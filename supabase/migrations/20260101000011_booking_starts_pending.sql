@@ -1,0 +1,18 @@
+-- Las reservas nuevas nacen "por confirmar".
+--
+-- Antes el default de la columna era 'confirmed', así que el estado
+-- `pending` existía en el CHECK, en los índices y en las consultas que
+-- liberan el horario (status in ('pending','confirmed')), pero NADA lo
+-- generaba: era un estado inalcanzable y el botón "Confirmar" del panel
+-- nunca se iba a pintar.
+--
+-- Se cambia el default en vez de meter `status` en el INSERT de
+-- `book_appointment` a propósito: la función vigente está redefinida en la
+-- migración 0007 (reutilización de pacientes por correo) y el INSERT no
+-- nombra la columna. Alterar el default alcanza a las dos versiones de la
+-- función y a cualquier otra vía de inserción futura.
+--
+-- Mientras la cita esté `pending` sigue ocupando el horario: todas las
+-- consultas de disponibilidad la tratan como ocupada, así que nadie puede
+-- agendar encima.
+alter table appointments alter column status set default 'pending';

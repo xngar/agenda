@@ -1,26 +1,126 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   Tokens de marca
+   ----------------------------------------------------------------------------
+   Los DOS colores base viven aquí y en ningún otro lado. Todo lo demás
+   (tintes, sombras, bordes) se deriva con color-mix() para que cambiar la
+   paleta sea editar estas dos líneas.
+
+   Contraste verificado (WCAG AA):
+     texto blanco sobre --brand-navy  -> 10.8:1  (AAA)
+     --brand-navy sobre --brand-sky  ->  5.8:1  (AA para texto normal)
+   Nunca se pone texto blanco sobre celeste.
+   ========================================================================== */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --brand-sky: #7cc7f0;
+  --brand-navy: #0b3c7a;
+
+  /* Neutros cálidos y limpios para el fondo de la clínica */
+  --neutral-50: #f8fafc;
+  --neutral-100: #f1f5f9;
+  --neutral-200: #e2e8f0;
+  --neutral-300: #cbd5e1;
+  --neutral-500: #64748b;
+  --neutral-600: #475569;
+  --neutral-800: #1e293b;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Base */
+  --color-brand-sky: var(--brand-sky);
+  --color-brand-navy: var(--brand-navy);
+
+  /* Derivatives de navy */
+  --color-brand-navy-900: color-mix(in oklab, var(--brand-navy) 82%, black);
+  --color-brand-navy-800: color-mix(in oklab, var(--brand-navy) 90%, black);
+  --color-brand-navy-700: color-mix(in oklab, var(--brand-navy) 86%, white);
+  --color-brand-navy-600: color-mix(in oklab, var(--brand-navy) 72%, white);
+  --color-brand-navy-300: color-mix(in oklab, var(--brand-navy) 42%, white);
+  --color-brand-navy-100: color-mix(in oklab, var(--brand-navy) 14%, white);
+  --color-brand-navy-50: color-mix(in oklab, var(--brand-navy) 7%, white);
+
+  /* Derivatives de sky */
+  --color-brand-sky-700: color-mix(in oklab, var(--brand-sky) 78%, black);
+  --color-brand-sky-600: color-mix(in oklab, var(--brand-sky) 88%, black);
+  --color-brand-sky-400: color-mix(in oklab, var(--brand-sky) 80%, white);
+  --color-brand-sky-200: color-mix(in oklab, var(--brand-sky) 55%, white);
+  --color-brand-sky-100: color-mix(in oklab, var(--brand-sky) 35%, white);
+  --color-brand-sky-50: color-mix(in oklab, var(--brand-sky) 18%, white);
+
+  /* Neutros */
+  --color-neutral-50: var(--neutral-50);
+  --color-neutral-100: var(--neutral-100);
+  --color-neutral-200: var(--neutral-200);
+  --color-neutral-300: var(--neutral-300);
+  --color-neutral-500: var(--neutral-500);
+  --color-neutral-600: var(--neutral-600);
+  --color-neutral-800: var(--neutral-800);
+
+  /* Sombras derivadas de navy: nunca negro puro */
+  --shadow-card: 0 1px 2px color-mix(in srgb, var(--brand-navy) 8%, transparent),
+    0 8px 24px -12px color-mix(in srgb, var(--brand-navy) 22%, transparent);
+  --shadow-lift: 0 2px 4px color-mix(in srgb, var(--brand-navy) 10%, transparent),
+    0 16px 40px -16px color-mix(in srgb, var(--brand-navy) 30%, transparent);
+  --shadow-focus: 0 0 0 3px color-mix(in srgb, var(--brand-sky) 55%, transparent);
+
+  --radius-card: 0.875rem;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--neutral-50);
+    color: var(--color-neutral-800);
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Foco visible y consistente en todo el sitio (WCAG 2.4.7). */
+  :focus-visible {
+    outline: 2px solid var(--brand-navy);
+    outline-offset: 2px;
+    border-radius: 0.35rem;
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--brand-sky) 45%, transparent);
+    color: var(--brand-navy);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  .skip-link {
+    position: absolute;
+    left: 0.5rem;
+    top: -4rem;
+    z-index: 60;
+    border-radius: 0.5rem;
+    background-color: var(--brand-navy);
+    color: #fff;
+    padding: 0.6rem 1rem;
+    font-weight: 600;
+    transition: top 0.15s ease;
+  }
+  .skip-link:focus {
+    top: 0.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

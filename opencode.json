@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "supabase-agenda": {
+      "type": "remote",
+      "url": "https://mcp.supabase.com/mcp?project_ref=ylqyhrwvkvdfgmcecams",
+      "enabled": true
+    },
+    "supabase": {
+      "enabled": false
+    }
+  }
+}

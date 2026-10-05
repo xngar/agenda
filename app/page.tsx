@@ -1,69 +1,178 @@
-import Image from "next/image";
+import Link from "next/link";
+import { getCatalog } from "@/lib/booking";
+import { Card, buttonClasses } from "@/components/ui";
+import { formatDuration } from "@/lib/dates";
+import { CLINIC_ADDRESS, CLINIC_PHONE } from "@/lib/clinic";
+import { getDoctorSession } from "@/lib/auth";
 
-export default function Home() {
+export const metadata = {
+  title: "Reserva tu hora en línea",
+};
+
+export default async function HomePage() {
+  const [catalog, doctor] = await Promise.all([getCatalog(), getDoctorSession()]);
+  const { settings, services, doctors } = catalog;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <>
+      {/* Hero */}
+      <section className="border-b border-neutral-200 bg-gradient-to-b from-brand-sky-50 to-white">
+        <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div>
+            <p className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-brand-navy shadow-card">
+              <span aria-hidden="true" className="h-2 w-2 rounded-full bg-brand-sky" />
+              Lunes a sábado · Confirmación inmediata
+            </p>
+            <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-brand-navy sm:text-4xl lg:text-[2.75rem]">
+              Tu hora con el dentista, en dos minutos
+            </h1>
+            <p className="mt-4 max-w-xl text-base leading-relaxed text-neutral-700">
+              Elige el servicio, el profesional y el horario que te acomode. Te enviamos la
+              confirmación al correo y puedes cambiar o cancelar tu cita cuando quieras.
+            </p>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              <Link href="/reservar" className={buttonClasses("primary", "lg")}>
+                Reservar ahora
+              </Link>
+              <a href={`tel:${CLINIC_PHONE.replace(/\s/g, "")}`} className={buttonClasses("secondary", "lg")}>
+                Llamar {CLINIC_PHONE}
+              </a>
+            </div>
+            <p className="mt-5 text-xs text-neutral-600">
+              Sin registro ni contraseña. Necesitamos sólo tu nombre, RUT, teléfono y correo.
+            </p>
+          </div>
+
+          <Card className="p-5 sm:p-6">
+            <h2 className="text-base font-semibold text-brand-navy">Cómo funciona</h2>
+            <ol className="mt-4 space-y-4">
+              {[
+                { n: 1, t: "Elige qué necesitas", d: "Control, limpieza o urgencia dental." },
+                { n: 2, t: "Elige a quién y cuándo", d: "Puedes dejar que elijamos el profesional libre." },
+                { n: 3, t: "Deja tus datos", d: "Te escribimos para confirmar y adjuntamos la cita al calendario." },
+              ].map((step) => (
+                <li key={step.n} className="flex gap-3.5">
+                  <span
+                    aria-hidden="true"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-navy text-sm font-bold text-white"
+                  >
+                    {step.n}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-neutral-800">{step.t}</span>
+                    <span className="block text-sm text-neutral-600">{step.d}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </Card>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Servicios */}
+      <section aria-labelledby="servicios" className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
+        <h2 id="servicios" className="text-2xl font-bold text-brand-navy">
+          Servicios
+        </h2>
+        <p className="mt-1.5 text-sm text-neutral-600">
+          Duración aproximada de cada atención. Si tu caso es distinto, conversamos al llegar.
+        </p>
+
+        <ul className="mt-6 grid gap-4 sm:grid-cols-3">
+          {services.map((service) => (
+            <Card as="li" key={service.id} className="flex flex-col p-5">
+              <h3 className="text-base font-semibold text-brand-navy">{service.name}</h3>
+              <p className="mt-1 text-sm text-neutral-600">
+                Duración aproximada: {formatDuration(service.duration_min)}
+              </p>
+              <div className="mt-4 pt-1">
+                <Link
+                  href={`/reservar?servicio=${service.id}`}
+                  className={buttonClasses("secondary", "sm", "w-full")}
+                >
+                  Reservar {service.name.toLowerCase()}
+                </Link>
+              </div>
+            </Card>
+          ))}
+        </ul>
+      </section>
+
+      {/* Equipo + datos */}
+      <section aria-labelledby="equipo" className="border-y border-neutral-200 bg-white">
+        <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_1fr]">
+          <div>
+            <h2 id="equipo" className="text-2xl font-bold text-brand-navy">
+              Nuestro equipo
+            </h2>
+            <ul className="mt-5 space-y-3">
+              {doctors.map((doc) => (
+                <li key={doc.id}>
+                  <Card className="flex items-center gap-4 px-4 py-3.5">
+                    <span
+                      aria-hidden="true"
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-sky-100 text-sm font-bold text-brand-navy"
+                    >
+                      {initials(doc.full_name)}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block font-semibold text-neutral-800">{doc.full_name}</span>
+                      {doc.specialty ? (
+                        <span className="block text-sm text-neutral-600">{doc.specialty}</span>
+                      ) : null}
+                    </span>
+                  </Card>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h2 className="text-2xl font-bold text-brand-navy">Datos de la clínica</h2>
+            <dl className="mt-5 divide-y divide-neutral-200 overflow-hidden rounded-card border border-neutral-200 bg-white">
+              {[
+                { k: "Horario", v: "Lunes a viernes 09:00 – 13:00 y 15:00 – 19:00 · Sábado 09:00 – 13:00" },
+                { k: "Dirección", v: CLINIC_ADDRESS },
+                { k: "Teléfono", v: CLINIC_PHONE },
+                { k: "Anticipación mínima", v: `${settings.min_notice_hours} horas` },
+                { k: "Cancelación", v: `hasta ${settings.cancel_min_hours} horas antes` },
+              ].map((row) => (
+                <div key={row.k} className="flex flex-col gap-0.5 px-4 py-3 sm:flex-row sm:gap-4">
+                  <dt className="text-sm font-medium text-neutral-600 sm:w-44 sm:shrink-0">{row.k}</dt>
+                  <dd className="text-sm text-neutral-800">{row.v}</dd>
+                </div>
+              ))}
+            </dl>
+
+            {doctor ? (
+              <Card className="mt-5 p-4">
+                <p className="text-sm text-neutral-700">
+                  Hola, <strong className="text-brand-navy">{doctor.full_name}</strong>. Tienes una
+                  sesión abierta en el panel.
+                </p>
+                <Link href="/dashboard" className={buttonClasses("ghost", "sm", "mt-3")}>
+                  Ir a mi agenda
+                </Link>
+              </Card>
+            ) : null}
+          </div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* Cerrada el domingo */}
+      <section className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
+        <p className="rounded-card bg-brand-navy-50 px-4 py-3 text-sm text-brand-navy-900">
+          Atendemos de lunes a sábado. El sábado sólo en la mañana y el domingo cerrado. Los
+          feriados y los días bloqueados por los profesionales no se pueden reservar.
+        </p>
+      </section>
+    </>
   );
+}
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  const first = parts[0]?.[0] ?? "";
+  const last = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : "";
+  return `${first}${last}`.toUpperCase();
 }

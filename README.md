@@ -1,36 +1,123 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Agenda Online — sistema de reservas odontológicas
 
-## Getting Started
+Aplicación de reservas de hora para una clínica odontológica: el paciente
+elige servicio, profesional, día y hora desde el sitio público; el equipo
+atiende las citas desde un panel privado. Funciona en español, con una sola
+zona horaria (`America/Santiago`).
 
-First, run the development server:
+## Qué incluye
+
+**Sitio público**
+
+- `/` — servicios, equipo y datos de la clínica.
+- `/reservar` — asistente de 4 pasos (servicio → profesional → día y hora →
+  datos), con validación en cliente que nunca ofrece horas ya tomadas. La cita
+  nace **«por confirmar»**: el horario queda reservado desde el primer
+  momento y la clínica la confirma desde el panel.
+- `/cita/[token]` — confirmación y enlace para cambiar o cancelar la cita.
+- `/privacidad` — aviso de privacidad.
+
+**Panel profesional** (`/dashboard`)
+
+- Ingreso con RUT y contraseña.
+- Agenda del día con filtros, cambio de estado (por confirmar, confirmada,
+  atendida, no asistió, cancelada) y suscripción en vivo vía Realtime.
+- El administrador ve las citas de todo el equipo, y puede activar o
+  desactivar cuentas; el resto, sólo las propias.
+
+## Requisitos
+
+- Node.js 20 o superior.
+- Un proyecto Supabase (Postgres con las migraciones de `supabase/migrations`).
+
+## Puesta en marcha
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # y completar los valores
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Las variables necesarias están documentadas en `.env.example`. Sólo tres son
+obligatorias para operar: `NEXT_PUBLIC_SUPABASE_URL`,
+`NEXT_PUBLIC_SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY`. Las demás
+degradan con elegancia (Turnstile, Upstash y Resend son opcionales en
+desarrollo).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Para datos de prueba: `npm run seed:dev`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+| Comando | Qué hace |
+| --- | --- |
+| `npm run dev` | Servidor de desarrollo. |
+| `npm run build` / `npm start` | Build y ejecución en modo producción. |
+| `npm run lint` | ESLint. |
+| `npm run typecheck` | TypeScript sin emitir. |
+| `npm run test` | Pruebas unitarias (Vitest). |
+| `npm run e2e` | Pruebas de navegador (Playwright, contra el build). |
+| `npm run check` | lint + typecheck + test. |
+| `npm run seed:dev` | Carga datos de desarrollo. |
 
-To learn more about Next.js, take a look at the following resources:
+`npm run e2e` necesita el servidor levantado (`npm start`) y, si no es en
+el puerto 3000, `E2E_BASE_URL=http://localhost:3111`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Arquitectura
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+app/                 rutas de Next (App Router)
+  page.tsx           portada
+  reservar/          asistente público
+  cita/[token]/      gestión de cita con token
+  dashboard/         panel privado (+ /login)
+  api/               rutas: bookings, slots, auth, dashboard, cron
+lib/
+  dates.ts           fechas de la clínica (día = clave "yyyy-MM-dd")
+  range.ts           lectura de tstzrange de Postgres
+  booking.ts         alta de citas y disponibilidad (sólo servidor)
+  rut.ts             validación de RUT chileno
+  ics.ts             adjunto .ics en UTC
+  auth.ts            sesión del profesional
+components/          UI compartida
+supabase/migrations/ esquema, RPC, RLS, Realtime y seed
+tests/               pruebas unitarias
+e2e/                 pruebas de navegador
+```
 
-## Deploy on Vercel
+Tres ideas que conviene conocer antes de tocar el código:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **El día es una clave, no una fecha.** Un día hábil es `"2026-10-05"` y se
+   maneja siempre en UTC. Sumar días con la zona local del navegador hacía
+   que un lunes apareciera como domingo.
+2. **La disponibilidad se calcula en Postgres.** Las horas salen de
+   `availability_rules` menos `time_off`, menos feriados y menos las citas
+   que ya existen. No hay "slots" precalculados que puedan quedar viejos.
+3. **RLS es la autoridad.** El panel usa un cliente Supabase con cookie de
+   sesión; cada consulta pasa por las políticas. El `proxy.ts` sólo evita
+   mostrar la pantalla de carga a quien no tiene sesión, no autoriza nada.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Seguridad
+
+- Contraseñas con `bcrypt`; sesión en cookie `httpOnly` + `sameSite=lax`.
+- Gestión de cita por token cifrado (AES-256-GCM) y de un solo uso.
+- Rate limiting por IP en booking y login (Upstash en producción).
+- Turnstile en el formulario; la CSP lo permite explícitamente.
+- Sin datos sensibles en los logs.
+
+## Base de datos
+
+Las migraciones se aplican en orden y son la única fuente de verdad del
+esquema. Las tres últimas resuelven problemas que sólo se ven en producción:
+
+- `...0010` agrega la RPC `dashboard_appointments`, que resuelve el
+  solapamiento de `tstzrange` en el servidor: filtrar un rango con `>=`/`<=`
+  contra otro rango **no funciona** en Postgres y devuelve `malformed range
+  literal`, que es como la agenda del panel aparecía vacía.
+- `...0011` hace que una reserva nueva nazca `pending`. Antes el estado
+  existía en el CHECK y en los índices, pero nadie lo generaba: era
+  inalcanzable y el botón «Confirmar» nunca se pintaba.
+- `...0012` hace que `get_available_slots` respete `doctors.active`, que no
+  contemplaba. El resultado era mostrarle horas a un profesional desactivado
+  para negárselas al confirmar.
+
+Para partir de cero: `npm run db:test` (resetea y aplica todo).
