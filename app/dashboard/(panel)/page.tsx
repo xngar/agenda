@@ -5,6 +5,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { isValidDayKey, todayKey } from "@/lib/dates";
 import type { DoctorAppointment, PublicDoctor } from "@/lib/types";
 import { Agenda } from "./agenda";
+import { DayNav } from "./day-nav";
 import { DoctorPicker } from "./doctor-picker";
 import Link from "next/link";
 
@@ -49,6 +50,24 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
   const appointments = (data ?? []) as unknown as DoctorAppointment[];
 
+  /**
+   * Días con citas en las próximas dos semanas.
+   *
+   * Sin esto, un día sin citas se veía como una lista vacía sin explicación:
+   * el panel abre en hoy, así que una cita reservada para mañana era
+   * invisible y parecía que la reserva se había perdido.
+   */
+  const { data: resumen } = await supabase.rpc("dashboard_day_summaries", {
+    p_from: dayKey,
+    p_to: addDaysKey(dayKey, 14),
+    p_doctor: onlyDoctorId,
+  });
+  const diasConCitas = ((resumen ?? []) as unknown as {
+    day: string;
+    total: number;
+    pendientes: number;
+  }[]).map((r) => ({ ...r, day: r.day.slice(0, 10) }));
+
   const { data: unread } = await supabase
     .from("notifications")
     .select("id")
@@ -65,14 +84,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         <div>
           <h1 className="text-2xl font-semibold text-brand-navy">Agenda</h1>
           <p className="text-sm text-neutral-600">
-            {new Intl.DateTimeFormat("es-CL", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-              timeZone: "UTC",
-            }).format(new Date(`${dayKey}T12:00:00Z`))}
+            <time dateTime={dayKey}>{dayLabel(dayKey)}</time>
             {" · "}
             {appointments.length} cita{appointments.length === 1 ? "" : "s"}
+            {appointments.length > 0 ? " este día" : ""}
           </p>
         </div>
 
@@ -80,6 +95,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           <DoctorPicker current={onlyDoctorId} isAdmin={session.isAdmin} doctors={team} />
         ) : null}
       </div>
+
+      <DayNav dayKey={dayKey} today={todayKey()} resumen={diasConCitas} />
 
       {error ? (
         <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
@@ -93,6 +110,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         doctorId={onlyDoctorId ?? session.id}
         canSeeAll={session.isAdmin}
         unreadCount={(unread ?? []).length}
+        diasConCitas={diasConCitas}
       />
 
       <p className="text-sm text-neutral-500">
@@ -102,6 +120,24 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       </p>
     </div>
   );
+}
+
+/** Etiqueta legible del día local, sin desfase por zona horaria. */
+function dayLabel(dayKey: string): string {
+  return new Intl.DateTimeFormat("es-CL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  }).format(new Date(`${dayKey}T12:00:00Z`));
+}
+
+/** Suma días a una clave "yyyy-MM-dd" sin pasar por la zona local. */
+function addDaysKey(dayKey: string, delta: number): string {
+  const [a, m, d] = dayKey.split("-").map(Number);
+  const f = new Date(Date.UTC(a, m - 1, d));
+  f.setUTCDate(f.getUTCDate() + delta);
+  return f.toISOString().slice(0, 10);
 }
 
 /** Equipo activo, para el filtro del admin. */

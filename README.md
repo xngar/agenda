@@ -46,6 +46,31 @@ desarrollo).
 
 Para datos de prueba: `npm run seed:dev`.
 
+## Cómo probarlo a mano
+
+Dos cuentas quedan en la base de desarrollo, con la misma contraseña
+`AgendaDev2026!`:
+
+| Cuenta | Rol |
+| --- | --- |
+| `camila.rojas@clinicadental.test` | Administradora: ve todo el equipo y gestiona las cuentas. |
+| `sebastian.munoz@clinicadental.test` | Profesional: sólo su propia agenda. |
+
+Para recorrer el flujo completo:
+
+1. Levanta el servidor (`npm run dev`, o `npm run build` + `npm start`).
+2. En una ventana aparte, entra en `/reservar` y agenda una hora. La reserva
+   nace **Por confirmar**.
+3. En el panel, entra con la cuenta que quieras y abre `/dashboard`. Si
+   reservaste para una fecha que no es hoy, navega a ella con `?date=AAAA-MM-DD`
+   — la agenda abre en el día actual.
+4. La cita aparece con su botón **Confirmar**. Al confirmar, el estado pasa a
+   *Confirmada* y se avisa al profesional.
+
+`node scripts/demo-panel.mjs` hace todo eso de forma automática, comprueba lo
+que se ve en pantalla en las tres vistas (admin sin filtro, admin filtrado y
+profesional) y deja capturas en `C:/Users/xngar/AppData/Local/Temp/opencode/shots`.
+
 ## Scripts
 
 | Comando | Qué hace |
@@ -58,6 +83,8 @@ Para datos de prueba: `npm run seed:dev`.
 | `npm run e2e` | Pruebas de navegador (Playwright, contra el build). |
 | `npm run check` | lint + typecheck + test. |
 | `npm run seed:dev` | Carga datos de desarrollo. |
+| `node scripts/panel-check.mjs` | Verificación HTTP/RLS contra el servidor, incluidos los permisos del panel. |
+| `node scripts/demo-panel.mjs` | Reserva una cita y comprueba las tres vistas del panel con capturas. |
 
 `npm run e2e` necesita el servidor levantado (`npm start`) y, si no es en
 el puerto 3000, `E2E_BASE_URL=http://localhost:3111`.

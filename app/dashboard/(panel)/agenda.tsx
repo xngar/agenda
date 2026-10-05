@@ -14,6 +14,8 @@ interface Props {
   doctorId: string;
   canSeeAll: boolean;
   unreadCount: number;
+  /** Días cercanos que sí tienen citas, para explicar un día vacío. */
+  diasConCitas: { day: string; total: number; pendientes: number }[];
 }
 
 type Filtro = "todas" | "activas" | "canceladas";
@@ -26,7 +28,14 @@ type Filtro = "todas" | "activas" | "canceladas";
  * en el cliente: la fuente de verdad es el servidor, y el refresco
  * también trae cambios hechos por otro profesional.
  */
-export function Agenda({ initial, doctorId, canSeeAll, unreadCount }: Props) {
+export function Agenda({
+  initial,
+  dayKey,
+  doctorId,
+  canSeeAll,
+  unreadCount,
+  diasConCitas,
+}: Props) {
   const router = useRouter();
   const [filtro, setFiltro] = useState<Filtro>("todas");
   const [pendiente, setPendiente] = useState<string | null>(null);
@@ -125,7 +134,19 @@ export function Agenda({ initial, doctorId, canSeeAll, unreadCount }: Props) {
       ) : null}
 
       {visibles.length === 0 ? (
-        <EmptyState title="Sin citas para este día" description="No hay horas reservadas que mostrar." />
+        diasConCitas.length > 0 ? (
+          /*
+            Un día vacío sin más se lee como "no hay nada", pero casi siempre
+            significa "no hay nada HOY". Como la cita pendiente suele estar al
+            día siguiente, sesaysólo en qué días hay algo.
+          */
+          <EmptyState
+            title="Sin citas para este día"
+            description={`No hay horas reservadas el ${new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${dayKey}T12:00:00Z`))}. Hay citas en los próximos días: usa las fechas de arriba para verlas.`}
+          />
+        ) : (
+          <EmptyState title="Sin citas para este día" description="No hay horas reservadas que mostrar." />
+        )
       ) : (
         <ul className="space-y-2">
           {visibles.map((cita) => {

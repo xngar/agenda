@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getService, getSlotsForDay, getSlotsWithDoctor } from "@/lib/booking";
+import { getService, getSlotsWithDoctor } from "@/lib/booking";
 import { getCatalog } from "@/lib/booking";
 import { isValidDayKey } from "@/lib/dates";
 import { checkRateLimit, clientIdentity } from "@/lib/ratelimit";
@@ -77,9 +77,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ slots: [], closed: true });
   }
 
-  const slots = doctorId
-    ? await getSlotsForDay(date, service.duration_min, doctorId)
-    : await getSlotsWithDoctor(date, service.duration_min, null);
+  // Siempre por `getSlotsWithDoctor`, incluso cuando el paciente ya eligió
+  // un profesional: así la respuesta trae siempre `doctor_id`. Antes se
+  // llamaba directo a `getSlotsForDay` en ese caso y el campo desaparecía,
+  // así que un cliente que copiaba el `doctor_id` del horario fallaba con 422
+  // al reservar.
+  const slots = await getSlotsWithDoctor(date, service.duration_min, doctorId ?? null);
 
   return NextResponse.json(
     { slots, durationMin: service.duration_min },

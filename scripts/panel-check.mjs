@@ -233,6 +233,41 @@ console.log("\n[5] Aislamiento por RLS entre profesionales");
     `status=${despuesDeConfirmar.status}`,
   );
 
+  // Navegación de día. Sin esto, una cita reservada para mañana quedaba
+  // invisible: la agenda abría en hoy, que estaba vacío, y no había forma de
+  // cambiar de fecha.
+  const hoyKey = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Santiago",
+  }).format(new Date());
+
+  const agendaHoy = await req(admin, `/dashboard?doctor=${slot.doctor_id}`);
+  check(
+    "la agenda trae un selector de fecha",
+    agendaHoy.text.includes('id="filtro-dia"'),
+    `status=${agendaHoy.status}`,
+  );
+
+  const conNavegacion = await req(admin, `/dashboard?date=${slot.slot_start.slice(0, 10)}&doctor=${slot.doctor_id}`);
+  check(
+    "el selector de fecha muestra el día elegido",
+    conNavegacion.text.includes(`value="${slot.slot_start.slice(0, 10)}"`),
+    `status=${conNavegacion.status}`,
+  );
+
+  check(
+    "en un día sin citas avisa que hay citas en otros días",
+    hoyKey !== slot.slot_start.slice(0, 10)
+      ? agendaHoy.text.includes("Hay citas en los próximos días")
+      : true,
+    `hoy=${hoyKey}`,
+  );
+
+  check(
+    "el resumen ofrece un salto al día con citas",
+    agendaHoy.text.includes("por confirmar") || agendaHoy.text.includes('aria-label="Días con citas"'),
+    "",
+  );
+
   // Sebastián intenta tocar una cita que no es suya.
   const ajeno = await req(doc, "/api/dashboard/appointments", {
     method: "POST",
