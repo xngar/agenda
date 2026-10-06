@@ -41,7 +41,8 @@ export async function GET(request: Request) {
   }
 
   const url = new URL(request.url);
-  const parsed = querySchema.safeParse({
+const parsed = querySchema.safeParse({
+    clinicSlug: url.searchParams.get("clinicSlug") ?? undefined,
     date: url.searchParams.get("date") ?? "",
     serviceId: url.searchParams.get("serviceId") ?? "",
     doctorId: url.searchParams.get("doctorId") ?? undefined,
@@ -63,9 +64,9 @@ export async function GET(request: Request) {
 
   // El servidor es quien decide el rango de fechas; el cliente no puede
   // ampliarlo pidiendo un aÃ±o hacia adelante.
-  const today = new Date();
-  const santiagoToday = formatInSantiago(today);
-  const diffDays = diffInDays(santiagoToday, date);
+const today = new Date();
+  const clinicToday = formatInTimezone(today, settings.timezone);
+  const diffDays = diffInDays(clinicToday, date);
   if (diffDays < 0 || diffDays > settings.max_days_ahead) {
     return NextResponse.json({ slots: [], outOfRange: true });
   }
@@ -82,7 +83,8 @@ export async function GET(request: Request) {
   // llamaba directo a `getSlotsForDay` en ese caso y el campo desaparecÃ­a,
   // asÃ­ que un cliente que copiaba el `doctor_id` del horario fallaba con 422
   // al reservar.
-  const slots = await getSlotsWithDoctor(date, service.duration_min, doctorId ?? null);
+  const orgId = typeof catalog.settings.id === "string" ? catalog.settings.id : null;
+  const slots = await getSlotsWithDoctor(date, service.duration_min, doctorId ?? null, orgId);
 
   return NextResponse.json(
     { slots, durationMin: service.duration_min },
@@ -90,9 +92,9 @@ export async function GET(request: Request) {
   );
 }
 
-function formatInSantiago(date: Date): string {
+function formatInTimezone(date: Date, timeZone: string): string {
   return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Santiago",
+    timeZone,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",

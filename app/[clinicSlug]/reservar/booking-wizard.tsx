@@ -40,6 +40,7 @@ export interface BookingWizardProps {
   minNoticeHours: number;
   cancelMinHours: number;
   clinicName: string;
+  clinicSlug: string;
   timezone: string;
   initialServiceId?: string;
 }
@@ -106,6 +107,7 @@ export default function BookingWizard(props: BookingWizardProps) {
 
       try {
         const params = new URLSearchParams({
+          clinicSlug: props.clinicSlug,
           date: dayKey,
           serviceId,
           doctorId: doctorId ?? "",
@@ -140,7 +142,7 @@ export default function BookingWizard(props: BookingWizardProps) {
         setSlotsLoading(false);
       }
     },
-    [serviceId, doctorId],
+    [serviceId, doctorId, props.clinicSlug],
   );
 
   /**
@@ -231,6 +233,7 @@ export default function BookingWizard(props: BookingWizardProps) {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
+          clinicSlug: props.clinicSlug,
           serviceId,
           doctorId,
           slotStart,

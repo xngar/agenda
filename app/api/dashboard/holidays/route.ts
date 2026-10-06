@@ -61,6 +61,7 @@ export async function POST(request: Request) {
   const { data: repetido } = await supabase
     .from("clinic_holidays")
     .select("date")
+    .eq("org_id", session.orgId)
     .eq("date", date);
   if (repetido && repetido.length > 0) {
     return NextResponse.json(
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
 
   const { data: creado, error } = await supabase
     .from("clinic_holidays")
-    .insert({ date, name })
+    .insert({ date, name, org_id: session.orgId })
     .select("date, name");
 
   if (error) {

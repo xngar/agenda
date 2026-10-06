@@ -31,7 +31,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
             Agenda · Panel
           </Link>
 
-          <NavLinks isAdmin={session.isAdmin} />
+          <NavLinks isAdmin={session.isAdmin} isSuperAdmin={session.isSuperAdmin} />
 
           <div className="flex items-center gap-3">
             <div className="text-right text-sm leading-tight">

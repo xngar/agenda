@@ -29,7 +29,7 @@ export default async function CitaPage({ params }: Props) {
     toPatientView(found.row),
     // El calendario de reprogramación necesita feriados y límites, igual
     // que en /reservar.
-    getCatalog(),
+    getCatalog("sonrisa-dental"),
   ]);
 
   // Ya pasó o quedó cancelada: se muestra el estado, no un 404, porque el

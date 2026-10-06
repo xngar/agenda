@@ -20,7 +20,7 @@ const bodySchema = patientDetailsSchema.extend({
   serviceId: uuidSchema,
   doctorId: uuidSchema.nullable(),
   slotStart: z.string().min(10).max(40),
-  turnstileToken: z.string().optional(),
+  turnstileToken: z.string().optional(), clinicSlug: z.string().optional(),
 });
 
 function fieldOf(error: z.ZodError): string | undefined {

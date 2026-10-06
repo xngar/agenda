@@ -9,6 +9,27 @@ export const CLINIC_ADDRESS = "Av. Providencia 1234, Of. 502, Santiago";
 export const CLINIC_PHONE = "+56 2 2345 6789";
 export const SUPPORT_EMAIL = "reservas@clinicadental.test";
 
+/**
+ * Identidad visible de una clínica. En multi-tenant casi todo viene de
+ * `organizations`; estas constantes quedan sólo como respaldo para las
+ * rutas públicas sin slug (portada y /reservar heredadas).
+ */
+export interface ClinicBrand {
+  name: string;
+  slug?: string;
+  address?: string | null;
+  phone?: string | null;
+  supportEmail?: string | null;
+}
+
+export const DEFAULT_BRAND: ClinicBrand = {
+  name: "Clínica Dental Sonrisa",
+  slug: "sonrisa-dental",
+  address: CLINIC_ADDRESS,
+  phone: CLINIC_PHONE,
+  supportEmail: SUPPORT_EMAIL,
+};
+
 /** Copy legal: Ley 19.628 sobre protección de la vida privada. */
 export const CONSENT_TEXT =
   "Autorizo a la clínica a guardar mis datos personales (nombre, RUT, teléfono y correo) " +

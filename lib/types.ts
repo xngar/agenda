@@ -134,5 +134,15 @@ export type BusinessErrorCode = keyof typeof BUSINESS_ERROR_MESSAGES;
 
 
 
-export interface Organization extends Omit<ClinicSettings,'id'> { id:string; name:string; slug:string; timezone:string; active:boolean; }
-export interface PublicOrganization extends Pick<Organization,'id'|'name'|'slug'|'timezone'|'address'|'phone'|'support_email'|'consent_text'> {}
+export interface Organization extends Omit<ClinicSettings, "id"> {
+  id: string;
+  name: string;
+  slug: string;
+  timezone: string;
+  active: boolean;
+}
+
+export type PublicOrganization = Pick<
+  Organization,
+  "id" | "name" | "slug" | "timezone" | "address" | "phone" | "support_email" | "consent_text"
+>;

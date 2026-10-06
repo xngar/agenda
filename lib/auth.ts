@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 
 import { redirect } from "next/navigation";
 import { supabaseServer } from "./supabase/server";
@@ -8,9 +8,16 @@ export interface DoctorSession {
   orgId: string;
   orgSlug: string;
   id: string;
-  full_name: string;
+full_name: string;
   specialty: string | null;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
+}
+
+/** La relación `organizations` puede venir como objeto o como arreglo. */
+function orgSlugOf(relation: unknown): string {
+  if (Array.isArray(relation)) return (relation[0]?.slug as string | undefined) ?? "";
+  return ((relation as { slug?: string } | null)?.slug as string | undefined) ?? "";
 }
 
 /**
@@ -31,7 +38,7 @@ export async function getDoctorSession(): Promise<DoctorSession | null> {
 
   const { data: doctor, error } = await supabase
     .from("doctors")
-    .select("id, full_name, specialty, is_admin, active, org_id, organizations!doctors_org_id_fkey (slug)")
+    .select("id, full_name, specialty, is_admin, is_super_admin, active, org_id, organizations!doctors_org_id_fkey (slug)")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -41,9 +48,10 @@ export async function getDoctorSession(): Promise<DoctorSession | null> {
     id: doctor.id,
     full_name: doctor.full_name,
     specialty: doctor.specialty,
-    isAdmin: doctor.is_admin,
+isAdmin: doctor.is_admin,
+    isSuperAdmin: doctor.is_super_admin,
     orgId: doctor.org_id,
-    orgSlug: doctor.organizations?.slug ?? '',
+orgSlug: orgSlugOf(doctor.organizations),
   };
 }
 
@@ -74,8 +82,6 @@ export async function getClinicSettings(): Promise<ClinicSettings> {
 
 export async function requireSuperAdmin(): Promise<DoctorSession> {
   const session = await requireDoctor();
-  const supabase = await supabaseServer();
-  const { data: d } = await supabase.from('doctors').select('is_super_admin').eq('id', session.id).maybeSingle();
-  if (!d?.is_super_admin) redirect('/dashboard');
+  if (!session.isSuperAdmin) redirect("/dashboard");
   return session;
 }

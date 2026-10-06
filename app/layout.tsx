@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import SiteHeader from "@/components/site-header";
-import SiteFooter from "@/components/site-footer";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -40,11 +38,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <a href="#contenido" className="skip-link">
           Saltar al contenido
         </a>
-        <SiteHeader />
-        <main id="contenido" className="flex-1">
+        <main id="contenido" className="flex flex-1 flex-col">
           {children}
         </main>
-        <SiteFooter />
       </body>
     </html>
   );

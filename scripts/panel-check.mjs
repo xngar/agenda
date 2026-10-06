@@ -663,7 +663,7 @@ console.log("\n[8] Bloqueos de tiempo");
     });
   const slotsPublicos = async (doctorId) => {
     const r = await fetch(
-      `${BASE}/api/slots?date=2026-10-06&serviceId=${SERVICE}&doctorId=${doctorId}`,
+      `${BASE}/api/slots?date=2026-11-10&serviceId=${SERVICE}&doctorId=${doctorId}`,
     );
     return ((await r.json()).slots ?? []).length;
   };
@@ -776,7 +776,7 @@ console.log("\n[8] Bloqueos de tiempo");
   // Cita de prueba real para poder probar el 409 sin depender de datos viejos.
   const slotDisponible = async () => {
     const r = await fetch(
-      `${BASE}/api/slots?date=2026-10-06&serviceId=${SERVICE}&doctorId=${CAMILA}`,
+      `${BASE}/api/slots?date=2026-11-10&serviceId=${SERVICE}&doctorId=${CAMILA}`,
     );
     return ((await r.json()).slots ?? [])[0]?.slot_start;
   };
@@ -810,11 +810,11 @@ console.log("\n[8] Bloqueos de tiempo");
     );
     const trasCita = await slotsPublicos(CAMILA);
 
-    // Día completo del 2026-10-06 para Camila: la cita recién creada queda dentro.
+    // Día completo del 2026-11-10 para Camila: la cita recién creada queda dentro.
     const diaEntero = await post(admin, {
       doctorId: CAMILA,
-      startsAt: "2026-10-06T00:00:00.000Z",
-      endsAt: "2026-10-07T00:00:00.000Z",
+      startsAt: "2026-11-10T00:00:00.000Z",
+      endsAt: "2026-11-11T00:00:00.000Z",
       confirm: false,
     });
     const diaEnteroJson = json(diaEntero);
@@ -827,14 +827,14 @@ console.log("\n[8] Bloqueos de tiempo");
     );
     check(
       "el conflicto apunta al día correcto",
-      diaEnteroJson.conflicts?.[0]?.dia === "2026-10-06",
+      diaEnteroJson.conflicts?.[0]?.dia === "2026-11-10",
       String(diaEnteroJson.conflicts?.[0]?.dia),
     );
 
     const forzado = await post(admin, {
       doctorId: CAMILA,
-      startsAt: "2026-10-06T00:00:00.000Z",
-      endsAt: "2026-10-07T00:00:00.000Z",
+      startsAt: "2026-11-10T00:00:00.000Z",
+      endsAt: "2026-11-11T00:00:00.000Z",
       confirm: true,
     });
     const forzadoJson = json(forzado);

@@ -43,7 +43,20 @@ interface SeedDoctor {
   fullName: string;
   specialty: string;
   isAdmin: boolean;
+  isSuperAdmin?: boolean;
 }
+
+/**
+ * Operador de la plataforma. No atiende pacientes: vive en una organización
+ * interna inactiva para que nunca aparezca en el catálogo público, pero
+ * conserva `org_id` (NOT NULL) y puede crear clínicas desde el panel.
+ */
+const SUPER_ADMIN = {
+  email: "admin@agenda.test",
+  fullName: "Administración de la plataforma",
+  orgName: "Plataforma (interna)",
+  orgSlug: "plataforma",
+} as const;
 
 const DOCTORS: SeedDoctor[] = [
   {
@@ -75,17 +88,72 @@ async function main(): Promise<void> {
     return;
   }
 
+  const { data: orgSeed, error: orgError } = await supabase
+    .from("organizations")
+    .select("id")
+    .eq("slug", "sonrisa-dental")
+    .single();
+  if (orgError || !orgSeed) {
+    console.error("✗ No existe la organización 'sonrisa-dental'. Corre las migraciones 20260102000001 primero.");
+    process.exitCode = 1;
+    return;
+  }
+  const orgId = orgSeed.id as string;
+
   for (const doctor of DOCTORS) {
-    await upsertDoctor(supabase, doctor);
+    await upsertDoctor(supabase, doctor, orgId);
   }
 
+  const platformOrgId = await ensurePlatformOrg(supabase);
+  await upsertSuperAdmin(supabase, platformOrgId);
+
   console.log("\n✓ Seed de desarrollo completo.");
-  console.log(`  Contraseña de ambos: ${SEED_PASSWORD}`);
-  console.log(`  Admin: ${DOCTORS[0]!.email}`);
+  console.log(`  Contraseña de todos: ${SEED_PASSWORD}`);
+  console.log(`  Admin de clínica: ${DOCTORS[0]!.email}`);
   console.log(`  Profesional: ${DOCTORS[1]!.email}`);
+  console.log(`  Super-admin plataforma: ${SUPER_ADMIN.email}`);
 }
 
-async function upsertDoctor(supabase: SupabaseClient, doctor: SeedDoctor): Promise<void> {
+async function ensurePlatformOrg(supabase: SupabaseClient): Promise<string> {
+  const { data: existing } = await supabase
+    .from("organizations")
+    .select("id")
+    .eq("slug", SUPER_ADMIN.orgSlug)
+    .maybeSingle();
+  if (existing) return existing.id as string;
+
+  const { data, error } = await supabase
+    .from("organizations")
+    .insert({ name: SUPER_ADMIN.orgName, slug: SUPER_ADMIN.orgSlug, active: false })
+    .select("id")
+    .single();
+  if (error || !data) throw new Error(`organizations/${SUPER_ADMIN.orgSlug}: ${error?.message ?? "sin fila"}`);
+  return data.id as string;
+}
+
+async function upsertSuperAdmin(supabase: SupabaseClient, orgId: string): Promise<void> {
+  const userId = await ensureAuthUser(supabase, SUPER_ADMIN.email);
+  const { error } = await supabase.from("doctors").upsert(
+    {
+      id: userId,
+      full_name: SUPER_ADMIN.fullName,
+      specialty: null,
+      is_admin: false,
+      is_super_admin: true,
+      active: true,
+      org_id: orgId,
+    },
+    { onConflict: "id" },
+  );
+  if (error) throw new Error(`super-admin/${SUPER_ADMIN.email}: ${error.message}`);
+  console.log(`  · ${SUPER_ADMIN.fullName} (${SUPER_ADMIN.email})`);
+}
+
+async function upsertDoctor(
+  supabase: SupabaseClient,
+  doctor: SeedDoctor,
+  orgId: string,
+): Promise<void> {
   const userId = await ensureAuthUser(supabase, doctor.email);
 
   const { error: doctorError } = await supabase
@@ -97,6 +165,7 @@ async function upsertDoctor(supabase: SupabaseClient, doctor: SeedDoctor): Promi
         specialty: doctor.specialty,
         is_admin: doctor.isAdmin,
         active: true,
+        org_id: orgId,
       },
       { onConflict: "id" },
     );
@@ -118,6 +187,7 @@ async function upsertDoctor(supabase: SupabaseClient, doctor: SeedDoctor): Promi
       weekday: rule.weekday,
       start_time: startTime,
       end_time: endTime,
+      org_id: orgId,
     })),
   );
 

@@ -12,6 +12,8 @@ export const metadata = {
 export default async function HomePage() {
   const [catalog, doctor] = await Promise.all([getCatalog("sonrisa-dental"), getDoctorSession()]);
   const { settings, services, doctors } = catalog;
+  const address = settings.address ?? CLINIC_ADDRESS;
+  const phone = settings.phone ?? CLINIC_PHONE;
 
   return (
     <>
@@ -34,8 +36,8 @@ export default async function HomePage() {
               <Link href="/reservar" className={buttonClasses("primary", "lg")}>
                 Reservar ahora
               </Link>
-              <a href={`tel:${CLINIC_PHONE.replace(/\s/g, "")}`} className={buttonClasses("secondary", "lg")}>
-                Llamar {CLINIC_PHONE}
+              <a href={`tel:${phone.replace(/\s/g, "")}`} className={buttonClasses("secondary", "lg")}>
+                Llamar {phone}
               </a>
             </div>
             <p className="mt-5 text-xs text-neutral-600">
@@ -132,8 +134,8 @@ export default async function HomePage() {
             <dl className="mt-5 divide-y divide-neutral-200 overflow-hidden rounded-card border border-neutral-200 bg-white">
               {[
                 { k: "Horario", v: "Lunes a viernes 09:00 â€“ 13:00 y 15:00 â€“ 19:00 Â· SÃ¡bado 09:00 â€“ 13:00" },
-                { k: "DirecciÃ³n", v: CLINIC_ADDRESS },
-                { k: "TelÃ©fono", v: CLINIC_PHONE },
+                { k: "DirecciÃ³n", v: address },
+                { k: "TelÃ©fono", v: phone },
                 { k: "AnticipaciÃ³n mÃ­nima", v: `${settings.min_notice_hours} horas` },
                 { k: "CancelaciÃ³n", v: `hasta ${settings.cancel_min_hours} horas antes` },
               ].map((row) => (

@@ -130,6 +130,7 @@ export async function POST(request: Request) {
       doctor_id: doctorId,
       during: `[${startsAt},${endsAt})`,
       reason: reason ?? null,
+      org_id: session.orgId,
     })
     .select("id, during, reason");
 

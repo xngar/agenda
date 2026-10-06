@@ -14,10 +14,22 @@ const soloAdmin = [
   { href: "/dashboard/feriados", label: "Feriados" },
 ];
 
-export function NavLinks({ isAdmin }: { isAdmin: boolean }) {
+const soloSuperAdmin = [{ href: "/dashboard/plataforma", label: "Plataforma" }];
+
+export function NavLinks({
+  isAdmin,
+  isSuperAdmin = false,
+}: {
+  isAdmin: boolean;
+  isSuperAdmin?: boolean;
+}) {
   const pathname = usePathname();
 
-  const visible = isAdmin ? [...items, ...soloAdmin] : items;
+  const visible = [
+    ...items,
+    ...(isAdmin ? soloAdmin : []),
+    ...(isSuperAdmin ? soloSuperAdmin : []),
+  ];
 
   return (
     <nav aria-label="Secciones del panel">

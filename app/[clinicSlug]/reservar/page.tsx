@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { getCatalog } from "@/lib/booking";
 import { ErrorNotice } from "@/components/ui";
 import BookingWizard from "./booking-wizard";
@@ -13,16 +13,13 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-type Props = {
-  searchParams: Promise<{ servicio?: string }>;
-};
-
-export default async function ReservarPage({ searchParams }: Props) {
+export default async function ReservarPage({ params, searchParams }: { params: Promise<{ clinicSlug:string }>, searchParams: Promise<{ servicio?: string }> }) {
   const { servicio } = await searchParams;
+  const { clinicSlug } = await params;
 
   let catalog;
   try {
-    catalog = await getCatalog("sonrisa-dental");
+    catalog = await getCatalog(clinicSlug);
   } catch {
     // No filtramos el motivo: al paciente no le sirve saber si fallÃ³ la
     // base o la red, y no queremos exponer internals en pantalla.
@@ -50,7 +47,8 @@ export default async function ReservarPage({ searchParams }: Props) {
       maxDaysAhead={catalog.settings.max_days_ahead}
       minNoticeHours={catalog.settings.min_notice_hours}
       cancelMinHours={catalog.settings.cancel_min_hours}
-      clinicName={catalog.settings.name}
+clinicName={catalog.settings.name}
+      clinicSlug={clinicSlug}
       timezone={catalog.settings.timezone}
       initialServiceId={initialServiceId}
     />

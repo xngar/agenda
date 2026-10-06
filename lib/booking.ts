@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 
 import { supabaseAdmin } from "./supabase/admin";
 import { serverEnv } from "./env";
@@ -52,7 +52,8 @@ const APPOINTMENT_SELECT = `
   reminder_sent_at,
   doctor_id,
   service_id,
-  patient_id,
+patient_id,
+  org_id,
   patients ( id, full_name, rut, phone, email ),
   doctors ( id, full_name, specialty ),
   services ( id, name, duration_min )
@@ -68,6 +69,7 @@ type AppointmentRow = {
   doctor_id: string;
   service_id: string | null;
   patient_id: string;
+  org_id: string;
   patients: { id: string; full_name: string; rut: string | null; phone: string | null; email: string } | null;
   doctors: { id: string; full_name: string; specialty: string | null } | null;
   services: { id: string; name: string; duration_min: number } | null;
@@ -91,7 +93,21 @@ export async function getCatalog(orgSlug: string): Promise<Catalog> {
   if (doctors.error) throw new Error('No se pudieron leer los profesionales');
   if (holidays.error) throw new Error('No se pudieron leer los feriados');
   return { settings: org as ClinicSettings, services: (services.data??[]) as Service[], doctors: (doctors.data??[]) as PublicDoctor[], holidays: (holidays.data??[]) as Holiday[] };
-}export async function getService(id: string): Promise<Service | null> {
+}
+
+/** Organización activa por slug, para el branding del sitio público. */
+export async function getPublicOrganization(orgSlug: string): Promise<ClinicSettings | null> {
+  const { data, error } = await supabaseAdmin()
+    .from("organizations")
+    .select("*")
+    .eq("slug", orgSlug)
+    .eq("active", true)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data as ClinicSettings;
+}
+
+export async function getService(id: string): Promise<Service | null> {
   const { data } = await supabaseAdmin()
     .from("services")
     .select("id, name, duration_min")
@@ -109,6 +125,7 @@ export async function getSlotsForDay(
   day: string,
   durationMin: number,
   doctorId: string | null,
+  orgId?: string | null,
 ): Promise<Slot[]> {
   const supabase = supabaseAdmin();
 
@@ -118,9 +135,10 @@ export async function getSlotsForDay(
         p_date: day,
         p_duration: durationMin,
       })
-    : await supabase.rpc("get_available_slots_any", {
+: await supabase.rpc("get_available_slots_any", {
         p_date: day,
         p_duration: durationMin,
+        p_org_id: orgId ?? null,
       });
 
   if (error) {
@@ -149,17 +167,19 @@ export async function getSlotsWithDoctor(
   day: string,
   durationMin: number,
   doctorId: string | null,
+  orgId?: string | null,
 ): Promise<SlotWithDoctor[]> {
   const supabase = supabaseAdmin();
 
   if (doctorId) {
-    const slots = await getSlotsForDay(day, durationMin, doctorId);
+const slots = await getSlotsForDay(day, durationMin, doctorId, orgId);
     return slots.map((slot) => ({ ...slot, doctor_id: doctorId }));
   }
 
-  const { data, error } = await supabase.rpc("get_available_slots_any", {
+const { data, error } = await supabase.rpc("get_available_slots_any", {
     p_date: day,
     p_duration: durationMin,
+    p_org_id: orgId ?? null,
   });
   if (error) return [];
   return (data ?? []) as SlotWithDoctor[];
@@ -182,7 +202,7 @@ export interface BookResult {
   specialty: string | null;
 }
 
-export async function bookAppointment(input: PatientDetailsInput): Promise<BookResult> {
+export async function bookAppointment(input: PatientDetailsInput & { clinicSlug?: string }): Promise<BookResult> {
   const supabase = supabaseAdmin();
 
   // Defensa en profundidad: el esquema de Zod ya valida el dÃ­gito
@@ -196,7 +216,16 @@ export async function bookAppointment(input: PatientDetailsInput): Promise<BookR
   const service = await getService(input.serviceId);
   if (!service) throw new BusinessError("A0002", 422);
 
-  const doctorId = await resolveDoctor(input.doctorId, input.slotStart, service.duration_min);
+const orgSlug = input.clinicSlug ?? "sonrisa-dental";
+  const { data: orgRow } = await supabase
+    .from("organizations")
+    .select("id")
+    .eq("slug", orgSlug)
+    .eq("active", true)
+    .maybeSingle();
+  const orgId = (orgRow?.id as string | undefined) ?? undefined;
+
+  const doctorId = await resolveDoctor(input.doctorId, input.slotStart, service.duration_min, orgId);
   const token = generateManageToken();
   const tokenHash = hashManageToken(token);
 
@@ -216,7 +245,7 @@ export async function bookAppointment(input: PatientDetailsInput): Promise<BookR
 
   await sealToken(appointmentId as string, token);
 
-  const settings = await getSettings();
+const settings = await getSettings(orgId);
   const row = await loadAppointmentRow(appointmentId as string);
   const doctor = row?.doctors;
   const startsAt = lowerBound(row?.during);
@@ -266,13 +295,15 @@ async function resolveDoctor(
   doctorId: string | null,
   slotStart: string,
   durationMin: number,
+  orgId?: string,
 ): Promise<string> {
   if (doctorId) return doctorId;
 
   const day = slotStart.slice(0, 10);
-  const { data, error } = await supabaseAdmin().rpc("get_available_slots_any", {
+const { data, error } = await supabaseAdmin().rpc("get_available_slots_any", {
     p_date: day,
     p_duration: durationMin,
+    p_org_id: orgId ?? null,
   });
   if (error) throw new BusinessError("A0002");
 
@@ -329,7 +360,7 @@ export async function getAppointmentByToken(token: string): Promise<{
 export async function toPatientView(
   row: AppointmentRow,
 ): Promise<PatientAppointmentView> {
-  const settings = await getSettings();
+  const settings = await getSettings(row.org_id);
   const startsAt = lowerBound(row.during);
   const endsAt = upperBound(row.during);
   const active = row.status === "pending" || row.status === "confirmed";

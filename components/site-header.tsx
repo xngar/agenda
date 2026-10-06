@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { buttonClasses } from "./ui";
+import { DEFAULT_BRAND, type ClinicBrand } from "@/lib/clinic";
 
-export default function SiteHeader() {
+export default function SiteHeader({ brand = DEFAULT_BRAND }: { brand?: ClinicBrand }) {
+  const homeHref = brand.slug ? `/${brand.slug}` : "/";
+  const reservarHref = brand.slug ? `/${brand.slug}/reservar` : "/reservar";
+
   return (
     <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <Link
-          href="/"
+          href={homeHref}
           className="group flex min-w-0 items-center gap-2.5 rounded-lg"
           aria-label="Ir al inicio"
         >
@@ -20,7 +24,7 @@ export default function SiteHeader() {
           </span>
           <span className="min-w-0">
             <span className="block truncate text-sm font-bold leading-tight text-brand-navy">
-              Sonrisa Dental
+              {brand.name}
             </span>
             <span className="block truncate text-xs leading-tight text-neutral-600">
               Agenda online
@@ -35,10 +39,7 @@ export default function SiteHeader() {
           >
             Privacidad
           </Link>
-          <Link
-            href="/reservar"
-            className={buttonClasses("primary", "sm")}
-          >
+          <Link href={reservarHref} className={buttonClasses("primary", "sm")}>
             Reservar hora
           </Link>
         </nav>
