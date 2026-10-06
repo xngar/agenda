@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { supabaseAdmin } from "./supabase/admin";
 import { serverEnv } from "./env";
@@ -30,10 +30,10 @@ import type {
 import type { PatientDetailsInput } from "./validation";
 
 /**
- * Orquestación de reservas en el servidor.
+ * OrquestaciÃ³n de reservas en el servidor.
  *
- * Ninguna disponibilidad se calcula acá: se pregunta a Postgres, que es
- * la única fuente de verdad sobre la zona horaria y las reglas.
+ * Ninguna disponibilidad se calcula acÃ¡: se pregunta a Postgres, que es
+ * la Ãºnica fuente de verdad sobre la zona horaria y las reglas.
  */
 
 export interface Catalog {
@@ -74,33 +74,24 @@ type AppointmentRow = {
 };
 
 /* ------------------------------------------------------------------ */
-/* Catálogo público                                                     */
+/* CatÃ¡logo pÃºblico                                                     */
 /* ------------------------------------------------------------------ */
 
-export async function getCatalog(): Promise<Catalog> {
+export async function getCatalog(orgSlug: string): Promise<Catalog> {
   const supabase = supabaseAdmin();
-
-  const [settings, services, doctors, holidays] = await Promise.all([
-    supabase.from("clinic_settings").select("*").eq("id", 1).single(),
-    supabase.from("services").select("id, name, duration_min, active").eq("active", true),
-    supabase.from("doctors").select("id, full_name, specialty").eq("active", true),
-    supabase.from("clinic_holidays").select("date, name"),
+  const { data: org, error: orgErr } = await supabase.from('organizations').select('*').eq('slug', orgSlug).eq('active', true).maybeSingle();
+  if (orgErr || !org) throw new Error('Organizacion no encontrada');
+  const orgId = org.id as string;
+  const [services, doctors, holidays] = await Promise.all([
+    supabase.from('services').select('id,name,duration_min,active').eq('org_id', orgId).eq('active', true),
+    supabase.from('doctors').select('id,full_name,specialty').eq('org_id', orgId).eq('active', true),
+    supabase.from('clinic_holidays').select('date,name').eq('org_id', orgId),
   ]);
-
-  if (settings.error) throw new Error("No se pudo leer clinic_settings");
-  if (services.error) throw new Error("No se pudieron leer los servicios");
-  if (doctors.error) throw new Error("No se pudieron leer los profesionales");
-  if (holidays.error) throw new Error("No se pudieron leer los feriados");
-
-  return {
-    settings: settings.data as ClinicSettings,
-    services: (services.data ?? []) as Service[],
-    doctors: (doctors.data ?? []) as PublicDoctor[],
-    holidays: (holidays.data ?? []) as Holiday[],
-  };
-}
-
-export async function getService(id: string): Promise<Service | null> {
+  if (services.error) throw new Error('No se pudieron leer los servicios');
+  if (doctors.error) throw new Error('No se pudieron leer los profesionales');
+  if (holidays.error) throw new Error('No se pudieron leer los feriados');
+  return { settings: org as ClinicSettings, services: (services.data??[]) as Service[], doctors: (doctors.data??[]) as PublicDoctor[], holidays: (holidays.data??[]) as Holiday[] };
+}export async function getService(id: string): Promise<Service | null> {
   const { data } = await supabaseAdmin()
     .from("services")
     .select("id, name, duration_min")
@@ -133,7 +124,7 @@ export async function getSlotsForDay(
       });
 
   if (error) {
-    console.warn("[disponibilidad] rpc falló:", error.message);
+    console.warn("[disponibilidad] rpc fallÃ³:", error.message);
     return [];
   }
 
@@ -194,9 +185,9 @@ export interface BookResult {
 export async function bookAppointment(input: PatientDetailsInput): Promise<BookResult> {
   const supabase = supabaseAdmin();
 
-  // Defensa en profundidad: el esquema de Zod ya valida el dígito
-  // verificador, así que llegar acá significa que alguien llamó a la
-  // función saltándose la ruta HTTP. El mensaje es explícito para que no
+  // Defensa en profundidad: el esquema de Zod ya valida el dÃ­gito
+  // verificador, asÃ­ que llegar acÃ¡ significa que alguien llamÃ³ a la
+  // funciÃ³n saltÃ¡ndose la ruta HTTP. El mensaje es explÃ­cito para que no
   // se confunda con un problema de disponibilidad.
   if (!isValidRut(input.rut)) {
     throw new BusinessError("A0006", 422);
@@ -270,7 +261,7 @@ export async function bookAppointment(input: PatientDetailsInput): Promise<BookR
   };
 }
 
-/** Elige el primer doctor libre si el paciente pidió "cualquiera". */
+/** Elige el primer doctor libre si el paciente pidiÃ³ "cualquiera". */
 async function resolveDoctor(
   doctorId: string | null,
   slotStart: string,
@@ -288,7 +279,7 @@ async function resolveDoctor(
   // Comparamos por instante, no por texto: Postgres puede devolver el
   // timestamptz como `2026-10-05T11:00:00-03:00` y el cliente lo manda
   // como `2026-10-05T14:00:00.000Z`. Son la misma hora y ambas formas
-  // son válidas.
+  // son vÃ¡lidas.
   const target = new Date(slotStart).getTime();
   const rows = (data ?? []) as SlotWithDoctor[];
   const match = rows.find((row) => new Date(row.slot_start).getTime() === target);
@@ -297,15 +288,16 @@ async function resolveDoctor(
   return match.doctor_id;
 }
 
-async function getSettings(): Promise<ClinicSettings> {
-  const { data } = await supabaseAdmin().from("clinic_settings").select("*").eq("id", 1).single();
-  if (!data) throw new Error("clinic_settings sin fila");
+async function getSettings(orgId?: string): Promise<ClinicSettings> {
+  const supabase = supabaseAdmin();
+  if (orgId) {
+    const { data } = await supabase.from('organizations').select('*').eq('id', orgId).single();
+    if (data) return data as ClinicSettings;
+  }
+  const { data } = await supabase.from('organizations').select('*').eq('slug', 'sonrisa-dental').maybeSingle();
+  if (!data) throw new Error('organization sin fila');
   return data as ClinicSettings;
 }
-
-/* ------------------------------------------------------------------ */
-/* Gestión por token                                                    */
-/* ------------------------------------------------------------------ */
 
 export async function loadAppointmentRow(appointmentId: string): Promise<AppointmentRow | null> {
   const { data, error } = await supabaseAdmin()
@@ -351,7 +343,7 @@ export async function toPatientView(
     serviceId: row.service_id,
     doctorName: row.doctors?.full_name ?? "Profesional",
     specialty: row.doctors?.specialty ?? null,
-    serviceName: row.services?.name ?? "Atención",
+    serviceName: row.services?.name ?? "AtenciÃ³n",
     clinicName: settings.name,
     clinicTimezone: settings.timezone || DEFAULT_TIMEZONE,
     patientName: row.patients?.full_name ?? "",
@@ -426,7 +418,7 @@ export async function cancelByToken(
   await Promise.all([
     sendEmail({
       to: row.patients?.email ?? "",
-      subject: `Cita cancelada · ${settings.name}`,
+      subject: `Cita cancelada Â· ${settings.name}`,
       html: bookingCancelledHtml({
         patientName: row.patients?.full_name ?? "",
         clinicName: settings.name,
@@ -466,7 +458,7 @@ async function sealToken(appointmentId: string, token: string): Promise<void> {
     p_token: token,
     p_key: serverEnv().MANAGE_TOKEN_KEY,
   });
-  if (error) console.warn("[token] no se pudo sellar el token de gestión");
+  if (error) console.warn("[token] no se pudo sellar el token de gestiÃ³n");
 }
 
 async function sendConfirmationEmail(args: {
@@ -488,7 +480,7 @@ async function sendConfirmationEmail(args: {
     uid: args.appointmentId,
     startsAt: args.startsAt,
     endsAt: args.endsAt,
-    summary: `${args.serviceName} · ${args.clinicName}`,
+    summary: `${args.serviceName} Â· ${args.clinicName}`,
     description: `Cita con ${args.doctorName}${
       args.specialty ? ` (${args.specialty})` : ""
     }. Gestionar cita: ${args.manageUrl}`,
@@ -499,7 +491,7 @@ async function sendConfirmationEmail(args: {
 
   const result = await sendEmail({
     to: args.to,
-    subject: `Cita confirmada · ${args.clinicName}`,
+    subject: `Cita confirmada Â· ${args.clinicName}`,
     html: bookingConfirmedHtml({
       patientName: args.patientName,
       clinicName: args.clinicName,
@@ -532,7 +524,7 @@ async function sendRescheduleEmail(args: {
 
   await sendEmail({
     to: args.to,
-    subject: `Cita reprogramada · ${args.clinicName}`,
+    subject: `Cita reprogramada Â· ${args.clinicName}`,
     html: bookingRescheduledHtml({
       patientName: args.view.patientName,
       clinicName: args.clinicName,
@@ -567,7 +559,7 @@ async function notifyDoctorNewBooking(args: {
 
   await sendEmail({
     to: email,
-    subject: `Nueva reserva · ${args.clinicName}`,
+    subject: `Nueva reserva Â· ${args.clinicName}`,
     html: doctorNewBookingHtml({
       clinicName: args.clinicName,
       patientName: args.patientName,
@@ -604,7 +596,7 @@ async function notifyDoctorChange(
 }
 
 async function doctorEmail(doctorId: string): Promise<string | null> {
-  // El correo vive en auth.users; el catálogo público sólo expone nombre.
+  // El correo vive en auth.users; el catÃ¡logo pÃºblico sÃ³lo expone nombre.
   const { data, error } = await supabaseAdmin().auth.admin.getUserById(doctorId);
   if (error || !data?.user) return null;
   return data.user.email ?? null;
@@ -621,11 +613,11 @@ export interface ReminderSummary {
 }
 
 /**
- * Envía los recordatorios de las próximas 24 h.
+ * EnvÃ­a los recordatorios de las prÃ³ximas 24 h.
  *
  * `claim_due_reminders()` marca `reminder_sent_at` en la misma
- * transacción que devuelve las filas, así que aunque el envío falle la
- * clínica no reintenta en bucle; si el correo se pierde, la clínica lo
+ * transacciÃ³n que devuelve las filas, asÃ­ que aunque el envÃ­o falle la
+ * clÃ­nica no reintenta en bucle; si el correo se pierde, la clÃ­nica lo
  * gestiona desde el dashboard.
  */
 export async function sendDueReminders(): Promise<ReminderSummary> {
@@ -634,7 +626,7 @@ export async function sendDueReminders(): Promise<ReminderSummary> {
 
   const { data, error } = await supabase.rpc("claim_due_reminders");
   if (error) {
-    console.warn("[recordatorios] claim_due_reminders falló:", error.message);
+    console.warn("[recordatorios] claim_due_reminders fallÃ³:", error.message);
     return { sent: 0, skipped: 0, failed: 0 };
   }
 
@@ -667,13 +659,13 @@ export async function sendDueReminders(): Promise<ReminderSummary> {
 
     const result = await sendEmail({
       to: row.patient_email,
-      subject: `Recordatorio de cita · ${settings.name}`,
+      subject: `Recordatorio de cita Â· ${settings.name}`,
       html: bookingReminderHtml({
         patientName: row.patient_name,
         clinicName: settings.name,
         doctorName: appointment.doctors?.full_name ?? "Profesional",
         specialty: appointment.doctors?.specialty ?? null,
-        serviceName: row.service_name ?? appointment.services?.name ?? "Atención",
+        serviceName: row.service_name ?? appointment.services?.name ?? "AtenciÃ³n",
         dateLabel: formatDateLong(startsAt, settings.timezone),
         timeLabel: formatRange(startsAt, endsAt, settings.timezone),
         clinicAddress: CLINIC_ADDRESS,

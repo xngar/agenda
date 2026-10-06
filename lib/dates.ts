@@ -46,6 +46,11 @@ export function dateKey(iso: string | Date, timezone = DEFAULT_TIMEZONE): string
   return formatInTimeZone(iso, timezone, "yyyy-MM-dd");
 }
 
+/** "14:30" a partir de un instante, en la zona de la clínica. */
+export function timeKey(iso: string | Date, timezone = DEFAULT_TIMEZONE): string {
+  return formatInTimeZone(iso, timezone, "HH:mm");
+}
+
 /** ISO con offset de la zona: "2026-10-05T09:00:00-03:00" */
 export function zonedInstant(
   day: string,

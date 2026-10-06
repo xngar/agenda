@@ -105,18 +105,77 @@ export const doctorUpdateSchema = z
     path: ["reason"],
   });
 
+/** Estructura de una regla de disponibilidad semanal, antes de validaciones. */
+const availabilityRuleObject = z.object({
+  doctorId: uuidSchema,
+  weekday: z.number().int().min(0).max(6),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/, "Hora inválida"),
+  endTime: z.string().regex(/^\d{2}:\d{2}$/, "Hora inválida"),
+});
+
 /** Regla de disponibilidad semanal. */
-export const availabilityRuleSchema = z
-  .object({
-    doctorId: uuidSchema,
-    weekday: z.number().int().min(0).max(6),
-    startTime: z.string().regex(/^\d{2}:\d{2}$/, "Hora inválida"),
-    endTime: z.string().regex(/^\d{2}:\d{2}$/, "Hora inválida"),
-  })
-  .refine((v) => v.endTime > v.startTime, {
+export const availabilityRuleSchema = availabilityRuleObject.refine(
+  (v) => v.endTime > v.startTime,
+  {
     message: "La hora de término debe ser posterior al inicio",
     path: ["endTime"],
-  });
+  },
+);
+
+/**
+ * Regla de una sola franja, sin el id del profesional.
+ *
+ * Se separa porque el formulario envía el `doctorId` sólo al principio, no
+ * en cada franja. Las horas van con dos dígitos (`09:00`, no `9:00`) para
+ * que la comparación por texto de abajo funcione igual que en la base.
+ *
+ * `availabilityRuleObject` se mantiene aparte del esquema final porque
+ * Zod no permite `.omit()` sobre un esquema con `refine`.
+ */
+export const availabilitySlotSchema = availabilityRuleObject.omit({ doctorId: true }).refine(
+  (v) => v.endTime > v.startTime,
+  {
+    message: "La hora de término debe ser posterior al inicio",
+    path: ["endTime"],
+  },
+);
+
+/** El horario completo de un profesional. */
+export const availabilityRulesSchema = z.object({
+  doctorId: uuidSchema,
+  rules: z.array(availabilitySlotSchema).max(21, "Demasiadas franjas de horario"),
+});
+
+/**
+ * Dos franjas del mismo día no pueden solaparse.
+ *
+ * Por separado y no como `refine` del esquema para poder usarlo en cliente
+ * y en servidor con el MISMO mensaje: dos franjas que se cruzan generan la
+ * misma hora dos veces en `get_available_slots` y el paciente la ve
+ * duplicada en el asistente. Una regla invertida (fin antes que inicio) en
+ * cambio la detecta el `refine` del esquema individual.
+ */
+export function availabilityOverlaps(
+  rules: { weekday: number; startTime: string; endTime: string }[],
+): boolean {
+  const porDia = new Map<number, { start: string; end: string }[]>();
+  for (const r of rules) {
+    const lista = porDia.get(r.weekday) ?? [];
+    lista.push({ start: r.startTime, end: r.endTime });
+    porDia.set(r.weekday, lista);
+  }
+
+  for (const franjas of porDia.values()) {
+    const ordenadas = [...franjas].sort((a, b) => a.start.localeCompare(b.start));
+    for (let i = 1; i < ordenadas.length; i++) {
+      if (ordenadas[i].start < ordenadas[i - 1].end) return true;
+    }
+  }
+  return false;
+}
+
+export const availabilityOverlapMessage =
+  "Dos franjas del mismo día no pueden solaparse";
 
 /** Bloqueo / vacaciones. */
 export const timeOffSchema = z

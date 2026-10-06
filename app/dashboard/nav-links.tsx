@@ -3,12 +3,21 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const items = [{ href: "/dashboard", label: "Agenda" }];
+const items = [
+  { href: "/dashboard", label: "Agenda" },
+  { href: "/dashboard/horario", label: "Horario" },
+  { href: "/dashboard/bloqueos", label: "Bloqueos" },
+];
+
+const soloAdmin = [
+  { href: "/dashboard/admin", label: "Equipo" },
+  { href: "/dashboard/feriados", label: "Feriados" },
+];
 
 export function NavLinks({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();
 
-  const visible = isAdmin ? [...items, { href: "/dashboard/admin", label: "Equipo" }] : items;
+  const visible = isAdmin ? [...items, ...soloAdmin] : items;
 
   return (
     <nav aria-label="Secciones del panel">

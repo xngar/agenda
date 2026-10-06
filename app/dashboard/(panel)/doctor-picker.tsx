@@ -15,10 +15,20 @@ export function DoctorPicker({
   current,
   isAdmin,
   doctors,
+  basePath = "/dashboard",
+  allOption = true,
 }: {
   current: string | null;
   isAdmin: boolean;
   doctors?: PublicDoctor[];
+  /** Sección desde la que se navega: la agenda usa /dashboard, el horario, /dashboard/horario. */
+  basePath?: string;
+  /**
+   * En la agenda "Todo el equipo" significa algo (ve todas las citas). En el
+   * horario no: hay que editar el horario de UN profesional, así que esa
+   * opción no aparece.
+   */
+  allOption?: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -30,7 +40,7 @@ export function DoctorPicker({
     else params.set("doctor", doctorId);
 
     startTransition(() => {
-      router.push(`/dashboard${params.size ? `?${params}` : ""}`);
+      router.push(`${basePath}${params.size ? `?${params}` : ""}`);
     });
   }
 
@@ -43,12 +53,12 @@ export function DoctorPicker({
       </label>
       <select
         id="filtro-doctor"
-        value={current ?? "all"}
+        value={allOption && !current ? "all" : (current ?? "")}
         disabled={pending || !isAdmin}
         onChange={(e) => irA(e.target.value)}
         className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm disabled:opacity-60"
       >
-        <option value="all">Todo el equipo</option>
+        {allOption ? <option value="all">Todo el equipo</option> : null}
         {opciones.map((d) => (
           <option key={d.id} value={d.id}>
             {d.full_name}

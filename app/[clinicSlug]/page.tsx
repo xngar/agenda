@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { getCatalog } from "@/lib/booking";
 import { Card, buttonClasses } from "@/components/ui";
 import { formatDuration } from "@/lib/dates";
@@ -9,8 +9,8 @@ export const metadata = {
   title: "Reserva tu hora en lÃ­nea",
 };
 
-export default async function HomePage() {
-  const [catalog, doctor] = await Promise.all([getCatalog("sonrisa-dental"), getDoctorSession()]);
+export default async function HomePage({ params }: { params: Promise<{ clinicSlug: string }> }) {
+  const { clinicSlug } = await params; const [catalog, doctor] = await Promise.all([getCatalog(clinicSlug), getDoctorSession()]);
   const { settings, services, doctors } = catalog;
 
   return (
