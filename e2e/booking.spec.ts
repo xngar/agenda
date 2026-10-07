@@ -28,15 +28,13 @@ function proximoDiaHabil(): string {
 }
 
 test.describe("reserva de hora (paciente)", () => {
-  test("la home muestra servicios y el equipo", async ({ page }) => {
+  test("la home muestra la clínica y el CTA de reserva", async ({ page }) => {
     await page.goto("/");
 
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Tu hora con el dentista");
-    await expect(page.getByRole("heading", { name: "Servicios" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Nuestro equipo" })).toBeVisible();
-
-    // El catálogo real viene de la base: hay al menos un servicio.
-    await expect(page.locator("main ul li").first()).toBeVisible();
+    // El h1 es el nombre real de la organización.
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Cómo funciona" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Datos de la clínica" })).toBeVisible();
 
     // El enlace principal lleva a /reservar.
     await page.getByRole("link", { name: "Reservar ahora" }).click();
