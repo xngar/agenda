@@ -11,7 +11,10 @@ const slotDate = "2026-10-08";
 
 /** RUT válido y distinto en cada corrida (dígito verificador mod-11 con K). */
 function rutUnico() {
-  const base = String(Date.now()).slice(-8);
+  let base = String(Date.now()).slice(-8);
+  // isValidRut rechaza cuerpos que empiezan en 0 (lib/rut.ts): en las ventanas
+  // en que el 6º dígito del timestamp es 0 el script entero moría con 422.
+  if (base[0] === "0") base = `1${base.slice(1)}`;
   let suma = 0;
   let factor = 2;
   for (let i = base.length - 1; i >= 0; i--) {
@@ -381,13 +384,18 @@ console.log("\n[5] Aislamiento por RLS entre profesionales");
   });
   check("sin sesión da 401", sinSesion.status === 401, `status=${sinSesion.status}`);
 
-  // Limpieza.
-  const cleanup = await req(admin, "/api/dashboard/appointments", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ appointmentId: body.appointmentId, action: "cancelled" }),
-  });
-  console.log(`  (cita ${body.appointmentId.slice(0, 8)} cancelada para limpiar: ${cleanup.status})`);
+  // Limpieza. Si la reserva falló no hay cita que cancelar: el FAIL de arriba
+  // ya quedó registrado y el resto del script debe seguir corriendo.
+  if (!body.appointmentId) {
+    console.log("  (sin cita creada: se omite la limpieza)");
+  } else {
+    const cleanup = await req(admin, "/api/dashboard/appointments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ appointmentId: body.appointmentId, action: "cancelled" }),
+    });
+    console.log(`  (cita ${body.appointmentId.slice(0, 8)} cancelada para limpiar: ${cleanup.status})`);
+  }
 }
 
 console.log("\n[6] Activar y desactivar cuentas del equipo");
