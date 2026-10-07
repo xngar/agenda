@@ -295,6 +295,52 @@ console.log("\n[5] Aislamiento por RLS entre profesionales");
     "",
   );
 
+  // Calendario mensual: el conmutador Día | Mes de la agenda.
+  check(
+    "la vista día ofrece pasar a la vista Mes",
+    conNavegacion.text.includes("view=mes"),
+    `status=${conNavegacion.status}`,
+  );
+
+  const mesKey = slot.slot_start.slice(0, 7);
+  const vistaMes = await req(admin, `/dashboard?view=mes&month=${mesKey}&doctor=${slot.doctor_id}`);
+  check(
+    "la vista Mes carga sin errores",
+    vistaMes.status === 200 && !vistaMes.text.includes("No pudimos cargar la agenda"),
+    `status=${vistaMes.status}`,
+  );
+
+  // Requisito del producto: en el día de la reserva quedan marcados el
+  // nombre del paciente y el horario registrado (chips de la grilla).
+  const horaLocal = new Intl.DateTimeFormat("es-CL", {
+    timeZone: "America/Santiago",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(slot.slot_start));
+  check(
+    "el calendario mensual marca nombre y horario de la cita",
+    vistaMes.status === 200 &&
+      vistaMes.text.includes("Paciente Panel") &&
+      vistaMes.text.includes(horaLocal) &&
+      vistaMes.text.includes("data-cita") &&
+      vistaMes.text.includes('aria-label="Calendario mensual"'),
+    `status=${vistaMes.status} nombre=${vistaMes.text.includes("Paciente Panel")} hora=${horaLocal}`,
+  );
+
+  check(
+    "el calendario ofrece volver a la vista Día",
+    vistaMes.text.includes("/dashboard?date="),
+    `status=${vistaMes.status}`,
+  );
+
+  // Navegación entre meses (el anterior calcula con aritmética de calendario
+  // pura, igual que hace la UI con addMonthsToKey).
+  const [mesAnio, mesNum] = mesKey.split("-").map(Number);
+  const mesAnterior = new Date(Date.UTC(mesAnio, mesNum - 2, 1)).toISOString().slice(0, 10).slice(0, 7);
+  const otroMes = await req(admin, `/dashboard?view=mes&month=${mesAnterior}&doctor=${slot.doctor_id}`);
+  check("la grilla navega a otro mes", otroMes.status === 200, `status=${otroMes.status} mes=${mesAnterior}`);
+
   // Sebastián intenta tocar una cita que no es suya.
   const ajeno = await req(doc, "/api/dashboard/appointments", {
     method: "POST",

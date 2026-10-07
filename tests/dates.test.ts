@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   addDaysToKey,
+  addMonthsToKey,
   dateKey,
   durationMinutes,
   formatDuration,
   isValidDayKey,
+  isValidMonthKey,
+  monthGridRange,
+  monthLabel,
   weekdayOfKey,
   zonedInstant,
 } from "@/lib/dates";
@@ -71,6 +75,40 @@ describe("claves de día", () => {
     expect(dateKey("2026-10-05T00:30:00Z", "America/Santiago")).toBe("2026-10-04");
     // 03:00 UTC ya es lunes en Santiago.
     expect(dateKey("2026-10-05T03:00:00Z", "America/Santiago")).toBe("2026-10-05");
+  });
+});
+
+describe("meses del calendario mensual", () => {
+  it("valida claves de mes", () => {
+    expect(isValidMonthKey("2026-10")).toBe(true);
+    expect(isValidMonthKey("2026-12")).toBe(true);
+    for (const mala of ["2026-13", "2026-00", "2026-1", "2026-10-01", "octubre", "", undefined, null]) {
+      expect(isValidMonthKey(mala as string | null | undefined), String(mala)).toBe(false);
+    }
+  });
+
+  it("suma meses cruzando el año, en ambos sentidos", () => {
+    expect(addMonthsToKey("2026-10", 1)).toBe("2026-11");
+    expect(addMonthsToKey("2026-12", 1)).toBe("2027-01");
+    expect(addMonthsToKey("2026-01", -1)).toBe("2025-12");
+    expect(addMonthsToKey("2026-10", -12)).toBe("2025-10");
+  });
+
+  it("la grilla cubre semanas completas de lunes a domingo", () => {
+    // Octubre 2026: el día 1 es jueves y el 31 es sábado, así que la
+    // grilla va del lunes 28/9 al domingo 1/11 (5 semanas).
+    expect(monthGridRange("2026-10")).toEqual({ from: "2026-09-28", to: "2026-11-01" });
+    // Febrero 2026: el día 1 cae en domingo; la semana se completa desde
+    // el lunes 26/1 y termina el domingo 1/3.
+    expect(monthGridRange("2026-02")).toEqual({ from: "2026-01-26", to: "2026-03-01" });
+    // Enero 2026 empieza en jueves: la grilla arranca en 2025.
+    expect(monthGridRange("2026-01")).toEqual({ from: "2025-12-29", to: "2026-02-01" });
+  });
+
+  it("etiqueta el mes en español", () => {
+    expect(monthLabel("2026-10")).toBe("Octubre 2026");
+    expect(monthLabel("2026-01")).toBe("Enero 2026");
+    expect(monthLabel("2026-12")).toBe("Diciembre 2026");
   });
 });
 

@@ -114,6 +114,59 @@
   }
 }
 
+/* ----------------------------------------------------------------------------
+   Calendario mensual del panel (month-view.tsx).
+   - Una sola entrada escalonada para la grilla: las celdas "florecen" al
+     montarse y al cambiar de mes (React remonta por la key del mes).
+   - El menú contextual entra con un scale corto desde su esquina.
+   El bloque prefers-reduced-motion de abajo anula ambas animaciones.
+   -------------------------------------------------------------------------- */
+@keyframes month-cell-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.anim-month-cell {
+  animation: month-cell-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.anim-menu {
+  animation: menu-in 0.16s ease-out;
+  transform-origin: top left;
+}
+
+@keyframes label-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.anim-label {
+  animation: label-in 0.25s ease-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
