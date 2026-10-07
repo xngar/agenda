@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getClinicSettings, getDoctorSession } from "@/lib/auth";
+import { getOrgSettings, getDoctorSession } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { dateKey, timeKey } from "@/lib/dates";
 import { parseAppointmentRange } from "@/lib/range";
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const settings = await getClinicSettings();
+  const settings = await getOrgSettings(session.orgId);
   const supabase = await supabaseServer();
 
   const { data: citas, error: citasError } = await supabase.rpc("appointments_in_range", {

@@ -30,10 +30,10 @@ import type {
 import type { PatientDetailsInput } from "./validation";
 
 /**
- * OrquestaciÃ³n de reservas en el servidor.
+ * Orquestación de reservas en el servidor.
  *
- * Ninguna disponibilidad se calcula acÃ¡: se pregunta a Postgres, que es
- * la Ãºnica fuente de verdad sobre la zona horaria y las reglas.
+ * Ninguna disponibilidad se calcula acá: se pregunta a Postgres, que es
+ * la única fuente de verdad sobre la zona horaria y las reglas.
  */
 
 export interface Catalog {
@@ -76,7 +76,7 @@ type AppointmentRow = {
 };
 
 /* ------------------------------------------------------------------ */
-/* CatÃ¡logo pÃºblico                                                     */
+/* Catálogo público                                                     */
 /* ------------------------------------------------------------------ */
 
 export async function getCatalog(orgSlug: string): Promise<Catalog> {
@@ -95,7 +95,7 @@ export async function getCatalog(orgSlug: string): Promise<Catalog> {
   return { settings: org as ClinicSettings, services: (services.data??[]) as Service[], doctors: (doctors.data??[]) as PublicDoctor[], holidays: (holidays.data??[]) as Holiday[] };
 }
 
-/** Organización activa por slug, para el branding del sitio público. */
+/** Organizaci�n activa por slug, para el branding del sitio p�blico. */
 export async function getPublicOrganization(orgSlug: string): Promise<ClinicSettings | null> {
   const { data, error } = await supabaseAdmin()
     .from("organizations")
@@ -142,7 +142,7 @@ export async function getSlotsForDay(
       });
 
   if (error) {
-    console.warn("[disponibilidad] rpc fallÃ³:", error.message);
+    console.warn("[disponibilidad] rpc falló:", error.message);
     return [];
   }
 
@@ -205,9 +205,9 @@ export interface BookResult {
 export async function bookAppointment(input: PatientDetailsInput & { clinicSlug?: string }): Promise<BookResult> {
   const supabase = supabaseAdmin();
 
-  // Defensa en profundidad: el esquema de Zod ya valida el dÃ­gito
-  // verificador, asÃ­ que llegar acÃ¡ significa que alguien llamÃ³ a la
-  // funciÃ³n saltÃ¡ndose la ruta HTTP. El mensaje es explÃ­cito para que no
+  // Defensa en profundidad: el esquema de Zod ya valida el dígito
+  // verificador, así que llegar acá significa que alguien llamó a la
+  // función saltándose la ruta HTTP. El mensaje es explícito para que no
   // se confunda con un problema de disponibilidad.
   if (!isValidRut(input.rut)) {
     throw new BusinessError("A0006", 422);
@@ -290,7 +290,7 @@ const settings = await getSettings(orgId);
   };
 }
 
-/** Elige el primer doctor libre si el paciente pidiÃ³ "cualquiera". */
+/** Elige el primer doctor libre si el paciente pidió "cualquiera". */
 async function resolveDoctor(
   doctorId: string | null,
   slotStart: string,
@@ -310,7 +310,7 @@ const { data, error } = await supabaseAdmin().rpc("get_available_slots_any", {
   // Comparamos por instante, no por texto: Postgres puede devolver el
   // timestamptz como `2026-10-05T11:00:00-03:00` y el cliente lo manda
   // como `2026-10-05T14:00:00.000Z`. Son la misma hora y ambas formas
-  // son vÃ¡lidas.
+  // son válidas.
   const target = new Date(slotStart).getTime();
   const rows = (data ?? []) as SlotWithDoctor[];
   const match = rows.find((row) => new Date(row.slot_start).getTime() === target);
@@ -374,7 +374,7 @@ export async function toPatientView(
     serviceId: row.service_id,
     doctorName: row.doctors?.full_name ?? "Profesional",
     specialty: row.doctors?.specialty ?? null,
-    serviceName: row.services?.name ?? "AtenciÃ³n",
+    serviceName: row.services?.name ?? "Atención",
     clinicName: settings.name,
     clinicTimezone: settings.timezone || DEFAULT_TIMEZONE,
     patientName: row.patients?.full_name ?? "",
@@ -449,7 +449,7 @@ export async function cancelByToken(
   await Promise.all([
     sendEmail({
       to: row.patients?.email ?? "",
-      subject: `Cita cancelada Â· ${settings.name}`,
+      subject: `Cita cancelada · ${settings.name}`,
       html: bookingCancelledHtml({
         patientName: row.patients?.full_name ?? "",
         clinicName: settings.name,
@@ -489,7 +489,7 @@ async function sealToken(appointmentId: string, token: string): Promise<void> {
     p_token: token,
     p_key: serverEnv().MANAGE_TOKEN_KEY,
   });
-  if (error) console.warn("[token] no se pudo sellar el token de gestiÃ³n");
+  if (error) console.warn("[token] no se pudo sellar el token de gestión");
 }
 
 async function sendConfirmationEmail(args: {
@@ -511,7 +511,7 @@ async function sendConfirmationEmail(args: {
     uid: args.appointmentId,
     startsAt: args.startsAt,
     endsAt: args.endsAt,
-    summary: `${args.serviceName} Â· ${args.clinicName}`,
+    summary: `${args.serviceName} · ${args.clinicName}`,
     description: `Cita con ${args.doctorName}${
       args.specialty ? ` (${args.specialty})` : ""
     }. Gestionar cita: ${args.manageUrl}`,
@@ -522,7 +522,7 @@ async function sendConfirmationEmail(args: {
 
   const result = await sendEmail({
     to: args.to,
-    subject: `Cita confirmada Â· ${args.clinicName}`,
+    subject: `Cita confirmada · ${args.clinicName}`,
     html: bookingConfirmedHtml({
       patientName: args.patientName,
       clinicName: args.clinicName,
@@ -555,7 +555,7 @@ async function sendRescheduleEmail(args: {
 
   await sendEmail({
     to: args.to,
-    subject: `Cita reprogramada Â· ${args.clinicName}`,
+    subject: `Cita reprogramada · ${args.clinicName}`,
     html: bookingRescheduledHtml({
       patientName: args.view.patientName,
       clinicName: args.clinicName,
@@ -590,7 +590,7 @@ async function notifyDoctorNewBooking(args: {
 
   await sendEmail({
     to: email,
-    subject: `Nueva reserva Â· ${args.clinicName}`,
+    subject: `Nueva reserva · ${args.clinicName}`,
     html: doctorNewBookingHtml({
       clinicName: args.clinicName,
       patientName: args.patientName,
@@ -627,7 +627,7 @@ async function notifyDoctorChange(
 }
 
 async function doctorEmail(doctorId: string): Promise<string | null> {
-  // El correo vive en auth.users; el catÃ¡logo pÃºblico sÃ³lo expone nombre.
+  // El correo vive en auth.users; el catálogo público sólo expone nombre.
   const { data, error } = await supabaseAdmin().auth.admin.getUserById(doctorId);
   if (error || !data?.user) return null;
   return data.user.email ?? null;
@@ -644,11 +644,11 @@ export interface ReminderSummary {
 }
 
 /**
- * EnvÃ­a los recordatorios de las prÃ³ximas 24 h.
+ * Envía los recordatorios de las próximas 24 h.
  *
  * `claim_due_reminders()` marca `reminder_sent_at` en la misma
- * transacciÃ³n que devuelve las filas, asÃ­ que aunque el envÃ­o falle la
- * clÃ­nica no reintenta en bucle; si el correo se pierde, la clÃ­nica lo
+ * transacción que devuelve las filas, así que aunque el envío falle la
+ * clínica no reintenta en bucle; si el correo se pierde, la clínica lo
  * gestiona desde el dashboard.
  */
 export async function sendDueReminders(): Promise<ReminderSummary> {
@@ -657,7 +657,7 @@ export async function sendDueReminders(): Promise<ReminderSummary> {
 
   const { data, error } = await supabase.rpc("claim_due_reminders");
   if (error) {
-    console.warn("[recordatorios] claim_due_reminders fallÃ³:", error.message);
+    console.warn("[recordatorios] claim_due_reminders falló:", error.message);
     return { sent: 0, skipped: 0, failed: 0 };
   }
 
@@ -690,13 +690,13 @@ export async function sendDueReminders(): Promise<ReminderSummary> {
 
     const result = await sendEmail({
       to: row.patient_email,
-      subject: `Recordatorio de cita Â· ${settings.name}`,
+      subject: `Recordatorio de cita · ${settings.name}`,
       html: bookingReminderHtml({
         patientName: row.patient_name,
         clinicName: settings.name,
         doctorName: appointment.doctors?.full_name ?? "Profesional",
         specialty: appointment.doctors?.specialty ?? null,
-        serviceName: row.service_name ?? appointment.services?.name ?? "AtenciÃ³n",
+        serviceName: row.service_name ?? appointment.services?.name ?? "Atención",
         dateLabel: formatDateLong(startsAt, settings.timezone),
         timeLabel: formatRange(startsAt, endsAt, settings.timezone),
         clinicAddress: CLINIC_ADDRESS,

@@ -6,7 +6,7 @@ import { CLINIC_ADDRESS, CLINIC_PHONE } from "@/lib/clinic";
 import { getDoctorSession } from "@/lib/auth";
 
 export const metadata = {
-  title: "Reserva tu hora en lÃ­nea",
+  title: "Reserva tu hora en línea",
 };
 
 export default async function HomePage({ params }: { params: Promise<{ clinicSlug: string }> }) {
@@ -23,14 +23,14 @@ export default async function HomePage({ params }: { params: Promise<{ clinicSlu
           <div>
             <p className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-brand-navy shadow-card">
               <span aria-hidden="true" className="h-2 w-2 rounded-full bg-brand-sky" />
-              Lunes a sÃ¡bado Â· ConfirmaciÃ³n inmediata
+              Lunes a sábado · Confirmación inmediata
             </p>
             <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-brand-navy sm:text-4xl lg:text-[2.75rem]">
               Tu hora con el dentista, en dos minutos
             </h1>
             <p className="mt-4 max-w-xl text-base leading-relaxed text-neutral-700">
               Elige el servicio, el profesional y el horario que te acomode. Te enviamos la
-              confirmaciÃ³n al correo y puedes cambiar o cancelar tu cita cuando quieras.
+              confirmación al correo y puedes cambiar o cancelar tu cita cuando quieras.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link href={`/${clinicSlug}/reservar`} className={buttonClasses("primary", "lg")}>
@@ -41,16 +41,16 @@ export default async function HomePage({ params }: { params: Promise<{ clinicSlu
               </a>
             </div>
             <p className="mt-5 text-xs text-neutral-600">
-              Sin registro ni contraseÃ±a. Necesitamos sÃ³lo tu nombre, RUT, telÃ©fono y correo.
+              Sin registro ni contraseña. Necesitamos sólo tu nombre, RUT, teléfono y correo.
             </p>
           </div>
 
           <Card className="p-5 sm:p-6">
-            <h2 className="text-base font-semibold text-brand-navy">CÃ³mo funciona</h2>
+            <h2 className="text-base font-semibold text-brand-navy">Cómo funciona</h2>
             <ol className="mt-4 space-y-4">
               {[
-                { n: 1, t: "Elige quÃ© necesitas", d: "Control, limpieza o urgencia dental." },
-                { n: 2, t: "Elige a quiÃ©n y cuÃ¡ndo", d: "Puedes dejar que elijamos el profesional libre." },
+                { n: 1, t: "Elige qué necesitas", d: "Control, limpieza o urgencia dental." },
+                { n: 2, t: "Elige a quién y cuándo", d: "Puedes dejar que elijamos el profesional libre." },
                 { n: 3, t: "Deja tus datos", d: "Te escribimos para confirmar y adjuntamos la cita al calendario." },
               ].map((step) => (
                 <li key={step.n} className="flex gap-3.5">
@@ -77,7 +77,7 @@ export default async function HomePage({ params }: { params: Promise<{ clinicSlu
           Servicios
         </h2>
         <p className="mt-1.5 text-sm text-neutral-600">
-          DuraciÃ³n aproximada de cada atenciÃ³n. Si tu caso es distinto, conversamos al llegar.
+          Duración aproximada de cada atención. Si tu caso es distinto, conversamos al llegar.
         </p>
 
         <ul className="mt-6 grid gap-4 sm:grid-cols-3">
@@ -85,7 +85,7 @@ export default async function HomePage({ params }: { params: Promise<{ clinicSlu
             <Card as="li" key={service.id} className="flex flex-col p-5">
               <h3 className="text-base font-semibold text-brand-navy">{service.name}</h3>
               <p className="mt-1 text-sm text-neutral-600">
-                DuraciÃ³n aproximada: {formatDuration(service.duration_min)}
+                Duración aproximada: {formatDuration(service.duration_min)}
               </p>
               <div className="mt-4 pt-1">
                 <Link
@@ -130,14 +130,14 @@ export default async function HomePage({ params }: { params: Promise<{ clinicSlu
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold text-brand-navy">Datos de la clÃ­nica</h2>
+            <h2 className="text-2xl font-bold text-brand-navy">Datos de la clínica</h2>
             <dl className="mt-5 divide-y divide-neutral-200 overflow-hidden rounded-card border border-neutral-200 bg-white">
               {[
-                { k: "Horario", v: "Lunes a viernes 09:00 â€“ 13:00 y 15:00 â€“ 19:00 Â· SÃ¡bado 09:00 â€“ 13:00" },
-                { k: "DirecciÃ³n", v: address },
-                { k: "TelÃ©fono", v: phone },
-                { k: "AnticipaciÃ³n mÃ­nima", v: `${settings.min_notice_hours} horas` },
-                { k: "CancelaciÃ³n", v: `hasta ${settings.cancel_min_hours} horas antes` },
+                { k: "Horario", v: "Lunes a viernes 09:00 – 13:00 y 15:00 – 19:00 · Sábado 09:00 – 13:00" },
+                { k: "Dirección", v: address },
+                { k: "Teléfono", v: phone },
+                { k: "Anticipación mínima", v: `${settings.min_notice_hours} horas` },
+                { k: "Cancelación", v: `hasta ${settings.cancel_min_hours} horas antes` },
               ].map((row) => (
                 <div key={row.k} className="flex flex-col gap-0.5 px-4 py-3 sm:flex-row sm:gap-4">
                   <dt className="text-sm font-medium text-neutral-600 sm:w-44 sm:shrink-0">{row.k}</dt>
@@ -150,7 +150,7 @@ export default async function HomePage({ params }: { params: Promise<{ clinicSlu
               <Card className="mt-5 p-4">
                 <p className="text-sm text-neutral-700">
                   Hola, <strong className="text-brand-navy">{doctor.full_name}</strong>. Tienes una
-                  sesiÃ³n abierta en el panel.
+                  sesión abierta en el panel.
                 </p>
                 <Link href="/dashboard" className={buttonClasses("ghost", "sm", "mt-3")}>
                   Ir a mi agenda
@@ -164,8 +164,8 @@ export default async function HomePage({ params }: { params: Promise<{ clinicSlu
       {/* Cerrada el domingo */}
       <section className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
         <p className="rounded-card bg-brand-navy-50 px-4 py-3 text-sm text-brand-navy-900">
-          Atendemos de lunes a sÃ¡bado. El sÃ¡bado sÃ³lo en la maÃ±ana y el domingo cerrado. Los
-          feriados y los dÃ­as bloqueados por los profesionales no se pueden reservar.
+          Atendemos de lunes a sábado. El sábado sólo en la mañana y el domingo cerrado. Los
+          feriados y los días bloqueados por los profesionales no se pueden reservar.
         </p>
       </section>
     </>

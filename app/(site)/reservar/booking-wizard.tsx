@@ -40,6 +40,7 @@ export interface BookingWizardProps {
   minNoticeHours: number;
   cancelMinHours: number;
   clinicName: string;
+  consentText?: string;
   timezone: string;
   initialServiceId?: string;
 }
@@ -558,7 +559,7 @@ export default function BookingWizard(props: BookingWizardProps) {
                     className="mt-1 h-4 w-4 shrink-0 accent-[#0B3C7A]"
                   />
                   <label htmlFor="consent" className="text-sm text-neutral-700">
-                    {CONSENT_TEXT}
+                    {props.consentText ?? CONSENT_TEXT}
                   </label>
                 </div>
                 {fieldErrors.consent ? (

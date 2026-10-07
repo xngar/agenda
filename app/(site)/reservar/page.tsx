@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { getCatalog } from "@/lib/booking";
 import { ErrorNotice } from "@/components/ui";
 import BookingWizard from "./booking-wizard";
@@ -6,7 +6,7 @@ import BookingWizard from "./booking-wizard";
 export const metadata: Metadata = {
   title: "Reservar hora",
   description:
-    "Elige servicio, profesional y hora para tu atenciÃ³n odontolÃ³gica. ConfirmaciÃ³n inmediata por correo.",
+    "Elige servicio, profesional y hora para tu atención odontológica. Confirmación inmediata por correo.",
   // La disponibilidad cambia todo el tiempo; no tiene sentido cachearla.
   robots: { index: true, follow: true },
 };
@@ -24,13 +24,13 @@ export default async function ReservarPage({ searchParams }: Props) {
   try {
     catalog = await getCatalog("sonrisa-dental");
   } catch {
-    // No filtramos el motivo: al paciente no le sirve saber si fallÃ³ la
+    // No filtramos el motivo: al paciente no le sirve saber si falló la
     // base o la red, y no queremos exponer internals en pantalla.
     return (
       <div className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6">
         <h1 className="text-2xl font-bold text-brand-navy">Reservar hora</h1>
         <div className="mt-5">
-          <ErrorNotice message="No pudimos cargar la agenda en este momento. Intenta en unos minutos o llÃ¡manos." />
+          <ErrorNotice message="No pudimos cargar la agenda en este momento. Intenta en unos minutos o llámanos." />
         </div>
       </div>
     );
@@ -50,7 +50,8 @@ export default async function ReservarPage({ searchParams }: Props) {
       maxDaysAhead={catalog.settings.max_days_ahead}
       minNoticeHours={catalog.settings.min_notice_hours}
       cancelMinHours={catalog.settings.cancel_min_hours}
-      clinicName={catalog.settings.name}
+clinicName={catalog.settings.name}
+      consentText={catalog.settings.consent_text}
       timezone={catalog.settings.timezone}
       initialServiceId={initialServiceId}
     />

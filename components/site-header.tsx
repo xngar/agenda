@@ -3,8 +3,10 @@ import { buttonClasses } from "./ui";
 import { DEFAULT_BRAND, type ClinicBrand } from "@/lib/clinic";
 
 export default function SiteHeader({ brand = DEFAULT_BRAND }: { brand?: ClinicBrand }) {
-  const homeHref = brand.slug ? `/${brand.slug}` : "/";
-  const reservarHref = brand.slug ? `/${brand.slug}/reservar` : "/reservar";
+  const base = brand.slug ? `/${brand.slug}` : "";
+  const homeHref = base || "/";
+  const reservarHref = `${base}/reservar`;
+  const privacidadHref = `${base}/privacidad`;
 
   return (
     <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white/95 backdrop-blur">
@@ -34,7 +36,7 @@ export default function SiteHeader({ brand = DEFAULT_BRAND }: { brand?: ClinicBr
 
         <nav aria-label="Principal" className="flex items-center gap-1.5 sm:gap-3">
           <Link
-            href="/privacidad"
+            href={privacidadHref}
             className="hidden rounded-lg px-2 py-2 text-sm font-medium text-neutral-700 hover:bg-brand-navy-50 hover:text-brand-navy sm:inline-flex"
           >
             Privacidad

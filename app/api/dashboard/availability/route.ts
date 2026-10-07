@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getClinicSettings, getDoctorSession } from "@/lib/auth";
+import { getOrgSettings, getDoctorSession } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import {
   availabilityOverlaps,
@@ -109,7 +109,7 @@ export async function POST(request: Request) {
    * confirmación. Sin eso, quien edita ve un "guardado" y no sabe que la
    * próxima cita de ese profesional ya no encaja con la agenda.
    */
-  const settings = await getClinicSettings();
+  const settings = await getOrgSettings(session.orgId);
   const supabase = await supabaseServer();
 
   const { data: citas, error: citasError } = await supabase.rpc("appointments_in_range", {

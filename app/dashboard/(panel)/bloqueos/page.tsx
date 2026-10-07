@@ -1,7 +1,7 @@
 import "server-only";
 
 import Link from "next/link";
-import { getClinicSettings, requireDoctor } from "@/lib/auth";
+import { getOrgSettings, requireDoctor } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { dateKey, timeKey } from "@/lib/dates";
 import { parseAppointmentRange } from "@/lib/range";
@@ -32,7 +32,7 @@ export default async function BloqueosPage({ searchParams }: PageProps) {
   const soloAdmin = session.isAdmin && doctorParam && doctorParam !== "all";
   const doctorId = soloAdmin ? doctorParam : session.id;
 
-  const settings = await getClinicSettings();
+  const settings = await getOrgSettings(session.orgId);
   const supabase = await supabaseServer();
 
   const { data: bloques } = await supabase

@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getService, getSlotsWithDoctor } from "@/lib/booking";
 import { getCatalog } from "@/lib/booking";
@@ -7,25 +7,25 @@ import { checkRateLimit, clientIdentity } from "@/lib/ratelimit";
 
 const querySchema = z.object({ clinicSlug: z.string().optional(),
   date: z.string().min(1),
-  serviceId: z.string().uuid("Servicio invÃ¡lido"),
+  serviceId: z.string().uuid("Servicio inválido"),
   /**
-   * OJO: el preprocesado va ANTES de validar a propÃ³sito.
+   * OJO: el preprocesado va ANTES de validar a propósito.
    *
-   * El asistente manda `doctorId=` (cadena vacÃ­a) cuando el paciente elige
+   * El asistente manda `doctorId=` (cadena vacía) cuando el paciente elige
    * "Cualquiera disponible". Con
    *   z.string().uuid().transform(v => v === "" ? null : v)
-   * el `.uuid()` valida primero, la cadena vacÃ­a falla y el `.transform()`
-   * queda como cÃ³digo muerto: la API respondÃ­a 400 y el paso 3 no
+   * el `.uuid()` valida primero, la cadena vacía falla y el `.transform()`
+   * queda como código muerto: la API respondía 400 y el paso 3 no
    * mostraba ninguna hora. Por eso se normaliza en `z.preprocess`.
    */
   doctorId: z.preprocess(
     (v) => (v === "" || v === "any" || v === "null" ? undefined : v),
-    z.string().uuid("Profesional invÃ¡lido").optional(),
+    z.string().uuid("Profesional inválido").optional(),
   ),
 });
 
 /**
- * Horarios de un dÃ­a. Es pÃºblico (no hay datos personales) pero va con
+ * Horarios de un día. Es público (no hay datos personales) pero va con
  * rate limit para que nadie lo use como raspador del calendario.
  */
 export async function GET(request: Request) {
@@ -49,7 +49,7 @@ const parsed = querySchema.safeParse({
   });
 
   if (!parsed.success || !isValidDayKey(parsed.data.date)) {
-    return NextResponse.json({ error: "ParÃ¡metros invÃ¡lidos" }, { status: 400 });
+    return NextResponse.json({ error: "Parámetros inválidos" }, { status: 400 });
   }
 
   const { date, serviceId, doctorId } = parsed.data;
@@ -63,7 +63,7 @@ const parsed = querySchema.safeParse({
   const settings = catalog.settings;
 
   // El servidor es quien decide el rango de fechas; el cliente no puede
-  // ampliarlo pidiendo un aÃ±o hacia adelante.
+  // ampliarlo pidiendo un año hacia adelante.
 const today = new Date();
   const clinicToday = formatInTimezone(today, settings.timezone);
   const diffDays = diffInDays(clinicToday, date);
@@ -78,10 +78,10 @@ const today = new Date();
     return NextResponse.json({ slots: [], closed: true });
   }
 
-  // Siempre por `getSlotsWithDoctor`, incluso cuando el paciente ya eligiÃ³
-  // un profesional: asÃ­ la respuesta trae siempre `doctor_id`. Antes se
-  // llamaba directo a `getSlotsForDay` en ese caso y el campo desaparecÃ­a,
-  // asÃ­ que un cliente que copiaba el `doctor_id` del horario fallaba con 422
+  // Siempre por `getSlotsWithDoctor`, incluso cuando el paciente ya eligió
+  // un profesional: así la respuesta trae siempre `doctor_id`. Antes se
+  // llamaba directo a `getSlotsForDay` en ese caso y el campo desaparecía,
+  // así que un cliente que copiaba el `doctor_id` del horario fallaba con 422
   // al reservar.
   const orgId = typeof catalog.settings.id === "string" ? catalog.settings.id : null;
   const slots = await getSlotsWithDoctor(date, service.duration_min, doctorId ?? null, orgId);

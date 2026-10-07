@@ -1,7 +1,7 @@
-﻿/**
+/**
  * Tipos del dominio. Reflejan las migraciones en supabase/migrations.
  * Se mantienen a mano (no generados) porque son un subconjunto curado:
- * las columnas que el cliente anÃ³nimo no puede leer ni siquiera existen
+ * las columnas que el cliente anónimo no puede leer ni siquiera existen
  * en estos tipos.
  */
 
@@ -25,7 +25,7 @@ export const STATUS_LABEL: Record<AppointmentStatus, string> = {
   confirmed: "Confirmada",
   cancelled: "Cancelada",
   completed: "Atendida",
-  no_show: "No asistiÃ³",
+  no_show: "No asistió",
 };
 
 export type NotificationType = "new_booking" | "rescheduled" | "cancelled";
@@ -73,7 +73,7 @@ export interface SlotWithDoctor extends Slot {
   doctor_id: string;
 }
 
-/** Cita tal como la ve el doctor autenticado (RLS: sÃ³lo las propias). */
+/** Cita tal como la ve el doctor autenticado (RLS: sólo las propias). */
 export interface DoctorAppointment {
   id: string;
   doctor_id: string;
@@ -120,14 +120,14 @@ export interface PatientAppointmentView {
 /** Errores de negocio de la base (SQLSTATE A000x) y su texto en es-CL. */
 export const BUSINESS_ERROR_MESSAGES = {
   A0001: "Esa hora ya fue reservada. Elige otra, por favor.",
-  A0002: "Ese horario no estÃ¡ disponible. Elige otra, por favor.",
-  A0003: "El enlace no es vÃ¡lido o la cita ya no existe.",
-  A0004: "Tu cita estÃ¡ demasiado cerca para cancelarla por internet.",
+  A0002: "Ese horario no está disponible. Elige otra, por favor.",
+  A0003: "El enlace no es válido o la cita ya no existe.",
+  A0004: "Tu cita está demasiado cerca para cancelarla por internet.",
   A0005: "Esta cita ya no se puede modificar.",
-  // No viene de Postgres: lo usa la capa de aplicaciÃ³n cuando el RUT no
-  // pasa el dÃ­gito verificador. Antes se reportaba como A0002 y el
+  // No viene de Postgres: lo usa la capa de aplicación cuando el RUT no
+  // pasa el dígito verificador. Antes se reportaba como A0002 y el
   // paciente terminaba buscando otra hora por un error de tipeo.
-  A0006: "Revisa tu RUT: el dÃ­gito verificador no coincide.",
+  A0006: "Revisa tu RUT: el dígito verificador no coincide.",
 } as const;
 
 export type BusinessErrorCode = keyof typeof BUSINESS_ERROR_MESSAGES;

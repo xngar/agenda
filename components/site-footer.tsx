@@ -2,7 +2,9 @@ import Link from "next/link";
 import { DEFAULT_BRAND, type ClinicBrand } from "@/lib/clinic";
 
 export default function SiteFooter({ brand = DEFAULT_BRAND }: { brand?: ClinicBrand }) {
-  const reservarHref = brand.slug ? `/${brand.slug}/reservar` : "/reservar";
+  const base = brand.slug ? `/${brand.slug}` : "";
+  const reservarHref = `${base}/reservar`;
+  const privacidadHref = `${base}/privacidad`;
   const address = brand.address ?? DEFAULT_BRAND.address;
   const phone = brand.phone ?? DEFAULT_BRAND.phone;
   const supportEmail = brand.supportEmail ?? DEFAULT_BRAND.supportEmail;
@@ -45,7 +47,7 @@ export default function SiteFooter({ brand = DEFAULT_BRAND }: { brand?: ClinicBr
               </Link>
             </li>
             <li>
-              <Link href="/privacidad" className="text-neutral-600 hover:text-brand-navy">
+              <Link href={privacidadHref} className="text-neutral-600 hover:text-brand-navy">
                 Aviso de privacidad
               </Link>
             </li>

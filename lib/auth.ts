@@ -14,17 +14,17 @@ full_name: string;
   isSuperAdmin: boolean;
 }
 
-/** La relación `organizations` puede venir como objeto o como arreglo. */
+/** La relaci�n `organizations` puede venir como objeto o como arreglo. */
 function orgSlugOf(relation: unknown): string {
   if (Array.isArray(relation)) return (relation[0]?.slug as string | undefined) ?? "";
   return ((relation as { slug?: string } | null)?.slug as string | undefined) ?? "";
 }
 
 /**
- * VerificaciÃ³n REAL de sesiÃ³n + rol, en el servidor.
+ * Verificación REAL de sesión + rol, en el servidor.
  *
- * El `proxy.ts` sÃ³lo hace un chequeo optimista del cookie (rÃ¡pido, sin
- * red). La autoridad es esta funciÃ³n: sin `doctors` no hay sesiÃ³n, con
+ * El `proxy.ts` sólo hace un chequeo optimista del cookie (rápido, sin
+ * red). La autoridad es esta función: sin `doctors` no hay sesión, con
  * `active = false` tampoco, y `is_admin` se lee de la base, no de un
  * claim del token.
  */
@@ -67,12 +67,12 @@ export async function requireAdmin(): Promise<DoctorSession> {
   return session;
 }
 
-export async function getClinicSettings(): Promise<ClinicSettings> {
+export async function getOrgSettings(orgId: string): Promise<ClinicSettings> {
   const supabase = await supabaseServer();
-  const { data } = await supabase.from("clinic_settings").select("*").eq("id", 1).single();
+  const { data } = await supabase.from("organizations").select("*").eq("id", orgId).single();
 
   if (!data) {
-    throw new Error("clinic_settings sin fila; ejecuta las migraciones de supabase/migrations");
+    throw new Error("organizacion sin configuracion; revisa el org_id del profesional");
   }
   return data as ClinicSettings;
 }

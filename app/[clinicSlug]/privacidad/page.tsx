@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import PrivacyNotice from "@/components/privacy-notice";
 import { getPublicOrganization } from "@/lib/booking";
-import { DEFAULT_BRAND, type ClinicBrand } from "@/lib/clinic";
 
 export const metadata: Metadata = {
   title: "Aviso de privacidad",
@@ -11,18 +11,25 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function PrivacidadPage() {
-  const slug = DEFAULT_BRAND.slug ?? "sonrisa-dental";
-  const org = await getPublicOrganization(slug).catch(() => null);
-  const brand: ClinicBrand = org
-    ? {
+export default async function PrivacidadPage({
+  params,
+}: {
+  params: Promise<{ clinicSlug: string }>;
+}) {
+  const { clinicSlug } = await params;
+  const org = await getPublicOrganization(clinicSlug).catch(() => null);
+  if (!org) notFound();
+
+  return (
+    <PrivacyNotice
+      brand={{
         name: org.name,
         slug: org.slug,
         address: org.address,
         phone: org.phone,
         supportEmail: org.support_email,
-      }
-    : DEFAULT_BRAND;
-
-  return <PrivacyNotice brand={brand} consentText={org?.consent_text ?? null} />;
+      }}
+      consentText={org.consent_text}
+    />
+  );
 }
