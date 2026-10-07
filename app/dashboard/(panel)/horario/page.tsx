@@ -71,7 +71,7 @@ export default async function HorarioPage({ searchParams }: PageProps) {
         {session.isAdmin ? (
           <DoctorPicker
             current={doctorId}
-            isAdmin
+            canFilter
             doctors={team}
             basePath="/dashboard/horario"
             allOption={false}

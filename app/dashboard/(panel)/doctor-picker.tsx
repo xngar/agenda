@@ -5,7 +5,8 @@ import { useTransition } from "react";
 import type { PublicDoctor } from "@/lib/types";
 
 /**
- * Filtro por profesional, sólo para admins.
+ * Filtro por profesional, para quienes ven toda la agenda (admin y
+ * recepción).
  *
  * Va por la URL (`?doctor=`) y no con estado local: así la agenda se
  * puede recargar, compartir y refrescar desde Realtime sin perder el
@@ -13,13 +14,13 @@ import type { PublicDoctor } from "@/lib/types";
  */
 export function DoctorPicker({
   current,
-  isAdmin,
+  canFilter,
   doctors,
   basePath = "/dashboard",
   allOption = true,
 }: {
   current: string | null;
-  isAdmin: boolean;
+  canFilter: boolean;
   doctors?: PublicDoctor[];
   /** Sección desde la que se navega: la agenda usa /dashboard, el horario, /dashboard/horario. */
   basePath?: string;
@@ -54,7 +55,7 @@ export function DoctorPicker({
       <select
         id="filtro-doctor"
         value={allOption && !current ? "all" : (current ?? "")}
-        disabled={pending || !isAdmin}
+        disabled={pending || !canFilter}
         onChange={(e) => irA(e.target.value)}
         className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm disabled:opacity-60"
       >

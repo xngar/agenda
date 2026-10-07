@@ -177,7 +177,9 @@ export function Agenda({
                       {cita.patient?.full_name ?? "Paciente"}
                     </p>
                     <p className="text-sm text-neutral-500">
-                      {[cita.patient?.phone, cita.patient?.email].filter(Boolean).join(" · ")}
+                      {[cita.patient?.rut, cita.patient?.phone, cita.patient?.email]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </p>
                   </div>
 

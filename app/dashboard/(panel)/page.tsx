@@ -28,10 +28,11 @@ interface PageProps {
  * Agenda del panel.
  *
  * Dos vistas sobre la misma agenda: día (`?date=`) y mes
- * (`?view=mes&month=`). Un admin puede ver la de todo el equipo con
- * `?doctor=<id>`; cada profesional ve siempre la suya. La consulta pasa
- * por el cliente de sesión (anon + RLS), no por el service role: así la
- * vista no depende de que el filtro esté bien escrito en el código.
+ * (`?view=mes&month=`). El admin y la recepción pueden ver la de todo el
+ * equipo con `?doctor=<id>`; cada profesional ve siempre la suya. La
+ * consulta pasa por el cliente de sesión (anon + RLS), no por el service
+ * role: así la vista no depende de que el filtro esté bien escrito en el
+ * código.
  */
 export default async function DashboardPage({ searchParams }: PageProps) {
   const session = await getDoctorSession();
@@ -39,7 +40,13 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
   const { date, doctor, view, month } = await searchParams;
   const dayKey = isValidDayKey(date) ? date : todayKey();
-  const onlyDoctorId = session.isAdmin && doctor && doctor !== "all" ? doctor : null;
+  /**
+   * Admin y recepción ven la agenda de todo el equipo: filtran por
+   * profesional, cargan el selector y gestionan cualquier cita de la
+   * organización (la recepción cubre al profesional que no está).
+   */
+  const veTodoElEquipo = session.isAdmin || session.role === "reception";
+  const onlyDoctorId = veTodoElEquipo && doctor && doctor !== "all" ? doctor : null;
   const verMes = view === "mes";
   const mesKey = isValidMonthKey(month) ? month : dayKey.slice(0, 7);
   const grid = monthGridRange(mesKey);
@@ -110,9 +117,9 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     unreadCount = (unread ?? []).length;
   }
 
-  // El equipo sólo se carga para admins, que son los únicos que pueden
-  // cambiar el filtro.
-  const team = session.isAdmin ? await getActiveDoctors() : [];
+  // El equipo sólo se carga para quienes pueden cambiar el filtro
+  // (admin y recepción).
+  const team = veTodoElEquipo ? await getActiveDoctors() : [];
 
   return (
     <div className="space-y-5">
@@ -142,8 +149,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
         <div className="flex flex-wrap items-center gap-2">
           <ViewToggle verMes={verMes} dayKey={dayKey} mesKey={mesKey} doctor={onlyDoctorId} />
-          {session.isAdmin ? (
-            <DoctorPicker current={onlyDoctorId} isAdmin={session.isAdmin} doctors={team} />
+          {veTodoElEquipo ? (
+            <DoctorPicker current={onlyDoctorId} canFilter={veTodoElEquipo} doctors={team} />
           ) : null}
         </div>
       </div>
@@ -165,7 +172,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           gridTo={grid.to}
           hoy={todayKey()}
           currentUserId={session.id}
-          isAdmin={session.isAdmin}
+          canManage={veTodoElEquipo}
           realtimeDoctorId={onlyDoctorId ?? session.id}
           doctorFilter={onlyDoctorId}
         />

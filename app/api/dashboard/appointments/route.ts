@@ -26,9 +26,10 @@ const bodySchema = z.object({
  *
  * La autorización NO se toma del id que envía el cliente: se resuelve la
  * sesión contra la base y se comprueba que la cita pertenezca a ese
- * profesional (o a cualquiera, si es admin). Aunque RLS ya impide que un
- * doctor toque citas ajenas, se revalida aquí para que el error sea
- * explícito en vez de un 403 opaco.
+ * profesional (o a cualquiera, si es admin o recepción: la recepción
+ * gestiona la agenda del equipo cuando el profesional no está). Aunque
+ * RLS ya impide que un doctor toque citas ajenas, se revalida aquí para
+ * que el error sea explícito en vez de un 403 opaco.
  */
 export async function POST(request: Request) {
   const session = await getDoctorSession();
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Cita no encontrada" }, { status: 404 });
   }
 
-  if (appointment.doctor_id !== session.id && !session.isAdmin) {
+  if (appointment.doctor_id !== session.id && !session.isAdmin && session.role !== "reception") {
     return NextResponse.json(
       { error: "Esa cita no está asignada a ti" },
       { status: 403 },

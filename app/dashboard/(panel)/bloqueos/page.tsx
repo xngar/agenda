@@ -75,7 +75,7 @@ export default async function BloqueosPage({ searchParams }: PageProps) {
         {session.isAdmin ? (
           <DoctorPicker
             current={doctorId}
-            isAdmin
+            canFilter
             doctors={team}
             basePath="/dashboard/bloqueos"
             allOption={false}

@@ -27,6 +27,10 @@ function rutUnico() {
 }
 const RUT_UNICO = rutUnico();
 
+/** El RUT puede guardarse con puntos o sin ellos: se comparan sólo dígitos y K. */
+const rutEn = (texto) =>
+  texto.replace(/[^\dK]/gi, "").includes(RUT_UNICO.replace(/[^\dK]/gi, ""));
+
 let pass = 0,
   fail = 0;
 function check(name, ok, detail = "") {
@@ -232,6 +236,48 @@ console.log("\n[5] Aislamiento por RLS entre profesionales");
     check(`${nombre} ${deberiaVer ? "ve" : "no ve"} la cita ajena`, visible === deberiaVer, `status=${r.status}`);
   }
 
+  // La recepción cubre al profesional que no está: debe ver la agenda del
+  // equipo con nombre y RUT del paciente (históricamente aparecía como
+  // "Paciente" porque RLS le vaciaba el JOIN a patients), con el filtro de
+  // profesional activo y con permiso para confirmar la cita.
+  const recep = jar();
+  const loginRec = await req(recep, "/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "recepcion@clinicadental.test", password: "AgendaDev2026!" }),
+  });
+  check("login de la recepción 200", loginRec.status === 200, `status=${loginRec.status}`);
+
+  const recUrl = `/dashboard?date=${slot.slot_start.slice(0, 10)}&doctor=${slot.doctor_id}`;
+  const recAgenda = await req(recep, recUrl);
+  check(
+    "la recepción ve el paciente con nombre y RUT en la agenda",
+    recAgenda.status === 200 &&
+      recAgenda.text.includes("Paciente Panel") &&
+      rutEn(recAgenda.text),
+    `status=${recAgenda.status} nombre=${recAgenda.text.includes("Paciente Panel")} rut=${rutEn(recAgenda.text)}`,
+  );
+  check(
+    "la recepción tiene el filtro de profesional",
+    recAgenda.text.includes('id="filtro-doctor"'),
+    `status=${recAgenda.status}`,
+  );
+  check(
+    "la agenda de la recepción ofrece Confirmar",
+    recAgenda.text.includes("Confirmar"),
+    `status=${recAgenda.status}`,
+  );
+
+  const recMes = await req(
+    recep,
+    `/dashboard?view=mes&month=${slot.slot_start.slice(0, 7)}&doctor=${slot.doctor_id}`,
+  );
+  check(
+    "la recepción ve la agenda del equipo en la vista Mes",
+    recMes.status === 200 && recMes.text.includes("Paciente Panel"),
+    `status=${recMes.status} nombre=${recMes.text.includes("Paciente Panel")}`,
+  );
+
   // Confirmar una cita pendiente: el botón sólo existe mientras el estado
   // es `pending`.
   const urlAgenda = `/dashboard?date=${slot.slot_start.slice(0, 10)}&doctor=${slot.doctor_id}`;
@@ -242,13 +288,26 @@ console.log("\n[5] Aislamiento por RLS entre profesionales");
     `status=${antesDeConfirmar.status}`,
   );
 
+  // La transición pending → confirmed la ejecuta la recepción: es la
+  // acción central de "aceptar la cita cuando el profesional no está".
+  const recConfirmada = await req(recep, "/api/dashboard/appointments", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ appointmentId: body.appointmentId, action: "confirmed" }),
+  });
+  check(
+    "la recepción confirma la cita pendiente",
+    recConfirmada.status === 200 && recConfirmada.text.includes('"confirmed"'),
+    `status=${recConfirmada.status} ${recConfirmada.text.slice(0, 80)}`,
+  );
+
   const confirmada = await req(admin, "/api/dashboard/appointments", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ appointmentId: body.appointmentId, action: "confirmed" }),
   });
   check(
-    "el admin confirma la cita pendiente",
+    "el admin también puede confirmar la cita",
     confirmada.status === 200 && confirmada.text.includes('"confirmed"'),
     `status=${confirmada.status} ${confirmada.text.slice(0, 80)}`,
   );

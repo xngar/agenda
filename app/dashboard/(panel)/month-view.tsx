@@ -25,7 +25,8 @@ interface Props {
   /** Hoy según la zona de la clínica. */
   hoy: string;
   currentUserId: string;
-  isAdmin: boolean;
+  /** Admin o recepción: pueden actuar sobre cualquier cita de la organización. */
+  canManage: boolean;
   /** Profesional cuyas notificaciones se escuchan (el filtro o el dueño). */
   realtimeDoctorId: string;
   /** `?doctor=` actual, para que la navegación no lo pierda. */
@@ -52,7 +53,7 @@ export function MonthView({
   gridTo,
   hoy,
   currentUserId,
-  isAdmin,
+  canManage,
   realtimeDoctorId,
   doctorFilter,
 }: Props) {
@@ -94,9 +95,9 @@ export function MonthView({
     return lista;
   }, [gridFrom, gridTo]);
 
-  /** El menú sólo aparece para el dueño de la cita o un admin. */
+  /** El menú aparece para el dueño de la cita, un admin o la recepción. */
   function puedeActuar(cita: DoctorAppointment): boolean {
-    return isAdmin || cita.doctor_id === currentUserId;
+    return canManage || cita.doctor_id === currentUserId;
   }
 
   function accionesDe(cita: DoctorAppointment): Accion[] {
@@ -389,6 +390,7 @@ export function MonthView({
             <p className="truncate px-2.5 py-2 text-xs font-semibold text-neutral-500">
               {formatTime(parseAppointmentRange(menu.cita.during).start)} ·{" "}
               {menu.cita.patient?.full_name ?? "Paciente"}
+              {menu.cita.patient?.rut ? ` · ${menu.cita.patient.rut}` : ""}
             </p>
 
             {accionesDe(menu.cita).map((accion) => {
