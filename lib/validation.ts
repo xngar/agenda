@@ -196,12 +196,14 @@ export const serviceSchema = z.object({
   active: z.boolean().default(true),
 });
 
+/** Alta de un miembro del equipo desde el panel del administrador. */
 export const doctorSchema = z.object({
   email: emailSchema,
   fullName: fullNameSchema,
-  specialty: z.string().trim().max(120).optional(),
+  password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres").max(72),
+  specialty: z.string().trim().max(80).optional(),
+  role: z.enum(["professional", "reception"]).default("professional"),
   isAdmin: z.boolean().default(false),
-  active: z.boolean().default(true),
 });
 
 export const holidaySchema = z.object({

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getDoctorSession } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { DEFAULT_TIMEZONE } from "@/lib/dates";
+import { DEFAULT_AVAILABILITY, DEFAULT_SERVICES } from "@/lib/defaults";
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -21,26 +22,6 @@ const RESERVED_SLUGS = new Set([
   "login",
   "_next",
 ]);
-
-/** Servicios con los que arranca cualquier clínica nueva. */
-const DEFAULT_SERVICES: { name: string; duration_min: number }[] = [
-  { name: "Control", duration_min: 30 },
-  { name: "Limpieza", duration_min: 45 },
-  { name: "Urgencia", duration_min: 30 },
-];
-
-/**
- * Horario por defecto del primer profesional. `weekday` sigue la
- * convención de Postgres (0 = domingo). El domingo se omite a propósito.
- */
-const DEFAULT_AVAILABILITY: { weekday: number; windows: [string, string][] }[] = [
-  { weekday: 1, windows: [["09:00", "13:00"], ["15:00", "19:00"]] },
-  { weekday: 2, windows: [["09:00", "13:00"], ["15:00", "19:00"]] },
-  { weekday: 3, windows: [["09:00", "13:00"], ["15:00", "19:00"]] },
-  { weekday: 4, windows: [["09:00", "13:00"], ["15:00", "19:00"]] },
-  { weekday: 5, windows: [["09:00", "13:00"], ["15:00", "19:00"]] },
-  { weekday: 6, windows: [["09:00", "13:00"]] },
-];
 
 const organizationSchema = z.object({
   name: z.string().trim().min(3, "El nombre es demasiado corto").max(120, "El nombre es demasiado largo"),

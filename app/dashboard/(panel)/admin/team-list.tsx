@@ -8,6 +8,7 @@ export interface TeamMember {
   id: string;
   full_name: string;
   specialty: string | null;
+  role: "professional" | "reception";
   is_admin: boolean;
   active: boolean;
 }
@@ -91,6 +92,12 @@ export function TeamList({ initial, selfId }: { initial: TeamMember[]; selfId: s
                 {d.is_admin ? (
                   <span className="rounded-full bg-brand-navy-50 px-2.5 py-1 text-xs font-semibold text-brand-navy">
                     Administrador
+                  </span>
+                ) : null}
+
+                {d.role === "reception" ? (
+                  <span className="rounded-full bg-brand-sky-50 px-2.5 py-1 text-xs font-semibold text-brand-navy">
+                    Recepción
                   </span>
                 ) : null}
 

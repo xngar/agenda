@@ -22,8 +22,8 @@ zona horaria (`America/Santiago`).
 - Ingreso con RUT y contraseña.
 - Agenda del día con filtros, cambio de estado (por confirmar, confirmada,
   atendida, no asistió, cancelada) y suscripción en vivo vía Realtime.
-- El administrador ve las citas de todo el equipo, y puede activar o
-  desactivar cuentas; el resto, sólo las propias.
+- El administrador ve las citas de todo el equipo, y puede agregar
+  miembros, activar o desactivar cuentas; el resto, sólo las propias.
 
 ## Requisitos
 

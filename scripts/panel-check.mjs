@@ -457,6 +457,139 @@ console.log("\n[6] Activar y desactivar cuentas del equipo");
     pagina.status === 200 && pagina.text.includes("Desactivar"),
     `status=${pagina.status}`,
   );
+
+  // ---- Alta de miembros (POST /api/dashboard/doctors) ----
+  const post = (cookies, payload) =>
+    req(cookies, "/api/dashboard/doctors", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+  const sello = Date.now();
+  const correoPro = `panel.doctor.${sello}@test.cl`;
+  const correoRec = `panel.recep.${sello}@test.cl`;
+  const clave = "PanelTest2026!";
+
+  const sinSesionAlta = await post(anon, {
+    fullName: "Sin Sesión",
+    email: `panel.anon.${sello}@test.cl`,
+    password: clave,
+  });
+  check("alta sin sesión da 401", sinSesionAlta.status === 401, `status=${sinSesionAlta.status}`);
+
+  const noAdminAlta = await post(doc, {
+    fullName: "No Admin",
+    email: `panel.noadmin.${sello}@test.cl`,
+    password: clave,
+  });
+  check(
+    "un profesional NO puede agregar miembros",
+    noAdminAlta.status === 403,
+    `status=${noAdminAlta.status} ${noAdminAlta.text.slice(0, 90)}`,
+  );
+
+  const claveCorta = await post(admin, {
+    fullName: "Clave Corta",
+    email: `panel.corta.${sello}@test.cl`,
+    password: "123",
+  });
+  check("una contraseña corta da 422", claveCorta.status === 422, `status=${claveCorta.status}`);
+
+  const altaPro = await post(admin, {
+    fullName: "Doctor Panel Alta",
+    email: correoPro,
+    password: clave,
+    specialty: "Pruebas",
+    role: "professional",
+    isAdmin: false,
+  });
+  check(
+    "el admin crea un profesional",
+    altaPro.status === 201,
+    `status=${altaPro.status} ${altaPro.text.slice(0, 110)}`,
+  );
+  const idPro = altaPro.status === 201 ? JSON.parse(altaPro.text)?.doctor?.id : undefined;
+
+  const paginaAlta = await req(admin, "/dashboard/admin");
+  check(
+    "el nuevo miembro aparece en la lista del equipo",
+    paginaAlta.status === 200 && paginaAlta.text.includes("Doctor Panel Alta"),
+    `status=${paginaAlta.status}`,
+  );
+
+  const jarMiembro = jar();
+  const loginMiembro = await req(jarMiembro, "/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: correoPro, password: clave }),
+  });
+  check(
+    "la cuenta nueva puede entrar al panel",
+    loginMiembro.status === 200,
+    `status=${loginMiembro.status} ${loginMiembro.text.slice(0, 90)}`,
+  );
+
+  const sinAdmin = await req(jarMiembro, "/dashboard/admin");
+  check(
+    "pero la cuenta nueva NO es administradora",
+    sinAdmin.status >= 300 && sinAdmin.status < 400 && (sinAdmin.location ?? "") === "/dashboard",
+    `status=${sinAdmin.status} location=${sinAdmin.location}`,
+  );
+
+  const dup = await post(admin, {
+    fullName: "Correo Repetido",
+    email: correoPro,
+    password: clave,
+  });
+  check(
+    "un correo repetido da 409",
+    dup.status === 409,
+    `status=${dup.status} ${dup.text.slice(0, 90)}`,
+  );
+
+  const altaRec = await post(admin, {
+    fullName: "Recepción Panel Alta",
+    email: correoRec,
+    password: clave,
+    role: "reception",
+  });
+  check(
+    "el admin crea una recepción",
+    altaRec.status === 201,
+    `status=${altaRec.status} ${altaRec.text.slice(0, 110)}`,
+  );
+  const idRec = altaRec.status === 201 ? JSON.parse(altaRec.text)?.doctor?.id : undefined;
+
+  // El profesional nuevo nace con el horario por defecto: debe ofrecer horas.
+  const slotsNuevo = idPro
+    ? await (
+        await fetch(`${BASE}/api/slots?date=${slotDate}&serviceId=${SERVICE}&doctorId=${idPro}`)
+      ).json()
+    : { slots: [] };
+  check(
+    "el nuevo profesional ofrece horas",
+    (slotsNuevo.slots ?? []).length > 0,
+    `${(slotsNuevo.slots ?? []).length} slots`,
+  );
+
+  // Limpieza: las cuentas creadas por esta corrida quedan desactivadas.
+  if (idPro) {
+    const d = await patch(admin, { doctorId: idPro, active: false });
+    check(
+      "limpieza: se desactiva el profesional creado",
+      d.status === 200 && d.text.includes('"active":false'),
+      `status=${d.status}`,
+    );
+  }
+  if (idRec) {
+    const d = await patch(admin, { doctorId: idRec, active: false });
+    check(
+      "limpieza: se desactiva la recepción creada",
+      d.status === 200 && d.text.includes('"active":false'),
+      `status=${d.status}`,
+    );
+  }
 }
 
 console.log("\n[7] Horario semanal");
