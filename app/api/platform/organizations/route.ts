@@ -63,6 +63,19 @@ const organizationSchema = z.object({
   adminSpecialty: z.string().trim().max(80).optional(),
 });
 
+/** Sólo el equipo de la plataforma administra organizaciones. */
+async function plataformaAdmin(
+  supabase: ReturnType<typeof supabaseAdmin>,
+  doctorId: string,
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("doctors")
+    .select("is_super_admin")
+    .eq("id", doctorId)
+    .maybeSingle();
+  return Boolean(data?.is_super_admin);
+}
+
 export async function POST(request: Request) {
   const session = await getDoctorSession();
   if (!session) {
@@ -70,13 +83,7 @@ export async function POST(request: Request) {
   }
 
   const supabase = supabaseAdmin();
-  const { data: doctor } = await supabase
-    .from("doctors")
-    .select("is_super_admin")
-    .eq("id", session.id)
-    .maybeSingle();
-
-  if (!doctor?.is_super_admin) {
+  if (!(await plataformaAdmin(supabase, session.id))) {
     return NextResponse.json(
       { error: "Sólo el equipo de la plataforma puede crear organizaciones" },
       { status: 403 },
@@ -205,6 +212,115 @@ export async function POST(request: Request) {
     { ok: true, organization: creada, admin: { email: adminEmail } },
     { status: 201 },
   );
+}
+
+/**
+ * Elimina una clínica entera y todo lo que cuelga de ella.
+ *
+ * Se niega si la organización tiene citas: el historial no se borra, sólo se
+ * deja de publicar la clínica. También se niega si es la organización desde
+ * la que opera el propio equipo de la plataforma.
+ */
+export async function DELETE(request: Request) {
+  const session = await getDoctorSession();
+  if (!session) {
+    return NextResponse.json({ error: "Sesión no válida" }, { status: 401 });
+  }
+
+  const supabase = supabaseAdmin();
+  if (!(await plataformaAdmin(supabase, session.id))) {
+    return NextResponse.json(
+      { error: "Sólo el equipo de la plataforma puede eliminar organizaciones" },
+      { status: 403 },
+    );
+  }
+
+  const raw = await request.json().catch(() => null);
+  const slug = typeof raw?.slug === "string" ? raw.slug.trim().toLowerCase() : "";
+  if (!slug) {
+    return NextResponse.json({ error: "Indica qué organización eliminar" }, { status: 422 });
+  }
+
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("id,name,slug")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (!org) {
+    return NextResponse.json(
+      { error: "No existe una organización con ese identificador", code: "no_existe" },
+      { status: 404 },
+    );
+  }
+
+  if (org.id === session.orgId) {
+    return NextResponse.json(
+      {
+        error: "Es la organización desde la que trabajas; no puedes eliminarla",
+        code: "organizacion_propia",
+      },
+      { status: 409 },
+    );
+  }
+
+  const { count: citas } = await supabase
+    .from("appointments")
+    .select("id", { count: "exact", head: true })
+    .eq("org_id", org.id);
+
+  if (citas) {
+    return NextResponse.json(
+      {
+        error: "Tiene citas registradas: para que deje de ofrecer horas, desactívala en su lugar.",
+        code: "tiene_citas",
+      },
+      { status: 409 },
+    );
+  }
+
+  const { data: profesionales } = await supabase
+    .from("doctors")
+    .select("id")
+    .eq("org_id", org.id);
+
+  const borrados: { tabla: string; etiqueta: string }[] = [
+    { tabla: "availability_rules", etiqueta: "el horario" },
+    { tabla: "clinic_holidays", etiqueta: "los feriados" },
+    { tabla: "time_off", etiqueta: "las ausencias" },
+    { tabla: "notifications", etiqueta: "las notificaciones" },
+    { tabla: "services", etiqueta: "los servicios" },
+    { tabla: "doctors", etiqueta: "los profesionales" },
+  ];
+
+  for (const paso of borrados) {
+    const { error } = await supabase.from(paso.tabla).delete().eq("org_id", org.id);
+    if (error) {
+      return NextResponse.json(
+        { error: `No se pudo eliminar ${paso.etiqueta}`, code: "borrado_parcial" },
+        { status: 500 },
+      );
+    }
+  }
+
+  const { error: orgError } = await supabase
+    .from("organizations")
+    .delete()
+    .eq("id", org.id);
+
+  if (orgError) {
+    return NextResponse.json(
+      { error: "No se pudo eliminar la organización", code: "borrado_parcial" },
+      { status: 500 },
+    );
+  }
+
+  // Sin fila de doctor, esa cuenta de acceso ya no puede entrar a ningún lado.
+  for (const profesional of profesionales ?? []) {
+    await supabase.auth.admin.deleteUser(profesional.id);
+  }
+
+  return NextResponse.json({ ok: true, organization: org });
 }
 
 /**

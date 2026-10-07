@@ -1021,7 +1021,104 @@ console.log("\n[9] Feriados");
   );
 }
 
-console.log("\n[10] Logout");
+console.log("\n[10] Organizaciones");
+const plataforma = jar();
+{
+  const json = (r) => {
+    try {
+      return JSON.parse(r.text);
+    } catch {
+      return {};
+    }
+  };
+  const borrar = (cookies, body) =>
+    req(cookies, "/api/platform/organizations", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+  const login = await req(plataforma, "/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "admin@agenda.test", password: "AgendaDev2026!" }),
+  });
+  check("entra el equipo de plataforma", login.status === 200, `status=${login.status}`);
+
+  const listado = await req(plataforma, "/dashboard/plataforma/organizaciones");
+  check("abre el listado de organizaciones", listado.status === 200, `status=${listado.status}`);
+  check("lista las clínicas existentes", listado.text.includes(">sonrisa-dental"));
+
+  const sinPermiso = await req(admin, "/dashboard/plataforma/organizaciones");
+  check(
+    "una administradora de clínica no llega al panel de plataforma",
+    sinPermiso.status >= 300 && sinPermiso.status < 400,
+    `status=${sinPermiso.status}`,
+  );
+
+  const anonimo = await req(null, "/api/platform/organizations", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ slug: "clinica-feliz" }),
+  });
+  check("sin sesión no borra nada", anonimo.status === 401, `status=${anonimo.status}`);
+
+  const sinSlug = await borrar(plataforma, {});
+  check("sin identificador responde 422", sinSlug.status === 422, `status=${sinSlug.status}`);
+
+  const inexistente = await borrar(plataforma, { slug: "no-existe-esta-clinica" });
+  check("una clínica inexistente responde 404", inexistente.status === 404, `status=${inexistente.status}`);
+
+  const ajena = await borrar(admin, { slug: "clinica-feliz" });
+  check("una administradora de clínica no puede borrar", ajena.status === 403, `status=${ajena.status}`);
+
+  const propia = await borrar(plataforma, { slug: "plataforma" });
+  check(
+    "la plataforma no se borra a sí misma",
+    propia.status === 409 && json(propia).code === "organizacion_propia",
+    `status=${propia.status} code=${json(propia).code}`,
+  );
+
+  const conCitas = await borrar(plataforma, { slug: "sonrisa-dental" });
+  check(
+    "una clínica con citas no se borra",
+    conCitas.status === 409 && json(conCitas).code === "tiene_citas",
+    `status=${conCitas.status} code=${json(conCitas).code}`,
+  );
+
+  const slugDePrueba = `borrable-${Date.now()}`;
+  const creada = await req(plataforma, "/api/platform/organizations", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: "Clínica Borrable",
+      slug: slugDePrueba,
+      adminFullName: "Prueba Borrable",
+      adminEmail: `${slugDePrueba}@test.cl`,
+      adminPassword: "AgendaDev2026!",
+    }),
+  });
+  check(
+    "se crea una clínica de prueba",
+    creada.status === 201,
+    `status=${creada.status} ${json(creada).error ?? ""}`,
+  );
+
+  const borrada = await borrar(plataforma, { slug: slugDePrueba });
+  check(
+    "se elimina completa",
+    borrada.status === 200 && json(borrada).ok === true,
+    `status=${borrada.status} ${json(borrada).error ?? ""}`,
+  );
+
+  const otraVez = await borrar(plataforma, { slug: slugDePrueba });
+  check("al volver a borrarla responde 404", otraVez.status === 404, `status=${otraVez.status}`);
+
+  const trasBorrar = await req(null, `/${slugDePrueba}`);
+  check("su página pública deja de existir", trasBorrar.status === 404, `status=${trasBorrar.status}`);
+}
+
+console.log("\n[11] Logout");
 {
   const r = await req(admin, "/api/auth/logout", { method: "POST" });
   check("logout responde 303", r.status === 303, `status=${r.status}`);
