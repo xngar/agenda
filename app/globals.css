@@ -16,6 +16,13 @@
   --brand-sky: #7cc7f0;
   --brand-navy: #0b3c7a;
 
+  /* Tokens aislados para landing */
+  --lp-navy: #0B2A5B;
+  --lp-blue: #1D4ED8;
+  --lp-sky-100: #E0F2FE;
+  --lp-sky-200: #BAE6FD;
+  --lp-yellow: #FACC15;
+
   /* Neutros cálidos y limpios para el fondo de la clínica */
   --neutral-50: #f8fafc;
   --neutral-100: #f1f5f9;
@@ -56,6 +63,13 @@
   --color-neutral-500: var(--neutral-500);
   --color-neutral-600: var(--neutral-600);
   --color-neutral-800: var(--neutral-800);
+
+  /* Landing tokens (aislados) */
+  --color-lp-navy: var(--lp-navy);
+  --color-lp-blue: var(--lp-blue);
+  --color-lp-sky-100: var(--lp-sky-100);
+  --color-lp-sky-200: var(--lp-sky-200);
+  --color-lp-yellow: var(--lp-yellow);
 
   /* Sombras derivadas de navy: nunca negro puro */
   --shadow-card: 0 1px 2px color-mix(in srgb, var(--brand-navy) 8%, transparent),
