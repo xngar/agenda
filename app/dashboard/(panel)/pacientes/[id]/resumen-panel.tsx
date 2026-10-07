@@ -37,9 +37,7 @@ function Campo({ etiqueta, valor }: { etiqueta: string; valor: React.ReactNode }
 }
 
 interface FormState {
-  nombres: string;
-  apellido_paterno: string;
-  apellido_materno: string;
+  full_name: string;
   birth_date: string;
   sex: string;
   nationality: string;
@@ -64,9 +62,7 @@ interface FormState {
 
 function formFrom(p: Patient): FormState {
   return {
-    nombres: p.nombres ?? "",
-    apellido_paterno: p.apellido_paterno ?? "",
-    apellido_materno: p.apellido_materno ?? "",
+    full_name: p.full_name ?? "",
     birth_date: p.birth_date ?? "",
     sex: p.sex ?? "",
     nationality: p.nationality ?? "",
@@ -116,9 +112,7 @@ export function ResumenPanel({ patient, orgType }: { patient: Patient; orgType: 
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nombres: empty(form.nombres) ?? undefined,
-          apellido_paterno: empty(form.apellido_paterno) ?? undefined,
-          apellido_materno: empty(form.apellido_materno) ?? undefined,
+          full_name: empty(form.full_name) ?? undefined,
           birth_date: empty(form.birth_date) ?? undefined,
           sex: empty(form.sex) ?? undefined,
           nationality: empty(form.nationality) ?? undefined,
@@ -165,14 +159,16 @@ export function ResumenPanel({ patient, orgType }: { patient: Patient; orgType: 
           <fieldset>
             <legend className="mb-3 text-sm font-semibold text-brand-navy">Datos personales</legend>
             <div className="grid gap-3 md:grid-cols-2">
-              <Field label="Nombres" htmlFor="nombres" required={false}>
-                <input id="nombres" className={inputClasses} value={form.nombres} onChange={(e) => set("nombres", e.target.value)} />
-              </Field>
-              <Field label="Apellido paterno" htmlFor="ap-paterno" required={false}>
-                <input id="ap-paterno" className={inputClasses} value={form.apellido_paterno} onChange={(e) => set("apellido_paterno", e.target.value)} />
-              </Field>
-              <Field label="Apellido materno" htmlFor="ap-materno" required={false}>
-                <input id="ap-materno" className={inputClasses} value={form.apellido_materno} onChange={(e) => set("apellido_materno", e.target.value)} />
+              <Field label="Nombre completo" htmlFor="full_name" required>
+                <input
+                  id="full_name"
+                  className={inputClasses}
+                  required
+                  minLength={2}
+                  maxLength={120}
+                  value={form.full_name}
+                  onChange={(e) => set("full_name", e.target.value)}
+                />
               </Field>
               <Field label="Fecha de nacimiento" htmlFor="birth_date" required={false}>
                 <input id="birth_date" type="date" className={inputClasses} value={form.birth_date} onChange={(e) => set("birth_date", e.target.value)} />
