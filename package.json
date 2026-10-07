@@ -13,6 +13,7 @@
     "test:coverage": "vitest run --coverage",
     "e2e": "playwright test",
     "check": "npm run lint && npm run typecheck && npm run test",
+    "check:panel": "node scripts/panel-check.mjs",
     "seed:dev": "tsx scripts/seed-dev.ts",
     "db:test": "supabase db reset --db-only"
   },
