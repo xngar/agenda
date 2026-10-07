@@ -179,7 +179,7 @@ export function PatientsTable({
         </table>
       </div>
 
-      {totalPages > 1 ? (
+      {total > 0 ? (
         <nav
           aria-label="Paginación de pacientes"
           className="flex flex-wrap items-center justify-between gap-3"

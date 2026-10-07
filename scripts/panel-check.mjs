@@ -1510,12 +1510,15 @@ console.log("\n[12] Listado de pacientes: tabla, orden y paginación");
     );
     check("los encabezados permiten ordenar por RUT", html1.includes("/dashboard/pacientes?sort=rut"));
 
-    // -- Paginación --
+    // -- Paginación (10 por página) --
     const pag1 = html1.match(/Página (\d+) de (\d+)/);
+    const filasPag1 = (html1.match(/\/dashboard\/pacientes\/[0-9a-f-]{36}"/g) ?? []).length;
     check(
-      "la tabla pagina cuando hay más de 25 pacientes",
-      html1.includes('data-testid="patients-pagination"') && Number(pag1?.[2]) >= 2,
-      pag1?.[0] ?? "sin paginación",
+      "la tabla pagina de 10 en 10",
+      html1.includes('data-testid="patients-pagination"') &&
+        Number(pag1?.[2]) >= 3 &&
+        filasPag1 === 10,
+      `${pag1?.[0] ?? "sin paginación"} filas=${filasPag1}`,
     );
 
     const segunda = await req(admin, "/dashboard/pacientes?page=2");

@@ -7,7 +7,7 @@ import { PatientsSearch } from "./patients-search";
 import { NewPatientButton } from "./patient-form";
 import { PatientsTable, type ListPatient } from "./patients-table";
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 10;
 const SORT_COLUMNS = ["full_name", "rut", "birth_date", "patient_status"] as const;
 
 export default async function PacientesPage({
