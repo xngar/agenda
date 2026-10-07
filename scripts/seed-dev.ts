@@ -41,9 +41,13 @@ const WEEKDAY_RULES: { weekday: number; windows: [string, string][] }[] = [
 interface SeedDoctor {
   email: string;
   fullName: string;
-  specialty: string;
-  isAdmin: boolean;
+  specialty: string | null;
+  isAdmin?: boolean;
   isSuperAdmin?: boolean;
+  /** Organización destino; por defecto sonrisa-dental. */
+  orgSlug?: string;
+  /** reception ve contacto y agenda, sin contenido clínico. */
+  role?: "professional" | "reception";
 }
 
 /**
@@ -71,6 +75,21 @@ const DOCTORS: SeedDoctor[] = [
     specialty: "Endodoncia",
     isAdmin: false,
   },
+  {
+    email: "recepcion@clinicadental.test",
+    fullName: "María de la Luz Pérez",
+    specialty: null,
+    isAdmin: false,
+    role: "reception",
+  },
+  {
+    email: "valentina.soto@espaciocalma.test",
+    fullName: "Ps. Valentina Soto",
+    specialty: "Psicología clínica",
+    isAdmin: true,
+    orgSlug: "espacio-calma",
+    role: "professional",
+  },
 ];
 
 async function main(): Promise<void> {
@@ -81,26 +100,15 @@ async function main(): Promise<void> {
 
   console.log(`→ Conectado a ${env.NEXT_PUBLIC_SUPABASE_URL}`);
 
-  const { data: services } = await supabase.from("services").select("id, name").eq("active", true);
-  if (!services?.length) {
+  const servicesCheck = await supabase.from("services").select("id, name").eq("active", true);
+  if (!servicesCheck.data?.length) {
     console.error("✗ No hay servicios activos. Corre la migración 0006 (seed) primero.");
     process.exitCode = 1;
     return;
   }
 
-  const { data: orgSeed, error: orgError } = await supabase
-    .from("organizations")
-    .select("id")
-    .eq("slug", "sonrisa-dental")
-    .single();
-  if (orgError || !orgSeed) {
-    console.error("✗ No existe la organización 'sonrisa-dental'. Corre las migraciones 20260102000001 primero.");
-    process.exitCode = 1;
-    return;
-  }
-  const orgId = orgSeed.id as string;
-
   for (const doctor of DOCTORS) {
+    const orgId = doctor.orgSlug ? await ensureOrg(supabase, doctor.orgSlug) : await sonrisaOrgId(supabase);
     await upsertDoctor(supabase, doctor, orgId);
   }
 
@@ -111,7 +119,38 @@ async function main(): Promise<void> {
   console.log(`  Contraseña de todos: ${SEED_PASSWORD}`);
   console.log(`  Admin de clínica: ${DOCTORS[0]!.email}`);
   console.log(`  Profesional: ${DOCTORS[1]!.email}`);
+  console.log(`  Recepción: ${DOCTORS[2]!.email}`);
+  console.log(`  Psicológica: ${DOCTORS[3]!.email}`);
   console.log(`  Super-admin plataforma: ${SUPER_ADMIN.email}`);
+}
+
+async function sonrisaOrgId(supabase: SupabaseClient): Promise<string> {
+  const { data: orgSeed, error: orgError } = await supabase
+    .from("organizations")
+    .select("id")
+    .eq("slug", "sonrisa-dental")
+    .single();
+  if (orgError || !orgSeed) {
+    console.error("✗ No existe la organización 'sonrisa-dental'. Corre las migraciones 20260102000001 primero.");
+    process.exitCode = 1;
+    throw new Error("sonrisa-dental no encontrada");
+  }
+  return orgSeed.id as string;
+}
+
+/** Crea una organización con su tipo de especialidad si no existe. */
+async function ensureOrg(supabase: SupabaseClient, slug: string): Promise<string> {
+  const { data: existing } = await supabase.from("organizations").select("id").eq("slug", slug).maybeSingle();
+  if (existing) return existing.id as string;
+
+  const type = slug === "espacio-calma" ? "psychological" : "dental";
+  const { data, error } = await supabase
+    .from("organizations")
+    .insert({ name: "Espacio Calma", slug, active: true, type })
+    .select("id")
+    .single();
+  if (error || !data) throw new Error(`organizations/${slug}: ${error?.message ?? "sin fila"}`);
+  return data.id as string;
 }
 
 async function ensurePlatformOrg(supabase: SupabaseClient): Promise<string> {
@@ -163,7 +202,8 @@ async function upsertDoctor(
         id: userId,
         full_name: doctor.fullName,
         specialty: doctor.specialty,
-        is_admin: doctor.isAdmin,
+        is_admin: doctor.isAdmin ?? false,
+        role: doctor.role ?? "professional",
         active: true,
         org_id: orgId,
       },
@@ -172,6 +212,9 @@ async function upsertDoctor(
 
   if (doctorError) throw new Error(`doctors/${doctor.email}: ${doctorError.message}`);
   console.log(`  · ${doctor.fullName} (${doctor.email})`);
+
+  // La recepción no atiende: no necesita ventanas de horario.
+  if (doctor.role === "reception") return;
 
   // Reemplazamos las reglas completas para que el seed sea idempotente:
   // si se cambia el horario en este archivo, no quedan ventanas viejas.

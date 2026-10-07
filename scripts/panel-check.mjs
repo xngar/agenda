@@ -9,6 +9,21 @@ const SEBASTIAN = "3a335e2c-9881-473a-a98c-94c3661b977e";
 const CAMILA = "d4555fbf-7e8a-4f6d-901c-d6f2b410c55b";
 const slotDate = "2026-10-08";
 
+/** RUT válido y distinto en cada corrida (dígito verificador mod-11 con K). */
+function rutUnico() {
+  const base = String(Date.now()).slice(-8);
+  let suma = 0;
+  let factor = 2;
+  for (let i = base.length - 1; i >= 0; i--) {
+    suma += Number(base[i]) * factor;
+    factor = factor === 7 ? 2 : factor + 1;
+  }
+  const resto = 11 - (suma % 11);
+  const dv = resto === 11 ? "0" : resto === 10 ? "K" : String(resto);
+  return `${base}-${dv}`;
+}
+const RUT_UNICO = rutUnico();
+
 let pass = 0,
   fail = 0;
 function check(name, ok, detail = "") {
@@ -169,7 +184,7 @@ console.log("\n[5] Aislamiento por RLS entre profesionales");
       doctorId: slot.doctor_id,
       slotStart: slot.slot_start,
       fullName: "Paciente Panel",
-      rut: "12345678-5",
+      rut: RUT_UNICO,
       phone: "+56900000001",
       email,
       consent: true,
@@ -533,7 +548,7 @@ console.log("\n[7] Horario semanal");
           doctorId: slot.doctor_id,
           slotStart: slot.slot_start,
           fullName: "Paciente Horario",
-          rut: "12345678-5",
+          rut: RUT_UNICO,
           phone: "+56900000009",
           email,
           consent: true,
@@ -796,7 +811,7 @@ console.log("\n[8] Bloqueos de tiempo");
         doctorId: CAMILA,
         slotStart,
         fullName: "Paciente Bloqueo",
-        rut: "12345678-5",
+        rut: RUT_UNICO,
         phone: "+56900000002",
         email: `panel.${Date.now()}@test.cl`,
         consent: true,
@@ -1118,7 +1133,172 @@ const plataforma = jar();
   check("su página pública deja de existir", trasBorrar.status === 404, `status=${trasBorrar.status}`);
 }
 
-console.log("\n[11] Logout");
+console.log("\n[11] Ficha clínica");
+let FICHA_PATIENT = null;
+{
+  const json = (r) => {
+    try {
+      return JSON.parse(r.text);
+    } catch {
+      return {};
+    }
+  };
+
+  // -- Acceso del admin de la clínica --
+  const lista = await req(admin, "/api/ficha/patients");
+  check(
+    "la admin lista los pacientes",
+    lista.status === 200 && Array.isArray(json(lista).patients),
+    `status=${lista.status}`,
+  );
+  const mauricio = (json(lista).patients ?? []).find((p) => p.full_name?.includes("Mauricio"));
+  check("aparece el paciente demo 'Mauricio'", Boolean(mauricio?.id), mauricio?.full_name);
+  if (mauricio?.id) FICHA_PATIENT = mauricio.id;
+
+  // -- Detalle con antecedentes --
+  const detalle = await req(admin, `/api/ficha/patients/${FICHA_PATIENT}`);
+  check("el detalle incluye la ficha completa", detalle.status === 200, `status=${detalle.status}`);
+  // PostgREST embebe la relación 1:1 de antecedentes como OBJETO (no array).
+  const bg = json(detalle).patient?.patient_medical_background;
+  const bgArr = Array.isArray(bg) ? bg : bg ? [bg] : [];
+  check(
+    "los antecedentes vienen anidados",
+    bgArr.length === 1 && (bgArr[0]?.alergias ?? []).includes("penicilina"),
+    bgArr.length === 0 ? "sin fila" : `alergias=${(bgArr[0]?.alergias ?? []).join(",")}`,
+  );
+
+  // -- Aislamiento: recibirlo y profesionales de otra organización no ven su ficha --
+  const recepcion = jar();
+  await req(recepcion, "/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "recepcion@clinicadental.test", password: "AgendaDev2026!" }),
+  });
+  const recLista = await req(recepcion, "/api/ficha/patients");
+  check("la recepción lista pacientes por contacto", recLista.status === 200 && Array.isArray(json(recLista).patients),
+    `status=${recLista.status}`);
+  const recDetalle = await req(recepcion, `/api/ficha/patients/${FICHA_PATIENT}`);
+  check("la recepción NO ve el detalle clínico", recDetalle.status === 403, `status=${recDetalle.status}`);
+
+  const psicologa = jar();
+  await req(psicologa, "/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "valentina.soto@espaciocalma.test", password: "AgendaDev2026!" }),
+  });
+  const ajena = await req(psicologa, `/api/ficha/patients/${FICHA_PATIENT}`);
+  check("un profesional de otra clínica obtiene 404", ajena.status === 404, `status=${ajena.status}`);
+
+  // -- Atenciones: crear borrador, editar y firmar --
+  const creada = await req(admin, `/api/ficha/patients/${FICHA_PATIENT}/encounters`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      patient_id: FICHA_PATIENT,
+      started_at: "2026-10-06",
+      care_type: "control",
+      motivo: "Control post-tratamiento",
+      evolucion: "Buenas condiciones, sin dolor",
+      diagnostico: "Sin hallazgos",
+      indicaciones: "Seguir indicaciones",
+    }),
+  });
+  check("se crea una atención en borrador", creada.status === 201, `status=${creada.status}`);
+  const encId = json(creada).encounter?.id;
+  check("la atención tiene id", Boolean(encId), encId);
+
+  const editada = await req(admin, `/api/ficha/encounters/${encId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ care_type: "control", motivo: "Control post-tratamiento (editado)", evolucion: "Buenas condiciones" }),
+  });
+  check("el borrador se puede editar", editada.status === 200, `status=${editada.status}`);
+
+  const firmada = await req(admin, `/api/ficha/encounters/${encId}`, { method: "POST" });
+  check("la atención se firma", firmada.status === 200 && json(firmada).encounter?.status === "signed",
+    `status=${firmada.status}`);
+  check("la firma deja author y fecha", Boolean(json(firmada).encounter?.signed_by && json(firmada).encounter?.signed_at),
+    "");
+
+  // -- Inmutabilidad tras firmar --
+  const reedited = await req(admin, `/api/ficha/encounters/${encId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ motivo: "No debería entrar" }),
+  });
+  // La firma es inmutable: la ruta rechaza el borrador firmado (404 al no
+  // encontrar blanco de edición) y la base además lo bloquea (EFIRM = 409
+  // ficha_firmada). Cualquiera de los dos respeta la garantía.
+  check(
+    "editar una atención firmada está bloqueado",
+    reedited.status === 404 || (reedited.status === 409 && json(reedited).code === "ficha_firmada"),
+    `status=${reedited.status} code=${json(reedited).code}`,
+  );
+
+  const versiones = await req(admin, `/api/ficha/encounters/${encId}/versions`);
+  check(
+    "la firma generó un snapshot de versión",
+    versiones.status === 200 && (json(versiones).versions ?? []).length >= 1,
+    `status=${versiones.status} n=${(json(versiones).versions ?? []).length}`,
+  );
+
+  const correccion = await req(admin, `/api/ficha/encounters/${encId}/versions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reason: "Se agrega observación post-control" }),
+  });
+  check("se registra una corrección en el historial", correccion.status === 201, `status=${correccion.status}`);
+
+  // -- Odontograma y plan (sólo odontológico) --
+  const chart = await req(admin, `/api/ficha/patients/${FICHA_PATIENT}/chart`);
+  const pieza16 = (json(chart).chart ?? []).find((e) => e.tooth === 16 && e.face === "occlusal");
+  check("el odontograma muestra caries en pieza 16", chart.status === 200 && pieza16?.state === "caries",
+    `${pieza16?.tooth} ${pieza16?.face}=${pieza16?.state}`);
+
+  const plan = await req(admin, `/api/ficha/patients/${FICHA_PATIENT}/plan`);
+  check("el plan tiene los tratamientos sembrados", plan.status === 200 && (json(plan).items ?? []).length >= 2,
+    `status=${plan.status} n=${(json(plan).items ?? []).length}`);
+
+  const recetas = await req(admin, `/api/ficha/patients/${FICHA_PATIENT}/prescriptions`);
+  check("la receta sembrada aparece", recetas.status === 200 && (json(recetas).prescriptions ?? []).length >= 1,
+    `status=${recetas.status}`);
+
+  // -- Exportar y PDF --
+  const expJson = await req(admin, `/api/ficha/patients/${FICHA_PATIENT}/export`);
+  check("la exportación JSON responde", expJson.status === 200 && Boolean(json(expJson).patient?.id),
+    `status=${expJson.status}`);
+  const expCsv = await req(admin, `/api/ficha/patients/${FICHA_PATIENT}/export?format=csv`);
+  check("la exportación CSV responde", expCsv.status === 200 && expCsv.text.includes("Mauricio"),
+    `status=${expCsv.status}`);
+  const pdf = await req(admin, `/api/ficha/patients/${FICHA_PATIENT}/pdf`);
+  check("el PDF de la ficha se genera", pdf.status === 200 && pdf.text.startsWith("%PDF"),
+    `status=${pdf.status} head=${pdf.text.slice(0, 20)}`);
+
+  // -- Auditoría registra la firma sobre la entidad que la recibió --
+  const auditPaciente = await req(admin, `/api/ficha/audit?entity_id=${FICHA_PATIENT}&limit=200`);
+  check(
+    "la auditoría tiene entradas del paciente",
+    auditPaciente.status === 200 && (json(auditPaciente).entries ?? []).length >= 1,
+    `status=${auditPaciente.status} n=${(json(auditPaciente).entries ?? []).length}`,
+  );
+  const auditEnc = await req(admin, `/api/ficha/audit?entity=encounters&entity_id=${encId}&limit=50`);
+  const accionesEnc = (json(auditEnc).entries ?? []).map((e) => e.action);
+  check(
+    "la auditoría registra la firma de la atención",
+    auditEnc.status === 200 && accionesEnc.includes("sign"),
+    `status=${auditEnc.status} acciones=${[...new Set(accionesEnc)].join(",")}`,
+  );
+
+  // -- La recepción no toca nada clínico --
+  const recReceta = await req(recepcion, `/api/ficha/patients/${FICHA_PATIENT}/prescriptions`);
+  check("la recepción no lee recetas", recReceta.status === 403, `status=${recReceta.status}`);
+
+  // -- Limpieza del borrador/firma creados en esta prueba --
+  // No hay endpoint de borrado (inmutabilidad), así que este check es
+  // informativo: la fila permanece como parte del demo.
+}
+
+console.log("\n[12] Logout");
 {
   const r = await req(admin, "/api/auth/logout", { method: "POST" });
   check("logout responde 303", r.status === 303, `status=${r.status}`);
