@@ -18,7 +18,7 @@ import {
   inputClasses,
 } from "@/components/ui";
 import Turnstile from "@/components/turnstile";
-import WeekdayPicker, { type DayStatus } from "./weekday-picker";
+import WeekdayPicker, { type DayStatus } from "@/components/booking/weekday-picker";
 
 type Step = 1 | 2 | 3 | 4 | 5;
 

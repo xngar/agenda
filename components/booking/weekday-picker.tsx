@@ -37,6 +37,12 @@ const MONTHS = [
  * rango) para dar feedback inmediato, pero el día habilitado NO implica
  * disponibilidad: las horas llegan del servidor al elegir el día. La
  * verdad es siempre Postgres.
+ *
+ * La grilla se alinea a la semana real (lunes→domingo): antes de hoy se
+ * muestran atenuados los días pasados de la semana y al final se completan
+ * las filas vacías, porque el encabezado `Lu…Do` fija la columna de cada
+ * número. Empezar "desde hoy" en la primera columna hacía que el 7 de
+ * octubre cayera bajo "Lu" cuando era miércoles.
  */
 export default function WeekdayPicker({
   holidays,
@@ -53,9 +59,28 @@ export default function WeekdayPicker({
     [holidays],
   );
 
+  const today = useMemo(() => todayKey(TZ), []);
+
+  /** Días pasados de la semana de hoy, para alinear la primera fila. */
+  const pasados = useMemo(() => {
+    const n = weekdayForGrid(today); // 0 = lunes
+    const list: DayCell[] = [];
+    for (let k = n; k >= 1; k--) {
+      const key = addDaysToKey(today, -k);
+      list.push({
+        key,
+        dayNumber: Number(key.slice(8, 10)),
+        weekday: weekdayForGrid(key),
+        disabled: true,
+        reason: "Día pasado",
+        past: true,
+      });
+    }
+    return list;
+  }, [today]);
+
   const days = useMemo(() => {
     const now = new Date();
-    const today = todayKey(TZ);
     const minutesNow = minutesInSantiago(now);
     const minNoticeMinutes = minNoticeHours * 60;
     const todayIsUsable = minutesNow + minNoticeMinutes < 24 * 60;
@@ -92,15 +117,22 @@ export default function WeekdayPicker({
       });
     }
     return list;
-  }, [holidayMap, maxDaysAhead, minNoticeHours, statuses]);
+  }, [today, holidayMap, maxDaysAhead, minNoticeHours, statuses]);
 
-  const hoy = useMemo(() => todayKey(TZ), []);
+  const celdas = useMemo(() => [...pasados, ...days], [pasados, days]);
+
+  /** Relleno final para que la grilla cierre en filas completas de 7. */
+  const relleno = useMemo(() => {
+    const resto = celdas.length % 7;
+    return resto === 0 ? 0 : 7 - resto;
+  }, [celdas.length]);
 
   const monthLabel = useMemo(() => {
-    if (days.length === 0) return "";
-    const month = Number(days[0]!.key.slice(5, 7)) - 1;
-    return `${MONTHS[month]}`;
-  }, [days]);
+    if (celdas.length === 0) return "";
+    const desde = Number(celdas[0]!.key.slice(5, 7)) - 1;
+    const hasta = Number(celdas[celdas.length - 1]!.key.slice(5, 7)) - 1;
+    return desde === hasta ? MONTHS[desde] : `${MONTHS[desde]} – ${MONTHS[hasta]}`;
+  }, [celdas]);
 
   return (
     <section aria-labelledby="calendario-titulo">
@@ -123,9 +155,9 @@ export default function WeekdayPicker({
           </div>
         ))}
 
-        {days.map((cell) => {
+        {celdas.map((cell) => {
           const isSelected = selected === cell.key;
-          const isToday = cell.key === hoy;
+          const isToday = cell.key === today;
           const holiday = holidayMap.get(cell.key);
 
           return (
@@ -139,9 +171,11 @@ export default function WeekdayPicker({
               title={cell.reason ?? undefined}
               className={[
                 "relative flex min-h-14 flex-col items-center justify-center rounded-xl border text-sm transition-colors sm:min-h-16",
-                cell.disabled
-                  ? "cursor-not-allowed border-neutral-200 bg-neutral-100 text-neutral-400 line-through"
-                  : "border-neutral-300 bg-white text-neutral-800 hover:border-brand-navy hover:bg-brand-navy-50",
+                cell.past
+                  ? "cursor-not-allowed border-neutral-100 bg-neutral-50 text-neutral-300"
+                  : cell.disabled
+                    ? "cursor-not-allowed border-neutral-200 bg-neutral-100 text-neutral-400 line-through"
+                    : "border-neutral-300 bg-white text-neutral-800 hover:border-brand-navy hover:bg-brand-navy-50",
                 isSelected ? "border-brand-navy bg-brand-navy text-white hover:bg-brand-navy" : "",
                 isToday && !isSelected ? "border-brand-sky bg-brand-sky-50" : "",
               ]
@@ -149,7 +183,7 @@ export default function WeekdayPicker({
                 .join(" ")}
             >
               <span className="text-xs font-medium sm:text-sm">{cell.dayNumber}</span>
-              {holiday ? (
+              {holiday && !cell.past ? (
                 <span className="mt-0.5 hidden max-w-full truncate px-1 text-[9px] font-semibold uppercase leading-tight sm:block">
                   feriado
                 </span>
@@ -157,11 +191,15 @@ export default function WeekdayPicker({
             </button>
           );
         })}
+
+        {Array.from({ length: relleno }, (_, i) => (
+          <div key={`relleno-${i}`} aria-hidden className="min-h-14 sm:min-h-16" />
+        ))}
       </div>
 
       <p className="mt-2.5 text-xs text-neutral-600">
-        Los días con línea son domingos, feriados o no tienen horas. Al elegir un día te mostramos
-        las horas reales.
+        Los días grises ya pasaron. Los días con línea son domingos, feriados o no tienen horas.
+        Al elegir un día te mostramos las horas reales.
       </p>
     </section>
   );
@@ -174,6 +212,7 @@ interface DayCell {
   disabled: boolean;
   reason: string | null;
   loading?: boolean;
+  past?: boolean;
 }
 
 /**

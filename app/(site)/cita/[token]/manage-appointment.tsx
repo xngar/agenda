@@ -15,7 +15,7 @@ import {
   StatusBadge,
   buttonClasses,
 } from "@/components/ui";
-import WeekdayPicker from "../../reservar/weekday-picker";
+import WeekdayPicker from "@/components/booking/weekday-picker";
 import { formatDateLong, formatRange } from "@/lib/dates";
 
 type Mode = "view" | "reschedule" | "cancel";
