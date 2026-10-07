@@ -1451,7 +1451,137 @@ let FICHA_PATIENT = null;
   // informativo: la fila permanece como parte del demo.
 }
 
-console.log("\n[12] Logout");
+console.log("\n[12] Listado de pacientes: tabla, orden y paginación");
+{
+  const json = (r) => {
+    try {
+      return JSON.parse(r.text);
+    } catch {
+      return {};
+    }
+  };
+  // React inserta <!-- --> entre nodos de texto en el SSR; se quitan para
+  // poder leer el HTML con regex simples.
+  const limpio = (html) => html.replace(/<!-- -->/g, "");
+  const primerNombre = (html) =>
+    (limpio(html).match(/\/dashboard\/pacientes\/[0-9a-f-]{36}"[^>]*>([^<]+)<\/a>/) ?? [])[1] ?? "";
+  const contador = (html) => {
+    const m = limpio(html).match(/patients-count">(\d+) pacient/);
+    return m ? Number(m[1]) : null;
+  };
+
+  const creados = [];
+  try {
+    const sello = Date.now();
+    for (let i = 1; i <= 26; i++) {
+      const r = await req(admin, "/api/ficha/patients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          full_name: `Paginacion ${String(i).padStart(2, "0")}`,
+          email: `pag.${i}.${sello}@test.cl`,
+        }),
+      });
+      const id = json(r).patient?.id;
+      if (id) creados.push(id);
+    }
+    check("se crean 26 pacientes para forzar dos páginas", creados.length === 26, `creados=${creados.length}`);
+
+    const zoila = await req(admin, "/api/ficha/patients", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ full_name: "Zoila Receptacion Especial", email: `zoila.${sello}@test.cl` }),
+    });
+    const zoilaId = json(zoila).patient?.id;
+    if (zoilaId) creados.push(zoilaId);
+    check("se crea el paciente único del buscador", Boolean(zoilaId));
+
+    // -- Estructura de la tabla --
+    const primera = await req(admin, "/dashboard/pacientes");
+    const html1 = limpio(primera.text);
+    const nombre1 = primerNombre(primera.text);
+    check(
+      "el listado renderiza la tabla con sus columnas",
+      primera.status === 200 &&
+        html1.includes('data-testid="patients-table"') &&
+        html1.includes("aria-sort") &&
+        [">Paciente<", ">RUT<", ">Contacto<", ">Nacimiento<", ">Estado<"].every((h) => html1.includes(h)),
+      `status=${primera.status} primer=${nombre1}`,
+    );
+    check("los encabezados permiten ordenar por RUT", html1.includes("/dashboard/pacientes?sort=rut"));
+
+    // -- Paginación --
+    const pag1 = html1.match(/Página (\d+) de (\d+)/);
+    check(
+      "la tabla pagina cuando hay más de 25 pacientes",
+      html1.includes('data-testid="patients-pagination"') && Number(pag1?.[2]) >= 2,
+      pag1?.[0] ?? "sin paginación",
+    );
+
+    const segunda = await req(admin, "/dashboard/pacientes?page=2");
+    const html2 = limpio(segunda.text);
+    const nombre2 = primerNombre(segunda.text);
+    check(
+      "la página 2 muestra otros pacientes",
+      segunda.status === 200 &&
+        html2.includes('data-testid="patients-table"') &&
+        /Página 2 de \d+/.test(html2) &&
+        html2.includes("‹ Anterior") &&
+        Boolean(nombre2) &&
+        nombre2 !== nombre1,
+      `status=${segunda.status} p1=${nombre1} p2=${nombre2}`,
+    );
+
+    // -- Orden por columna --
+    const desc = await req(admin, "/dashboard/pacientes?sort=full_name&dir=desc");
+    const nombreDesc = primerNombre(desc.text);
+    check(
+      "ordenar por nombre invierte el listado",
+      desc.status === 200 && Boolean(nombreDesc) && nombreDesc !== nombre1,
+      `asc=${nombre1} desc=${nombreDesc}`,
+    );
+
+    // -- Buscador --
+    const buscada = await req(admin, "/dashboard/pacientes?q=Paginacion");
+    const nBuscados = contador(buscada.text);
+    check(
+      "el buscador acota el listado del admin",
+      buscada.status === 200 && nBuscados !== null && nBuscados >= 26,
+      `count=${nBuscados}`,
+    );
+    const zoilaAdmin = await req(admin, "/dashboard/pacientes?q=Zoila");
+    check("un término único devuelve un solo paciente", contador(zoilaAdmin.text) === 1, `count=${contador(zoilaAdmin.text)}`);
+
+    // -- Recepción: la RPC ahora filtra, ordena y pagina --
+    const recep = jar();
+    await req(recep, "/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "recepcion@clinicadental.test", password: "AgendaDev2026!" }),
+    });
+    const recPrimera = await req(recep, "/dashboard/pacientes");
+    check(
+      "la recepción también ve la tabla paginada",
+      recPrimera.status === 200 &&
+        recPrimera.text.includes('data-testid="patients-table"') &&
+        recPrimera.text.includes('data-testid="patients-pagination"'),
+      `status=${recPrimera.status}`,
+    );
+    const recZoila = await req(recep, "/dashboard/pacientes?q=Zoila");
+    check(
+      "el buscador filtra para la recepción",
+      recZoila.status === 200 && contador(recZoila.text) === 1,
+      `status=${recZoila.status} count=${contador(recZoila.text)}`,
+    );
+  } finally {
+    for (const id of creados) {
+      await req(admin, `/api/ficha/patients/${id}`, { method: "DELETE" });
+    }
+    console.log(`  (${creados.length} pacientes de prueba de paginación borrados)`);
+  }
+}
+
+console.log("\n[13] Logout");
 {
   const r = await req(admin, "/api/auth/logout", { method: "POST" });
   check("logout responde 303", r.status === 303, `status=${r.status}`);

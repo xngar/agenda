@@ -21,15 +21,26 @@ export async function GET(request: Request) {
   const offset = Math.max(Number.isFinite(offsetRaw) && offsetRaw > 0 ? Math.floor(offsetRaw) : 0, 0);
 
   let query;
+  const statusOk =
+    status === "active" || status === "inactive" || status === "abandoned" ? status : null;
   if (ctx.clinical) {
     query = ctx.supabase.from("patients").select("id,full_name,rut,phone,email,birth_date,sex,patient_status,doctor_id,org_id,created_at");
-    if (status === "active" || status === "inactive" || status === "abandoned") {
-      query = query.eq("patient_status", status);
+    if (statusOk) {
+      query = query.eq("patient_status", statusOk);
     }
   } else {
-    const { data, error } = await ctx.supabase.rpc("list_patients_contact");
+    const { data, error } = await ctx.supabase.rpc("list_patients_contact", {
+      p_q: q || null,
+      p_status: statusOk,
+      p_limit: limit,
+      p_offset: offset,
+      p_sort: "full_name",
+      p_dir: "asc",
+    });
     if (error) return dbError(error);
-    return NextResponse.json({ patients: data ?? [], limit, offset });
+    const rows = (data ?? []) as { total?: number | string }[];
+    const count = rows.length ? Number(rows[0].total ?? 0) : 0;
+    return NextResponse.json({ patients: rows, count, limit, offset });
   }
 
   query = query.eq("org_id", ctx.session.orgId);
