@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import type { OrganizationType, Patient, PatientMedicalBackground } from "@/lib/ficha/types";
+import { Button, ErrorNotice, buttonClasses } from "@/components/ui";
 import { ResumenPanel } from "./resumen-panel";
 import { AntecedentesPanel } from "./antecedentes-panel";
 import { AtencionesPanel } from "./atenciones-panel";
@@ -59,9 +61,33 @@ export function FichaTabs({
   canEdit?: boolean;
 }) {
   const tabs = orgType === "dental" ? TABS_DENTAL : TABS_CLINICA_COMMON;
+  const router = useRouter();
   const [active, setActive] = useState(tabs[0].id);
   const [auditoria, setAuditoria] = useState(isAdmin);
   const [editando, setEditando] = useState(false);
+  const [confirmandoEliminar, setConfirmandoEliminar] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
+  const [errorEliminar, setErrorEliminar] = useState<string | null>(null);
+
+  async function eliminarPaciente() {
+    setErrorEliminar(null);
+    setEliminando(true);
+    try {
+      const res = await fetch(`/api/ficha/patients/${patient.id}`, { method: "DELETE" });
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      if (!res.ok) {
+        setErrorEliminar(data?.error ?? "No se pudo eliminar el paciente");
+        return;
+      }
+      setConfirmandoEliminar(false);
+      router.push("/dashboard/pacientes");
+      router.refresh();
+    } catch {
+      setErrorEliminar("Error de conexión, intenta de nuevo");
+    } finally {
+      setEliminando(false);
+    }
+  }
 
   const visible = auditoria
     ? [...tabs, { id: "auditoria", label: "Auditoría" }]
@@ -126,6 +152,19 @@ export function FichaTabs({
             >
               PDF
             </a>
+            {canEdit ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setErrorEliminar(null);
+                  setConfirmandoEliminar(true);
+                }}
+                className={buttonClasses("danger", "sm")}
+                title="Eliminar paciente"
+              >
+                Eliminar
+              </button>
+            ) : null}
           </div>
         </div>
       </div>
@@ -172,6 +211,51 @@ export function FichaTabs({
         onClose={() => setEditando(false)}
         onSaved={() => setEditando(false)}
       />
+
+      {confirmandoEliminar ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="dialog-eliminar-paciente-titulo"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        >
+          <div
+            className="absolute inset-0 bg-neutral-900/50"
+            onClick={() => {
+              if (!eliminando) setConfirmandoEliminar(false);
+            }}
+          />
+          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-card">
+            <h2 id="dialog-eliminar-paciente-titulo" className="text-lg font-bold text-brand-navy">
+              ¿Eliminar {patient.full_name}?
+            </h2>
+            <p className="mt-2 text-sm text-neutral-600">
+              Se borrará la ficha del paciente y todo su historial clínico. Solo se pueden eliminar
+              pacientes que nunca agendaron una cita. Esta acción no se puede deshacer.
+            </p>
+
+            {errorEliminar ? (
+              <div className="mt-4">
+                <ErrorNotice message={errorEliminar} />
+              </div>
+            ) : null}
+
+            <div className="mt-6 flex justify-end gap-3">
+              <Button variant="ghost" size="sm" disabled={eliminando} onClick={() => setConfirmandoEliminar(false)}>
+                Cancelar
+              </Button>
+              <button
+                type="button"
+                onClick={eliminarPaciente}
+                disabled={eliminando}
+                className={buttonClasses("danger", "sm")}
+              >
+                {eliminando ? "Eliminando…" : "Eliminar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

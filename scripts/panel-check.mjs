@@ -1374,6 +1374,22 @@ let FICHA_PATIENT = null;
     const borrado = await req(admin, `/api/ficha/patients/${nuevoPaciente}`, { method: "DELETE" });
     check("el dueño/admin puede borrar el paciente de prueba", borrado.status === 200, `status=${borrado.status}`);
     nuevoPaciente = null;
+
+    // Un paciente que tiene (o tuvo) citas nunca se borra: el registro de
+    // agenda permanece, aunque la cita esté cancelada o completada.
+    const listaPanel = await req(admin, `/api/ficha/patients?q=${encodeURIComponent("Paciente Panel")}&limit=20`);
+    const conCita = (JSON.parse(listaPanel.text).patients ?? [])[0];
+    const delConCita = conCita
+      ? await req(admin, `/api/ficha/patients/${conCita.id}`, { method: "DELETE" })
+      : null;
+    check(
+      "no se puede borrar un paciente con citas",
+      delConCita?.status === 409 && json(delConCita).code === "tiene_citas",
+      delConCita ? `status=${delConCita.status} code=${json(delConCita).code}` : "sin paciente con citas",
+    );
+
+    const recDel = await req(recepcion, `/api/ficha/patients/${FICHA_PATIENT}`, { method: "DELETE" });
+    check("la recepción no borra pacientes", recDel.status === 403, `status=${recDel.status}`);
   } finally {
     const limpiar = async (id, nombre) => {
       if (!id) return;

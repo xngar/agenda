@@ -118,7 +118,10 @@ export async function DELETE(_request: Request, { params }: Params) {
 
   if (delError) {
     if (delError.code === "23503") {
-      return conflictMessage("El paciente tiene citas u otros registros; cancélalas antes de borrarlo", "tiene_registros");
+      return conflictMessage(
+        "Este paciente tiene o tuvo citas; solo se pueden eliminar pacientes sin citas",
+        "tiene_citas",
+      );
     }
     return dbError(delError);
   }
