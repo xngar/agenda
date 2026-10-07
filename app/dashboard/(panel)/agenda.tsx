@@ -12,7 +12,6 @@ interface Props {
   initial: DoctorAppointment[];
   dayKey: string;
   doctorId: string;
-  canSeeAll: boolean;
   unreadCount: number;
   /** Días cercanos que sí tienen citas, para explicar un día vacío. */
   diasConCitas: { day: string; total: number; pendientes: number }[];
@@ -32,7 +31,6 @@ export function Agenda({
   initial,
   dayKey,
   doctorId,
-  canSeeAll,
   unreadCount,
   diasConCitas,
 }: Props) {
@@ -149,7 +147,7 @@ export function Agenda({
         )
       ) : (
         <ul className="space-y-2">
-          {visibles.map((cita) => {
+          {visibles.map((cita, i) => {
             const { start, end } = parseAppointmentRange(cita.during);
             const cancelada = cita.status === "cancelled";
             const ocupado = pendiente?.startsWith(cita.id) ?? false;
@@ -157,85 +155,92 @@ export function Agenda({
             return (
               <li
                 key={cita.id}
-                className={`rounded-2xl border bg-white p-4 ${
-                  cancelada ? "border-neutral-200 opacity-70" : "border-neutral-200"
-                }`}
+                style={{ animationDelay: `${Math.min(i, 8) * 24}ms` }}
+                className={`anim-month-cell flex gap-3 rounded-2xl border border-l-[4px] p-4 transition-shadow hover:shadow-card sm:gap-4 ${
+                  RIEL[cita.status] ?? "border-l-neutral-300 bg-white"
+                } ${cancelada ? "opacity-70" : ""}`}
               >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-semibold text-neutral-900">
-                      <span className="tabular-nums">
-                        {formatTime(start)} – {formatTime(end)}
-                      </span>
-                      {cita.service?.name ? (
-                        <span className="ml-2 font-normal text-neutral-600">
-                          {cita.service.name}
-                        </span>
-                      ) : null}
-                    </p>
-                    <p className="mt-0.5 truncate text-sm text-neutral-700">
-                      {cita.patient?.full_name ?? "Paciente"}
-                    </p>
-                    <p className="text-sm text-neutral-500">
-                      {[cita.patient?.rut, cita.patient?.phone, cita.patient?.email]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <StatusBadge status={cita.status} />
-                    {!canSeeAll && cita.doctor_id !== doctorId ? null : null}
-                  </div>
+                {/*
+                  La hora es el ancla de la lectura: gutter tabular a la
+                  izquierda, igual que la grilla mensual usa el riel de
+                  color para contar el estado de un vistazo.
+                */}
+                <div className="w-14 shrink-0 pt-0.5 text-right sm:w-16">
+                  <p className="text-base font-semibold tabular-nums text-brand-navy">
+                    {formatTime(start)}
+                  </p>
+                  <p className="text-xs tabular-nums text-neutral-600">{formatTime(end)}</p>
                 </div>
 
-                {cita.status === "cancelled" && cita.cancel_reason ? (
-                  <p className="mt-2 text-sm text-neutral-500">
-                    Motivo: {cita.cancel_reason}
-                  </p>
-                ) : null}
-
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {cancelada ? (
-                    <Accion
-                      etiqueta="Reabrir"
-                      onClick={() => cambiar(cita.id, "reopen")}
-                      disabled={ocupado}
-                    />
-                  ) : (
-                    <>
-                      {/*
-                        Una cita recién creada queda en `pending`. Mientras
-                        no se confirma, el paciente no tiene garantía de que
-                        el espacio siga reservado para él, así que el botón
-                        va primero cuando corresponde.
-                      */}
-                      {cita.status === "pending" ? (
-                        <Accion
-                          etiqueta="Confirmar"
-                          onClick={() => cambiar(cita.id, "confirmed")}
-                          disabled={ocupado}
-                          destacado
-                        />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-[15px] font-semibold text-neutral-900">
+                        {cita.patient?.full_name ?? "Paciente"}
+                      </p>
+                      {cita.service?.name ? (
+                        <p className="mt-0.5 truncate text-sm text-neutral-600">
+                          {cita.service.name}
+                        </p>
                       ) : null}
+                      <p className="mt-0.5 truncate text-xs text-neutral-600">
+                        {[cita.patient?.rut, cita.patient?.phone, cita.patient?.email]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
+
+                    <StatusBadge status={cita.status} />
+                  </div>
+
+                  {cita.status === "cancelled" && cita.cancel_reason ? (
+                    <p className="mt-2 text-sm text-neutral-500">
+                      Motivo: {cita.cancel_reason}
+                    </p>
+                  ) : null}
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {cancelada ? (
                       <Accion
-                        etiqueta="Completar"
-                        onClick={() => cambiar(cita.id, "completed")}
+                        etiqueta="Reabrir"
+                        onClick={() => cambiar(cita.id, "reopen")}
                         disabled={ocupado}
                       />
-                      <Accion
-                        etiqueta="No asistió"
-                        onClick={() => cambiar(cita.id, "no_show")}
-                        disabled={ocupado}
-                      />
-                      <Accion
-                        etiqueta="Cancelar"
-                        onClick={() => cambiar(cita.id, "cancelled")}
-                        disabled={ocupado}
-                        tono="peligro"
-                      />
-                    </>
-                  )}
+                    ) : (
+                      <>
+                        {/*
+                          Una cita recién creada queda en `pending`. Mientras
+                          no se confirme, el paciente no tiene garantía de que
+                          el espacio siga reservado para él, así que el botón
+                          va primero cuando corresponde.
+                        */}
+                        {cita.status === "pending" ? (
+                          <Accion
+                            etiqueta="Confirmar"
+                            onClick={() => cambiar(cita.id, "confirmed")}
+                            disabled={ocupado}
+                            destacado
+                          />
+                        ) : null}
+                        <Accion
+                          etiqueta="Completar"
+                          onClick={() => cambiar(cita.id, "completed")}
+                          disabled={ocupado}
+                        />
+                        <Accion
+                          etiqueta="No asistió"
+                          onClick={() => cambiar(cita.id, "no_show")}
+                          disabled={ocupado}
+                        />
+                        <Accion
+                          etiqueta="Cancelar"
+                          onClick={() => cambiar(cita.id, "cancelled")}
+                          disabled={ocupado}
+                          tono="peligro"
+                        />
+                      </>
+                    )}
+                  </div>
                 </div>
               </li>
             );
@@ -249,6 +254,19 @@ export function Agenda({
     </section>
   );
 }
+
+/**
+ * Riel y fondo por estado. Misma historia de color que `CHIP_TONO` en
+ * month-view (navy = confirmada, celeste = por confirmar, gris = cancelada)
+ * para que día y mes se lean como la misma agenda.
+ */
+const RIEL: Record<string, string> = {
+  confirmed: "border-l-brand-navy bg-white",
+  pending: "border-l-brand-sky-400 bg-brand-sky-50",
+  cancelled: "border-l-neutral-300 bg-white",
+  completed: "border-l-brand-navy-300 bg-white",
+  no_show: "border-l-red-400 bg-white",
+};
 
 function Accion({
   etiqueta,

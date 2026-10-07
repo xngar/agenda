@@ -125,25 +125,21 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-brand-navy">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-navy-600">
             {verMes ? "Calendario" : "Agenda"}
-          </h1>
-          <p className="text-sm text-neutral-600">
+          </p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-brand-navy">
             {verMes ? (
-              <>
-                <time dateTime={mesKey}>{monthLabel(mesKey)}</time>
-                {" · "}
-                {appointments.length} cita{appointments.length === 1 ? "" : "s"}
-                {appointments.length > 0 ? " este mes" : ""}
-              </>
+              <time dateTime={mesKey}>{monthLabel(mesKey)}</time>
             ) : (
-              <>
-                <time dateTime={dayKey}>{dayLabel(dayKey)}</time>
-                {" · "}
-                {appointments.length} cita{appointments.length === 1 ? "" : "s"}
-                {appointments.length > 0 ? " este día" : ""}
-              </>
+              <time dateTime={dayKey}>{dayLabel(dayKey)}</time>
             )}
+          </h1>
+          <p className="mt-1.5">
+            <span className="inline-flex items-center rounded-full border border-neutral-200 bg-white px-2.5 py-0.5 text-xs font-medium tabular-nums text-neutral-600">
+              {appointments.length} cita{appointments.length === 1 ? "" : "s"}
+              {appointments.length > 0 ? (verMes ? " este mes" : " este día") : ""}
+            </span>
           </p>
         </div>
 
@@ -181,7 +177,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           initial={appointments}
           dayKey={dayKey}
           doctorId={onlyDoctorId ?? session.id}
-          canSeeAll={session.isAdmin}
           unreadCount={unreadCount}
           diasConCitas={diasConCitas}
         />
