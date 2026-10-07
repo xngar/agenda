@@ -74,6 +74,8 @@ export interface SpecialtyProfile {
 export interface Patient {
   id: string;
   org_id: string;
+  doctor_id: string | null;
+  doctors: { full_name: string } | null;
   full_name: string;
   nombres: string | null;
   apellido_paterno: string | null;

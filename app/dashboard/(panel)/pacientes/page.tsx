@@ -4,6 +4,7 @@ import { getDoctorSession, isClinical } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { Card, CardHeader, EmptyState, buttonClasses } from "@/components/ui";
 import { PatientsSearch } from "./patients-search";
+import { NewPatientButton } from "./patient-form";
 
 interface ListPatient {
   id: string;
@@ -14,6 +15,7 @@ interface ListPatient {
   birth_date: string | null;
   sex: string | null;
   patient_status?: string | null;
+  doctor?: { full_name: string } | null;
 }
 
 function formatRut(rut: string | null): string {
@@ -41,7 +43,7 @@ export default async function PacientesPage({
   if (clinical) {
     let query = supabase
       .from("patients")
-      .select("id,full_name,rut,phone,email,birth_date,sex,patient_status")
+      .select("id,full_name,rut,phone,email,birth_date,sex,patient_status,doctor_id,doctors!patients_doctor_id_fkey(full_name)")
       .eq("org_id", session.orgId);
     if (stat) query = query.eq("patient_status", stat);
     if (q) {
@@ -60,11 +62,16 @@ export default async function PacientesPage({
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-semibold text-brand-navy">Pacientes</h1>
-        <p className="text-sm text-neutral-600">
-          {clinical ? "Fichas clínicas de tu organización." : "Datos de contacto de tu organización (agenda y atención)."}
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold text-brand-navy">Pacientes</h1>
+          <p className="text-sm text-neutral-600">
+            {clinical
+              ? "Fichas clínicas de tu organización. Registra los tuyos y edita los que te pertenecen."
+              : "Datos de contacto de tu organización (agenda y atención)."}
+          </p>
+        </div>
+        {clinical ? <NewPatientButton /> : null}
       </div>
 
       <Card>
@@ -103,7 +110,10 @@ export default async function PacientesPage({
                 <div className="min-w-0">
                   <p className="truncate font-medium text-neutral-900">{p.full_name}</p>
                   <p className="text-sm text-neutral-600">
-                    {formatRut(p.rut)} {p.email ? `· ${p.email}` : ""}
+                    {formatRut(p.rut)} {p.email ? `· ${p.email}` : ""}{" "}
+                    {p.doctor?.full_name ? (
+                      <span className="text-brand-navy-700">· Paciente de {p.doctor.full_name}</span>
+                    ) : null}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-neutral-600">

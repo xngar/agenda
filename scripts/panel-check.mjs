@@ -194,6 +194,15 @@ console.log("\n[5] Aislamiento por RLS entre profesionales");
 
   const body = JSON.parse(booked.text);
 
+  // La reserva online deja el paciente al médico que atendió la cita.
+  const listaPac = await req(admin, `/api/ficha/patients?q=${encodeURIComponent("Paciente Panel")}&limit=20`);
+  const propietario = (JSON.parse(listaPac.text).patients ?? []).find((p) => p.full_name === "Paciente Panel" && p.doctor_id === slot.doctor_id);
+  check(
+    "la reserva online asigna el paciente al médico de la cita",
+    Boolean(propietario),
+    propietario ? `doctor_id=${propietario.doctor_id}` : "sin coincidencia",
+  );
+
   // Camila es admin: debe ver la cita de otro profesional.
   // OJO: se busca el NOMBRE del paciente, no el id. El id se usa como
   // `key` de React y nunca aparece en el HTML, así que buscarlo daría
@@ -1292,6 +1301,88 @@ let FICHA_PATIENT = null;
   // -- La recepción no toca nada clínico --
   const recReceta = await req(recepcion, `/api/ficha/patients/${FICHA_PATIENT}/prescriptions`);
   check("la recepción no lee recetas", recReceta.status === 403, `status=${recReceta.status}`);
+
+  // -- Propiedad: cada médico registra/edita los suyos; el resto solo ve --
+  const RUT_DUENO = rutUnico();
+  let nuevoPaciente = null;
+  let pacienteDeCamila = null;
+  try {
+    const nuevo = await req(doc, "/api/ficha/patients", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        full_name: "Ana Propiedad",
+        rut: RUT_DUENO,
+        phone: "+56900000002",
+        email: `dueno.${Date.now()}@test.cl`,
+        sex: "female",
+      }),
+    });
+    check("un médico registra su propio paciente", nuevo.status === 201, `status=${nuevo.status}`);
+    nuevoPaciente = json(nuevo).patient?.id ?? null;
+    check(
+      "y queda asignado a él como dueño",
+      json(nuevo).patient?.doctor_id === SEBASTIAN,
+      `doctor_id=${json(nuevo).patient?.doctor_id}`,
+    );
+
+    const adminEdit = await req(admin, `/api/ficha/patients/${nuevoPaciente}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: "+56911112222" }),
+    });
+    check("el administrador puede editar pacientes de otros", adminEdit.status === 200, `status=${adminEdit.status}`);
+    check(
+      "y conserva el dueño original",
+      json(adminEdit).patient?.doctor_id === SEBASTIAN,
+      `doctor_id=${json(adminEdit).patient?.doctor_id}`,
+    );
+
+    const propio = await req(admin, "/api/ficha/patients", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        full_name: "Bernarda De Camila",
+        rut: rutUnico(),
+        email: `cmila.${Date.now()}@test.cl`,
+      }),
+    });
+    pacienteDeCamila = json(propio).patient?.id ?? null;
+    check("el administrador registra un paciente suyo", propio.status === 201, `status=${propio.status}`);
+
+    const cruceEdit = await req(doc, `/api/ficha/patients/${pacienteDeCamila}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: "+56955554444" }),
+    });
+    check(
+      "un médico NO edita el paciente de otro",
+      cruceEdit.status === 403 || cruceEdit.status === 404,
+      `status=${cruceEdit.status}`,
+    );
+
+    const cruceDel = await req(doc, `/api/ficha/patients/${pacienteDeCamila}`, { method: "DELETE" });
+    check("tampoco lo borra", cruceDel.status === 403 || cruceDel.status === 404, `status=${cruceDel.status}`);
+
+    const recPost = await req(recepcion, "/api/ficha/patients", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ full_name: "Nadie", email: `nadie.${Date.now()}@test.cl` }),
+    });
+    check("la recepción no registra pacientes", recPost.status === 403, `status=${recPost.status}`);
+
+    const borrado = await req(admin, `/api/ficha/patients/${nuevoPaciente}`, { method: "DELETE" });
+    check("el dueño/admin puede borrar el paciente de prueba", borrado.status === 200, `status=${borrado.status}`);
+    nuevoPaciente = null;
+  } finally {
+    const limpiar = async (id, nombre) => {
+      if (!id) return;
+      const r = await req(admin, `/api/ficha/patients/${id}`, { method: "DELETE" });
+      console.log(`  (paciente ${nombre} ${id.slice(0, 8)} borrado para limpiar: ${r.status})`);
+    };
+    await limpiar(nuevoPaciente, "Ana");
+    await limpiar(pacienteDeCamila, "Bernarda");
+  }
 
   // -- Limpieza del borrador/firma creados en esta prueba --
   // No hay endpoint de borrado (inmutabilidad), así que este check es

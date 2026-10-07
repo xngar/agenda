@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 
   let query;
   if (ctx.clinical) {
-    query = ctx.supabase.from("patients").select("id,full_name,rut,phone,email,birth_date,sex,patient_status,org_id,created_at");
+    query = ctx.supabase.from("patients").select("id,full_name,rut,phone,email,birth_date,sex,patient_status,doctor_id,org_id,created_at");
     if (status === "active" || status === "inactive" || status === "abandoned") {
       query = query.eq("patient_status", status);
     }
@@ -67,6 +67,8 @@ export async function POST(request: Request) {
     .from("patients")
     .insert({
       org_id: ctx.session.orgId,
+      doctor_id: ctx.session.id,
+      consent_at: new Date().toISOString(),
       full_name: fullName,
       ...data,
       specialty_profile: data.specialty_profile ?? {},

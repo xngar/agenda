@@ -32,7 +32,7 @@ export default async function PacientePage({ params }: { params: Promise<{ id: s
   const supabase = await supabaseServer();
   const { data: patient, error } = await supabase
     .from("patients")
-    .select("*, patient_medical_background (*)")
+    .select("*, doctors!patients_doctor_id_fkey (full_name), patient_medical_background (*)")
     .eq("org_id", session.orgId)
     .eq("id", id)
     .maybeSingle();
@@ -57,6 +57,7 @@ export default async function PacientePage({ params }: { params: Promise<{ id: s
       orgType={(org.data?.type as OrganizationType) ?? "dental"}
       orgId={session.orgId}
       isAdmin={session.isAdmin}
+      canEdit={session.isAdmin || patient.doctor_id === session.id}
     />
   );
 }

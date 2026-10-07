@@ -10,6 +10,7 @@ import { PlanPanel } from "./plan-panel";
 import { RecetasPanel } from "./recetas-panel";
 import { AdjuntosPanel } from "./adjuntos-panel";
 import { AuditoriaPanel } from "./auditoria-panel";
+import { PatientFormModal } from "../patient-form";
 
 const TABS_CLINICA_COMMON = [
   { id: "resumen", label: "Resumen" },
@@ -48,16 +49,19 @@ export function FichaTabs({
   orgType,
   orgId,
   isAdmin,
+  canEdit = false,
 }: {
   patient: Patient;
   background: PatientMedicalBackground | null;
   orgType: OrganizationType;
   orgId: string;
   isAdmin: boolean;
+  canEdit?: boolean;
 }) {
   const tabs = orgType === "dental" ? TABS_DENTAL : TABS_CLINICA_COMMON;
   const [active, setActive] = useState(tabs[0].id);
   const [auditoria, setAuditoria] = useState(isAdmin);
+  const [editando, setEditando] = useState(false);
 
   const visible = auditoria
     ? [...tabs, { id: "auditoria", label: "Auditoría" }]
@@ -78,10 +82,26 @@ export function FichaTabs({
           <p className="mt-1 text-sm text-neutral-600">
             {patient.rut ?? "Sin RUT"} · {patient.sex && patient.sex !== "undisclosed" ? `${patient.sex === "female" ? "Mujer" : patient.sex === "male" ? "Hombre" : "Otro"} · ` : ""}
             {patient.birth_date ? `Nacido/a ${patient.birth_date.slice(0, 10)}` : "Fecha de nacimiento no registrada"}
+            {patient.doctors?.full_name ? (
+              <>
+                {" "}
+                · <span className="text-brand-navy-700">Paciente de {patient.doctors.full_name}</span>
+              </>
+            ) : null}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-sm">
+            {canEdit ? (
+              <button
+                type="button"
+                onClick={() => setEditando(true)}
+                className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:bg-brand-navy-50"
+                title="Editar datos del paciente"
+              >
+                Editar
+              </button>
+            ) : null}
             <label className="flex items-center gap-1.5">
               <input
                 type="checkbox"
@@ -145,6 +165,13 @@ export function FichaTabs({
       ) : active === "auditoria" ? (
         <AuditoriaPanel patientId={patient.id} />
       ) : null}
+
+      <PatientFormModal
+        open={editando}
+        initial={{ id: patient.id, full_name: patient.full_name, rut: patient.rut, phone: patient.phone, email: patient.email, birth_date: patient.birth_date, sex: patient.sex }}
+        onClose={() => setEditando(false)}
+        onSaved={() => setEditando(false)}
+      />
     </div>
   );
 }
