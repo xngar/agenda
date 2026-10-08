@@ -12,6 +12,7 @@ const items = [
 
 const soloAdmin = [
   { href: "/dashboard/admin", label: "Equipo" },
+  { href: "/dashboard/servicios", label: "Servicios" },
   { href: "/dashboard/feriados", label: "Feriados" },
 ];
 

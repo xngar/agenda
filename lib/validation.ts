@@ -196,6 +196,13 @@ export const serviceSchema = z.object({
   active: z.boolean().default(true),
 });
 
+export const serviceUpdateSchema = z.object({
+  serviceId: uuidSchema,
+  name: z.string().trim().min(2, "El nombre es demasiado corto").max(80).optional(),
+  durationMin: z.number().int().min(5, "Mínimo 5 minutos").max(480, "Máximo 8 horas").optional(),
+  active: z.boolean().optional(),
+});
+
 /** Alta de un miembro del equipo desde el panel del administrador. */
 export const doctorSchema = z.object({
   email: emailSchema,

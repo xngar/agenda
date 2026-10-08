@@ -5,9 +5,10 @@
 
 /** Servicios con los que arranca cualquier clínica nueva. */
 export const DEFAULT_SERVICES: { name: string; duration_min: number }[] = [
-  { name: "Control", duration_min: 30 },
-  { name: "Limpieza", duration_min: 45 },
+  { name: "Primera consulta", duration_min: 45 },
+  { name: "Control / seguimiento", duration_min: 30 },
   { name: "Urgencia", duration_min: 30 },
+  { name: "Otra consulta", duration_min: 30 },
 ];
 
 /**
