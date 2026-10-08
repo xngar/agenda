@@ -86,13 +86,24 @@ export async function getCatalog(orgSlug: string): Promise<Catalog> {
   const orgId = org.id as string;
   const [services, doctors, holidays] = await Promise.all([
     supabase.from('services').select('id,name,duration_min,active').eq('org_id', orgId).eq('active', true),
-    supabase.from('doctors').select('id,full_name,specialty').eq('org_id', orgId).eq('active', true),
+    supabase.from('doctors').select('id,full_name,specialty,role').eq('org_id', orgId).eq('active', true),
     supabase.from('clinic_holidays').select('date,name').eq('org_id', orgId),
   ]);
   if (services.error) throw new Error('No se pudieron leer los servicios');
   if (doctors.error) throw new Error('No se pudieron leer los profesionales');
   if (holidays.error) throw new Error('No se pudieron leer los feriados');
-  return { settings: org as ClinicSettings, services: (services.data??[]) as Service[], doctors: (doctors.data??[]) as PublicDoctor[], holidays: (holidays.data??[]) as Holiday[] };
+  return {
+    settings: org as ClinicSettings,
+    services: (services.data ?? []) as Service[],
+    doctors: ((doctors.data ?? []) as (PublicDoctor & { role?: string })[])
+      .filter((d) => d.role === 'professional')
+      .map((rest) => {
+        const { role: _unused, ...clean } = rest as PublicDoctor & { role?: string };
+        void _unused;
+        return clean;
+      }) as PublicDoctor[],
+    holidays: (holidays.data ?? []) as Holiday[],
+  };
 }
 
 /** Organizaci�n activa por slug, para el branding del sitio p�blico. */

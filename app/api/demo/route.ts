@@ -17,7 +17,6 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json({ ok: false, error: "Invalid" }, { status: 400 });
     }
-    // eslint-disable-next-line no-console
     console.log("demo-submission", parsed.data);
     return NextResponse.json({ ok: true });
   } catch {

@@ -46,10 +46,13 @@ export interface ClinicSettings {
   cancel_min_hours: number;
 }
 
+export type DoctorRoleType = "professional" | "reception";
+
 export interface PublicDoctor {
   id: string;
   full_name: string;
   specialty: string | null;
+  role?: DoctorRoleType | string;
 }
 
 export interface Service {
