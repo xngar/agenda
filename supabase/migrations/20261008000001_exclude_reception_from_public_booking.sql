@@ -1,9 +1,21 @@
--- Excluir recepcionistas del flujo publico de reserva (defensa en capas)
+-- Excluir recepcionistas del flujo publico de reserva (defensa en capas).
+-- Patch minimo sobre las definiciones vigentes: NO reemplaza la logica actual
+-- de book_appointment (normalizacion de RUT, doctor_id del paciente y manejo
+-- de unique_violation), solo agrega la exigencia de role = 'professional'.
+
 -- 1) get_available_slots: solo profesionales bookables
-create or replace function get_available_slots(p_doctor uuid, p_date date, p_duration int)
+create or replace function get_available_slots(p_doctor uuid, p_date date, p_duration integer)
 returns table(slot_start timestamptz, slot_end timestamptz)
-language sql stable as $$
-  with cfg as (select * from clinic_settings where id = 1),
+language sql
+stable
+set search_path to 'public', 'pg_temp'
+as $function$
+  with cfg as (
+    select o.*
+    from organizations o
+    join doctors d on d.org_id = o.id
+    where d.id = p_doctor
+  ),
   activo as (
     select d.id from doctors d where d.id = p_doctor and d.active and d.role = 'professional'
   ),
@@ -17,7 +29,7 @@ language sql stable as $$
     ) gs
     where r.doctor_id = p_doctor
       and r.weekday = extract(dow from p_date)
-      and not exists (select 1 from clinic_holidays h where h.date = p_date)
+      and not exists (select 1 from clinic_holidays h where h.org_id = cfg.id and h.date = p_date)
       and p_date <= (now() at time zone cfg.timezone)::date + cfg.max_days_ahead
   )
   select s, e from cand, cfg
@@ -31,26 +43,14 @@ language sql stable as $$
       select 1 from time_off t
       where t.doctor_id = p_doctor and t.during && tstzrange(s, e))
   order by s;
-$$;
+$function$;
 
--- 2) get_available_slots_any (2 args)
-create or replace function get_available_slots_any(p_date date, p_duration int)
+-- 2) get_available_slots_any: solo profesionales bookables
+create or replace function get_available_slots_any(p_date date, p_duration integer, p_org_id uuid default null)
 returns table(doctor_id uuid, slot_start timestamptz, slot_end timestamptz)
-language sql stable
-set search_path = public, pg_temp
-as $$
-  select d.id, s.slot_start, s.slot_end
-  from doctors d
-  cross join lateral get_available_slots(d.id, p_date, p_duration) s
-  where d.active and d.role = 'professional'
-  order by s.slot_start, d.id;
-$$;
-
--- 3) get_available_slots_any (3 args con org)
-create or replace function get_available_slots_any(p_date date, p_duration int, p_org_id uuid default null)
-returns table(doctor_id uuid, slot_start timestamptz, slot_end timestamptz)
-language sql stable
-set search_path = public, pg_temp
+language sql
+stable
+set search_path = 'public', 'pg_temp'
 as $$
   select d.id, s.slot_start, s.slot_end
   from doctors d
@@ -59,12 +59,10 @@ as $$
   order by s.slot_start, d.id;
 $$;
 
-revoke all on function get_available_slots_any(date, int, uuid) from public;
-grant execute on function get_available_slots_any(date, int, uuid) to anon, authenticated;
-revoke all on function get_available_slots_any(date, int) from public;
-grant execute on function get_available_slots_any(date, int) to anon, authenticated;
+revoke all on function get_available_slots_any(date, integer, uuid) from public;
+grant execute on function get_available_slots_any(date, integer, uuid) to anon, authenticated;
 
--- 4) Defensa en profundidad: book_appointment solo permite profesionales bookables
+-- 3) Defensa en profundidad: book_appointment solo permite profesionales bookables
 create or replace function book_appointment(
   p_doctor uuid,
   p_service uuid,
@@ -87,6 +85,7 @@ declare
   v_patient uuid;
   v_appointment uuid;
   v_slot timestamptz;
+  v_rut text;
 begin
   if p_doctor is null or p_service is null or p_start is null then
     raise exception using errcode = 'A0002', message = 'slot_no_disponible';
@@ -121,14 +120,29 @@ begin
     raise exception using errcode = 'A0002', message = 'slot_no_disponible';
   end if;
 
-  insert into patients (org_id, full_name, rut, phone, email, consent_at)
-  values (v_org, p_full_name, p_rut, p_phone, lower(p_email), now())
-  on conflict (org_id, lower(email)) do update
-    set full_name = excluded.full_name,
-        rut = coalesce(nullif(excluded.rut, ''), patients.rut),
-        phone = coalesce(nullif(excluded.phone, ''), patients.phone),
-        consent_at = now()
-  returning id into v_patient;
+  v_rut := regexp_replace(upper(p_rut), '[^0-9K]', '', 'g');
+
+  begin
+    insert into patients (org_id, doctor_id, full_name, rut, phone, email, consent_at)
+    values (v_org, p_doctor, p_full_name, v_rut, p_phone, lower(p_email), now())
+    on conflict (org_id, lower(email)) do update
+      set full_name = excluded.full_name,
+          doctor_id = coalesce(patients.doctor_id, excluded.doctor_id),
+          rut = coalesce(nullif(excluded.rut, ''), patients.rut),
+          phone = coalesce(nullif(excluded.phone, ''), patients.phone),
+          consent_at = now()
+    returning id into v_patient;
+  exception when unique_violation then
+    insert into patients (org_id, doctor_id, full_name, rut, phone, email, consent_at)
+    values (v_org, p_doctor, p_full_name, v_rut, p_phone, lower(p_email), now())
+    on conflict (org_id, regexp_replace(upper(rut), '[^0-9K]', '', 'g')) do update
+      set full_name = excluded.full_name,
+          doctor_id = coalesce(patients.doctor_id, excluded.doctor_id),
+          email = coalesce(nullif(excluded.email, ''), patients.email),
+          phone = coalesce(nullif(excluded.phone, ''), patients.phone),
+          consent_at = now()
+    returning id into v_patient;
+  end;
 
   begin
     insert into appointments (doctor_id, patient_id, service_id, during, manage_token_hash, org_id)

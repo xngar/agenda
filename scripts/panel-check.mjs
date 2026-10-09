@@ -4,10 +4,22 @@
  * que los cambios de estado funcionan.
  */
 const BASE = process.env.BASE ?? "http://localhost:3111";
-const SERVICE = "dccfd3d6-7e66-460b-93ce-989ecbfe270f";
+const SERVICE_FALLBACK = "dccfd3d6-7e66-460b-93ce-989ecbfe270f";
+let SERVICE = null;
 const SEBASTIAN = "3a335e2c-9881-473a-a98c-94c3661b977e";
 const CAMILA = "d4555fbf-7e8a-4f6d-901c-d6f2b410c55b";
-const slotDate = "2026-10-08";
+
+/** Primer día hábil (lun-vie) a partir de `offset` días desde hoy, en formato YYYY-MM-DD. */
+function nextWorkday(offset = 1) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+let slotDate = nextWorkday(1);
 
 /** RUT válido y distinto en cada corrida (dígito verificador mod-11 con K). */
 function rutUnico() {
@@ -78,6 +90,50 @@ async function req(cookies, path, init = {}) {
 }
 
 const hoy = await (async () => {
+  // Detectar una fecha hábil y un serviceId con disponibilidad real, de modo
+  // que el script siga funcionando aunque cambien los UUID sembrados o el
+  // margen mínimo de reserva. Se prueban varios días hábiles hacia adelante.
+  const candidateDates = [];
+  for (let i = 1; i <= 21 && candidateDates.length < 10; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    if (d.getDay() === 0 || d.getDay() === 6) continue;
+    candidateDates.push(
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
+    );
+  }
+
+  let serviceIds = [];
+  try {
+    const html = await (await fetch(`${BASE}/reservar`)).text();
+    serviceIds = [
+      ...html.matchAll(
+        /value="([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})"/g,
+      ),
+    ].map((m) => m[1]);
+  } catch {
+    // Sin catálogo: se usa el UUID de respaldo.
+  }
+  if (serviceIds.length === 0) serviceIds = [SERVICE_FALLBACK];
+
+  for (const date of candidateDates) {
+    for (const serviceId of serviceIds) {
+      try {
+        const slots = await (
+          await fetch(`${BASE}/api/slots?date=${date}&serviceId=${serviceId}`)
+        ).json();
+        if ((slots.slots ?? []).length > 0) {
+          SERVICE = serviceId;
+          slotDate = date;
+          return { slots: slots.slots };
+        }
+      } catch {
+        // Continúa con el siguiente candidato.
+      }
+    }
+  }
+
+  SERVICE = SERVICE_FALLBACK;
   const slots = await (
     await fetch(`${BASE}/api/slots?date=${slotDate}&serviceId=${SERVICE}`)
   ).json();

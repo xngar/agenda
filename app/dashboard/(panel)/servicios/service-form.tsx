@@ -20,10 +20,10 @@ export interface ServiceItem {
 
 export function ServiceForm({
   edit,
-  onCancel,
+  onCancel = () => {},
 }: {
   edit?: ServiceItem | null;
-  onCancel: () => void;
+  onCancel?: () => void;
 }) {
   const router = useRouter();
   const [enviando, setEnviando] = useState(false);

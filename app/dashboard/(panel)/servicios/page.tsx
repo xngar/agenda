@@ -27,7 +27,7 @@ export default async function ServiciosPage() {
         </p>
       </div>
 
-      <ServiceForm onCancel={() => {}} />
+      <ServiceForm />
 
       <ServiceList initial={services ?? []} />
 
