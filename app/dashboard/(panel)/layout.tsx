@@ -23,6 +23,9 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   const session = await getDoctorSession();
   if (!session) redirect("/dashboard/login");
 
+  // El super admin no opera ninguna clínica: vive en el área de plataforma.
+  if (session.isSuperAdmin) redirect("/dashboard/plataforma/organizaciones");
+
   return (
     <div className="min-h-dvh bg-neutral-50">
       <header className="border-b border-neutral-200 bg-white">

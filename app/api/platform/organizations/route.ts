@@ -4,24 +4,7 @@ import { getDoctorSession } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { DEFAULT_TIMEZONE } from "@/lib/dates";
 import { DEFAULT_AVAILABILITY, DEFAULT_SERVICES } from "@/lib/defaults";
-
-const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-
-/**
- * Identificadores que ya ocupan una ruta estática del sitio. Un slug con
- * estos valores dejaría la clínica inalcanzable en `/{slug}`, así que se
- * rechazan al crear la organización.
- */
-const RESERVED_SLUGS = new Set([
-  "reservar",
-  "privacidad",
-  "cita",
-  "dashboard",
-  "api",
-  "plataforma",
-  "login",
-  "_next",
-]);
+import { RESERVED_SLUGS, slugPattern } from "@/lib/platform";
 
 const organizationSchema = z.object({
   name: z.string().trim().min(3, "El nombre es demasiado corto").max(120, "El nombre es demasiado largo"),
@@ -43,6 +26,31 @@ const organizationSchema = z.object({
   adminPassword: z.string().min(8, "La contraseña debe tener al menos 8 caracteres").max(72),
   adminSpecialty: z.string().trim().max(80).optional(),
 });
+
+/** Campos editables de una organización existente (todos opcionales). */
+const patchSchema = z
+  .object({
+    id: z.string().uuid("Organización inválida"),
+    name: z.string().trim().min(3, "El nombre es demasiado corto").max(120, "El nombre es demasiado largo"),
+    slug: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .min(3, "El identificador es demasiado corto")
+      .max(50, "El identificador es demasiado largo")
+      .regex(slugPattern, "Usa sólo letras minúsculas, números y guiones"),
+    timezone: z.string().trim().min(1, "Indica la zona horaria"),
+    address: z.string().trim().max(200).nullable(),
+    phone: z.string().trim().max(40).nullable(),
+    supportEmail: z.string().trim().toLowerCase().email("Correo de soporte inválido").nullable(),
+    consentText: z.string().trim().max(2000).nullable(),
+    active: z.boolean(),
+  })
+  .partial()
+  .extend({ id: z.string().uuid("Organización inválida") })
+  .refine((v) => Object.keys(v).some((key) => key !== "id"), {
+    message: "No hay nada que actualizar",
+  });
 
 /** Sólo el equipo de la plataforma administra organizaciones. */
 async function plataformaAdmin(
@@ -302,6 +310,92 @@ export async function DELETE(request: Request) {
   }
 
   return NextResponse.json({ ok: true, organization: org });
+}
+
+/**
+ * Actualiza los datos generales de una organización: nombre, identificador
+ * (URL pública), zona horaria, contacto, consentimiento y estado activa.
+ */
+export async function PATCH(request: Request) {
+  const session = await getDoctorSession();
+  if (!session) {
+    return NextResponse.json({ error: "Sesión no válida" }, { status: 401 });
+  }
+
+  const supabase = supabaseAdmin();
+  if (!(await plataformaAdmin(supabase, session.id))) {
+    return NextResponse.json(
+      { error: "Sólo el equipo de la plataforma puede editar organizaciones" },
+      { status: 403 },
+    );
+  }
+
+  const raw = await request.json().catch(() => null);
+  const body = patchSchema.safeParse(raw);
+  if (!body.success) {
+    return NextResponse.json(
+      { error: body.error.issues[0]?.message ?? "Revisa los datos" },
+      { status: 422 },
+    );
+  }
+
+  const { id, supportEmail, ...rest } = body.data;
+
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("id,name,slug")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!org) {
+    return NextResponse.json(
+      { error: "No existe esa organización", code: "no_existe" },
+      { status: 404 },
+    );
+  }
+
+  if (rest.slug !== undefined && rest.slug !== org.slug) {
+    if (RESERVED_SLUGS.has(rest.slug)) {
+      return NextResponse.json(
+        { error: "Ese identificador está reservado", code: "slug_reservado" },
+        { status: 422 },
+      );
+    }
+
+    const { data: choque } = await supabase
+      .from("organizations")
+      .select("id")
+      .eq("slug", rest.slug)
+      .maybeSingle();
+    if (choque) {
+      return NextResponse.json(
+        { error: "Ya existe otra organización con ese identificador", code: "slug_duplicado" },
+        { status: 409 },
+      );
+    }
+  }
+
+  const update: Record<string, unknown> = { ...rest, updated_at: new Date().toISOString() };
+  if (supportEmail !== undefined) update.support_email = supportEmail;
+
+  const { data: actualizada, error: updateError } = await supabase
+    .from("organizations")
+    .update(update)
+    .eq("id", id)
+    .select("id,name,slug,timezone,address,phone,support_email,consent_text,active,created_at,updated_at")
+    .single();
+
+  if (updateError) {
+    if (updateError.code === "23505") {
+      return NextResponse.json(
+        { error: "Ya existe otra organización con ese identificador", code: "slug_duplicado" },
+        { status: 409 },
+      );
+    }
+    return NextResponse.json({ error: "No se pudo actualizar la organización" }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true, organization: actualizada });
 }
 
 /**

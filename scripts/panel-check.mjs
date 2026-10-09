@@ -1424,11 +1424,125 @@ const plataforma = jar();
       adminPassword: "AgendaDev2026!",
     }),
   });
-  check(
+check(
     "se crea una clínica de prueba",
     creada.status === 201,
     `status=${creada.status} ${json(creada).error ?? ""}`,
   );
+
+  // -- Edición (PATCH): nombre, estado y validaciones --
+  const patch = (cookies, body) =>
+    req(cookies, "/api/platform/organizations", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  const resetPass = (cookies, body) =>
+    req(cookies, "/api/platform/organizations/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+  const panelSuper = await req(plataforma, "/dashboard");
+  check(
+    "el super admin no cae en el panel de una clínica",
+    panelSuper.location === "/dashboard/plataforma/organizaciones",
+    `location=${panelSuper.location}`,
+  );
+
+  const creadaJson = json(creada);
+  const orgIdPrueba = creadaJson.organization?.id;
+  const editada = await patch(plataforma, { id: orgIdPrueba, name: "Clínica Borrable Editada", active: false });
+  check(
+    "se edita el nombre y el estado de la clínica",
+    editada.status === 200 && json(editada).organization?.name === "Clínica Borrable Editada" && json(editada).organization?.active === false,
+    `status=${editada.status} ${json(editada).error ?? ""}`,
+  );
+
+  const revertida = await patch(plataforma, { id: orgIdPrueba, name: "Clínica Borrable", active: true });
+  check(
+    "se revierte el nombre y se reactiva",
+    revertida.status === 200 && json(revertida).organization?.name === "Clínica Borrable" && json(revertida).organization?.active === true,
+    `status=${revertida.status} ${json(revertida).error ?? ""}`,
+  );
+
+  const slugOcupado = await patch(plataforma, { id: orgIdPrueba, slug: "sonrisa-dental" });
+  check(
+    "un identificador ya usado da 409",
+    slugOcupado.status === 409 && json(slugOcupado).code === "slug_duplicado",
+    `status=${slugOcupado.status} code=${json(slugOcupado).code}`,
+  );
+
+  const idInexistente = await patch(plataforma, { id: "00000000-0000-0000-0000-000000000000", name: "Nada" });
+  check("editar una clínica inexistente da 404", idInexistente.status === 404, `status=${idInexistente.status}`);
+
+  const patchVacio = await patch(plataforma, { id: orgIdPrueba });
+  check("un PATCH sin campos da 422", patchVacio.status === 422, `status=${patchVacio.status}`);
+
+  const editAjena = await patch(admin, { id: orgIdPrueba, name: "Intento" });
+  check("una administradora de clínica no edita", editAjena.status === 403, `status=${editAjena.status}`);
+
+  // -- Restablecer contraseña del administrador --
+  const resetOk = await resetPass(plataforma, { doctorId: CAMILA, password: "TempCambio2026!" });
+  check(
+    "se restablece la contraseña de una admin",
+    resetOk.status === 200 && json(resetOk).ok === true,
+    `status=${resetOk.status} ${json(resetOk).error ?? ""}`,
+  );
+  const resetRevert = await resetPass(plataforma, { doctorId: CAMILA, password: "AgendaDev2026!" });
+  check("se restaura la contraseña original", resetRevert.status === 200, `status=${resetRevert.status}`);
+
+  // Cambiar la clave revoca las sesiones activas: la admin vuelve a entrar.
+  await req(admin, "/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "camila.rojas@clinicadental.test", password: "AgendaDev2026!" }),
+  });
+
+  const resetAdmin = await resetPass(admin, { doctorId: CAMILA, password: "OtraTemp2026!" });
+  check("una admin de clínica no restablece contraseñas", resetAdmin.status === 403, `status=${resetAdmin.status}`);
+
+  const passCorta = await resetPass(plataforma, { doctorId: CAMILA, password: "corta" });
+  check("una contraseña corta da 422", passCorta.status === 422, `status=${passCorta.status}`);
+
+  const resetInexistente = await resetPass(plataforma, {
+    doctorId: "00000000-0000-0000-0000-000000000000",
+    password: "TempValida2026!",
+  });
+  check("resetear un profesional inexistente da 404", resetInexistente.status === 404, `status=${resetInexistente.status}`);
+
+  const tabla = await req(plataforma, "/dashboard/plataforma/organizaciones");
+  check(
+    "la tabla muestra al administrador con su correo",
+    tabla.status === 200 && tabla.text.includes("camila.rojas@clinicadental.test"),
+    `status=${tabla.status}`,
+  );
+  check("la tabla ofrece editar y restablecer", tabla.text.includes("Editar") && tabla.text.includes("Contraseña"), "");
+
+  // -- La organización interna (slug reservado) sigue siendo editable --
+  const filas = [...tabla.text.matchAll(/<tr[^>]*data-org-id="([0-9a-f-]{36})"[^>]*>([\s\S]*?)<\/tr>/g)];
+  const filaPlataforma = filas.find((m) => /\/.*?plataforma<\/span>/.test(m[2]));
+  const plataformaOrgId = filaPlataforma?.[1];
+  check("la tabla identifica la organización interna", Boolean(plataformaOrgId), plataformaOrgId ?? "no encontrada");
+  if (plataformaOrgId) {
+    const editableReservada = await patch(plataforma, {
+      id: plataformaOrgId,
+      name: "Plataforma (interna)",
+      slug: "plataforma",
+    });
+    check(
+      "se puede editar una organización con identificador reservado",
+      editableReservada.status === 200,
+      `status=${editableReservada.status} ${json(editableReservada).error ?? ""}`,
+    );
+    const cambiarReservado = await patch(plataforma, { id: plataformaOrgId, slug: "dashboard" });
+    check(
+      "cambiar a otro identificador reservado da 422",
+      cambiarReservado.status === 422 && json(cambiarReservado).code === "slug_reservado",
+      `status=${cambiarReservado.status} code=${json(cambiarReservado).code}`,
+    );
+  }
 
   const borrada = await borrar(plataforma, { slug: slugDePrueba });
   check(
@@ -1505,7 +1619,6 @@ let FICHA_PATIENT = null;
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      patient_id: FICHA_PATIENT,
       started_at: "2026-10-06",
       care_type: "control",
       motivo: "Control post-tratamiento",
@@ -1566,6 +1679,13 @@ let FICHA_PATIENT = null;
   check("el odontograma muestra caries en pieza 16", chart.status === 200 && pieza16?.state === "caries",
     `${pieza16?.tooth} ${pieza16?.face}=${pieza16?.state}`);
 
+  const chartPost = await req(admin, `/api/ficha/patients/${FICHA_PATIENT}/chart`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ entries: [{ tooth: 17, face: "occlusal", state: "sana" }] }),
+  });
+  check("el odontograma guarda una cara sin enviar dentition", chartPost.status === 201, `status=${chartPost.status}`);
+
   const plan = await req(admin, `/api/ficha/patients/${FICHA_PATIENT}/plan`);
   check("el plan tiene los tratamientos sembrados", plan.status === 200 && (json(plan).items ?? []).length >= 2,
     `status=${plan.status} n=${(json(plan).items ?? []).length}`);
@@ -1600,6 +1720,20 @@ let FICHA_PATIENT = null;
     `status=${auditEnc.status} acciones=${[...new Set(accionesEnc)].join(",")}`,
   );
 
+  const auditCsv = await req(admin, `/api/ficha/audit?entity_id=${FICHA_PATIENT}&limit=200&format=csv`);
+  check(
+    "el CSV de auditoría descarga",
+    auditCsv.status === 200 && auditCsv.text.includes("fecha") && auditCsv.text.includes(";"),
+    `status=${auditCsv.status}`,
+  );
+  const auditExportEv = await req(admin, `/api/ficha/audit?entity_id=${FICHA_PATIENT}&limit=200`);
+  const accionesExp = (json(auditExportEv).entries ?? []).map((e) => e.action);
+  check(
+    "la exportación se audita con action=export",
+    auditExportEv.status === 200 && accionesExp.includes("export"),
+    `status=${auditExportEv.status} acciones=${[...new Set(accionesExp)].join(",")}`,
+  );
+
   // -- La recepción no toca nada clínico --
   const recReceta = await req(recepcion, `/api/ficha/patients/${FICHA_PATIENT}/prescriptions`);
   check("la recepción no lee recetas", recReceta.status === 403, `status=${recReceta.status}`);
@@ -1626,6 +1760,15 @@ let FICHA_PATIENT = null;
       "y queda asignado a él como dueño",
       json(nuevo).patient?.doctor_id === SEBASTIAN,
       `doctor_id=${json(nuevo).patient?.doctor_id}`,
+    );
+
+    const detalleDueno = await req(admin, `/api/ficha/patients/${nuevoPaciente}`);
+    check(
+      "el RUT del paciente nuevo se persiste",
+      detalleDueno.status === 200 &&
+        String(json(detalleDueno).patient?.rut ?? "").replace(/[^\dK]/gi, "") ===
+          RUT_DUENO.replace(/[^\dK]/gi, ""),
+      `rut=${json(detalleDueno).patient?.rut}`,
     );
 
     const adminEdit = await req(admin, `/api/ficha/patients/${nuevoPaciente}`, {
