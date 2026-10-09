@@ -1453,17 +1453,45 @@ check(
 
   const creadaJson = json(creada);
   const orgIdPrueba = creadaJson.organization?.id;
-  const editada = await patch(plataforma, { id: orgIdPrueba, name: "Clínica Borrable Editada", active: false });
+  // Payload idéntico al que envía el formulario de edición: aunque se cambie
+  // un solo campo van siempre todos, incluidos los nulos y consentText.
+  const editada = await patch(plataforma, {
+    id: orgIdPrueba,
+    name: "Clínica Borrable Editada",
+    slug: slugDePrueba,
+    timezone: "America/Santiago",
+    phone: "+56 9 1234 5678",
+    address: "Av. Prueba 123",
+    supportEmail: "soporte@test.cl",
+    consentText: "Consentimiento de prueba",
+    active: false,
+  });
   check(
-    "se edita el nombre y el estado de la clínica",
-    editada.status === 200 && json(editada).organization?.name === "Clínica Borrable Editada" && json(editada).organization?.active === false,
+    "se edita el nombre, el estado y los datos del formulario",
+    editada.status === 200 &&
+      json(editada).organization?.name === "Clínica Borrable Editada" &&
+      json(editada).organization?.active === false &&
+      json(editada).organization?.consent_text === "Consentimiento de prueba",
     `status=${editada.status} ${json(editada).error ?? ""}`,
   );
 
-  const revertida = await patch(plataforma, { id: orgIdPrueba, name: "Clínica Borrable", active: true });
+  const revertida = await patch(plataforma, {
+    id: orgIdPrueba,
+    name: "Clínica Borrable",
+    slug: slugDePrueba,
+    timezone: "America/Santiago",
+    phone: null,
+    address: null,
+    supportEmail: null,
+    consentText: null,
+    active: true,
+  });
   check(
-    "se revierte el nombre y se reactiva",
-    revertida.status === 200 && json(revertida).organization?.name === "Clínica Borrable" && json(revertida).organization?.active === true,
+    "se revierte el nombre, se reactiva y se limpian los datos",
+    revertida.status === 200 &&
+      json(revertida).organization?.name === "Clínica Borrable" &&
+      json(revertida).organization?.active === true &&
+      json(revertida).organization?.consent_text === null,
     `status=${revertida.status} ${json(revertida).error ?? ""}`,
   );
 
@@ -1530,10 +1558,16 @@ check(
       id: plataformaOrgId,
       name: "Plataforma (interna)",
       slug: "plataforma",
+      timezone: "America/Santiago",
+      phone: null,
+      address: null,
+      supportEmail: null,
+      consentText: null,
+      active: false,
     });
     check(
       "se puede editar una organización con identificador reservado",
-      editableReservada.status === 200,
+      editableReservada.status === 200 && json(editableReservada).organization?.consent_text === null,
       `status=${editableReservada.status} ${json(editableReservada).error ?? ""}`,
     );
     const cambiarReservado = await patch(plataforma, { id: plataformaOrgId, slug: "dashboard" });

@@ -339,7 +339,7 @@ export async function PATCH(request: Request) {
     );
   }
 
-  const { id, supportEmail, ...rest } = body.data;
+  const { id, supportEmail, consentText, ...rest } = body.data;
 
   const { data: org } = await supabase
     .from("organizations")
@@ -377,6 +377,7 @@ export async function PATCH(request: Request) {
 
   const update: Record<string, unknown> = { ...rest, updated_at: new Date().toISOString() };
   if (supportEmail !== undefined) update.support_email = supportEmail;
+  if (consentText !== undefined) update.consent_text = consentText;
 
   const { data: actualizada, error: updateError } = await supabase
     .from("organizations")
