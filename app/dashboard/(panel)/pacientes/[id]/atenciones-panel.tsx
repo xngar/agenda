@@ -146,7 +146,7 @@ export function AtencionesPanel({ patientId }: { patientId: string }) {
         setError(data.error ?? "No se pudo guardar la atención");
         return;
       }
-      setAviso(dialogo === "nueva" ? "Atención registrada en borrador." : "Borrador actualizado.");
+      setAviso(dialogo === "nueva" ? "Atención registrada." : "Atención actualizada.");
       setDialogo(null);
       cargar();
     } catch {
@@ -415,6 +415,6 @@ export function AtencionesPanel({ patientId }: { patientId: string }) {
   );
 
   function dialogosGuardar(d: "nueva" | EncounterRow): string {
-    return d === "nueva" ? "Guardar borrador" : "Actualizar borrador";
+    return d === "nueva" ? "Guardar atención" : "Actualizar atención";
   }
 }

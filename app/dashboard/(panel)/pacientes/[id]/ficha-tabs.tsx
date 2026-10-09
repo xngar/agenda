@@ -188,7 +188,7 @@ export function FichaTabs({
       </nav>
 
       {active === "resumen" ? (
-        <ResumenPanel patient={patient} orgType={orgType} />
+        <ResumenPanel patient={patient} orgType={orgType} canEdit={canEdit} />
       ) : active === "antecedentes" ? (
         <AntecedentesPanel patientId={patient.id} initial={background} />
       ) : active === "atenciones" ? (
@@ -202,7 +202,7 @@ export function FichaTabs({
       ) : active === "adjuntos" ? (
         <AdjuntosPanel patientId={patient.id} orgId={orgId} />
       ) : active === "auditoria" ? (
-        <AuditoriaPanel patientId={patient.id} />
+        <AuditoriaPanel patientId={patient.id} isAdmin={isAdmin} />
       ) : null}
 
       <PatientFormModal

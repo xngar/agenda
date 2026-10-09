@@ -42,7 +42,7 @@ export async function POST(request: Request, { params }: Params) {
   if (patientError) return patientError;
 
   const raw = await request.json().catch(() => null);
-  const body = encounterSchema.safeParse(raw);
+  const body = encounterSchema.omit({ patient_id: true }).safeParse(raw);
   if (!body.success) return bodyError(body.error);
 
   const { data, error } = await ctx.supabase

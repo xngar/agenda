@@ -90,7 +90,15 @@ function empty(v: string): string | null {
   return v.trim() === "" ? null : v.trim();
 }
 
-export function ResumenPanel({ patient, orgType }: { patient: Patient; orgType: OrganizationType }) {
+export function ResumenPanel({
+  patient,
+  orgType,
+  canEdit = false,
+}: {
+  patient: Patient;
+  orgType: OrganizationType;
+  canEdit?: boolean;
+}) {
   const router = useRouter();
   const [editando, setEditando] = useState(false);
   const [form, setForm] = useState<FormState>(() => formFrom(patient));
@@ -271,6 +279,20 @@ export function ResumenPanel({ patient, orgType }: { patient: Patient; orgType: 
             </div>
           </fieldset>
 
+          <fieldset>
+            <legend className="mb-3 text-sm font-semibold text-brand-navy">Registro</legend>
+            <Field label="Cómo llegó" htmlFor="referral_source" required={false}>
+              <input
+                id="referral_source"
+                className={inputClasses}
+                maxLength={200}
+                placeholder="P. ej. Referido por un paciente, redes sociales, Google…"
+                value={form.referral_source}
+                onChange={(e) => set("referral_source", e.target.value)}
+              />
+            </Field>
+          </fieldset>
+
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={guardando}>{guardando ? "Guardando…" : "Guardar cambios"}</Button>
             <Button variant="ghost" onClick={() => setEditando(false)} disabled={guardando}>Cancelar</Button>
@@ -283,7 +305,10 @@ export function ResumenPanel({ patient, orgType }: { patient: Patient; orgType: 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Card>
-        <CardHeader title="Identificación" action={<Button size="sm" variant="secondary" onClick={() => setEditando(true)}>Editar</Button>} />
+        <CardHeader
+          title="Identificación"
+          action={canEdit ? <Button size="sm" variant="secondary" onClick={() => setEditando(true)}>Editar</Button> : undefined}
+        />
         <dl className="grid gap-4 px-5 py-4 sm:grid-cols-2">
           <Campo etiqueta="Nombre completo" valor={patient.full_name} />
           <Campo etiqueta="RUT" valor={patient.rut} />

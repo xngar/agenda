@@ -25,7 +25,7 @@ const ENTIDADES: Record<string, string> = {
   patient_medical_background: "Antecedentes",
 };
 
-export function AuditoriaPanel({ patientId }: { patientId: string }) {
+export function AuditoriaPanel({ patientId, isAdmin }: { patientId: string; isAdmin?: boolean }) {
   const [entries, setEntries] = useState<AuditEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,6 +68,26 @@ export function AuditoriaPanel({ patientId }: { patientId: string }) {
         <CardHeader
           title="Historial de auditoría"
           description="Registro de cambios sobre los datos de esta ficha (creación, edición, firma, exportación)."
+          action={
+            isAdmin ? (
+              <div className="flex flex-wrap gap-2">
+                <a
+                  className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:bg-brand-navy-50"
+                  href={`/api/ficha/audit?entity_id=${encodeURIComponent(patientId)}&limit=500&format=json`}
+                  download
+                >
+                  Exportar JSON
+                </a>
+                <a
+                  className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:bg-brand-navy-50"
+                  href={`/api/ficha/audit?entity_id=${encodeURIComponent(patientId)}&limit=500&format=csv`}
+                  download
+                >
+                  Exportar CSV
+                </a>
+              </div>
+            ) : undefined
+          }
         />
         <ul className="divide-y divide-neutral-100">
           {entries.length === 0 ? (

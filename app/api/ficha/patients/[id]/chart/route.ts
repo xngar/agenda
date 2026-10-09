@@ -51,7 +51,7 @@ export async function POST(request: Request, { params }: Params) {
 
   const items = [];
   for (const item of incoming) {
-    const parsed = chartEntrySchema.omit({ patient_id: true }).safeParse(item);
+    const parsed = chartEntrySchema.omit({ patient_id: true, dentition: true }).safeParse(item);
     if (!parsed.success) return bodyError(parsed.error);
     items.push(parsed.data);
   }
@@ -64,7 +64,7 @@ export async function POST(request: Request, { params }: Params) {
     dentition: item.tooth > 48 ? "deciduous" : "permanent",
     face: item.face,
     state: item.state,
-    recorded_at: item.recorded_at ? `${item.recorded_at}T00:00:00Z` : undefined,
+    recorded_at: item.recorded_at ? `${item.recorded_at}T00:00:00Z` : new Date().toISOString(),
   }));
 
   for (const row of rows) {

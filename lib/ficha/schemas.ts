@@ -33,6 +33,7 @@ export const patientBaseSchema = z.object({
   apellido_paterno: z.string().trim().max(60).nullable().optional(),
   apellido_materno: z.string().trim().max(60).nullable().optional(),
   full_name: z.string().trim().min(2).max(120).optional(),
+  rut: fichaRutSchema.nullable().optional(),
   birth_date: dateStringSchema.nullable().optional(),
   sex: z.enum(["female", "male", "other", "undisclosed"]).nullable().optional(),
   nationality: z.string().trim().max(80).nullable().optional(),
