@@ -16,7 +16,7 @@ export default async function PlataformaOrganizacionEditarPage({
 
   const { data: org } = await supabase
     .from("organizations")
-    .select("id,name,slug,timezone,address,phone,support_email,consent_text,active")
+    .select("id,name,slug,timezone,address,phone,support_email,consent_text,active,professional_limit")
     .eq("id", id)
     .maybeSingle();
 
@@ -49,6 +49,7 @@ export default async function PlataformaOrganizacionEditarPage({
             supportEmail: org.support_email ?? "",
             consentText: org.consent_text ?? "",
             active: org.active,
+            professionalLimit: org.professional_limit ?? 2,
           }}
         />
       </div>

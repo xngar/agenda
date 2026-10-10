@@ -30,6 +30,15 @@ export default async function AdminPage() {
     .select("id, full_name, specialty, role, is_admin, active")
     .order("full_name");
 
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("professional_limit")
+    .eq("id", session.orgId)
+    .maybeSingle();
+
+  const limit = org?.professional_limit ?? null;
+  const used = (doctors ?? []).filter((d) => d.role === "professional" && d.active).length;
+
   return (
     <div className="space-y-5">
       <div>
@@ -37,6 +46,13 @@ export default async function AdminPage() {
         <p className="text-sm text-neutral-600">
           Profesionales con acceso al panel. Un administrador puede agregar miembros y
           activar o desactivar cuentas.
+        </p>
+        <p className="mt-1 text-sm text-neutral-600">
+          Cupo de profesionales: <span className="font-medium text-neutral-800">{used}</span> de{" "}
+          {limit === null ? "∞" : limit}
+          {limit !== null && used >= limit ? (
+            <span className="ml-2 text-amber-700">Cupo alcanzado</span>
+          ) : null}
         </p>
       </div>
 

@@ -118,7 +118,49 @@ export async function POST(request: Request) {
 
   const { email, fullName, password, specialty, role, isAdmin } = parsed.data;
 
-  // 1) Cuenta de acceso primero: es lo que más suele fallar (correo ya
+  const supabase = await supabaseServer();
+
+  // 1) Aplicar cupo de profesionales: solo cuentan los activos de la misma
+  //    organización y solo se aplica cuando se crea un profesional (no recepción).
+  if (role === "professional") {
+    const { data: org, error: orgError } = await supabase
+      .from("organizations")
+      .select("professional_limit")
+      .eq("id", session.orgId)
+      .maybeSingle();
+    if (orgError) {
+      return NextResponse.json(
+        { error: "No se pudo validar el cupo de profesionales" },
+        { status: 500 },
+      );
+    }
+    const limit = org?.professional_limit;
+    if (limit !== null && limit !== undefined) {
+      const { count, error: countError } = await supabase
+        .from("doctors")
+        .select("id", { count: "exact", head: true })
+        .eq("org_id", session.orgId)
+        .eq("role", "professional")
+        .eq("active", true);
+      if (countError) {
+        return NextResponse.json(
+          { error: "No se pudo validar el cupo de profesionales" },
+          { status: 500 },
+        );
+      }
+      if (count !== null && count >= limit) {
+        return NextResponse.json(
+          {
+            error: `Cupo de ${limit} profesionales alcanzado. Para ampliarlo, contacta al equipo de la plataforma.`,
+            code: "limite_profesionales",
+          },
+          { status: 409 },
+        );
+      }
+    }
+  }
+
+  // 2) Cuenta de acceso primero: es lo que más suele fallar (correo ya
   //    registrado) y así no dejamos un doctor a medias.
   const { data: authUser, error: authError } = await supabaseAdmin().auth.admin.createUser({
     email,
@@ -142,10 +184,10 @@ export async function POST(request: Request) {
   }
 
   const userId = authUser.user.id;
-  const supabase = await supabaseServer();
+  const adminSupabase = await supabaseServer();
 
   // 2) Fila del profesional en la organización del admin de sesión.
-  const { error: doctorError } = await supabase.from("doctors").insert({
+  const { error: doctorError } = await adminSupabase.from("doctors").insert({
     id: userId,
     full_name: fullName,
     specialty: specialty || null,

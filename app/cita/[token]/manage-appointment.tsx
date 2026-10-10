@@ -64,6 +64,7 @@ export default function ManageAppointment({
 
       try {
         const params = new URLSearchParams({
+          clinicSlug: appointment.clinicSlug,
           date: dayKey,
           serviceId: appointment.serviceId,
           doctorId: appointment.doctorId,
@@ -84,7 +85,7 @@ export default function ManageAppointment({
         setSlotsLoading(false);
       }
     },
-    [appointment.serviceId, appointment.doctorId],
+    [appointment.serviceId, appointment.doctorId, appointment.clinicSlug],
   );
 
   const slotsByStart = useMemo(() => {
@@ -157,6 +158,12 @@ export default function ManageAppointment({
   const dateLabel = formatDateLong(appointment.startsAt, appointment.clinicTimezone);
   const timeLabel = formatRange(appointment.startsAt, appointment.endsAt, appointment.clinicTimezone);
 
+  // Datos de contacto de la organización de la cita: si faltan, caemos a las
+  // constantes por compatibilidad con organizaciones antiguas.
+  const address = appointment.clinicAddress ?? CLINIC_ADDRESS;
+  const phone = appointment.clinicPhone ?? CLINIC_PHONE;
+  const reservarHref = appointment.clinicSlug ? `/${appointment.clinicSlug}/reservar` : "/reservar";
+
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
       <div className="flex flex-wrap items-center gap-3">
@@ -191,7 +198,7 @@ export default function ManageAppointment({
             }
           />
           <Row label="Servicio" value={appointment.serviceName} />
-          <Row label="Lugar" value={CLINIC_ADDRESS} />
+          <Row label="Lugar" value={address} />
         </dl>
 
         {appointment.status === "cancelled" ? (

@@ -6,6 +6,18 @@
  * usa con ese fin.
  */
 
+/** Agrupa dígitos con puntos de miles: "12345678" -> "12.345.678". */
+function groupThousands(digits: string): string {
+  const groups: string[] = [];
+  let rest = digits;
+  while (rest.length > 3) {
+    groups.unshift(rest.slice(-3));
+    rest = rest.slice(0, -3);
+  }
+  if (rest.length > 0) groups.unshift(rest);
+  return groups.join(".");
+}
+
 /**
  * El último grupo acepta dígitos *y* letras: el verificador es `0-9` salvo
  * que sea 10 ("K") o 11 ("0"). Con `[dkK]` acá se rechazaba todo RUT
@@ -76,4 +88,22 @@ export function formatRut(input: string): string | null {
 
   const [, body, first, second, verifier] = match;
   return `${body}.${first}.${second}-${verifier.toUpperCase()}`;
+}
+
+/**
+ * Formatea progresivamente lo que el paciente escribe, sin exigir que el
+ * RUT esté completo ni que el verificador sea correcto. Es para el `input`
+ * en vivo, donde la validación todavía no tiene sentido.
+ *
+ * A partir de 8 caracteres asumimos que el último es el verificador: los
+ * cuerpos de RUT tienen 7 u 8 dígitos, así que con 8 ya podemos separar
+ * ("1.234.567-8" o el intermedio "1.234.567-8" que se corrige al terminar
+ * de escribir el noveno). Antes de eso mostramos todo como cuerpo con
+ * puntos, para no insertar un guión prematuro en "12".
+ */
+export function formatRutPartial(input: string): string {
+  const chars = input.replace(/[^0-9kK]/g, "").toUpperCase();
+  if (chars.length === 0) return "";
+  if (chars.length <= 7) return groupThousands(chars);
+  return `${groupThousands(chars.slice(0, -1))}-${chars.slice(-1)}`;
 }

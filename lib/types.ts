@@ -113,6 +113,10 @@ export interface PatientAppointmentView {
   specialty: string | null;
   serviceName: string;
   clinicName: string;
+  clinicSlug: string;
+  clinicAddress: string | null;
+  clinicPhone: string | null;
+  supportEmail: string | null;
   clinicTimezone: string;
   patientName: string;
   canModify: boolean;

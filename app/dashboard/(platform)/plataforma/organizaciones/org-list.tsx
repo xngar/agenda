@@ -13,6 +13,7 @@ export interface OrganizationRow {
   createdAt: string;
   admin: { id: string; name: string; email: string } | null;
   professionals: number;
+  professionalLimit: number | null;
 }
 
 /**
@@ -25,6 +26,7 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
   const [error, setError] = useState<string | null>(null);
   const [confirmar, setConfirmar] = useState<OrganizationRow | null>(null);
   const [eliminando, setEliminando] = useState(false);
+  const [actualizando, setActualizando] = useState<string | null>(null);
 
   const [resetear, setResetear] = useState<OrganizationRow | null>(null);
   const [nuevaPassword, setNuevaPassword] = useState("");
@@ -45,6 +47,28 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [confirmar, resetear, eliminando, restableciendo]);
+
+  async function cambiarCupo(id: string, value: string) {
+    setActualizando(id);
+    setError(null);
+    const next: number | null = value === "null" ? null : parseInt(value, 10);
+    try {
+      const res = await fetch("/api/platform/organizations", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, professionalLimit: next }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        setError(data?.error ?? "No se pudo actualizar el cupo de profesionales");
+      }
+      router.refresh();
+    } catch {
+      setError("No pudimos conectarnos. Intenta de nuevo.");
+    } finally {
+      setActualizando(null);
+    }
+  }
 
   async function confirmarEliminacion() {
     if (!confirmar) return;
@@ -102,7 +126,7 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
 
   return (
     <div className="mt-6 space-y-4">
-      {error && !confirmar && !resetear ? <ErrorNotice message={error} /> : null}
+      {error ? <div className="mb-4"><ErrorNotice message={error} /></div> : null}
 
       {organizations.length === 0 ? (
         <Card className="px-4 py-8">
@@ -139,7 +163,51 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
                     )}
                   </td>
                   <td className="px-4 py-3 text-neutral-700">
-                    {org.professionals > 0 ? org.professionals : "—"}
+                    {org.professionals}
+                    {org.professionalLimit !== null ? ` de ${org.professionalLimit}` : " de ∞"}
+                    <div className="mt-1">
+                      <select
+                        data-professional-limit
+                        disabled={actualizando === org.id}
+                        value={org.professionalLimit === null ? "null" : String(org.professionalLimit)}
+                        onChange={(e) => cambiarCupo(org.id, e.target.value)}
+                        className={`${inputClasses} h-8 text-xs`}
+                      >
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                        <option value="13">13</option>
+                        <option value="14">14</option>
+                        <option value="15">15</option>
+                        <option value="16">16</option>
+                        <option value="17">17</option>
+                        <option value="18">18</option>
+                        <option value="19">19</option>
+                        <option value="20">20</option>
+                        <option value="30">30</option>
+                        <option value="40">40</option>
+                        <option value="50">50</option>
+                        <option value="60">60</option>
+                        <option value="70">70</option>
+                        <option value="null">Sin límite</option>
+                        {org.professionalLimit !== null &&
+                          ![
+                            "2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","30","40","50","60","70",
+                          ].includes(String(org.professionalLimit)) ? (
+                          <option value={String(org.professionalLimit)}>
+                            {org.professionalLimit}
+                          </option>
+                        ) : null}
+                      </select>
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <span

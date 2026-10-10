@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Holiday, PublicDoctor, Service, Slot, SlotWithDoctor } from "@/lib/types";
 import { CONSENT_TEXT } from "@/lib/clinic";
-import { isValidRut } from "@/lib/rut";
+import { formatRutPartial, isValidRut } from "@/lib/rut";
+import { formatPhonePartial, isValidPhone, normalizePhone } from "@/lib/phone";
 import {
   Button,
   Card,
@@ -68,7 +69,7 @@ export default function BookingWizard(props: BookingWizardProps) {
   const [form, setForm] = useState({
     fullName: "",
     rut: "",
-    phone: "",
+    phone: "+56 ",
     email: "",
     consent: false,
   });
@@ -186,6 +187,27 @@ export default function BookingWizard(props: BookingWizardProps) {
     void loadSlots(dayKey);
   }
 
+  /**
+   * Formatea el RUT en vivo. Sólo reescribimos el valor cuando el cursor está
+   * al final (el caso normal al tipear): si el paciente edita en medio,
+   * reescribir lo obligaría a perseguir el cursor hasta el final.
+   */
+  function handleRutChange(event: ChangeEvent<HTMLInputElement>) {
+    const { value, selectionStart } = event.target;
+    const atEnd = selectionStart === null || selectionStart === value.length;
+    setForm((f) => ({ ...f, rut: atEnd ? formatRutPartial(value) : value }));
+    if (fieldErrors.rut) setFieldErrors((prev) => ({ ...prev, rut: "" }));
+  }
+
+  function handleRutBlur() {
+    setForm((f) => ({ ...f, rut: formatRutPartial(f.rut) }));
+  }
+
+  function handlePhoneChange(event: ChangeEvent<HTMLInputElement>) {
+    setForm((f) => ({ ...f, phone: formatPhonePartial(event.target.value) }));
+    if (fieldErrors.phone) setFieldErrors((prev) => ({ ...prev, phone: "" }));
+  }
+
   /* ---------------------------------------------------------------- */
   /* Navegación del wizard                                              */
   /* ---------------------------------------------------------------- */
@@ -210,7 +232,7 @@ export default function BookingWizard(props: BookingWizardProps) {
 
     if (form.fullName.trim().length < 3) errors.fullName = "Ingresa tu nombre completo";
     if (!isValidRut(form.rut)) errors.rut = "Revisa el RUT: el dígito verificador no coincide";
-    if (form.phone.trim().length < 8) errors.phone = "Ingresa un teléfono válido";
+    if (!isValidPhone(form.phone)) errors.phone = "Ingresa un teléfono válido";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim())) {
       errors.email = "Ingresa un correo válido";
     }
@@ -237,7 +259,7 @@ export default function BookingWizard(props: BookingWizardProps) {
           slotStart,
           fullName: form.fullName.trim(),
           rut: form.rut.trim(),
-          phone: form.phone.trim(),
+          phone: normalizePhone(form.phone),
           email: form.email.trim(),
           consent: form.consent,
           turnstileToken: turnstileToken || undefined,
@@ -502,32 +524,34 @@ export default function BookingWizard(props: BookingWizardProps) {
                   label="RUT"
                   htmlFor="rut"
                   error={fieldErrors.rut}
-                  hint="Sin puntos ni guiones: 123456789"
+                  hint="Escríbelo como quieras: le ponemos los puntos y el guión"
                 >
                   <input
                     id="rut"
                     name="rut"
-                    inputMode="numeric"
+                    inputMode="text"
+                    autoCapitalize="characters"
                     autoComplete="off"
-                    placeholder="12345678-9"
+                    placeholder="12.345.678-9"
                     className={inputClasses}
                     value={form.rut}
                     aria-invalid={Boolean(fieldErrors.rut)}
-                    onChange={(e) => setForm((f) => ({ ...f, rut: e.target.value }))}
+                    onChange={handleRutChange}
+                    onBlur={handleRutBlur}
                   />
                 </Field>
 
-                <Field label="Teléfono" htmlFor="phone" error={fieldErrors.phone} hint="Con código de país, por ejemplo +56912345678">
+                <Field label="Teléfono" htmlFor="phone" error={fieldErrors.phone} hint="Escribe sólo el número: el prefijo +56 ya está puesto">
                   <input
                     id="phone"
                     name="tel"
                     type="tel"
                     autoComplete="tel"
-                    placeholder="+56912345678"
+                    placeholder="+56 9 1234 5678"
                     className={inputClasses}
                     value={form.phone}
                     aria-invalid={Boolean(fieldErrors.phone)}
-                    onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                    onChange={handlePhoneChange}
                   />
                 </Field>
               </div>

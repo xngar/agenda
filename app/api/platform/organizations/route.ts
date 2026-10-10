@@ -21,6 +21,13 @@ const organizationSchema = z.object({
   phone: z.string().trim().max(40).optional(),
   supportEmail: z.string().trim().toLowerCase().email("Correo de soporte inválido").optional(),
   consentText: z.string().trim().max(2000).optional(),
+  professionalLimit: z
+    .number()
+    .int("El cupo debe ser un número entero")
+    .min(2, "El cupo mínimo es 2 profesionales")
+    .max(1000, "El cupo es demasiado alto")
+    .nullable()
+    .optional(),
   adminFullName: z.string().trim().min(3, "Indica el nombre del administrador").max(120),
   adminEmail: z.string().trim().toLowerCase().email("Correo del administrador inválido"),
   adminPassword: z.string().min(8, "La contraseña debe tener al menos 8 caracteres").max(72),
@@ -44,6 +51,12 @@ const patchSchema = z
     phone: z.string().trim().max(40).nullable(),
     supportEmail: z.string().trim().toLowerCase().email("Correo de soporte inválido").nullable(),
     consentText: z.string().trim().max(2000).nullable(),
+    professionalLimit: z
+      .number()
+      .int("El cupo debe ser un número entero")
+      .min(2, "El cupo mínimo es 2 profesionales")
+      .max(1000, "El cupo es demasiado alto")
+      .nullable(),
     active: z.boolean(),
   })
   .partial()
@@ -96,6 +109,7 @@ export async function POST(request: Request) {
     phone,
     supportEmail,
     consentText,
+    professionalLimit,
     adminFullName,
     adminEmail,
     adminPassword,
@@ -137,8 +151,9 @@ export async function POST(request: Request) {
       phone: phone || null,
       support_email: supportEmail || null,
       consent_text: consentText || null,
+      professional_limit: professionalLimit ?? 2,
     })
-    .select("id,name,slug,timezone,active")
+    .select("id,name,slug,timezone,active,professional_limit")
     .single();
 
   if (orgError || !creada) {
@@ -339,7 +354,7 @@ export async function PATCH(request: Request) {
     );
   }
 
-  const { id, supportEmail, consentText, ...rest } = body.data;
+  const { id, supportEmail, consentText, professionalLimit, ...rest } = body.data;
 
   const { data: org } = await supabase
     .from("organizations")
@@ -378,12 +393,13 @@ export async function PATCH(request: Request) {
   const update: Record<string, unknown> = { ...rest, updated_at: new Date().toISOString() };
   if (supportEmail !== undefined) update.support_email = supportEmail;
   if (consentText !== undefined) update.consent_text = consentText;
+  if (professionalLimit !== undefined) update.professional_limit = professionalLimit;
 
   const { data: actualizada, error: updateError } = await supabase
     .from("organizations")
     .update(update)
     .eq("id", id)
-    .select("id,name,slug,timezone,address,phone,support_email,consent_text,active,created_at,updated_at")
+    .select("id,name,slug,timezone,address,phone,support_email,consent_text,active,created_at,updated_at,professional_limit")
     .single();
 
   if (updateError) {

@@ -16,6 +16,7 @@ interface FormState {
   adminEmail: string;
   adminPassword: string;
   adminSpecialty: string;
+  professionalLimit: number | null;
 }
 
 const INITIAL: FormState = {
@@ -30,6 +31,7 @@ const INITIAL: FormState = {
   adminEmail: "",
   adminPassword: "",
   adminSpecialty: "",
+  professionalLimit: 2,
 };
 
 export default function OrganizationForm() {
@@ -59,6 +61,7 @@ export default function OrganizationForm() {
       adminEmail: form.adminEmail.trim(),
       adminPassword: form.adminPassword,
       adminSpecialty: form.adminSpecialty.trim() || undefined,
+      professionalLimit: form.professionalLimit,
     };
 
     try {
@@ -167,6 +170,29 @@ export default function OrganizationForm() {
               className={`${inputClasses} min-h-20`}
               placeholder="Acepto el tratamiento de mis datos para gestionar mi cita."
             />
+          </label>
+
+          <label className="flex flex-col gap-1.5 text-sm sm:col-span-2">
+            <span className="font-medium text-neutral-800">Cupo de profesionales</span>
+            <select
+              value={form.professionalLimit === null ? "null" : String(form.professionalLimit)}
+              onChange={(e) =>
+                update("professionalLimit", e.target.value === "null" ? null : parseInt(e.target.value, 10))
+              }
+              className={inputClasses}
+            >
+              {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 30, 40, 50, 60, 70].map(
+                (n) => (
+                  <option key={n} value={String(n)}>
+                    {n}
+                  </option>
+                ),
+              )}
+              <option value="null">Sin límite</option>
+            </select>
+            <span className="text-xs text-neutral-500">
+              Profesionales activos permitidos. La recepción no consume cupo.
+            </span>
           </label>
         </div>
       </Card>

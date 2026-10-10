@@ -572,6 +572,11 @@ console.log("\n[6] Activar y desactivar cuentas del equipo");
     pagina.status === 200 && pagina.text.includes("Desactivar"),
     `status=${pagina.status}`,
   );
+  check(
+    "la vista de equipo muestra el cupo de profesionales",
+    pagina.status === 200 && pagina.text.includes("Cupo de profesionales"),
+    `status=${pagina.status}`,
+  );
 
   // ---- Alta de miembros (POST /api/dashboard/doctors) ----
   const post = (cookies, payload) =>
@@ -1374,6 +1379,18 @@ const plataforma = jar();
   const listado = await req(plataforma, "/dashboard/plataforma/organizaciones");
   check("abre el listado de organizaciones", listado.status === 200, `status=${listado.status}`);
   check("lista las clínicas existentes", listado.text.includes(">sonrisa-dental"));
+  check(
+    "el listado muestra el selector de cupo de profesionales",
+    listado.text.includes("data-professional-limit") && listado.text.includes("Sin límite"),
+    listado.text.includes("data-professional-limit") ? "sin etiqueta Sin límite" : "sin selector de cupo",
+  );
+
+  const nuevaPagina = await req(plataforma, "/dashboard/plataforma/organizaciones/nueva");
+  check(
+    "el formulario de alta incluye el cupo de profesionales",
+    nuevaPagina.status === 200 && nuevaPagina.text.includes("Cupo de profesionales"),
+    `status=${nuevaPagina.status}`,
+  );
 
   const sinPermiso = await req(admin, "/dashboard/plataforma/organizaciones");
   check(
@@ -1453,6 +1470,12 @@ check(
 
   const creadaJson = json(creada);
   const orgIdPrueba = creadaJson.organization?.id;
+  const paginaEdicion = await req(plataforma, `/dashboard/plataforma/organizaciones/${orgIdPrueba}`);
+  check(
+    "la página de edición muestra el cupo de profesionales",
+    paginaEdicion.status === 200 && paginaEdicion.text.includes("Cupo de profesionales"),
+    `status=${paginaEdicion.status}`,
+  );
   // Payload idéntico al que envía el formulario de edición: aunque se cambie
   // un solo campo van siempre todos, incluidos los nulos y consentText.
   const editada = await patch(plataforma, {
@@ -1578,6 +1601,57 @@ check(
     );
   }
 
+
+  // -- Límite de profesionales --
+  {
+    const crearMiembro = (cookies, payload) =>
+      req(cookies, "/api/dashboard/doctors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    const fechaLim = Date.now();
+    const slugLim = `cupo-${fechaLim}`;
+    const correoAdminLim = `cupo.admin.${fechaLim}@test.cl`;
+    const orgLim = await req(plataforma, "/api/platform/organizations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "Clinica Cupo",
+        slug: slugLim,
+        adminFullName: "Admin Cupo",
+        adminEmail: correoAdminLim,
+        adminPassword: "AgendaDev2026!",
+        professionalLimit: 2,
+      }),
+    });
+    check("se crea una clínica con cupo 2", orgLim.status === 201, `status=${orgLim.status}`);
+    const orgLimJson = json(orgLim);
+    const orgLimId = orgLimJson.organization?.id;
+    check("la clínica nueva reporta cupo 2", orgLimJson.organization?.professional_limit === 2, `limit=${orgLimJson.organization?.professional_limit}`);
+
+    const adminLim = jar();
+    const loginLim = await req(adminLim, "/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: correoAdminLim, password: "AgendaDev2026!" }),
+    });
+    check("entra la administradora de la clínica con cupo", loginLim.status === 200, `status=${loginLim.status}`);
+
+    const alta1 = await crearMiembro(adminLim, { fullName: "Pro Cupo 1", email: `cupo.pro1.${fechaLim}@test.cl`, password: "AgendaDev2026!", role: "professional", isAdmin: false });
+    check("el primer profesional adicional entra (el admin ya ocupa un cupo)", alta1.status === 201, `status=${alta1.status} ${alta1.text.slice(0, 90)}`);
+    const alta2 = await crearMiembro(adminLim, { fullName: "Pro Cupo 2", email: `cupo.pro2.${fechaLim}@test.cl`, password: "AgendaDev2026!", role: "professional", isAdmin: false });
+    check("el siguiente profesional excede el cupo y da 409", alta2.status === 409 && json(alta2).code === "limite_profesionales", `status=${alta2.status} code=${json(alta2).code}`);
+    const altaRecLim = await crearMiembro(adminLim, { fullName: "Recep Cupo", email: `cupo.recep.${fechaLim}@test.cl`, password: "AgendaDev2026!", role: "reception", isAdmin: false });
+    check("la recepción no se ve limitada por el cupo", altaRecLim.status === 201, `status=${altaRecLim.status} ${altaRecLim.text.slice(0, 90)}`);
+    if (orgLimId) {
+      const subirCupo = await patch(plataforma, { id: orgLimId, professionalLimit: 4 });
+      check("se sube el cupo a 4", subirCupo.status === 200, `status=${subirCupo.status}`);
+    }
+    const alta2bis = await crearMiembro(adminLim, { fullName: "Pro Cupo 2", email: `cupo.pro2.${fechaLim}@test.cl`, password: "AgendaDev2026!", role: "professional", isAdmin: false });
+    check("se puede crear más profesionales tras subir el cupo", alta2bis.status === 201, `status=${alta2bis.status} ${alta2bis.text.slice(0, 90)}`);
+    await borrar(plataforma, { slug: slugLim });
+  }
   const borrada = await borrar(plataforma, { slug: slugDePrueba });
   check(
     "se elimina completa",

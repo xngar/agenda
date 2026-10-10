@@ -387,6 +387,10 @@ export async function toPatientView(
     specialty: row.doctors?.specialty ?? null,
     serviceName: row.services?.name ?? "Atención",
     clinicName: settings.name,
+    clinicSlug: settings.slug ?? "",
+    clinicAddress: settings.address ?? null,
+    clinicPhone: settings.phone ?? null,
+    supportEmail: settings.support_email ?? null,
     clinicTimezone: settings.timezone || DEFAULT_TIMEZONE,
     patientName: row.patients?.full_name ?? "",
     canModify: active && new Date(endsAt).getTime() > Date.now(),
@@ -417,7 +421,7 @@ export async function rescheduleByToken(
   const row = await loadAppointmentRow(data as string);
   if (!row) throw new BusinessError("A0003", 404);
 
-  const settings = await getSettings();
+  const settings = await getSettings(row.org_id);
   const view = await toPatientView(row);
 
   await Promise.all([
@@ -454,7 +458,7 @@ export async function cancelByToken(
   const row = await loadAppointmentRow(data as string);
   if (!row) throw new BusinessError("A0003", 404);
 
-  const settings = await getSettings();
+  const settings = await getSettings(row.org_id);
   const view = await toPatientView(row);
 
   await Promise.all([

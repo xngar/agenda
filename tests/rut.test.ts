@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidRut, normalizeRut, formatRut } from "@/lib/rut";
+import { isValidRut, normalizeRut, formatRut, formatRutPartial } from "@/lib/rut";
 
 /**
  * Regresiones del módulo de RUT.
@@ -110,5 +110,35 @@ describe("isValidRut", () => {
   it("devuelve null al formatear algo que no es RUT", () => {
     expect(formatRut("123456789")).toBeNull();
     expect(formatRut("")).toBeNull();
+  });
+});
+
+describe("formatRutPartial", () => {
+  it("no ensucia la entrada mientras es corta", () => {
+    expect(formatRutPartial("1")).toBe("1");
+    expect(formatRutPartial("12")).toBe("12");
+    expect(formatRutPartial("1234")).toBe("1.234");
+    expect(formatRutPartial("1234567")).toBe("1.234.567");
+  });
+
+  it("separa el verificador desde los 8 caracteres", () => {
+    expect(formatRutPartial("12345678")).toBe("1.234.567-8");
+    expect(formatRutPartial("123456785")).toBe("12.345.678-5");
+  });
+
+  it("reformatea una entrada ya formateada", () => {
+    expect(formatRutPartial("12.345.678-5")).toBe("12.345.678-5");
+    expect(formatRutPartial("12-345-678-5")).toBe("12.345.678-5");
+  });
+
+  it("normaliza la K del verificador y descarta basura", () => {
+    expect(formatRutPartial("12.345.678-k")).toBe("12.345.678-K");
+    expect(formatRutPartial("12a345b6785")).toBe("12.345.678-5");
+    expect(formatRutPartial("")).toBe("");
+  });
+
+  it("el ida y vuelta deja un RUT válido", () => {
+    const formateado = formatRutPartial("123456785");
+    expect(isValidRut(formateado)).toBe(true);
   });
 });

@@ -17,7 +17,7 @@ export default async function PlataformaOrganizacionesPage() {
 
   const { data: orgs } = await supabase
     .from("organizations")
-    .select("id,name,slug,active,created_at")
+    .select("id,name,slug,active,created_at,professional_limit")
     .order("name");
 
   let rows: OrganizationRow[] = (orgs ?? []).map((org) => ({
@@ -28,6 +28,7 @@ export default async function PlataformaOrganizacionesPage() {
     createdAt: fechaCreacion(org.created_at),
     admin: null,
     professionals: 0,
+    professionalLimit: org.professional_limit as number | null,
   }));
 
   if (orgs?.length) {
@@ -35,16 +36,17 @@ export default async function PlataformaOrganizacionesPage() {
 
     const { data: doctores } = await supabase
       .from("doctors")
-      .select("id, full_name, org_id, is_admin, active")
+      .select("id, full_name, org_id, is_admin, active, role")
       .in("org_id", orgIds);
 
     const porOrg = new Map<
       string,
-      { admins: { id: string; name: string; active: boolean }[]; total: number }
+      { admins: { id: string; name: string; active: boolean }[]; total: number; totalProfessionals: number }
     >();
     for (const d of doctores ?? []) {
-      const entry = porOrg.get(d.org_id) ?? { admins: [], total: 0 };
+      const entry = porOrg.get(d.org_id) ?? { admins: [], total: 0, totalProfessionals: 0 };
       entry.total += 1;
+      if (d.role === "professional") entry.totalProfessionals += 1;
       if (d.is_admin) entry.admins.push({ id: d.id, name: d.full_name, active: d.active });
       porOrg.set(d.org_id, entry);
     }
@@ -71,7 +73,8 @@ export default async function PlataformaOrganizacionesPage() {
         admin: mainAdmin
           ? { id: mainAdmin.id, name: mainAdmin.name, email: emails.get(mainAdmin.id) ?? "" }
           : null,
-        professionals: entry?.total ?? 0,
+        professionals: entry?.totalProfessionals ?? 0,
+        professionalLimit: org.professional_limit ?? 2,
       };
     });
   }
