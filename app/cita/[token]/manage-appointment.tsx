@@ -229,8 +229,8 @@ export default function ManageAppointment({
         {!canModify && appointment.status !== "cancelled" ? (
           <p className="mt-5 border-t border-neutral-200 pt-5 text-sm text-neutral-600">
             Esta cita ya no se puede modificar por internet. Si necesitas cambios, llámanos al{" "}
-            <a href={`tel:${CLINIC_PHONE.replace(/\s/g, "")}`} className="font-semibold text-brand-navy">
-              {CLINIC_PHONE}
+            <a href={`tel:${phone.replace(/\s/g, "")}`} className="font-semibold text-brand-navy">
+              {phone}
             </a>
             .
           </p>
@@ -379,7 +379,7 @@ export default function ManageAppointment({
       ) : null}
 
       <div className="mt-8 text-center">
-        <Link href="/reservar" className={buttonClasses("secondary", "sm")}>
+        <Link href={reservarHref} className={buttonClasses("secondary", "sm")}>
           Reservar otra hora
         </Link>
       </div>

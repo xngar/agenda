@@ -3,6 +3,7 @@ import { getCatalog, getPublicOrganization } from "@/lib/booking";
 import { Card, buttonClasses } from "@/components/ui";
 import { CLINIC_ADDRESS, CLINIC_PHONE } from "@/lib/clinic";
 import { getDoctorSession } from "@/lib/auth";
+import ManageAppointmentModal from "@/components/booking/manage-appointment-modal";
 
 export async function generateMetadata({ params }: { params: Promise<{ clinicSlug: string }> }) {
   const { clinicSlug } = await params;
@@ -38,13 +39,16 @@ export default async function HomePage({ params }: { params: Promise<{ clinicSlu
               Elige el servicio, el profesional y el horario que te acomode. Te enviamos la
               confirmación al correo y puedes cambiar o cancelar tu cita cuando quieras.
             </p>
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link href={`/${clinicSlug}/reservar`} className={buttonClasses("primary", "lg")}>
                 Reservar ahora
               </Link>
               <a href={`tel:${phone.replace(/\s/g, "")}`} className={buttonClasses("secondary", "lg")}>
                 Llamar {phone}
               </a>
+            </div>
+            <div className="mt-3.5">
+              <ManageAppointmentModal clinicSlug={clinicSlug} clinicName={settings.name} variant="link" />
             </div>
             <p className="mt-5 text-xs text-neutral-600">
               Sin registro ni contraseña. Necesitamos sólo tu nombre, RUT, teléfono y correo.

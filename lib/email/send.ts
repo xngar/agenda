@@ -25,6 +25,8 @@ export interface SendOptions {
   subject: string;
   html: string;
   text?: string;
+  /** Dirección a la que responderán los pacientes si dan clic en Responder */
+  replyTo?: string;
   /** Archivo adjunto en claro, p. ej. el .ics de la cita. */
   attachments?: { filename: string; content: string | Buffer }[];
 }
@@ -42,11 +44,13 @@ export async function sendEmail(options: SendOptions): Promise<SendResult> {
   }
 
   try {
+    const replyTo = options.replyTo ?? env.EMAIL_REPLY_TO;
     const { error } = await resend.emails.send({
       from: env.EMAIL_FROM,
       to: options.to,
       subject: options.subject,
       html: options.html,
+      ...(replyTo ? { reply_to: replyTo } : {}),
       ...(options.text ? { text: options.text } : {}),
       ...(options.attachments ? { attachments: options.attachments } : {}),
     });

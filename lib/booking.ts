@@ -9,6 +9,7 @@ import { sendEmail, maskEmail } from "./email/send";
 import {
   bookingCancelledHtml,
   bookingConfirmedHtml,
+  bookingManageLinkHtml,
   bookingReminderHtml,
   bookingRescheduledHtml,
   doctorChangeHtml,
@@ -16,7 +17,7 @@ import {
 } from "./email/templates";
 import { formatDateLong, formatRange, DEFAULT_TIMEZONE } from "./dates";
 import { generateManageToken, hashManageToken, isManageTokenShape } from "./token";
-import { isValidRut } from "./rut";
+import { isValidRut, normalizeRut } from "./rut";
 import { parseRange } from "./range";
 import type {
   ClinicSettings,
@@ -733,6 +734,157 @@ async function openToken(appointmentId: string): Promise<string | null> {
   });
   if (error || !data) return null;
   return typeof data === "string" ? data : null;
+}
+
+export interface RequestAccessInput {
+  clinicSlug: string;
+  rut?: string;
+  email?: string;
+}
+
+export interface RequestAccessResult {
+  found: boolean;
+  directAccess: boolean;
+  manageUrl?: string;
+  maskedEmail?: string;
+  message: string;
+}
+
+export async function requestAppointmentAccess(
+  input: RequestAccessInput,
+): Promise<RequestAccessResult> {
+  const supabase = supabaseAdmin();
+  const normalizedRut = input.rut ? normalizeRut(input.rut) : undefined;
+  const cleanEmail = input.email ? input.email.trim().toLowerCase() : undefined;
+
+  if (!normalizedRut && !cleanEmail) {
+    throw new BusinessError("Debes ingresar tu RUT o tu correo electrónico.", 400);
+  }
+
+  // 1. Obtener la organización
+  const { data: org, error: orgErr } = await supabase
+    .from("organizations")
+    .select("id, name, slug, timezone, address, phone")
+    .eq("slug", input.clinicSlug)
+    .eq("active", true)
+    .maybeSingle();
+
+  if (orgErr || !org) {
+    throw new BusinessError("Clínica no encontrada", 404);
+  }
+
+  // 2. Buscar pacientes por RUT o email en esta clínica
+  let patientQuery = supabase
+    .from("patients")
+    .select("id, full_name, rut, email, phone")
+    .eq("org_id", org.id);
+
+  if (normalizedRut && cleanEmail) {
+    patientQuery = patientQuery.or(`rut.eq.${normalizedRut},email.ilike.${cleanEmail}`);
+  } else if (normalizedRut) {
+    patientQuery = patientQuery.eq("rut", normalizedRut);
+  } else if (cleanEmail) {
+    patientQuery = patientQuery.ilike("email", cleanEmail);
+  }
+
+  const { data: patients, error: patientErr } = await patientQuery;
+  if (patientErr || !patients || patients.length === 0) {
+    return {
+      found: false,
+      directAccess: false,
+      message: "No encontramos ninguna cita activa con los datos ingresados en esta clínica.",
+    };
+  }
+
+  const patientIds = patients.map((p) => p.id);
+
+  // 3. Buscar citas activas (pending o confirmed) para estos pacientes en esta organización
+  const { data: appointments, error: apptErr } = await supabase
+    .from("appointments")
+    .select(APPOINTMENT_SELECT)
+    .eq("org_id", org.id)
+    .in("patient_id", patientIds)
+    .in("status", ["pending", "confirmed"])
+    .order("during", { ascending: true });
+
+  if (apptErr || !appointments || appointments.length === 0) {
+    return {
+      found: false,
+      directAccess: false,
+      message: "No tienes citas activas pendientes ni confirmadas en esta clínica.",
+    };
+  }
+
+  const now = Date.now();
+  const upcomingAppts = (appointments as unknown as AppointmentRow[]).filter((a) => {
+    const ends = new Date(upperBound(a.during)).getTime();
+    return ends > now;
+  });
+
+  if (upcomingAppts.length === 0) {
+    return {
+      found: false,
+      directAccess: false,
+      message: "Tus citas anteriores en esta clínica ya concluyeron o fueron canceladas.",
+    };
+  }
+
+  const targetAppt = upcomingAppts[0];
+  const targetPatient = targetAppt.patients;
+  const patientEmail = targetPatient?.email ?? "";
+
+  // 4. Descifrar el token de gestión
+  const token = await openToken(targetAppt.id);
+  if (!token) {
+    throw new BusinessError("No pudimos generar el enlace de gestión en este momento.", 500);
+  }
+
+  const url = manageUrl(token);
+  const view = await toPatientView(targetAppt);
+
+  // 5. Enviar el correo con Resend
+  if (patientEmail) {
+    await sendEmail({
+      to: patientEmail,
+      subject: `Gestionar mi cita · ${org.name}`,
+      html: bookingManageLinkHtml({
+        patientName: targetPatient?.full_name ?? "Paciente",
+        clinicName: org.name,
+        doctorName: view.doctorName,
+        specialty: view.specialty,
+        serviceName: view.serviceName,
+        dateLabel: formatDateLong(view.startsAt, org.timezone),
+        timeLabel: formatRange(view.startsAt, view.endsAt, org.timezone),
+        clinicAddress: org.address ?? CLINIC_ADDRESS,
+        manageUrl: url,
+      }),
+      text: `Accede a gestionar o cancelar tu cita en ${org.name} en el siguiente enlace: ${url}`,
+    });
+  }
+
+  // 6. Direct access: si el email coincide o ingresó ambos datos verificados
+  const emailMatched = cleanEmail && cleanEmail === patientEmail.toLowerCase();
+  const rutMatched = normalizedRut && targetPatient?.rut && normalizeRut(targetPatient.rut) === normalizedRut;
+  const isDirect = Boolean(emailMatched && rutMatched) || Boolean(emailMatched);
+
+  const masked = patientEmail ? maskEmail(patientEmail) : undefined;
+
+  if (isDirect) {
+    return {
+      found: true,
+      directAccess: true,
+      manageUrl: url,
+      maskedEmail: masked,
+      message: "¡Cita encontrada! Redirigiendo...",
+    };
+  }
+
+  return {
+    found: true,
+    directAccess: false,
+    maskedEmail: masked,
+    message: `Encontramos tu cita. Por seguridad, enviamos el enlace privado a tu correo ${masked}. Revisa tu bandeja de entrada o spam.`,
+  };
 }
 
 /* ------------------------------------------------------------------ */

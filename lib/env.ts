@@ -15,6 +15,7 @@ const serverEnvSchema = z.object({
 
   RESEND_API_KEY: z.string().min(10).optional(),
   EMAIL_FROM: z.string().default("Clínica <reservas@reservas.clinicadental.test>"),
+  EMAIL_REPLY_TO: z.string().min(3).optional(),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
 
   TURNSTILE_SECRET_KEY: z.string().min(10).optional(),
@@ -34,6 +35,7 @@ function loadServerEnv() {
     MANAGE_TOKEN_KEY: process.env.MANAGE_TOKEN_KEY,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     EMAIL_FROM: process.env.EMAIL_FROM,
+    EMAIL_REPLY_TO: process.env.EMAIL_REPLY_TO,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY,
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,

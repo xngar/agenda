@@ -150,6 +150,25 @@ export function bookingReminderHtml(data: BookingEmailData): string {
   );
 }
 
+export function bookingManageLinkHtml(data: BookingEmailData): string {
+  return shell(
+    "Tu enlace para gestionar tu cita",
+    `Gestiona tu cita del ${data.dateLabel} a las ${data.timeLabel}`,
+    data.clinicName,
+    `<h1 style="margin:0 0 8px;font-size:22px;color:${PALETTE.navy};">Tu enlace para gestionar tu cita</h1>
+     <p style="margin:0 0 20px;color:${PALETTE.muted};">Hola ${escapeHtml(firstName(data.patientName))}, solicitaste acceso para ver, reprogramar o cancelar tu hora médica:</p>
+     <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background:${PALETTE.skySoft};border:1px solid ${PALETTE.border};border-radius:12px;padding:8px 16px;">
+       ${detailRow("Fecha", escapeHtml(data.dateLabel))}
+       ${detailRow("Hora", escapeHtml(data.timeLabel))}
+       ${detailRow("Profesional", escapeHtml(data.doctorName))}
+       ${data.specialty ? detailRow("Especialidad", escapeHtml(data.specialty)) : ""}
+       ${detailRow("Servicio", escapeHtml(data.serviceName))}
+       ${detailRow("Dirección", escapeHtml(data.clinicAddress))}
+     </table>
+     ${button(data.manageUrl, "Gestionar o cancelar mi cita")}`,
+  );
+}
+
 export function doctorNewBookingHtml(data: {
   clinicName: string;
   patientName: string;

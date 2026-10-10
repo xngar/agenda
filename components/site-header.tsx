@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { buttonClasses } from "./ui";
 import { DEFAULT_BRAND, type ClinicBrand } from "@/lib/clinic";
+import ManageAppointmentModal from "@/components/booking/manage-appointment-modal";
 
 export default function SiteHeader({ brand = DEFAULT_BRAND }: { brand?: ClinicBrand }) {
   const base = brand.slug ? `/${brand.slug}` : "";
@@ -27,6 +28,15 @@ export default function SiteHeader({ brand = DEFAULT_BRAND }: { brand?: ClinicBr
         </Link>
 
         <nav aria-label="Principal" className="flex items-center gap-1.5 sm:gap-3">
+          {brand.slug ? (
+            <ManageAppointmentModal
+              clinicSlug={brand.slug}
+              clinicName={brand.name}
+              variant="nav"
+            >
+              Gestionar cita
+            </ManageAppointmentModal>
+          ) : null}
           <Link
             href={privacidadHref}
             className="hidden rounded-lg px-2 py-2 text-sm font-medium text-neutral-700 hover:bg-brand-navy-50 hover:text-brand-navy sm:inline-flex"
