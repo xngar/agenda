@@ -57,6 +57,48 @@ export const STATE_ORDER: string[] = [
 
 export const FACES: string[] = ["vestibular", "lingual", "mesial", "distal", "occlusal", "incisal"];
 
+/**
+ * Prioridad para el color agregado de una pieza: gana el estado que más
+ * atención clínica pide. Antes sólo se pintaban extraída/ausente/caries y
+ * todo lo demás (obturada, corona, endodoncia…) quedaba gris como si no
+ * tuviera nada, aunque el dato sí estaba guardado.
+ */
+export const TOOTH_STATE_PRIORITY: string[] = [
+  "extraida",
+  "ausente",
+  "caries",
+  "por_extraer",
+  "endodoncia",
+  "fractura",
+  "obturada",
+  "corona",
+  "puente",
+  "implante",
+  "sellante",
+  "desgaste",
+  "incluida",
+  "protesis_removible",
+  "sana",
+];
+
+/**
+ * Estado agregado de una pieza a partir de los estados de sus caras (una
+ * entrada por cara; las no registradas van como undefined/null/"").
+ * "sana" sólo si todas las caras vienen registradas y sanas; undefined si
+ * no hay ninguna cara registrada.
+ */
+export function aggregateToothState(states: (string | undefined | null)[]): string | undefined {
+  const presentes = states.filter((s): s is string => typeof s === "string" && s !== "");
+  if (presentes.length === 0) return undefined;
+  const todasRegistradas = states.every((s): s is string => typeof s === "string" && s !== "");
+  if (todasRegistradas && presentes.every((s) => s === "sana")) return "sana";
+  for (const candidato of TOOTH_STATE_PRIORITY) {
+    if (candidato === "sana") continue;
+    if (presentes.includes(candidato)) return candidato;
+  }
+  return undefined;
+}
+
 export function toothLabel(tooth: number): string {
   const set = tooth >= 11 && tooth <= 28 ? "superior" : "inferior";
   const dentition = tooth <= 48 ? "permanente" : "temporal";

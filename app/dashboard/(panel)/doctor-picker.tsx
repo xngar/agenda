@@ -1,12 +1,29 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "cn";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import type { PublicDoctor } from "@/lib/types";
 
 /**
  * Filtro por profesional, para quienes ven toda la agenda (admin y
- * recepción).
+ * recepción). Combobox de shadcn (botón + popover con buscador): con
+ * hartos profesionales el `<select>` nativo obliga a scrollear a ciegas.
  *
  * Va por la URL (`?doctor=`) y no con estado local: así la agenda se
  * puede recargar, compartir y refrescar desde Realtime sin perder el
@@ -34,38 +51,74 @@ export function DoctorPicker({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [pending, startTransition] = useTransition();
+  const [abierto, setAbierto] = useState(false);
 
   function irA(doctorId: string) {
     const params = new URLSearchParams(searchParams.toString());
     if (doctorId === "all") params.delete("doctor");
     else params.set("doctor", doctorId);
 
+    setAbierto(false);
     startTransition(() => {
       router.push(`${basePath}${params.size ? `?${params}` : ""}`);
     });
   }
 
-  const opciones = doctors ?? [];
+  if (!canFilter) return null;
+
+  const opciones = [
+    ...(allOption ? [{ value: "all", label: "Todo el equipo" }] : []),
+    ...(doctors ?? []).map((d) => ({ value: d.id, label: d.full_name })),
+  ];
+  const valor = allOption && !current ? "all" : (current ?? "");
+  const actual = opciones.find((o) => o.value === valor) ?? null;
 
   return (
     <div>
-      <label htmlFor="filtro-doctor" className="mb-1 block text-xs font-medium text-neutral-600">
+      <p id="filtro-doctor-label" className="mb-1 block text-xs font-medium text-neutral-600">
         Profesional
-      </label>
-      <select
-        id="filtro-doctor"
-        value={allOption && !current ? "all" : (current ?? "")}
-        disabled={pending || !canFilter}
-        onChange={(e) => irA(e.target.value)}
-        className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm disabled:opacity-60"
-      >
-        {allOption ? <option value="all">Todo el equipo</option> : null}
-        {opciones.map((d) => (
-          <option key={d.id} value={d.id}>
-            {d.full_name}
-          </option>
-        ))}
-      </select>
+      </p>
+      <Popover open={abierto} onOpenChange={setAbierto}>
+        <PopoverTrigger asChild>
+          <Button
+            id="filtro-doctor"
+            variant="outline"
+            role="combobox"
+            aria-expanded={abierto}
+            aria-labelledby="filtro-doctor-label filtro-doctor-valor"
+            disabled={pending}
+            className="w-full justify-between bg-white font-normal text-neutral-800 hover:bg-neutral-50 disabled:opacity-60 sm:w-56"
+          >
+            <span id="filtro-doctor-valor" className="truncate">
+              {actual?.label ?? "Elegir profesional…"}
+            </span>
+            <ChevronsUpDown className="opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-full min-w-52 p-0" align="start">
+          <Command>
+            <CommandInput placeholder="Buscar profesional…" />
+            <CommandList>
+              <CommandEmpty>Ningún profesional coincide.</CommandEmpty>
+              <CommandGroup>
+                {opciones.map((o) => (
+                  <CommandItem
+                    key={o.value}
+                    value={`${o.label} ${o.value}`}
+                    keywords={[o.label]}
+                    onSelect={() => irA(o.value)}
+                  >
+                    <Check
+                      className={cn(o.value === valor ? "opacity-100" : "opacity-0")}
+                    />
+                    {o.label}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 /* ============================================================================
    Tokens de marca
@@ -190,4 +191,47 @@
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ============================================================================
+   Tokens de shadcn/ui (sólo para sus componentes en components/ui/).
+   Mapeados a la marca: primary = navy, accent/ring = sky. No tocan los
+   tokens de marca de arriba ni los usan los componentes propios.
+   ========================================================================== */
+:root {
+  --background: #ffffff;
+  --foreground: #1e293b;
+  --primary: #0b3c7a;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #1e293b;
+  --accent: #e9f6fe;
+  --accent-foreground: #0b3c7a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --destructive: #b91c1c;
+  --border: #e2e8f0;
+  --input: #cbd5e1;
+  --ring: #7cc7f0;
+  --popover: #ffffff;
+  --popover-foreground: #1e293b;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
 }

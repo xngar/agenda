@@ -3,6 +3,22 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "cn";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button as ShadcnButton } from "@/components/ui/button";
 import { Button, Card, ErrorNotice, InfoNotice, buttonClasses, inputClasses } from "@/components/ui";
 
 export interface OrganizationRow {
@@ -22,6 +38,78 @@ const TIPO_LABEL: Record<OrganizationRow["type"], string> = {
   medical: "Médica",
   psychological: "Psicológica",
 };
+
+const CUPOS = ["2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","30","40","50","60","70"];
+
+/**
+ * Cupo de profesionales con combobox shadcn (botón + popover con buscador).
+ * Mantiene `data-professional-limit` en el trigger para el panel-check.
+ */
+function CupoCombobox({
+  orgId,
+  professionalLimit,
+  disabled,
+  onSelect,
+}: {
+  orgId: string;
+  professionalLimit: number | null;
+  disabled: boolean;
+  onSelect: (orgId: string, value: string) => void;
+}) {
+  const [abierto, setAbierto] = useState(false);
+  const actual = professionalLimit === null ? "null" : String(professionalLimit);
+  const opciones = [
+    ...CUPOS,
+    ...(professionalLimit !== null && !CUPOS.includes(String(professionalLimit))
+      ? [String(professionalLimit)]
+      : []),
+    "null",
+  ];
+  const etiqueta = (v: string) => (v === "null" ? "Sin límite" : v);
+
+  return (
+    <Popover open={abierto} onOpenChange={setAbierto}>
+      <PopoverTrigger asChild>
+        <ShadcnButton
+          data-professional-limit
+          variant="outline"
+          role="combobox"
+          aria-expanded={abierto}
+          aria-label={`Cupo de profesionales, actual: ${etiqueta(actual)}`}
+          disabled={disabled}
+          className="h-8 justify-between bg-white px-2.5 text-xs font-normal text-neutral-700 hover:bg-neutral-50 disabled:opacity-60"
+        >
+          {etiqueta(actual)}
+          <ChevronsUpDown className="opacity-50" />
+        </ShadcnButton>
+      </PopoverTrigger>
+      <PopoverContent className="w-44 p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Buscar cupo…" />
+          <CommandList>
+            <CommandEmpty>Sin coincidencias.</CommandEmpty>
+            <CommandGroup>
+              {opciones.map((v) => (
+                <CommandItem
+                  key={v}
+                  value={v === "null" ? "Sin límite null" : `${v} ${v}`}
+                  keywords={[etiqueta(v)]}
+                  onSelect={() => {
+                    setAbierto(false);
+                    onSelect(orgId, v);
+                  }}
+                >
+                  <Check className={cn(v === actual ? "opacity-100" : "opacity-0")} />
+                  {etiqueta(v)}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 /**
  * Listado de clínicas del panel de plataforma, en tabla: administrador de
@@ -215,47 +303,12 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
                     {org.professionals}
                     {org.professionalLimit !== null ? ` de ${org.professionalLimit}` : " de ∞"}
                     <div className="mt-1">
-                      <select
-                        data-professional-limit
+                      <CupoCombobox
+                        orgId={org.id}
+                        professionalLimit={org.professionalLimit}
                         disabled={actualizando === org.id}
-                        value={org.professionalLimit === null ? "null" : String(org.professionalLimit)}
-                        onChange={(e) => cambiarCupo(org.id, e.target.value)}
-                        className={`${inputClasses} h-8 text-xs`}
-                      >
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                        <option value="6">6</option>
-                        <option value="7">7</option>
-                        <option value="8">8</option>
-                        <option value="9">9</option>
-                        <option value="10">10</option>
-                        <option value="11">11</option>
-                        <option value="12">12</option>
-                        <option value="13">13</option>
-                        <option value="14">14</option>
-                        <option value="15">15</option>
-                        <option value="16">16</option>
-                        <option value="17">17</option>
-                        <option value="18">18</option>
-                        <option value="19">19</option>
-                        <option value="20">20</option>
-                        <option value="30">30</option>
-                        <option value="40">40</option>
-                        <option value="50">50</option>
-                        <option value="60">60</option>
-                        <option value="70">70</option>
-                        <option value="null">Sin límite</option>
-                        {org.professionalLimit !== null &&
-                          ![
-                            "2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","30","40","50","60","70",
-                          ].includes(String(org.professionalLimit)) ? (
-                          <option value={String(org.professionalLimit)}>
-                            {org.professionalLimit}
-                          </option>
-                        ) : null}
-                      </select>
+                        onSelect={cambiarCupo}
+                      />
                     </div>
                   </td>
                   <td className="px-4 py-3">

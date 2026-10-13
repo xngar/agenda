@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { DentalChartEntry, DentalFace, DentalState } from "@/lib/ficha/types";
+import { aggregateToothState } from "@/lib/ficha/dental";
 import { Card, CardHeader, Button, ErrorNotice, InfoNotice, Spinner, modalClasses } from "./panels-shared";
 
 const STATES: { value: DentalState; label: string }[] = [
@@ -59,6 +60,7 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
   const [aviso, setAviso] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [edits, setEdits] = useState<Record<string, DentalState>>({});
+  const [iniciales, setIniciales] = useState<Record<string, DentalState>>({});
   const [guardando, setGuardando] = useState(false);
 
   const cargar = useCallback(async () => {
@@ -97,18 +99,44 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
   };
 
   const estadoPieza = (tooth: number): DentalState | undefined => {
-    const faces = toothFaces(tooth);
-    if (faces.some((f) => estadoDe(tooth, f) === "extraida")) return "extraida";
-    if (faces.some((f) => estadoDe(tooth, f) === "ausente")) return "ausente";
-    if (faces.some((f) => estadoDe(tooth, f) === "caries")) return "caries";
-    if (faces.length && faces.every((f) => estadoDe(tooth, f) === "sana")) return "sana";
-    return undefined;
+    const estados = toothFaces(tooth).map((f) => estadoDe(tooth, f));
+    return aggregateToothState(estados) as DentalState | undefined;
+  };
+
+  const desglosePieza = (tooth: number): string => {
+    const partes = toothFaces(tooth).flatMap((f) => {
+      const estado = estadoDe(tooth, f);
+      return estado ? [`${FACE_LABELS[f].toLowerCase()} ${estado}`] : [];
+    });
+    return partes.length > 0 ? partes.join(" · ") : "sin registro";
   };
 
   function abrir(tooth: number) {
+    // El modal precarga lo guardado: lo que ves es lo que hay.
+    const precarga: Record<string, DentalState> = {};
+    for (const f of toothFaces(tooth)) {
+      const estado = estadoDe(tooth, f);
+      if (estado) precarga[f] = estado;
+    }
     setSelected(tooth);
-    setEdits({});
+    setEdits(precarga);
+    setIniciales(precarga);
     setError(null);
+  }
+
+  /** Caras que difieren de lo cargado al abrir (vacío = volver a "Sin cambio"). */
+  function diferencias(): { face: string; state: DentalState }[] {
+    if (!selected) return [];
+    const caras = new Set([...Object.keys(edits), ...Object.keys(iniciales)]);
+    const cambios: { face: string; state: DentalState }[] = [];
+    for (const face of caras) {
+      const antes = iniciales[face];
+      const ahora = edits[face];
+      if (ahora === antes) continue;
+      if (!ahora) continue;
+      cambios.push({ face, state: ahora });
+    }
+    return cambios;
   }
 
   async function guardar(e: React.FormEvent) {
@@ -118,7 +146,7 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
     setError(null);
     setAviso(null);
     try {
-      const entries = Object.entries(edits).map(([face, state]) => ({
+      const entries = diferencias().map(({ face, state }) => ({
         tooth: selected,
         face,
         state,
@@ -161,7 +189,7 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
               type="button"
               onClick={() => abrir(t)}
               className={`flex h-9 w-9 items-center justify-center rounded-lg text-xs font-bold transition-colors ${className}`}
-              title={`Pieza ${t}: ${c ?? "sin registro"}`}
+              title={`Pieza ${t}: ${desglosePieza(t)}`}
             >
               {t}
             </button>
@@ -209,13 +237,15 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
       {selected ? (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-neutral-900/40 p-4" onClick={() => setSelected(null)}>
           <div className={modalClasses} onClick={(e) => e.stopPropagation()}>
-            <CardHeader title={`Pieza ${selected}`} description="Selecciona el estado de cada cara. Deja una cara sin elegir para no cambiarla." />
+            <CardHeader title={`Pieza ${selected}`} description="Se muestran los valores guardados. Cambia sólo las caras a registrar; se guarda únicamente lo que difiere." />
             <form onSubmit={guardar} className="space-y-3 px-5 py-5">
               {error ? <ErrorNotice message={error} /> : null}
               <div className="grid gap-3 sm:grid-cols-2">
                 {toothFaces(selected).map((face) => (
                   <label key={face} className="block">
-                    <span className="mb-1 block text-xs font-medium text-neutral-600">{FACE_LABELS[face]}</span>
+                    <span className="mb-1 block text-xs font-medium text-neutral-600">
+                      {FACE_LABELS[face]}
+                    </span>
                     <select
                       className="w-full min-h-11 rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 focus:border-brand-navy focus:outline-none"
                       value={edits[face] ?? ""}
@@ -242,7 +272,7 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
                 {estadoPieza(selected) ?? "sin registrar"}
               </p>
               <div className="flex flex-wrap gap-3">
-                <Button type="submit" disabled={guardando || Object.keys(edits).length === 0}>
+                <Button type="submit" disabled={guardando || diferencias().length === 0}>
                   {guardando ? "Guardando…" : "Guardar caras"}
                 </Button>
                 <Button variant="ghost" onClick={() => setSelected(null)} disabled={guardando}>Cancelar</Button>
