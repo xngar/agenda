@@ -758,7 +758,7 @@ export async function requestAppointmentAccess(
   const cleanEmail = input.email ? input.email.trim().toLowerCase() : undefined;
 
   if (!normalizedRut && !cleanEmail) {
-    throw new BusinessError("Debes ingresar tu RUT o tu correo electrónico.", 400);
+    throw new BusinessError("A0007", 400);
   }
 
   // 1. Obtener la organización
@@ -770,7 +770,7 @@ export async function requestAppointmentAccess(
     .maybeSingle();
 
   if (orgErr || !org) {
-    throw new BusinessError("Clínica no encontrada", 404);
+    throw new BusinessError("A0008", 404);
   }
 
   // 2. Buscar pacientes por RUT o email en esta clínica
@@ -836,7 +836,7 @@ export async function requestAppointmentAccess(
   // 4. Descifrar el token de gestión
   const token = await openToken(targetAppt.id);
   if (!token) {
-    throw new BusinessError("No pudimos generar el enlace de gestión en este momento.", 500);
+    throw new BusinessError("A0009", 500);
   }
 
   const url = manageUrl(token);

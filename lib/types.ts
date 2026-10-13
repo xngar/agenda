@@ -135,6 +135,12 @@ export const BUSINESS_ERROR_MESSAGES = {
   // pasa el dígito verificador. Antes se reportaba como A0002 y el
   // paciente terminaba buscando otra hora por un error de tipeo.
   A0006: "Revisa tu RUT: el dígito verificador no coincide.",
+  // Códigos de aplicación para `requestAppointmentAccess` (tampoco vienen de
+  // Postgres): el constructor de BusinessError sólo acepta códigos, así que
+  // pasarle el texto directo no compila.
+  A0007: "Debes ingresar tu RUT o tu correo electrónico.",
+  A0008: "Clínica no encontrada.",
+  A0009: "No pudimos generar el enlace de gestión en este momento.",
 } as const;
 
 export type BusinessErrorCode = keyof typeof BUSINESS_ERROR_MESSAGES;

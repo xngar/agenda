@@ -23,6 +23,9 @@ const STATUS_BY_CODE: Record<BusinessErrorCode, number> = {
   A0004: 409,
   A0005: 409,
   A0006: 422,
+  A0007: 400,
+  A0008: 404,
+  A0009: 500,
 };
 
 /** Traduce el `code` de un error de Supabase a un error de negocio. */
