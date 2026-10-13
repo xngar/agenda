@@ -16,11 +16,25 @@ export default async function PlataformaOrganizacionEditarPage({
 
   const { data: org } = await supabase
     .from("organizations")
-    .select("id,name,slug,timezone,address,phone,support_email,consent_text,active,professional_limit")
+    .select("id,name,slug,timezone,type,address,phone,support_email,consent_text,active,professional_limit")
     .eq("id", id)
     .maybeSingle();
 
   if (!org) notFound();
+
+  const [{ count: conPerfil }, { count: conEncuentro }] = await Promise.all([
+    supabase
+      .from("patients")
+      .select("id", { count: "exact", head: true })
+      .eq("org_id", id)
+      .not("specialty_profile", "eq", "{}"),
+    supabase
+      .from("encounters")
+      .select("id", { count: "exact", head: true })
+      .eq("org_id", id)
+      .not("specialty_data", "eq", "{}"),
+  ]);
+  const tieneDatosEspecialidad = (conPerfil ?? 0) + (conEncuentro ?? 0) > 0;
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-8">
@@ -40,10 +54,12 @@ export default async function PlataformaOrganizacionEditarPage({
         <OrganizationEditForm
           id={org.id}
           slugReserved={RESERVED_SLUGS.has(org.slug)}
+          tieneDatosEspecialidad={tieneDatosEspecialidad}
           initial={{
             name: org.name ?? "",
             slug: org.slug ?? "",
             timezone: org.timezone ?? "America/Santiago",
+            type: (org.type as "dental" | "medical" | "psychological" | undefined) ?? "dental",
             phone: org.phone ?? "",
             address: org.address ?? "",
             supportEmail: org.support_email ?? "",

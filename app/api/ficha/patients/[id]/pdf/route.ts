@@ -10,6 +10,7 @@ import {
   dbError,
 } from "@/lib/ficha/http";
 import { FACE_LABEL, STATE_LABEL } from "@/lib/ficha/dental";
+import { redactEncounters } from "@/lib/ficha/privacy";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -314,7 +315,12 @@ export async function GET(_request: Request, { params }: Params) {
   if (error) return dbError(error);
   if (!patient) return notFound("Paciente no encontrado");
 
-  const pdf = await buildPdf(patient, { orgName: org?.name ?? "Clínica" });
+  // El PDF no imprime notas privadas; se redactan antes por seguridad.
+  const encounters = redactEncounters(
+    ((patient.encounters as unknown[] | null) ?? []) as Record<string, unknown>[],
+    ctx.session,
+  );
+  const pdf = await buildPdf({ ...patient, encounters }, { orgName: org?.name ?? "Clínica" });
 
   return new NextResponse(new Uint8Array(pdf), {
     headers: {

@@ -9,12 +9,19 @@ export interface OrganizationRow {
   id: string;
   name: string;
   slug: string;
+  type: "dental" | "medical" | "psychological";
   active: boolean;
   createdAt: string;
   admin: { id: string; name: string; email: string } | null;
   professionals: number;
   professionalLimit: number | null;
 }
+
+const TIPO_LABEL: Record<OrganizationRow["type"], string> = {
+  dental: "Odontológica",
+  medical: "Médica",
+  psychological: "Psicológica",
+};
 
 /**
  * Listado de clínicas del panel de plataforma, en tabla: administrador de
@@ -138,6 +145,7 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
             <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
               <tr>
                 <th scope="col" className="px-4 py-3 font-semibold">Clínica</th>
+                <th scope="col" className="px-4 py-3 font-semibold">Tipo</th>
                 <th scope="col" className="px-4 py-3 font-semibold">Administrador</th>
                 <th scope="col" className="px-4 py-3 font-semibold">Profesionales</th>
                 <th scope="col" className="px-4 py-3 font-semibold">Estado</th>
@@ -151,6 +159,11 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
                   <td className="px-4 py-3">
                     <span className="block font-semibold text-neutral-800">{org.name}</span>
                     <span className="block text-xs text-neutral-500">/{org.slug}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-semibold text-neutral-700">
+                      {TIPO_LABEL[org.type] ?? org.type}
+                    </span>
                   </td>
                   <td className="px-4 py-3">
                     {org.admin ? (

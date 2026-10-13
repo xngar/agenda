@@ -17,6 +17,7 @@ const organizationSchema = z.object({
     .regex(slugPattern, "Usa sólo letras minúsculas, números y guiones")
     .refine((slug) => !RESERVED_SLUGS.has(slug), "Ese identificador está reservado"),
   timezone: z.string().trim().min(1).default(DEFAULT_TIMEZONE),
+  type: z.enum(["dental", "medical", "psychological"]).default("dental"),
   address: z.string().trim().max(200).optional(),
   phone: z.string().trim().max(40).optional(),
   supportEmail: z.string().trim().toLowerCase().email("Correo de soporte inválido").optional(),
@@ -47,6 +48,7 @@ const patchSchema = z
       .max(50, "El identificador es demasiado largo")
       .regex(slugPattern, "Usa sólo letras minúsculas, números y guiones"),
     timezone: z.string().trim().min(1, "Indica la zona horaria"),
+    type: z.enum(["dental", "medical", "psychological"]),
     address: z.string().trim().max(200).nullable(),
     phone: z.string().trim().max(40).nullable(),
     supportEmail: z.string().trim().toLowerCase().email("Correo de soporte inválido").nullable(),
@@ -105,6 +107,7 @@ export async function POST(request: Request) {
     name,
     slug,
     timezone,
+    type,
     address,
     phone,
     supportEmail,
@@ -147,13 +150,14 @@ export async function POST(request: Request) {
       name,
       slug,
       timezone,
+      type,
       address: address || null,
       phone: phone || null,
       support_email: supportEmail || null,
       consent_text: consentText || null,
       professional_limit: professionalLimit ?? 2,
     })
-    .select("id,name,slug,timezone,active,professional_limit")
+    .select("id,name,slug,timezone,type,active,professional_limit")
     .single();
 
   if (orgError || !creada) {
@@ -358,7 +362,7 @@ export async function PATCH(request: Request) {
 
   const { data: org } = await supabase
     .from("organizations")
-    .select("id,name,slug")
+    .select("id,name,slug,type")
     .eq("id", id)
     .maybeSingle();
 
@@ -368,6 +372,9 @@ export async function PATCH(request: Request) {
       { status: 404 },
     );
   }
+
+  const cambiaTipo =
+    rest.type !== undefined && rest.type !== (org.type as string | undefined);
 
   if (rest.slug !== undefined && rest.slug !== org.slug) {
     if (RESERVED_SLUGS.has(rest.slug)) {
@@ -399,7 +406,7 @@ export async function PATCH(request: Request) {
     .from("organizations")
     .update(update)
     .eq("id", id)
-    .select("id,name,slug,timezone,address,phone,support_email,consent_text,active,created_at,updated_at,professional_limit")
+    .select("id,name,slug,timezone,type,address,phone,support_email,consent_text,active,created_at,updated_at,professional_limit")
     .single();
 
   if (updateError) {
@@ -410,6 +417,22 @@ export async function PATCH(request: Request) {
       );
     }
     return NextResponse.json({ error: "No se pudo actualizar la organización" }, { status: 500 });
+  }
+
+  if (cambiaTipo) {
+    // Los datos de especialidad pertenecen al tipo anterior y dejan de tener
+    // sentido: se borran (decisión confirmada con la clínica). La ficha común
+    // — pacientes, citas, atenciones — se conserva intacta.
+    await supabase.from("patients").update({ specialty_profile: {} }).eq("org_id", id);
+    await supabase.from("encounters").update({ specialty_data: {} }).eq("org_id", id);
+    await supabase.from("audit_log").insert({
+      org_id: id,
+      actor_id: session.id,
+      action: "update",
+      entity: "organization",
+      entity_id: id,
+      summary: { type_change: { from: org.type, to: rest.type }, specialty_data_wiped: true },
+    });
   }
 
   return NextResponse.json({ ok: true, organization: actualizada });

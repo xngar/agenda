@@ -4,10 +4,13 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, buttonClasses, inputClasses } from "@/components/ui";
 
+type OrgType = "dental" | "medical" | "psychological";
+
 interface FormState {
   name: string;
   slug: string;
   timezone: string;
+  type: OrgType;
   phone: string;
   address: string;
   supportEmail: string;
@@ -20,15 +23,21 @@ export function OrganizationEditForm({
   id,
   initial,
   slugReserved = false,
+  tieneDatosEspecialidad = false,
 }: {
   id: string;
   initial: FormState;
   slugReserved?: boolean;
+  tieneDatosEspecialidad?: boolean;
 }) {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(initial);
+  const [confirmaBorrado, setConfirmaBorrado] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const cambiaTipo = form.type !== initial.type;
+  const exigeConfirmacion = cambiaTipo && tieneDatosEspecialidad;
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -36,6 +45,10 @@ export function OrganizationEditForm({
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (exigeConfirmacion && !confirmaBorrado) {
+      setError("Para cambiar el tipo debes confirmar que se borrarán los datos de especialidad.");
+      return;
+    }
     setBusy(true);
     setError(null);
 
@@ -44,6 +57,7 @@ export function OrganizationEditForm({
       name: form.name.trim(),
       slug: form.slug.trim().toLowerCase(),
       timezone: form.timezone.trim(),
+      type: form.type,
       phone: form.phone.trim() || null,
       address: form.address.trim() || null,
       supportEmail: form.supportEmail.trim() || null,
@@ -125,6 +139,42 @@ export function OrganizationEditForm({
               placeholder="America/Santiago"
             />
           </label>
+
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="font-medium text-neutral-800">Tipo de organización</span>
+            <select
+              value={form.type}
+              onChange={(e) => update("type", e.target.value as OrgType)}
+              className={inputClasses}
+            >
+              <option value="dental">Odontológica</option>
+              <option value="medical">Médica</option>
+              <option value="psychological">Psicológica</option>
+            </select>
+            <span className="text-xs text-neutral-500">
+              Define qué ficha clínica verán los profesionales.
+            </span>
+          </label>
+
+          {exigeConfirmacion ? (
+            <label className="flex items-start gap-2 rounded-xl border border-red-300 bg-red-50 p-3 text-sm sm:col-span-2">
+              <input
+                type="checkbox"
+                checked={confirmaBorrado}
+                onChange={(e) => setConfirmaBorrado(e.target.checked)}
+                className="mt-0.5 h-4 w-4"
+              />
+              <span className="text-red-800">
+                Entiendo que cambiar el tipo <strong>borrará los datos de especialidad</strong>{" "}
+                de todas las fichas de esta organización. Los pacientes, citas y atenciones se
+                conservan. Esta acción no se puede deshacer.
+              </span>
+            </label>
+          ) : cambiaTipo ? (
+            <p className="text-xs text-neutral-500 sm:col-span-2">
+              La organización aún no tiene datos de especialidad: el cambio de tipo no borra nada.
+            </p>
+          ) : null}
 
           <label className="flex flex-col gap-1.5 text-sm">
             <span className="font-medium text-neutral-800">Teléfono</span>

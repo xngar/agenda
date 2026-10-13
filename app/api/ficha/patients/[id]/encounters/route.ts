@@ -8,6 +8,8 @@ import {
   orgPatient,
 } from "@/lib/ficha/http";
 import { encounterSchema } from "@/lib/ficha/schemas";
+import { validateEncounterData } from "@/lib/ficha/definitions";
+import { redactEncounters } from "@/lib/ficha/privacy";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -29,7 +31,13 @@ export async function GET(_request: Request, { params }: Params) {
 
   if (error) return dbError(error);
 
-  return NextResponse.json({ patient, encounters: data ?? [] });
+  return NextResponse.json({
+    patient,
+    encounters: redactEncounters(
+      (data ?? []) as unknown as Record<string, unknown>[],
+      ctx.session,
+    ),
+  });
 }
 
 export async function POST(request: Request, { params }: Params) {
@@ -45,13 +53,16 @@ export async function POST(request: Request, { params }: Params) {
   const body = encounterSchema.omit({ patient_id: true }).safeParse(raw);
   if (!body.success) return bodyError(body.error);
 
+  const especialidad = validateEncounterData(ctx.session.orgType, body.data.specialty_data);
+  if (!especialidad.success) return bodyError(especialidad.error);
+
   const { data, error } = await ctx.supabase
     .from("encounters")
     .insert({
       org_id: ctx.session.orgId,
       patient_id: id,
       doctor_id: ctx.session.id,
-      specialty_data: body.data.specialty_data ?? {},
+      specialty_data: especialidad.data,
       appointment_id: body.data.appointment_id ?? null,
       started_at: body.data.started_at ? `${body.data.started_at}T00:00:00Z` : undefined,
       care_type: body.data.care_type ?? null,

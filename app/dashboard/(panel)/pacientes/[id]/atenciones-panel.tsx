@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { Encounter, EncounterVersion } from "@/lib/ficha/types";
+import type { Encounter, EncounterVersion, OrganizationType } from "@/lib/ficha/types";
+import { fichaFor } from "@/lib/ficha/definitions";
 import {
   Card,
   CardHeader,
@@ -12,6 +13,7 @@ import {
   Spinner,
   inputClasses,
 } from "@/components/ui";
+import { SpecialtyForm, SpecialtyView, type SpecialtyValues } from "./specialty-section";
 
 interface EncounterRow extends Encounter {
   doctors?: { full_name: string } | null;
@@ -66,11 +68,20 @@ function careLabel(v: string): string {
   return CARE_TYPES.find((c) => c.value === v)?.label ?? v;
 }
 
-export function AtencionesPanel({ patientId }: { patientId: string }) {
+export function AtencionesPanel({
+  patientId,
+  orgType,
+}: {
+  patientId: string;
+  orgType: OrganizationType;
+}) {
+  const ficha = fichaFor(orgType);
+  const esPsicologica = orgType === "psychological";
   const [encounters, setEncounters] = useState<EncounterRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dialogo, setDialogo] = useState<"nueva" | EncounterRow | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [especialidad, setEspecialidad] = useState<SpecialtyValues>({});
   const [guardando, setGuardando] = useState(false);
   const [firmando, setFirmando] = useState<string | null>(null);
   const [versionesDe, setVersionesDe] = useState<string | null>(null);
@@ -104,12 +115,14 @@ export function AtencionesPanel({ patientId }: { patientId: string }) {
 
   function abrirNueva() {
     setForm({ ...EMPTY_FORM, started_at: new Date().toISOString().slice(0, 10) });
+    setEspecialidad({});
     setDialogo("nueva");
     setError(null);
   }
 
   function abrirEditar(e: EncounterRow) {
     setForm(formFrom(e));
+    setEspecialidad({ ...((e.specialty_data as SpecialtyValues | null) ?? {}) });
     setDialogo(e);
     setError(null);
   }
@@ -128,6 +141,7 @@ export function AtencionesPanel({ patientId }: { patientId: string }) {
         diagnostico: form.diagnostico.trim() || undefined,
         indicaciones: form.indicaciones.trim() || undefined,
         proxima_cita_at: form.proxima_cita_at || null,
+        specialty_data: especialidad,
       };
       const response =
         dialogo === "nueva"
@@ -304,6 +318,47 @@ export function AtencionesPanel({ patientId }: { patientId: string }) {
                         <p className="whitespace-pre-wrap text-neutral-800">{e.indicaciones}</p>
                       </div>
                     ) : null}
+                    {(() => {
+                      const datos = (e.specialty_data ?? {}) as SpecialtyValues;
+                      const conDatos = ficha.encounterFields.some((s) =>
+                        s.fields.some((f) => {
+                          const v = datos[f.key];
+                          return v !== undefined && v !== null && String(v).trim() !== "";
+                        }),
+                      );
+                      return (
+                        <>
+                          {datos.safetyConcerns === true ? (
+                            <div className="sm:col-span-2" role="alert">
+                              <p className="rounded-xl border border-red-300 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800">
+                                Alerta: esta atención marca preocupaciones de seguridad. Revisa la
+                                evaluación de riesgo.
+                              </p>
+                            </div>
+                          ) : null}
+                          {conDatos ? (
+                            <div className="sm:col-span-2">
+                              <p className="font-semibold text-neutral-700">
+                                Registro {ficha.label.toLowerCase()}
+                              </p>
+                              <div className="-mx-5 -my-4">
+                                <SpecialtyView sections={ficha.encounterFields} data={datos} />
+                              </div>
+                            </div>
+                          ) : null}
+                          {typeof datos.privateNotes === "string" && datos.privateNotes.trim() ? (
+                            <div className="sm:col-span-2">
+                              <p className="font-semibold text-neutral-700">
+                                Notas privadas (solo tratante)
+                              </p>
+                              <p className="whitespace-pre-wrap text-neutral-800">
+                                {datos.privateNotes}
+                              </p>
+                            </div>
+                          ) : null}
+                        </>
+                      );
+                    })()}
                     {e.proxima_cita_at ? (
                       <div>
                         <p className="font-semibold text-neutral-700">Próxima cita</p>
@@ -403,6 +458,28 @@ export function AtencionesPanel({ patientId }: { patientId: string }) {
               <Field label="Próxima cita" htmlFor="proxima" required={false}>
                 <input id="proxima" type="date" className={inputClasses} value={form.proxima_cita_at} onChange={(e) => set("proxima_cita_at", e.target.value)} />
               </Field>
+              <SpecialtyForm
+                sections={ficha.encounterFields}
+                value={especialidad}
+                onChange={(key, next) => setEspecialidad((v) => ({ ...v, [key]: next }))}
+                idPrefix="encuentro"
+              />
+              {esPsicologica && (dialogo === "nueva" || "privateNotes" in especialidad) ? (
+                <Field
+                  label="Notas privadas (solo tratante)"
+                  htmlFor="notas-privadas"
+                  required={false}
+                  hint="Nunca se comparten con otros profesionales ni aparecen en el export o el PDF."
+                >
+                  <textarea
+                    id="notas-privadas"
+                    rows={4}
+                    className={inputClasses}
+                    value={typeof especialidad.privateNotes === "string" ? especialidad.privateNotes : ""}
+                    onChange={(e) => setEspecialidad((v) => ({ ...v, privateNotes: e.target.value }))}
+                  />
+                </Field>
+              ) : null}
               <div className="flex flex-wrap gap-3">
                 <Button type="submit" disabled={guardando}>{guardando ? "Guardando…" : dialogosGuardar(dialogo)}</Button>
                 <Button variant="ghost" onClick={() => setDialogo(null)} disabled={guardando}>Cancelar</Button>

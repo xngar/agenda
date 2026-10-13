@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { OrganizationType, Patient } from "@/lib/ficha/types";
+import { fichaFor, ORG_TYPE_LABEL } from "@/lib/ficha/definitions";
 import { Card, CardHeader, Button, ErrorNotice, InfoNotice, Field, inputClasses } from "@/components/ui";
+import { SpecialtyForm, SpecialtyView, type SpecialtyValues } from "./specialty-section";
 
 const SEXOS = [
   { value: "female", label: "Mujer" },
@@ -106,6 +108,13 @@ export function ResumenPanel({
   const [aviso, setAviso] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
 
+  const ficha = fichaFor(orgType);
+  const [editandoPerfil, setEditandoPerfil] = useState(false);
+  const [perfil, setPerfil] = useState<SpecialtyValues>(
+    () => ({ ...((patient.specialty_profile as SpecialtyValues | null) ?? {}) }),
+  );
+  const [guardandoPerfil, setGuardandoPerfil] = useState(false);
+
   function set<K extends keyof FormState>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
   }
@@ -155,6 +164,32 @@ export function ResumenPanel({
       setError("No pudimos conectarnos. Intenta de nuevo.");
     } finally {
       setGuardando(false);
+    }
+  }
+
+  async function guardarPerfil(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setAviso(null);
+    setGuardandoPerfil(true);
+    try {
+      const response = await fetch(`/api/ficha/patients/${patient.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ specialty_profile: perfil }),
+      });
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) {
+        setError(data.error ?? "No se pudo guardar el perfil de especialidad");
+        return;
+      }
+      setAviso("Perfil de especialidad actualizado");
+      setEditandoPerfil(false);
+      router.refresh();
+    } catch {
+      setError("No pudimos conectarnos. Intenta de nuevo.");
+    } finally {
+      setGuardandoPerfil(false);
     }
   }
 
@@ -349,8 +384,50 @@ export function ResumenPanel({
           <Campo etiqueta="Paciente desde" valor={patient.admitted_at?.slice(0, 10)} />
           <Campo etiqueta="Cómo llegó" valor={patient.referral_source} />
           <Campo etiqueta="Consentimiento" valor={patient.consent_at?.slice(0, 10)} />
-          <Campo etiqueta="Tipo de organización" valor={orgType === "dental" ? "Odontológica" : orgType === "medical" ? "Médica" : "Psicológica"} />
+          <Campo etiqueta="Tipo de organización" valor={ORG_TYPE_LABEL[orgType]} />
         </dl>
+      </Card>
+
+      <Card>
+        <CardHeader
+          title={`Perfil ${ficha.label.toLowerCase()}`}
+          description="Antecedentes propios de esta especialidad"
+          action={
+            canEdit && !editandoPerfil ? (
+              <Button size="sm" variant="secondary" onClick={() => setEditandoPerfil(true)}>
+                Editar
+              </Button>
+            ) : undefined
+          }
+        />
+        {error && editandoPerfil ? (
+          <div className="px-5 pt-4">
+            <ErrorNotice message={error} />
+          </div>
+        ) : null}
+        {editandoPerfil ? (
+          <form onSubmit={guardarPerfil} className="space-y-6 px-5 py-5">
+            <SpecialtyForm
+              sections={ficha.profileFields}
+              value={perfil}
+              onChange={(key, next) => setPerfil((p) => ({ ...p, [key]: next }))}
+              idPrefix="perfil"
+            />
+            <div className="flex flex-wrap items-center gap-3">
+              <Button type="submit" disabled={guardandoPerfil}>
+                {guardandoPerfil ? "Guardando…" : "Guardar perfil"}
+              </Button>
+              <Button variant="ghost" onClick={() => setEditandoPerfil(false)} disabled={guardandoPerfil}>
+                Cancelar
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <SpecialtyView
+            sections={ficha.profileFields}
+            data={(patient.specialty_profile as SpecialtyValues | null) ?? {}}
+          />
+        )}
       </Card>
 
       {aviso ? <InfoNotice>{aviso}</InfoNotice> : null}

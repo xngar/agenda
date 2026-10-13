@@ -8,6 +8,7 @@ import {
   dbError,
 } from "@/lib/ficha/http";
 import { versionSchema } from "@/lib/ficha/schemas";
+import { redactVersions } from "@/lib/ficha/privacy";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -26,7 +27,9 @@ export async function GET(_request: Request, { params }: Params) {
 
   if (error) return dbError(error);
 
-  return NextResponse.json({ versions: data ?? [] });
+  return NextResponse.json({
+    versions: redactVersions((data ?? []) as unknown as Record<string, unknown>[], ctx.session),
+  });
 }
 
 export async function POST(request: Request, { params }: Params) {

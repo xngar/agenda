@@ -4,10 +4,13 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, buttonClasses, inputClasses } from "@/components/ui";
 
+type OrgType = "dental" | "medical" | "psychological";
+
 interface FormState {
   name: string;
   slug: string;
   timezone: string;
+  type: OrgType;
   address: string;
   phone: string;
   supportEmail: string;
@@ -23,6 +26,7 @@ const INITIAL: FormState = {
   name: "",
   slug: "",
   timezone: "America/Santiago",
+  type: "dental",
   address: "",
   phone: "",
   supportEmail: "",
@@ -53,6 +57,7 @@ export default function OrganizationForm() {
       name: form.name.trim(),
       slug: form.slug.trim().toLowerCase(),
       timezone: form.timezone.trim() || "America/Santiago",
+      type: form.type,
       address: form.address.trim() || undefined,
       phone: form.phone.trim() || undefined,
       supportEmail: form.supportEmail.trim() || undefined,
@@ -129,6 +134,23 @@ export default function OrganizationForm() {
               className={inputClasses}
               placeholder="America/Santiago"
             />
+          </label>
+
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="font-medium text-neutral-800">Tipo de organización</span>
+            <select
+              required
+              value={form.type}
+              onChange={(e) => update("type", e.target.value as OrgType)}
+              className={inputClasses}
+            >
+              <option value="dental">Odontológica</option>
+              <option value="medical">Médica</option>
+              <option value="psychological">Psicológica</option>
+            </select>
+            <span className="text-xs text-neutral-500">
+              Define qué ficha clínica verán los profesionales.
+            </span>
           </label>
 
           <label className="flex flex-col gap-1.5 text-sm">
@@ -221,7 +243,13 @@ export default function OrganizationForm() {
               value={form.adminSpecialty}
               onChange={(e) => update("adminSpecialty", e.target.value)}
               className={inputClasses}
-              placeholder="Odontología general"
+              placeholder={
+                form.type === "medical"
+                  ? "Medicina general"
+                  : form.type === "psychological"
+                    ? "Psicología clínica"
+                    : "Odontología general"
+              }
             />
           </label>
 

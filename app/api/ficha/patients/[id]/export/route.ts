@@ -6,6 +6,7 @@ import {
   notFound,
   dbError,
 } from "@/lib/ficha/http";
+import { redactEncounters } from "@/lib/ficha/privacy";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -34,7 +35,11 @@ export async function GET(request: Request, { params }: Params) {
   if (!patient) return notFound("Paciente no encontrado");
 
   if (format === "json") {
-    return NextResponse.json({ patient });
+    const encounters = redactEncounters(
+      ((patient.encounters as unknown[] | null) ?? []) as Record<string, unknown>[],
+      ctx.session,
+    );
+    return NextResponse.json({ patient: { ...patient, encounters } });
   }
 
   const rows = [

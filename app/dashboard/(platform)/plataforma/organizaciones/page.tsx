@@ -17,13 +17,14 @@ export default async function PlataformaOrganizacionesPage() {
 
   const { data: orgs } = await supabase
     .from("organizations")
-    .select("id,name,slug,active,created_at,professional_limit")
+    .select("id,name,slug,type,active,created_at,professional_limit")
     .order("name");
 
   let rows: OrganizationRow[] = (orgs ?? []).map((org) => ({
     id: org.id,
     name: org.name ?? "",
     slug: org.slug ?? "",
+    type: (org.type as OrganizationRow["type"] | undefined) ?? "dental",
     active: org.active,
     createdAt: fechaCreacion(org.created_at),
     admin: null,
@@ -68,6 +69,7 @@ export default async function PlataformaOrganizacionesPage() {
         id,
         name: org.name ?? "",
         slug: org.slug ?? "",
+        type: (org.type as OrganizationRow["type"] | undefined) ?? "dental",
         active: org.active,
         createdAt: fechaCreacion(org.created_at),
         admin: mainAdmin

@@ -10,6 +10,7 @@ import {
   orgPatient,
 } from "@/lib/ficha/http";
 import { patientBaseSchema } from "@/lib/ficha/schemas";
+import { validateProfile } from "@/lib/ficha/definitions";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -60,10 +61,12 @@ export async function PUT(request: Request, { params }: Params) {
   const patch: Record<string, unknown> = { ...data };
 
   if (data.specialty_profile) {
-    patch.specialty_profile = {
-      ...(existe.specialty_profile as Record<string, unknown> | null),
+    const perfil = validateProfile(ctx.session.orgType, {
+      ...((existe.specialty_profile as Record<string, unknown> | null) ?? {}),
       ...data.specialty_profile,
-    };
+    });
+    if (!perfil.success) return bodyError(perfil.error);
+    patch.specialty_profile = perfil.data;
   }
 
   if (data.full_name === undefined && (data.nombres || data.apellido_paterno || data.apellido_materno)) {

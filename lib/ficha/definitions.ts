@@ -65,3 +65,11 @@ export const ORG_TYPE_LABEL: Record<OrganizationType, string> = {
 export function fichaFor(type: OrganizationType): FichaDefinition {
   return FICHA_BY_TYPE[type];
 }
+
+export function validateProfile(type: OrganizationType, data: unknown) {
+  return fichaFor(type).profileSchema.safeParse((data ?? {}) as Record<string, unknown>);
+}
+
+export function validateEncounterData(type: OrganizationType, data: unknown) {
+  return fichaFor(type).encounterSchema.safeParse((data ?? {}) as Record<string, unknown>);
+}

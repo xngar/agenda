@@ -8,6 +8,7 @@ import {
   dbError,
 } from "@/lib/ficha/http";
 import { encounterSchema } from "@/lib/ficha/schemas";
+import { validateEncounterData } from "@/lib/ficha/definitions";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -21,11 +22,28 @@ export async function PUT(request: Request, { params }: Params) {
   const body = encounterSchema.omit({ patient_id: true, started_at: true }).safeParse(raw);
   if (!body.success) return bodyError(body.error);
 
+  // Merge y no reemplazo: el borrador puede no traer campos que otro
+  // profesional ya guardó (p. ej. notas privadas), y no deben perderse.
+  const { data: previa, error: previaError } = await ctx.supabase
+    .from("encounters")
+    .select("specialty_data")
+    .eq("org_id", ctx.session.orgId)
+    .eq("id", id)
+    .maybeSingle();
+  if (previaError) return dbError(previaError);
+  if (!previa) return notFound("Atención no encontrada o ya fue firmada");
+
+  const especialidad = validateEncounterData(ctx.session.orgType, {
+    ...((previa.specialty_data as Record<string, unknown> | null) ?? {}),
+    ...(body.data.specialty_data ?? {}),
+  });
+  if (!especialidad.success) return bodyError(especialidad.error);
+
   const { data, error } = await ctx.supabase
     .from("encounters")
     .update({
       ...body.data,
-      specialty_data: body.data.specialty_data ?? {},
+      specialty_data: especialidad.data,
     })
     .eq("org_id", ctx.session.orgId)
     .eq("id", id)

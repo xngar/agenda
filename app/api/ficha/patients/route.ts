@@ -7,6 +7,7 @@ import {
   dbError,
 } from "@/lib/ficha/http";
 import { patientBaseSchema } from "@/lib/ficha/schemas";
+import { validateProfile } from "@/lib/ficha/definitions";
 
 export async function GET(request: Request) {
   const ctx = await fichaContext();
@@ -67,6 +68,8 @@ export async function POST(request: Request) {
   if (!body.success) return bodyError(body.error);
 
   const data = body.data;
+  const perfil = validateProfile(ctx.session.orgType, data.specialty_profile);
+  if (!perfil.success) return bodyError(perfil.error);
   const compuesto =
     [data.nombres, data.apellido_paterno, data.apellido_materno]
       .filter(Boolean)
@@ -82,7 +85,7 @@ export async function POST(request: Request) {
       consent_at: new Date().toISOString(),
       full_name: fullName,
       ...data,
-      specialty_profile: data.specialty_profile ?? {},
+      specialty_profile: perfil.data,
     })
     .select()
     .single();

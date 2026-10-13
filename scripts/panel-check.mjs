@@ -1446,6 +1446,11 @@ check(
     creada.status === 201,
     `status=${creada.status} ${json(creada).error ?? ""}`,
   );
+  check(
+    "una clínica nueva nace odontológica por defecto",
+    json(creada).organization?.type === "dental",
+    `type=${json(creada).organization?.type}`,
+  );
 
   // -- Edición (PATCH): nombre, estado y validaciones --
   const patch = (cookies, body) =>
@@ -1530,6 +1535,23 @@ check(
 
   const patchVacio = await patch(plataforma, { id: orgIdPrueba });
   check("un PATCH sin campos da 422", patchVacio.status === 422, `status=${patchVacio.status}`);
+
+  const tipoInvalido = await patch(plataforma, { id: orgIdPrueba, type: "veterinaria" });
+  check("un tipo inválido da 422", tipoInvalido.status === 422, `status=${tipoInvalido.status}`);
+
+  const tipoCambiado = await patch(plataforma, { id: orgIdPrueba, type: "medical" });
+  check(
+    "se cambia el tipo a médica",
+    tipoCambiado.status === 200 && json(tipoCambiado).organization?.type === "medical",
+    `status=${tipoCambiado.status} ${json(tipoCambiado).error ?? ""}`,
+  );
+
+  const tipoRevertido = await patch(plataforma, { id: orgIdPrueba, type: "dental" });
+  check(
+    "se revierte el tipo a odontológica",
+    tipoRevertido.status === 200 && json(tipoRevertido).organization?.type === "dental",
+    `status=${tipoRevertido.status} ${json(tipoRevertido).error ?? ""}`,
+  );
 
   const editAjena = await patch(admin, { id: orgIdPrueba, name: "Intento" });
   check("una administradora de clínica no edita", editAjena.status === 403, `status=${editAjena.status}`);

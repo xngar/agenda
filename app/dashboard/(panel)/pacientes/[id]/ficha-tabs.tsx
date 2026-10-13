@@ -192,7 +192,7 @@ export function FichaTabs({
       ) : active === "antecedentes" ? (
         <AntecedentesPanel patientId={patient.id} initial={background} />
       ) : active === "atenciones" ? (
-        <AtencionesPanel patientId={patient.id} />
+        <AtencionesPanel patientId={patient.id} orgType={orgType} />
       ) : active === "odontograma" ? (
         <OdontogramaPanel patientId={patient.id} />
       ) : active === "plan" ? (
