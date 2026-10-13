@@ -17,6 +17,7 @@ export function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [verPassword, setVerPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -66,16 +67,28 @@ export function LoginForm() {
       </Field>
 
       <Field label="Contraseña" htmlFor={passwordId}>
-        <input
-          id={passwordId}
-          type="password"
-          name="password"
-          autoComplete="current-password"
-          required
-          className={inputClasses}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <span className="relative block">
+          <input
+            id={passwordId}
+            type={verPassword ? "text" : "password"}
+            name="password"
+            autoComplete="current-password"
+            required
+            className={`${inputClasses} pr-12`}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <button
+            type="button"
+            onClick={() => setVerPassword((v) => !v)}
+            aria-pressed={verPassword}
+            aria-label={verPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            title={verPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-xl text-neutral-500 transition-colors hover:text-brand-navy focus-visible:outline-2 focus-visible:outline-brand-navy"
+          >
+            {verPassword ? <OjoCerradoIcon /> : <OjoIcon />}
+          </button>
+        </span>
       </Field>
 
       {error ? (
@@ -92,5 +105,24 @@ export function LoginForm() {
         {pending ? "Entrando…" : "Ingresar"}
       </button>
     </form>
+  );
+}
+
+function OjoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function OjoCerradoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+      <path d="M3 3l18 18" />
+      <path d="M10.6 5.1A10.8 10.8 0 0 1 12 5c6.5 0 10 7 10 7a17.6 17.6 0 0 1-3.2 3.9M6.6 6.6C4 8.2 2 12 2 12s3.5 7 10 7c1.4 0 2.7-.3 3.9-.8" />
+      <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+    </svg>
   );
 }

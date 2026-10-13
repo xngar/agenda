@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { DoctorAppointment } from "@/lib/types";
 import { formatTime } from "@/lib/dates";
 import { StatusBadge, EmptyState } from "@/components/ui";
 import { useRealtimeNotifications } from "../use-realtime";
 import { parseAppointmentRange } from "@/lib/range";
+import { Accion, AgendaTable, RIEL } from "./agenda-table";
 
 interface Props {
   initial: DoctorAppointment[];
@@ -36,6 +37,7 @@ export function Agenda({
 }: Props) {
   const router = useRouter();
   const [filtro, setFiltro] = useState<Filtro>("todas");
+  const [busqueda, setBusqueda] = useState("");
   const [pendiente, setPendiente] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [nuevas, setNuevas] = useState(0);
@@ -74,31 +76,61 @@ export function Agenda({
     }
   }
 
+  const conteos = useMemo(() => {
+    let activas = 0;
+    let canceladas = 0;
+    for (const a of initial) {
+      if (a.status === "cancelled") canceladas += 1;
+      else activas += 1;
+    }
+    return { todas: initial.length, activas, canceladas };
+  }, [initial]);
+
   const visibles = initial.filter((a) => {
-    if (filtro === "activas") return a.status !== "cancelled";
-    if (filtro === "canceladas") return a.status === "cancelled";
-    return true;
+    if (filtro === "activas" && a.status === "cancelled") return false;
+    if (filtro === "canceladas" && a.status !== "cancelled") return false;
+    const q = normalizar(busqueda);
+    if (!q) return true;
+    return normalizar(a.patient?.full_name ?? "").includes(q);
   });
 
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex gap-1" role="group" aria-label="Filtrar citas">
-          {(["todas", "activas", "canceladas"] as const).map((valor) => (
-            <button
-              key={valor}
-              type="button"
-              aria-pressed={filtro === valor}
-              onClick={() => setFiltro(valor)}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium capitalize transition-colors ${
-                filtro === valor
-                  ? "bg-brand-navy text-white"
-                  : "bg-white text-neutral-700 hover:bg-neutral-100"
-              }`}
-            >
-              {valor}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex gap-1" role="group" aria-label="Filtrar citas">
+            {(["todas", "activas", "canceladas"] as const).map((valor) => (
+              <button
+                key={valor}
+                type="button"
+                aria-pressed={filtro === valor}
+                onClick={() => setFiltro(valor)}
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium capitalize transition-colors ${
+                  filtro === valor
+                    ? "bg-brand-navy text-white"
+                    : "bg-white text-neutral-700 hover:bg-neutral-100"
+                }`}
+              >
+                {valor}{" "}
+                <span className="tabular-nums opacity-80">({conteos[valor]})</span>
+              </button>
+            ))}
+          </div>
+
+          <div>
+            <label htmlFor="agenda-busqueda" className="sr-only">
+              Buscar por nombre de paciente
+            </label>
+            <input
+              id="agenda-busqueda"
+              type="search"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="Buscar por nombre…"
+              autoComplete="off"
+              className="min-h-9 rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-sm text-neutral-800 placeholder:text-neutral-500 focus:border-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-sky"
+            />
+          </div>
         </div>
 
         <p className="flex items-center gap-2 text-xs text-neutral-500">
@@ -131,8 +163,34 @@ export function Agenda({
         </p>
       ) : null}
 
+      {busqueda.trim() ? (
+        <p className="text-sm tabular-nums text-neutral-600" aria-live="polite">
+          {visibles.length} de {conteos.todas} citas
+        </p>
+      ) : null}
+
       {visibles.length === 0 ? (
-        diasConCitas.length > 0 ? (
+        initial.length > 0 ? (
+          <EmptyState
+            title="Sin resultados"
+            description={
+              busqueda.trim()
+                ? `Ninguna cita coincide con “${busqueda.trim()}”. Prueba con otro nombre o limpia la búsqueda.`
+                : "Ninguna cita coincide con este filtro."
+            }
+            action={
+              busqueda.trim() ? (
+                <button
+                  type="button"
+                  onClick={() => setBusqueda("")}
+                  className="rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+                >
+                  Limpiar búsqueda
+                </button>
+              ) : undefined
+            }
+          />
+        ) : diasConCitas.length > 0 ? (
           /*
             Un día vacío sin más se lee como "no hay nada", pero casi siempre
             significa "no hay nada HOY". Como la cita pendiente suele estar al
@@ -146,7 +204,12 @@ export function Agenda({
           <EmptyState title="Sin citas para este día" description="No hay horas reservadas que mostrar." />
         )
       ) : (
-        <ul className="space-y-2">
+        <>
+          <div className="hidden md:block">
+            <AgendaTable citas={visibles} pendiente={pendiente} onAccion={cambiar} />
+          </div>
+
+          <ul className="space-y-2 md:hidden" data-testid="agenda-cards">
           {visibles.map((cita, i) => {
             const { start, end } = parseAppointmentRange(cita.during);
             const cancelada = cita.status === "cancelled";
@@ -245,7 +308,8 @@ export function Agenda({
               </li>
             );
           })}
-        </ul>
+          </ul>
+        </>
       )}
 
       <p className="sr-only" aria-live="polite">
@@ -255,46 +319,10 @@ export function Agenda({
   );
 }
 
-/**
- * Riel y fondo por estado. Misma historia de color que `CHIP_TONO` en
- * month-view (navy = confirmada, celeste = por confirmar, gris = cancelada)
- * para que día y mes se lean como la misma agenda.
- */
-const RIEL: Record<string, string> = {
-  confirmed: "border-l-brand-navy bg-white",
-  pending: "border-l-brand-sky-400 bg-brand-sky-50",
-  cancelled: "border-l-neutral-300 bg-white",
-  completed: "border-l-brand-navy-300 bg-white",
-  no_show: "border-l-red-400 bg-white",
-};
-
-function Accion({
-  etiqueta,
-  onClick,
-  disabled,
-  tono,
-  destacado,
-}: {
-  etiqueta: string;
-  onClick: () => void;
-  disabled?: boolean;
-  tono?: "peligro";
-  destacado?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-        destacado
-          ? "border-brand-navy bg-brand-navy text-white hover:bg-brand-navy/90"
-          : tono === "peligro"
-            ? "border-red-300 text-red-700 hover:bg-red-50"
-            : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"
-      }`}
-    >
-      {etiqueta}
-    </button>
-  );
+function normalizar(valor: string): string {
+  return valor
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
 }

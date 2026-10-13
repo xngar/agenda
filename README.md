@@ -1,150 +1,155 @@
-# Agenda Online — sistema de reservas odontológicas
+# Agenda Online
 
-Aplicación de reservas de hora para una clínica odontológica: el paciente
-elige servicio, profesional, día y hora desde el sitio público; el equipo
-atiende las citas desde un panel privado. Funciona en español, con una sola
-zona horaria (`America/Santiago`).
+Sistema de reservas de citas para clínicas. El paciente elige servicio, profesional, día y hora desde el sitio público; la cita nace **por confirmar** y el equipo la gestiona desde un panel privado. Opera en español con zona horaria `America/Santiago`.
 
-## Qué incluye
+## ¿Qué incluye?
 
 **Sitio público**
-
-- `/` — servicios, equipo y datos de la clínica.
-- `/reservar` — asistente de 4 pasos (servicio → profesional → día y hora →
-  datos), con validación en cliente que nunca ofrece horas ya tomadas. La cita
-  nace **«por confirmar»**: el horario queda reservado desde el primer
-  momento y la clínica la confirma desde el panel.
-- `/cita/[token]` — confirmación y enlace para cambiar o cancelar la cita.
-- `/privacidad` — aviso de privacidad.
+- `/` - Portada con información de la clínica
+- `/reservar` - Asistente de reserva (servicio → profesional → día y hora → datos), con validación que nunca ofrece horas ya tomadas
+- `/cita/[token]` - Gestión de cita con token para confirmar, reprogramar o cancelar
+- `/privacidad` - Aviso de privacidad
+- Soporte para multi-tenant vía slug de clínica (`/[clinicSlug]/...`)
 
 **Panel profesional** (`/dashboard`)
+- Login con RUT y contraseña
+- Agenda del día con filtros por profesional
+- Cambio de estado (pending, confirmed, attended/completed según contexto, cancelled, no_show)
+- Notificaciones y suscripción en tiempo real vía Supabase Realtime
+- Roles: admin (ve todo el equipo), profesional (ve su agenda), recepción (acceso limitado según configuración)
+- Gestión de doctores, servicios, disponibilidad, feriados y permisos de ausencia
 
-- Ingreso con RUT y contraseña.
-- Agenda del día con filtros, cambio de estado (por confirmar, confirmada,
-  atendida, no asistió, cancelada) y suscripción en vivo vía Realtime.
-- El administrador ve las citas de todo el equipo, y puede agregar
-  miembros, activar o desactivar cuentas; el resto, sólo las propias.
+**Ficha Médica Electrónica** (solo profesionales autorizados)
+- Gestión de pacientes, antecedentes, encuestas, tratamientos, periodoncia
+- Prescripciones, consentimiento informado, archivos adjuntos
+- Exportación PDF de ficha
+- Registro de auditoría
 
 ## Requisitos
 
-- Node.js 20 o superior.
-- Un proyecto Supabase (Postgres con las migraciones de `supabase/migrations`).
+- **Node.js**: 20 o superior
+- **Base de datos**: Proyecto Supabase con PostgreSQL
+- **Extensiones PostgreSQL**: `btree_gist`, `pgcrypto` (aplicadas via migraciones)
 
-## Puesta en marcha
+## Instalación y puesta en marcha
+
+### 1. Clonar e instalar dependencias
 
 ```bash
+git clone <repo-url>
+cd agenda
 npm install
-cp .env.example .env.local   # y completar los valores
-npm run dev                  # http://localhost:3000
 ```
 
-Las variables necesarias están documentadas en `.env.example`. Sólo tres son
-obligatorias para operar: `NEXT_PUBLIC_SUPABASE_URL`,
-`NEXT_PUBLIC_SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY`. Las demás
-degradan con elegancia (Turnstile, Upstash y Resend son opcionales en
-desarrollo).
+### 2. Configurar variables de entorno
 
-Para datos de prueba: `npm run seed:dev`.
+Crear archivo `.env.local` a partir de `.env.example`:
 
-## Cómo probarlo a mano
-
-Dos cuentas quedan en la base de desarrollo, con la misma contraseña
-`AgendaDev2026!`:
-
-| Cuenta | Rol |
-| --- | --- |
-| `camila.rojas@clinicadental.test` | Administradora: ve todo el equipo y gestiona las cuentas. |
-| `sebastian.munoz@clinicadental.test` | Profesional: sólo su propia agenda. |
-
-Para recorrer el flujo completo:
-
-1. Levanta el servidor (`npm run dev`, o `npm run build` + `npm start`).
-2. En una ventana aparte, entra en `/reservar` y agenda una hora. La reserva
-   nace **Por confirmar**.
-3. En el panel, entra con la cuenta que quieras y abre `/dashboard`. Si
-   reservaste para una fecha que no es hoy, navega a ella con `?date=AAAA-MM-DD`
-   — la agenda abre en el día actual.
-4. La cita aparece con su botón **Confirmar**. Al confirmar, el estado pasa a
-   *Confirmada* y se avisa al profesional.
-
-`node scripts/demo-panel.mjs` hace todo eso de forma automática, comprueba lo
-que se ve en pantalla en las tres vistas (admin sin filtro, admin filtrado y
-profesional) y deja capturas en `C:/Users/xngar/AppData/Local/Temp/opencode/shots`.
-
-## Scripts
-
-| Comando | Qué hace |
-| --- | --- |
-| `npm run dev` | Servidor de desarrollo. |
-| `npm run build` / `npm start` | Build y ejecución en modo producción. |
-| `npm run lint` | ESLint. |
-| `npm run typecheck` | TypeScript sin emitir. |
-| `npm run test` | Pruebas unitarias (Vitest). |
-| `npm run e2e` | Pruebas de navegador (Playwright, contra el build). |
-| `npm run check` | lint + typecheck + test. |
-| `npm run seed:dev` | Carga datos de desarrollo. |
-| `node scripts/panel-check.mjs` | Verificación HTTP/RLS contra el servidor, incluidos los permisos del panel. |
-| `node scripts/demo-panel.mjs` | Reserva una cita y comprueba las tres vistas del panel con capturas. |
-
-`npm run e2e` necesita el servidor levantado (`npm start`) y, si no es en
-el puerto 3000, `E2E_BASE_URL=http://localhost:3111`.
-
-## Arquitectura
-
-```
-app/                 rutas de Next (App Router)
-  page.tsx           portada
-  reservar/          asistente público
-  cita/[token]/      gestión de cita con token
-  dashboard/         panel privado (+ /login)
-  api/               rutas: bookings, slots, auth, dashboard, cron
-lib/
-  dates.ts           fechas de la clínica (día = clave "yyyy-MM-dd")
-  range.ts           lectura de tstzrange de Postgres
-  booking.ts         alta de citas y disponibilidad (sólo servidor)
-  rut.ts             validación de RUT chileno
-  ics.ts             adjunto .ics en UTC
-  auth.ts            sesión del profesional
-components/          UI compartida
-supabase/migrations/ esquema, RPC, RLS, Realtime y seed
-tests/               pruebas unitarias
-e2e/                 pruebas de navegador
+```bash
+cp .env.example .env.local  # En Windows, copiar archivo manualmente
 ```
 
-Tres ideas que conviene conocer antes de tocar el código:
+Completar al menos las variables obligatorias:
 
-1. **El día es una clave, no una fecha.** Un día hábil es `"2026-10-05"` y se
-   maneja siempre en UTC. Sumar días con la zona local del navegador hacía
-   que un lunes apareciera como domingo.
-2. **La disponibilidad se calcula en Postgres.** Las horas salen de
-   `availability_rules` menos `time_off`, menos feriados y menos las citas
-   que ya existen. No hay "slots" precalculados que puedan quedar viejos.
-3. **RLS es la autoridad.** El panel usa un cliente Supabase con cookie de
-   sesión; cada consulta pasa por las políticas. El `proxy.ts` sólo evita
-   mostrar la pantalla de carga a quien no tiene sesión, no autoriza nada.
+- `NEXT_PUBLIC_SUPABASE_URL` - URL del proyecto Supabase
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Clave anónima Supabase
+- `SUPABASE_SERVICE_ROLE_KEY` - Clave service role (solo para servidor)
+- `MANAGE_TOKEN_KEY` - Clave para tokens de gestión (mín. 16 chars). Generar con: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
 
-## Seguridad
+**Variables opcionales (degradan graciosamente):**
+- `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO` - Envío de correos (si faltan, se loguean en consola)
+- `TURNSTILE_SECRET_KEY`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY` - Cloudflare Turnstile (captcha)
+- `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` - Rate limiting (usa Map in-memory si faltan)
+- `CRON_SECRET` - Autenticación para `/api/cron/reminders`
+- `NEXT_PUBLIC_APP_URL` - URL base de la app (default: http://localhost:3000)
 
-- Contraseñas con `bcrypt`; sesión en cookie `httpOnly` + `sameSite=lax`.
-- Gestión de cita por token cifrado (AES-256-GCM) y de un solo uso.
-- Rate limiting por IP en booking y login (Upstash en producción).
-- Turnstile en el formulario; la CSP lo permite explícitamente.
-- Sin datos sensibles en los logs.
+### 3. Aplicar migraciones en Supabase
 
-## Base de datos
+Las migraciones están en `supabase/migrations/` con orden cronológico. Aplicarlas con Supabase CLI:
 
-Las migraciones se aplican en orden y son la única fuente de verdad del
-esquema. Las tres últimas resuelven problemas que sólo se ven en producción:
+```bash
+supabase db push  # o supabase db reset para desarrollo local
+```
 
-- `...0010` agrega la RPC `dashboard_appointments`, que resuelve el
-  solapamiento de `tstzrange` en el servidor: filtrar un rango con `>=`/`<=`
-  contra otro rango **no funciona** en Postgres y devuelve `malformed range
-  literal`, que es como la agenda del panel aparecía vacía.
-- `...0011` hace que una reserva nueva nazca `pending`. Antes el estado
-  existía en el CHECK y en los índices, pero nadie lo generaba: era
-  inalcanzable y el botón «Confirmar» nunca se pintaba.
-- `...0012` hace que `get_available_slots` respete `doctors.active`, que no
-  contemplaba. El resultado era mostrarle horas a un profesional desactivado
-  para negárselas al confirmar.
+### 4. Cargar datos de desarrollo (opcional)
 
-Para partir de cero: `npm run db:test` (resetea y aplica todo).
+```bash
+npm run seed:dev
+```
+
+### 5. Ejecutar en desarrollo
+
+```bash
+npm run dev
+```
+
+Abrir [http://localhost:3000](http://localhost:3000).
+
+### 6. Build y producción
+
+```bash
+npm run build
+npm run start
+```
+
+## Cuentas de desarrollo (seed)
+
+Al ejecutar `npm run seed:dev`, se crean las siguientes cuentas (misma contraseña: `AgendaDev2026!`):
+
+| Email | Rol |
+|---|---|
+| `camila.rojas@clinicadental.test` | Administradora (ve todo el equipo, gestiona cuentas) |
+| `sebastian.munoz@clinicadental.test` | Profesional (ve su propia agenda) |
+
+**POR CONFIRMAR**: Estas cuentas son solo para desarrollo local con datos seed. No existen en producción.
+
+## Flujos de prueba manual
+
+1. Ir a `/reservar` y completar asistente. La cita nace **por confirmar** (estado `pending`).
+2. Ir a `/dashboard/login` e iniciar sesión con cuenta de desarrollo.
+3. En `/dashboard`, la cita aparece con opción **Confirmar** (cambia estado a `confirmed`).
+4. Ver gestión vía token en `/cita/[token]`.
+
+## Scripts disponibles
+
+| Comando | Descripción |
+|---|---|
+| `npm run dev` | Servidor desarrollo |
+| `npm run build` | Build producción |
+| `npm run start` | Ejecutar build |
+| `npm run lint` | Linting |
+| `npm run typecheck` | Type checking sin emitir |
+| `npm run test` | Tests unitarios |
+| `npm run test:watch` | Tests watch |
+| `npm run test:coverage` | Coverage |
+| `npm run e2e` | Tests E2E (requiere servidor corriendo; config `E2E_BASE_URL` si puerto distinto) |
+| `npm run check` | lint + typecheck + test |
+| `npm run check:panel` | Verificación HTTP/RLS (`node scripts/panel-check.mjs`) |
+| `npm run seed:dev` | Datos dev |
+| `npm run db:test` | Reset DB solo |
+
+## Estructura general
+
+```
+app/          # Rutas App Router (público, dashboard, API)
+lib/          # Lógica compartida (auth, booking, dates, supabase, etc.)
+components/   # Componentes UI reutilizables
+supabase/     # Migraciones SQL y tests
+tests/        # Tests unitarios Vitest
+e2e/          # Tests E2E Playwright
+scripts/      # Utilidades
+docs/         # Documentación
+```
+
+Ver `docs/ARQUITECTURA.md` para detalles completos.
+
+## Notas de seguridad
+
+- **RLS obligatorio**: Autoridad real está en PostgreSQL.
+- **Tokens**: `manage_token_hash` (SHA-256 hex) del token en claro; nunca se almacena token.
+- **Auth**: Supabase Auth con RUT + contraseña.
+- **Zod**: Validación en server-side.
+- **Fail-fast**: Config inválida rompe arranque.
+- **Rate limiting + Turnstile**: Opcionales con fallback seguro para desarrollo.
+
+**POR CONFIRMAR**: Configuraciones específicas de producción (dominio, SMTP real, Redis Upstash, claves Turnstile).
