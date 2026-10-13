@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getService, getSlotsWithDoctor } from "@/lib/booking";
-import { getCatalog } from "@/lib/booking";
+import { getCatalog, getCatalogById } from "@/lib/booking";
 import { isValidDayKey } from "@/lib/dates";
 import { checkRateLimit, clientIdentity } from "@/lib/ratelimit";
 
@@ -59,7 +59,21 @@ const parsed = querySchema.safeParse({
     return NextResponse.json({ error: "Servicio no disponible" }, { status: 404 });
   }
 
-  const clinicSlug = parsed.data.clinicSlug ?? "sonrisa-dental"; const catalog = await getCatalog(clinicSlug);
+  // Sin slug, la organización se resuelve desde el propio servicio: así la
+  // ruta no depende de ninguna clínica fija.
+  let catalog = null;
+  try {
+    catalog = parsed.data.clinicSlug
+      ? await getCatalog(parsed.data.clinicSlug)
+      : service.org_id
+        ? await getCatalogById(service.org_id)
+        : null;
+  } catch {
+    catalog = null;
+  }
+  if (!catalog) {
+    return NextResponse.json({ error: "Servicio no disponible" }, { status: 404 });
+  }
   const settings = catalog.settings;
 
   // El servidor es quien decide el rango de fechas; el cliente no puede

@@ -39,6 +39,16 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
   const [nuevaPassword, setNuevaPassword] = useState("");
   const [restableciendo, setRestableciendo] = useState(false);
   const [resetOk, setResetOk] = useState<{ name: string } | null>(null);
+  const [busqueda, setBusqueda] = useState("");
+
+  const normalizar = (v: string) =>
+    v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const q = normalizar(busqueda.trim());
+  const visibles = q
+    ? organizations.filter(
+        (org) => normalizar(org.name).includes(q) || normalizar(org.slug).includes(q),
+      )
+    : organizations;
 
   useEffect(() => {
     if (!confirmar && !resetear) return;
@@ -135,9 +145,35 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
     <div className="mt-6 space-y-4">
       {error ? <div className="mb-4"><ErrorNotice message={error} /></div> : null}
 
-      {organizations.length === 0 ? (
+      <div className="flex flex-wrap items-center gap-3">
+        <div>
+          <label htmlFor="org-busqueda" className="sr-only">
+            Buscar clínica por nombre
+          </label>
+          <input
+            id="org-busqueda"
+            type="search"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            placeholder="Buscar clínica por nombre…"
+            autoComplete="off"
+            className={`${inputClasses} w-64`}
+          />
+        </div>
+        {q ? (
+          <p className="text-sm tabular-nums text-neutral-600" aria-live="polite">
+            {visibles.length} de {organizations.length}
+          </p>
+        ) : null}
+      </div>
+
+      {visibles.length === 0 ? (
         <Card className="px-4 py-8">
-          <p className="text-sm text-neutral-600">Todavía no hay organizaciones.</p>
+          <p className="text-sm text-neutral-600">
+            {organizations.length === 0
+              ? "Todavía no hay organizaciones."
+              : `Ninguna clínica coincide con “${busqueda.trim()}”.`}
+          </p>
         </Card>
       ) : (
         <div className="overflow-x-auto rounded-card border border-neutral-200 bg-white shadow-card">
@@ -154,7 +190,7 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200">
-              {organizations.map((org) => (
+              {visibles.map((org) => (
                 <tr key={org.id} data-org-id={org.id} className="align-top">
                   <td className="px-4 py-3">
                     <span className="block font-semibold text-neutral-800">{org.name}</span>
@@ -255,13 +291,15 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
                       >
                         Contraseña
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setConfirmar(org)}
-                        className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100 hover:text-[color:var(--color-danger,#b91c1c)]"
-                      >
-                        Eliminar
-                      </button>
+                      {org.slug === "plataforma" ? null : (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmar(org)}
+                          className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100 hover:text-[color:var(--color-danger,#b91c1c)]"
+                        >
+                          Eliminar
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -274,7 +312,8 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
       <p className="text-sm text-neutral-500">
         Eliminar una clínica no borra su historial de citas: si ya tiene citas, desactívala desde{" "}
         <span className="font-medium text-neutral-700">Editar</span> para que deje de publicarse en
-        el catálogo.
+        el catálogo. La organización interna de la plataforma no se puede eliminar, pero sí
+        restablecer su contraseña.
       </p>
 
       {/* ── Confirmación de borrado ─────────────────────────────────── */}

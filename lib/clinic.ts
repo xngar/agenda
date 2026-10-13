@@ -23,8 +23,8 @@ export interface ClinicBrand {
 }
 
 export const DEFAULT_BRAND: ClinicBrand = {
-  name: "Clínica Dental Sonrisa",
-  slug: "sonrisa-dental",
+  name: "Clínica",
+  slug: undefined,
   address: CLINIC_ADDRESS,
   phone: CLINIC_PHONE,
   supportEmail: SUPPORT_EMAIL,

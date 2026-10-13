@@ -1,6 +1,6 @@
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
-import { getPublicOrganization } from "@/lib/booking";
+import { getDefaultOrganization } from "@/lib/booking";
 import { DEFAULT_BRAND, type ClinicBrand } from "@/lib/clinic";
 
 export const dynamic = "force-dynamic";
@@ -11,8 +11,7 @@ export const dynamic = "force-dynamic";
  * de la organización para no duplicar datos en componentes.
  */
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  const defaultSlug = DEFAULT_BRAND.slug ?? "sonrisa-dental";
-  const org = await getPublicOrganization(defaultSlug).catch(() => null);
+  const org = await getDefaultOrganization();
   const brand: ClinicBrand = org
     ? {
         name: org.name,

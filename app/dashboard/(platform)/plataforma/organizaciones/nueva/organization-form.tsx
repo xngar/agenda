@@ -3,6 +3,9 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, buttonClasses, inputClasses } from "@/components/ui";
+import { PasswordInput } from "@/components/password-input";
+import { formatSlugValue } from "@/lib/platform";
+import { formatPhonePartial, normalizePhone } from "@/lib/phone";
 
 type OrgType = "dental" | "medical" | "psychological";
 
@@ -22,15 +25,18 @@ interface FormState {
   professionalLimit: number | null;
 }
 
+const CONSENTIMIENTO_ESTANDAR =
+  "Autorizo a la clínica al tratamiento de mis datos personales para gestionar mis citas, enviar recordatorios y comunicaciones relacionadas con mi atención, conforme a la Ley N° 19.628 sobre protección de datos personales.";
+
 const INITIAL: FormState = {
   name: "",
   slug: "",
   timezone: "America/Santiago",
   type: "dental",
   address: "",
-  phone: "",
+  phone: formatPhonePartial(""),
   supportEmail: "",
-  consentText: "",
+  consentText: CONSENTIMIENTO_ESTANDAR,
   adminFullName: "",
   adminEmail: "",
   adminPassword: "",
@@ -53,13 +59,14 @@ export default function OrganizationForm() {
     setBusy(true);
     setError(null);
 
+    const telefono = normalizePhone(form.phone);
     const payload = {
       name: form.name.trim(),
       slug: form.slug.trim().toLowerCase(),
       timezone: form.timezone.trim() || "America/Santiago",
       type: form.type,
       address: form.address.trim() || undefined,
-      phone: form.phone.trim() || undefined,
+      phone: telefono || undefined,
       supportEmail: form.supportEmail.trim() || undefined,
       consentText: form.consentText.trim() || undefined,
       adminFullName: form.adminFullName.trim(),
@@ -116,13 +123,13 @@ export default function OrganizationForm() {
             <input
               required
               value={form.slug}
-              onChange={(e) => update("slug", e.target.value)}
+              onChange={(e) => update("slug", formatSlugValue(e.target.value))}
               className={inputClasses}
               placeholder="clinica-ejemplo"
               pattern="[a-z0-9]+(-[a-z0-9]+)*"
               title="Sólo minúsculas, números y guiones"
             />
-            <span className="text-xs text-neutral-500">Página pública: /{form.slug || "clinica-ejemplo"}</span>
+            <span className="text-xs text-neutral-500">Página pública: /{form.slug || "clinica-ejemplo"}. Los espacios se convierten en guiones automáticamente.</span>
           </label>
 
           <label className="flex flex-col gap-1.5 text-sm">
@@ -157,10 +164,14 @@ export default function OrganizationForm() {
             <span className="font-medium text-neutral-800">Teléfono</span>
             <input
               value={form.phone}
-              onChange={(e) => update("phone", e.target.value)}
+              onChange={(e) => update("phone", formatPhonePartial(e.target.value))}
               className={inputClasses}
               placeholder="+56 2 2345 6789"
+              inputMode="tel"
             />
+            <span className="text-xs text-neutral-500">
+              Escribe sólo el número: el +56 ya está puesto.
+            </span>
           </label>
 
           <label className="flex flex-col gap-1.5 text-sm sm:col-span-2">
@@ -190,8 +201,10 @@ export default function OrganizationForm() {
               value={form.consentText}
               onChange={(e) => update("consentText", e.target.value)}
               className={`${inputClasses} min-h-20`}
-              placeholder="Acepto el tratamiento de mis datos para gestionar mi cita."
             />
+            <span className="text-xs text-neutral-500">
+              Texto estándar ya incluido; puedes ampliarlo o ajustarlo antes de crear la clínica.
+            </span>
           </label>
 
           <label className="flex flex-col gap-1.5 text-sm sm:col-span-2">
@@ -265,18 +278,19 @@ export default function OrganizationForm() {
             />
           </label>
 
-          <label className="flex flex-col gap-1.5 text-sm">
-            <span className="font-medium text-neutral-800">Contraseña temporal</span>
-            <input
+          <div className="flex flex-col gap-1.5 text-sm">
+            <label htmlFor="admin-password" className="font-medium text-neutral-800">
+              Contraseña temporal
+            </label>
+            <PasswordInput
+              id="admin-password"
               required
-              type="password"
               minLength={8}
               value={form.adminPassword}
-              onChange={(e) => update("adminPassword", e.target.value)}
-              className={inputClasses}
               placeholder="Mínimo 8 caracteres"
+              onChange={(v) => update("adminPassword", v)}
             />
-          </label>
+          </div>
         </div>
       </Card>
 

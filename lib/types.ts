@@ -60,6 +60,7 @@ export interface Service {
   name: string;
   duration_min: number;
   active?: boolean;
+  org_id?: string;
 }
 
 export interface Holiday {

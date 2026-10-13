@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getAppointmentByToken, getCatalog, toPatientView } from "@/lib/booking";
+import { getAppointmentByToken, getCatalog, getDefaultCatalog, toPatientView } from "@/lib/booking";
 import { isManageTokenShape } from "@/lib/token";
 import type { ClinicBrand } from "@/lib/clinic";
 import SiteHeader from "@/components/site-header";
@@ -33,7 +33,9 @@ export default async function CitaPage({ params }: Props) {
   // mostraba siempre la clínica por defecto, así que una cita de otra
   // organización aparecía con dirección, teléfono y enlaces ajenos.
   const appointment = await toPatientView(found.row);
-  const catalog = await getCatalog(appointment.clinicSlug || "sonrisa-dental");
+  const catalog = appointment.clinicSlug
+    ? await getCatalog(appointment.clinicSlug)
+    : await getDefaultCatalog();
 
   const brand: ClinicBrand = {
     name: appointment.clinicName,

@@ -155,7 +155,8 @@ export async function POST(request: Request) {
       phone: phone || null,
       support_email: supportEmail || null,
       consent_text: consentText || null,
-      professional_limit: professionalLimit ?? 2,
+      // null explícito = sin límite; sólo la ausencia usa el 2 por defecto.
+      professional_limit: professionalLimit === undefined ? 2 : professionalLimit,
     })
     .select("id,name,slug,timezone,type,active,professional_limit")
     .single();
@@ -225,9 +226,11 @@ export async function POST(request: Request) {
 /**
  * Elimina una clínica entera y todo lo que cuelga de ella.
  *
- * Se niega si la organización tiene citas: el historial no se borra, sólo se
- * deja de publicar la clínica. También se niega si es la organización desde
- * la que opera el propio equipo de la plataforma.
+ * Sin `force` se niega si la organización tiene citas: el historial no se
+ * borra, sólo se deja de publicar la clínica. Con `force: true` se borra
+ * TODO (citas, pacientes, ficha, auditoría y cuentas), pensado para
+ * clínicas de prueba o dadas de baja definitiva. También se niega si es la
+ * organización desde la que opera el propio equipo de la plataforma.
  */
 export async function DELETE(request: Request) {
   const session = await getDoctorSession();
@@ -248,6 +251,7 @@ export async function DELETE(request: Request) {
   if (!slug) {
     return NextResponse.json({ error: "Indica qué organización eliminar" }, { status: 422 });
   }
+  const force = raw?.force === true;
 
   const { data: org } = await supabase
     .from("organizations")
@@ -259,6 +263,16 @@ export async function DELETE(request: Request) {
     return NextResponse.json(
       { error: "No existe una organización con ese identificador", code: "no_existe" },
       { status: 404 },
+    );
+  }
+
+  if (org.slug === "plataforma") {
+    return NextResponse.json(
+      {
+        error: "La organización interna de la plataforma no se puede eliminar",
+        code: "organizacion_interna",
+      },
+      { status: 409 },
     );
   }
 
@@ -277,7 +291,7 @@ export async function DELETE(request: Request) {
     .select("id", { count: "exact", head: true })
     .eq("org_id", org.id);
 
-  if (citas) {
+  if (citas && !force) {
     return NextResponse.json(
       {
         error: "Tiene citas registradas: para que deje de ofrecer horas, desactívala en su lugar.",
@@ -287,28 +301,90 @@ export async function DELETE(request: Request) {
     );
   }
 
+  const orgId = org.id as string;
+
   const { data: profesionales } = await supabase
     .from("doctors")
     .select("id")
-    .eq("org_id", org.id);
+    .eq("org_id", orgId);
 
-  const borrados: { tabla: string; etiqueta: string }[] = [
-    { tabla: "availability_rules", etiqueta: "el horario" },
-    { tabla: "clinic_holidays", etiqueta: "los feriados" },
-    { tabla: "time_off", etiqueta: "las ausencias" },
-    { tabla: "notifications", etiqueta: "las notificaciones" },
-    { tabla: "dental_payments", etiqueta: "los pagos" },
-    { tabla: "services", etiqueta: "los servicios" },
-    { tabla: "doctors", etiqueta: "los profesionales" },
-  ];
-
-  for (const paso of borrados) {
-    const { error } = await supabase.from(paso.tabla).delete().eq("org_id", org.id);
+  async function borrarTabla(
+    tabla: string,
+    etiqueta: string,
+  ): Promise<NextResponse | null> {
+    const { error } = await supabase.from(tabla).delete().eq("org_id", orgId);
     if (error) {
       return NextResponse.json(
-        { error: `No se pudo eliminar ${paso.etiqueta}`, code: "borrado_parcial" },
+        { error: `No se pudo eliminar ${etiqueta}`, code: "borrado_parcial" },
         { status: 500 },
       );
+    }
+    return null;
+  }
+
+  if (force) {
+    // Borrado total en orden de dependencias: primero los hijos sin org_id
+    // propio (tokens), luego la ficha, la agenda, los pacientes, la
+    // configuración y al final las personas y la auditoría que los registra.
+    const { data: citasOrg } = await supabase
+      .from("appointments")
+      .select("id")
+      .eq("org_id", org.id);
+    const citaIds = (citasOrg ?? []).map((c) => c.id as string);
+    if (citaIds.length > 0) {
+      const { error } = await supabase
+        .from("manage_token_secrets")
+        .delete()
+        .in("appointment_id", citaIds);
+      if (error) {
+        return NextResponse.json(
+          { error: "No se pudieron eliminar los tokens de gestión", code: "borrado_parcial" },
+          { status: 500 },
+        );
+      }
+    }
+
+    const borradoTotal: { tabla: string; etiqueta: string }[] = [
+      { tabla: "notifications", etiqueta: "las notificaciones" },
+      { tabla: "encounter_versions", etiqueta: "el historial de la ficha" },
+      { tabla: "attachments", etiqueta: "los adjuntos" },
+      { tabla: "consents", etiqueta: "los consentimientos" },
+      { tabla: "prescriptions", etiqueta: "las recetas" },
+      { tabla: "dental_chart_entries", etiqueta: "el odontograma" },
+      { tabla: "dental_treatment_plan_items", etiqueta: "el plan de tratamiento" },
+      { tabla: "periodontal_records", etiqueta: "los registros periodontales" },
+      { tabla: "patient_medical_background", etiqueta: "los antecedentes" },
+      { tabla: "encounters", etiqueta: "las atenciones" },
+      { tabla: "appointments", etiqueta: "las citas" },
+      { tabla: "patients", etiqueta: "los pacientes" },
+      { tabla: "availability_rules", etiqueta: "el horario" },
+      { tabla: "clinic_holidays", etiqueta: "los feriados" },
+      { tabla: "time_off", etiqueta: "las ausencias" },
+      { tabla: "dental_payments", etiqueta: "los pagos" },
+      { tabla: "dental_treatments_catalog", etiqueta: "el catálogo" },
+      { tabla: "services", etiqueta: "los servicios" },
+      { tabla: "doctors", etiqueta: "los profesionales" },
+      { tabla: "audit_log", etiqueta: "la auditoría" },
+    ];
+
+    for (const paso of borradoTotal) {
+      const fallo = await borrarTabla(paso.tabla, paso.etiqueta);
+      if (fallo) return fallo;
+    }
+  } else {
+    const borrados: { tabla: string; etiqueta: string }[] = [
+      { tabla: "availability_rules", etiqueta: "el horario" },
+      { tabla: "clinic_holidays", etiqueta: "los feriados" },
+      { tabla: "time_off", etiqueta: "las ausencias" },
+      { tabla: "notifications", etiqueta: "las notificaciones" },
+      { tabla: "dental_payments", etiqueta: "los pagos" },
+      { tabla: "services", etiqueta: "los servicios" },
+      { tabla: "doctors", etiqueta: "los profesionales" },
+    ];
+
+    for (const paso of borrados) {
+      const fallo = await borrarTabla(paso.tabla, paso.etiqueta);
+      if (fallo) return fallo;
     }
   }
 

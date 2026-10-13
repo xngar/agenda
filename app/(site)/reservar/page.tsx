@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getCatalog } from "@/lib/booking";
+import { getDefaultCatalog } from "@/lib/booking";
 import { ErrorNotice } from "@/components/ui";
 import BookingWizard from "./booking-wizard";
 
@@ -22,7 +22,7 @@ export default async function ReservarPage({ searchParams }: Props) {
 
   let catalog;
   try {
-    catalog = await getCatalog("sonrisa-dental");
+    catalog = await getDefaultCatalog();
   } catch {
     // No filtramos el motivo: al paciente no le sirve saber si falló la
     // base o la red, y no queremos exponer internals en pantalla.

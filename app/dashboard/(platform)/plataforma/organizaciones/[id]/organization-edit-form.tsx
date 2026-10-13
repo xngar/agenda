@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, buttonClasses, inputClasses } from "@/components/ui";
+import { formatPhonePartial, normalizePhone } from "@/lib/phone";
 
 type OrgType = "dental" | "medical" | "psychological";
 
@@ -31,7 +32,10 @@ export function OrganizationEditForm({
   tieneDatosEspecialidad?: boolean;
 }) {
   const router = useRouter();
-  const [form, setForm] = useState<FormState>(initial);
+  const [form, setForm] = useState<FormState>(() => ({
+    ...initial,
+    phone: formatPhonePartial(initial.phone),
+  }));
   const [confirmaBorrado, setConfirmaBorrado] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -58,7 +62,7 @@ export function OrganizationEditForm({
       slug: form.slug.trim().toLowerCase(),
       timezone: form.timezone.trim(),
       type: form.type,
-      phone: form.phone.trim() || null,
+      phone: normalizePhone(form.phone) || null,
       address: form.address.trim() || null,
       supportEmail: form.supportEmail.trim() || null,
       consentText: form.consentText.trim() || null,
@@ -180,10 +184,14 @@ export function OrganizationEditForm({
             <span className="font-medium text-neutral-800">Teléfono</span>
             <input
               value={form.phone}
-              onChange={(e) => update("phone", e.target.value)}
+              onChange={(e) => update("phone", formatPhonePartial(e.target.value))}
               className={inputClasses}
               placeholder="+56 2 2345 6789"
+              inputMode="tel"
             />
+            <span className="text-xs text-neutral-500">
+              Escribe sólo el número: el +56 ya está puesto.
+            </span>
           </label>
 
           <label className="flex flex-col gap-1.5 text-sm sm:col-span-2">

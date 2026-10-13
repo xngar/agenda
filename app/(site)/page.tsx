@@ -1,18 +1,18 @@
 import Link from "next/link";
-import { getCatalog, getPublicOrganization } from "@/lib/booking";
+import { getDefaultCatalog, getDefaultOrganization } from "@/lib/booking";
 import { Card, buttonClasses } from "@/components/ui";
 import { CLINIC_ADDRESS, CLINIC_PHONE } from "@/lib/clinic";
 import { getDoctorSession } from "@/lib/auth";
 
 export async function generateMetadata() {
-  const org = await getPublicOrganization("sonrisa-dental").catch(() => null);
+  const org = await getDefaultOrganization();
   return {
     title: { absolute: `${org?.name ?? "Clínica odontológica"} · Reserva tu hora` },
   };
 }
 
 export default async function HomePage() {
-  const [catalog, doctor] = await Promise.all([getCatalog("sonrisa-dental"), getDoctorSession()]);
+  const [catalog, doctor] = await Promise.all([getDefaultCatalog(), getDoctorSession()]);
   const { settings } = catalog;
   const address = settings.address ?? CLINIC_ADDRESS;
   const phone = settings.phone ?? CLINIC_PHONE;

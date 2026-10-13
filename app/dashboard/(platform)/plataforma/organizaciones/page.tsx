@@ -85,12 +85,20 @@ export default async function PlataformaOrganizacionesPage() {
     <div className="mx-auto w-full max-w-6xl px-4 py-8">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-brand-navy">Organizaciones</h1>
-        <Link
-          href="/dashboard/plataforma/organizaciones/nueva"
-          className={buttonClasses("primary", "sm")}
-        >
-          Crear nueva
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/dashboard/plataforma/seguridad"
+            className={buttonClasses("ghost", "sm")}
+          >
+            Seguridad
+          </Link>
+          <Link
+            href="/dashboard/plataforma/organizaciones/nueva"
+            className={buttonClasses("primary", "sm")}
+          >
+            Crear nueva
+          </Link>
+        </div>
       </div>
 
       <OrganizationList organizations={rows} />

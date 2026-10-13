@@ -84,7 +84,48 @@ export async function getCatalog(orgSlug: string): Promise<Catalog> {
   const supabase = supabaseAdmin();
   const { data: org, error: orgErr } = await supabase.from('organizations').select('*').eq('slug', orgSlug).eq('active', true).maybeSingle();
   if (orgErr || !org) throw new Error('Organizacion no encontrada');
-  const orgId = org.id as string;
+  return loadCatalog(org as unknown as { id: string } & Record<string, unknown>);
+}
+
+/** Catálogo por id de organización (p. ej. resuelto desde el servicio). */
+export async function getCatalogById(orgId: string): Promise<Catalog> {
+  const supabase = supabaseAdmin();
+  const { data: org, error: orgErr } = await supabase.from('organizations').select('*').eq('id', orgId).eq('active', true).maybeSingle();
+  if (orgErr || !org) throw new Error('Organizacion no encontrada');
+  return loadCatalog(org as unknown as { id: string } & Record<string, unknown>);
+}
+
+/**
+ * Catálogo de la primera organización activa (la más antigua). Es lo que
+ * muestra el sitio legado sin slug (`/` y `/reservar`) ahora que no hay
+ * una clínica por defecto fija.
+ */
+export async function getDefaultCatalog(): Promise<Catalog> {
+  const supabase = supabaseAdmin();
+  const { data: org, error: orgErr } = await supabase
+    .from('organizations')
+    .select('*')
+    .eq('active', true)
+    .not('slug', 'eq', 'plataforma')
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (orgErr || !org) throw new Error('Organizacion no encontrada');
+  return loadCatalog(org as unknown as { id: string } & Record<string, unknown>);
+}
+
+/** Organización activa por defecto para el branding del sitio legado. */
+export async function getDefaultOrganization(): Promise<ClinicSettings | null> {
+  try {
+    return (await getDefaultCatalog()).settings;
+  } catch {
+    return null;
+  }
+}
+
+async function loadCatalog(org: { id: string } & Record<string, unknown>): Promise<Catalog> {
+  const supabase = supabaseAdmin();
+  const orgId = org.id;
   const [services, doctors, holidays] = await Promise.all([
     supabase.from('services').select('id,name,duration_min,active').eq('org_id', orgId).eq('active', true),
     supabase.from('doctors').select('id,full_name,specialty,role').eq('org_id', orgId).eq('active', true),
@@ -94,7 +135,7 @@ export async function getCatalog(orgSlug: string): Promise<Catalog> {
   if (doctors.error) throw new Error('No se pudieron leer los profesionales');
   if (holidays.error) throw new Error('No se pudieron leer los feriados');
   return {
-    settings: org as ClinicSettings,
+    settings: org as unknown as ClinicSettings,
     services: (services.data ?? []) as Service[],
     doctors: ((doctors.data ?? []) as (PublicDoctor & { role?: string })[])
       .filter((d) => d.role === 'professional')
@@ -122,7 +163,7 @@ export async function getPublicOrganization(orgSlug: string): Promise<ClinicSett
 export async function getService(id: string): Promise<Service | null> {
   const { data } = await supabaseAdmin()
     .from("services")
-    .select("id, name, duration_min")
+    .select("id, name, duration_min, org_id")
     .eq("id", id)
     .eq("active", true)
     .maybeSingle();
@@ -228,14 +269,27 @@ export async function bookAppointment(input: PatientDetailsInput & { clinicSlug?
   const service = await getService(input.serviceId);
   if (!service) throw new BusinessError("A0002", 422);
 
-const orgSlug = input.clinicSlug ?? "sonrisa-dental";
-  const { data: orgRow } = await supabase
-    .from("organizations")
-    .select("id")
-    .eq("slug", orgSlug)
-    .eq("active", true)
-    .maybeSingle();
-  const orgId = (orgRow?.id as string | undefined) ?? undefined;
+  // Sin slug, la organización sale del propio servicio: así reservar no
+  // depende de ninguna clínica fija.
+  let orgRow: { id: string } | null = null;
+  if (input.clinicSlug) {
+    const { data } = await supabase
+      .from("organizations")
+      .select("id")
+      .eq("slug", input.clinicSlug)
+      .eq("active", true)
+      .maybeSingle();
+    orgRow = (data as { id: string } | null) ?? null;
+  } else if (service.org_id) {
+    const { data } = await supabase
+      .from("organizations")
+      .select("id")
+      .eq("id", service.org_id)
+      .eq("active", true)
+      .maybeSingle();
+    orgRow = (data as { id: string } | null) ?? null;
+  }
+  const orgId = orgRow?.id ?? undefined;
 
   const doctorId = await resolveDoctor(input.doctorId, input.slotStart, service.duration_min, orgId);
   const token = generateManageToken();
@@ -337,7 +391,14 @@ async function getSettings(orgId?: string): Promise<ClinicSettings> {
     const { data } = await supabase.from('organizations').select('*').eq('id', orgId).single();
     if (data) return data as ClinicSettings;
   }
-  const { data } = await supabase.from('organizations').select('*').eq('slug', 'sonrisa-dental').maybeSingle();
+  const { data } = await supabase
+    .from('organizations')
+    .select('*')
+    .eq('active', true)
+    .not('slug', 'eq', 'plataforma')
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
   if (!data) throw new Error('organization sin fila');
   return data as ClinicSettings;
 }

@@ -2,12 +2,30 @@
  * Verificación del panel del profesional contra el servidor real y la base real.
  * Comprueba que el proxy bloquea, que el login deja sesión, que RLS aísla y
  * que los cambios de estado funcionan.
+ *
+ * El script es autocontenido: crea su propia clínica de prueba con equipo
+ * (admin + profesional + recepción) y la elimina al final con borrado total.
+ * No depende de datos sembrados ni deja basura.
  */
 const BASE = process.env.BASE ?? "http://localhost:3111";
-const SERVICE_FALLBACK = "dccfd3d6-7e66-460b-93ce-989ecbfe270f";
 let SERVICE = null;
-const SEBASTIAN = "3a335e2c-9881-473a-a98c-94c3661b977e";
-const CAMILA = "d4555fbf-7e8a-4f6d-901c-d6f2b410c55b";
+// Compatibilidad: la detección de servicio vive en el setup del fixture.
+const SERVICE_FALLBACK = "dccfd3d6-7e66-460b-93ce-989ecbfe270f";
+const FIX = {
+  orgSlug: "",
+  orgId: "",
+  adminId: "",
+  adminEmail: "",
+  adminName: "Camila Panel",
+  proId: "",
+  proEmail: "",
+  proName: "Sebastián Panel",
+  recepEmail: "",
+  psiOrgSlug: "",
+  psiProEmail: "",
+};
+let SEBASTIAN = "";
+let CAMILA = "";
 
 /** Primer día hábil (lun-vie) a partir de `offset` días desde hoy, en formato YYYY-MM-DD. */
 function nextWorkday(offset = 1) {
@@ -89,10 +107,14 @@ async function req(cookies, path, init = {}) {
   return { status: res.status, location: res.headers.get("location"), text };
 }
 
-const hoy = await (async () => {
-  // Detectar una fecha hábil y un serviceId con disponibilidad real, de modo
-  // que el script siga funcionando aunque cambien los UUID sembrados o el
-  // margen mínimo de reserva. Se prueban varios días hábiles hacia adelante.
+let hoy = { slots: [] };
+
+/**
+ * Detecta fecha y servicio con disponibilidad real dentro de la clínica del
+ * fixture, probando días hábiles hacia adelante. Se llama desde el setup,
+ * cuando el equipo ya existe.
+ */
+async function detectarServicio(adminCookies) {
   const candidateDates = [];
   for (let i = 1; i <= 21 && candidateDates.length < 10; i++) {
     const d = new Date();
@@ -105,27 +127,32 @@ const hoy = await (async () => {
 
   let serviceIds = [];
   try {
-    const html = await (await fetch(`${BASE}/reservar`)).text();
-    serviceIds = [
-      ...html.matchAll(
-        /value="([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})"/g,
-      ),
-    ].map((m) => m[1]);
+    const r = await req(adminCookies, "/api/dashboard/services");
+    serviceIds = (JSON.parse(r.text).services ?? [])
+      .filter((s) => s.active !== false)
+      .map((s) => s.id);
   } catch {
     // Sin catálogo: se usa el UUID de respaldo.
   }
   if (serviceIds.length === 0) serviceIds = [SERVICE_FALLBACK];
 
+  // Sin ?doctorId para traer al equipo completo (la cita de [5] va para la
+  // admin y la de [7] para el profesional). Se filtra al equipo del fixture
+  // porque la API sin doctor cubre todas las organizaciones.
+  const delEquipo = (slots) =>
+    (slots ?? []).filter((s) => s.doctor_id === CAMILA || s.doctor_id === SEBASTIAN);
   for (const date of candidateDates) {
     for (const serviceId of serviceIds) {
       try {
         const slots = await (
           await fetch(`${BASE}/api/slots?date=${date}&serviceId=${serviceId}`)
         ).json();
-        if ((slots.slots ?? []).length > 0) {
+        const propios = delEquipo(slots.slots);
+        if (propios.length > 0) {
           SERVICE = serviceId;
           slotDate = date;
-          return { slots: slots.slots };
+          hoy = { slots: propios };
+          return;
         }
       } catch {
         // Continúa con el siguiente candidato.
@@ -137,8 +164,8 @@ const hoy = await (async () => {
   const slots = await (
     await fetch(`${BASE}/api/slots?date=${slotDate}&serviceId=${SERVICE}`)
   ).json();
-  return { slots: slots.slots ?? [] };
-})();
+  hoy = { slots: delEquipo(slots.slots) };
+}
 
 console.log("[1] El proxy bloquea el panel sin sesión");
 {
@@ -160,13 +187,137 @@ console.log("[1] El proxy bloquea el panel sin sesión");
   check("/dashboard/login es público", r3.status === 200, `status=${r3.status}`);
 }
 
+console.log("\n[0] Clínica de prueba autocontenida");
+const plataforma = jar();
+const jsonBody = (r) => {
+  try {
+    return JSON.parse(r.text);
+  } catch {
+    return {};
+  }
+};
+{
+  const sello = Date.now();
+  const loginPlataforma = await req(plataforma, "/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "admin@agenda.test", password: "AgendaDev2026!" }),
+  });
+  check("entra el equipo de plataforma", loginPlataforma.status === 200, `status=${loginPlataforma.status}`);
+  if (loginPlataforma.status !== 200) {
+    console.log("  (sin super-admin no hay fixture: se aborta)");
+    process.exit(1);
+  }
+
+  FIX.orgSlug = `panelcheck-${sello}`;
+  FIX.adminEmail = `panelcheck.admin.${sello}@test.cl`;
+  FIX.proEmail = `panelcheck.pro.${sello}@test.cl`;
+  FIX.recepEmail = `panelcheck.recep.${sello}@test.cl`;
+  FIX.psiOrgSlug = `panelcheck-psi-${sello}`;
+  FIX.psiProEmail = `panelcheck.psi.${sello}@test.cl`;
+
+  const crearOrg = (name, slug, type, adminFullName, adminEmail) =>
+    req(plataforma, "/api/platform/organizations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name,
+        slug,
+        type,
+        adminFullName,
+        adminEmail,
+        adminPassword: "AgendaDev2026!",
+        // Sin tope: el script crea admin + profesional + recepción.
+        professionalLimit: null,
+      }),
+    });
+
+  const org = await crearOrg("Clínica Panel Check", FIX.orgSlug, "dental", FIX.adminName, FIX.adminEmail);
+  check("se crea la clínica de prueba", org.status === 201, `status=${org.status} ${jsonBody(org).error ?? ""}`);
+  if (org.status !== 201) {
+    console.log("  (sin clínica no hay pruebas: se aborta)");
+    process.exit(1);
+  }
+  FIX.orgId = jsonBody(org).organization?.id ?? "";
+
+  const psi = await crearOrg("Psi Panel Check", FIX.psiOrgSlug, "psychological", "Psi Panel", `panelcheck.psiadmin.${sello}@test.cl`);
+  check("se crea la clínica psicológica de prueba", psi.status === 201, `status=${psi.status}`);
+
+  const crearMiembro = (cookies, payload) =>
+    req(cookies, "/api/dashboard/doctors", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+  const adminFix = jar();
+  const loginAdminFix = await req(adminFix, "/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: FIX.adminEmail, password: "AgendaDev2026!" }),
+  });
+  check("entra la admin de prueba", loginAdminFix.status === 200, `status=${loginAdminFix.status}`);
+
+  const altaPro = await crearMiembro(adminFix, {
+    fullName: FIX.proName,
+    email: FIX.proEmail,
+    password: "AgendaDev2026!",
+    specialty: "Pruebas",
+    role: "professional",
+    isAdmin: false,
+  });
+  FIX.proId = jsonBody(altaPro).doctor?.id ?? "";
+  SEBASTIAN = FIX.proId;
+  check("se crea el profesional de prueba", altaPro.status === 201 && Boolean(FIX.proId), `status=${altaPro.status}`);
+
+  const altaRec = await crearMiembro(adminFix, {
+    fullName: "Recepción Panel",
+    email: FIX.recepEmail,
+    password: "AgendaDev2026!",
+    role: "reception",
+  });
+  check("se crea la recepción de prueba", altaRec.status === 201, `status=${altaRec.status}`);
+
+  // El id propio sale del GET de horario sin ?doctorId (devuelve doctorId).
+  const adminIdRes = await req(adminFix, "/api/dashboard/availability");
+  CAMILA = jsonBody(adminIdRes).doctorId ?? "";
+  FIX.adminId = CAMILA;
+  check("se resuelve el id de la admin", Boolean(CAMILA), `id=${String(CAMILA).slice(0, 8)}`);
+
+  const psiAdminFix = jar();
+  await req(psiAdminFix, "/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: `panelcheck.psiadmin.${sello}@test.cl`, password: "AgendaDev2026!" }),
+  });
+  const altaPsi = await crearMiembro(psiAdminFix, {
+    fullName: "Psicóloga Panel",
+    email: FIX.psiProEmail,
+    password: "AgendaDev2026!",
+    role: "professional",
+    isAdmin: false,
+  });
+  check("se crea la psicóloga de otra clínica", altaPsi.status === 201, `status=${altaPsi.status}`);
+
+  if (!CAMILA || !SEBASTIAN) {
+    console.log("  (sin equipo no hay pruebas: se aborta)");
+    process.exit(1);
+  }
+  await detectarServicio(adminFix);
+  check("hay slots con disponibilidad real", hoy.slots.length > 0, `${hoy.slots.length} slots`);
+  if (hoy.slots.length === 0) {
+    console.log("  (sin slots no se puede probar reservas: se aborta)");
+    process.exit(1);
+  }
+}
+
 console.log("\n[2] Credenciales inválidas no abren sesión");
 {
   const anon = jar();
   const r = await req(anon, "/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: "camila.rojas@clinicadental.test", password: "incorrecta" }),
+    body: JSON.stringify({ email: FIX.adminEmail, password: "incorrecta" }),
   });
   check("contraseña incorrecta da 401", r.status === 401, `status=${r.status}`);
   check(
@@ -183,7 +334,7 @@ const admin = jar();
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      email: "camila.rojas@clinicadental.test",
+      email: FIX.adminEmail,
       password: "AgendaDev2026!",
     }),
   });
@@ -193,7 +344,7 @@ const admin = jar();
 {
   const r = await req(admin, "/dashboard");
   check("/dashboard ahora responde 200", r.status === 200, `status=${r.status}`);
-  check("muestra el nombre de la profesional", r.text.includes("Camila Rojas"));
+  check("muestra el nombre de la profesional", r.text.includes(FIX.adminName));
   check("la agenda se renderiza", r.text.includes("Agenda"));
   const loginRedirect = await req(admin, "/dashboard/login");
   check(
@@ -203,7 +354,7 @@ const admin = jar();
   );
   const adminPage = await req(admin, "/dashboard/admin");
   check("la admin entra a /dashboard/admin", adminPage.status === 200, `status=${adminPage.status}`);
-  check("la admin ve su nombre y el equipo", adminPage.text.includes("Camila Rojas"));
+  check("la admin ve su nombre y el equipo", adminPage.text.includes(FIX.adminName));
 }
 
 console.log("\n[4] Login de un profesional sin permisos de admin");
@@ -213,7 +364,7 @@ const doc = jar();
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      email: "sebastian.munoz@clinicadental.test",
+      email: FIX.proEmail,
       password: "AgendaDev2026!",
     }),
   });
@@ -300,7 +451,7 @@ console.log("\n[5] Aislamiento por RLS entre profesionales");
   const loginRec = await req(recep, "/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: "recepcion@clinicadental.test", password: "AgendaDev2026!" }),
+    body: JSON.stringify({ email: FIX.recepEmail, password: "AgendaDev2026!" }),
   });
   check("login de la recepción 200", loginRec.status === 200, `status=${loginRec.status}`);
 
@@ -1353,7 +1504,7 @@ console.log("\n[9] Feriados");
 }
 
 console.log("\n[10] Organizaciones");
-const plataforma = jar();
+// `plataforma` ya entró en el setup [0] y se reutiliza acá.
 {
   const json = (r) => {
     try {
@@ -1378,7 +1529,7 @@ const plataforma = jar();
 
   const listado = await req(plataforma, "/dashboard/plataforma/organizaciones");
   check("abre el listado de organizaciones", listado.status === 200, `status=${listado.status}`);
-  check("lista las clínicas existentes", listado.text.includes(">sonrisa-dental"));
+  check("lista las clínicas existentes", listado.text.includes(">macarena-allende"));
   check(
     "el listado muestra el selector de cupo de profesionales",
     listado.text.includes("data-professional-limit") && listado.text.includes("Sin límite"),
@@ -1418,11 +1569,11 @@ const plataforma = jar();
   const propia = await borrar(plataforma, { slug: "plataforma" });
   check(
     "la plataforma no se borra a sí misma",
-    propia.status === 409 && json(propia).code === "organizacion_propia",
+    propia.status === 409 && json(propia).code === "organizacion_interna",
     `status=${propia.status} code=${json(propia).code}`,
   );
 
-  const conCitas = await borrar(plataforma, { slug: "sonrisa-dental" });
+  const conCitas = await borrar(plataforma, { slug: "macarena-allende" });
   check(
     "una clínica con citas no se borra",
     conCitas.status === 409 && json(conCitas).code === "tiene_citas",
@@ -1523,7 +1674,7 @@ check(
     `status=${revertida.status} ${json(revertida).error ?? ""}`,
   );
 
-  const slugOcupado = await patch(plataforma, { id: orgIdPrueba, slug: "sonrisa-dental" });
+  const slugOcupado = await patch(plataforma, { id: orgIdPrueba, slug: "macarena-allende" });
   check(
     "un identificador ya usado da 409",
     slugOcupado.status === 409 && json(slugOcupado).code === "slug_duplicado",
@@ -1570,7 +1721,7 @@ check(
   await req(admin, "/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: "camila.rojas@clinicadental.test", password: "AgendaDev2026!" }),
+    body: JSON.stringify({ email: FIX.adminEmail, password: "AgendaDev2026!" }),
   });
 
   const resetAdmin = await resetPass(admin, { doctorId: CAMILA, password: "OtraTemp2026!" });
@@ -1585,10 +1736,60 @@ check(
   });
   check("resetear un profesional inexistente da 404", resetInexistente.status === 404, `status=${resetInexistente.status}`);
 
+  // -- Rotación de la contraseña del super-admin --
+  const rotar = (body) =>
+    req(plataforma, "/api/platform/rotar-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  const rotarClinica = await req(admin, "/api/platform/rotar-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ actual: "AgendaDev2026!", nueva: "OtraTemp2026!" }),
+  });
+  check("una admin de clínica no rota contraseña de plataforma", rotarClinica.status === 403, `status=${rotarClinica.status}`);
+
+  const rotarMala = await rotar({ actual: "incorrecta", nueva: "TempRotada2026!" });
+  check("con la actual incorrecta da 401", rotarMala.status === 401, `status=${rotarMala.status}`);
+
+  const rotarCorta = await rotar({ actual: "AgendaDev2026!", nueva: "corta" });
+  check("una nueva corta da 422", rotarCorta.status === 422, `status=${rotarCorta.status}`);
+
+  const rotarIgual = await rotar({ actual: "AgendaDev2026!", nueva: "AgendaDev2026!" });
+  check("repetir la actual da 422", rotarIgual.status === 422, `status=${rotarIgual.status}`);
+
+  const rotada = await rotar({ actual: "AgendaDev2026!", nueva: "TempRotada2026!" });
+  check("se rota la contraseña del super-admin", rotada.status === 200 && json(rotada).ok === true, `status=${rotada.status} ${json(rotada).error ?? ""}`);
+
+  // Rotar revoca las sesiones: el jar vuelve a entrar antes de seguir.
+  const loginRotada = await req(plataforma, "/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "admin@agenda.test", password: "TempRotada2026!" }),
+  });
+  check("se entra con la contraseña nueva", loginRotada.status === 200, `status=${loginRotada.status}`);
+
+  const auditoriaRotacion = await req(plataforma, "/api/ficha/audit?entity=doctors&limit=10");
+  const rotaciones = (json(auditoriaRotacion).entries ?? []).filter((e) => e.summary?.rotacion_password === true);
+  check(
+    "la rotación queda en la auditoría",
+    auditoriaRotacion.status === 200 && rotaciones.length >= 1,
+    `status=${auditoriaRotacion.status} n=${rotaciones.length}`,
+  );
+
+  const revertirClave = await rotar({ actual: "TempRotada2026!", nueva: "AgendaDev2026!" });
+  check("se restaura la contraseña original", revertirClave.status === 200, `status=${revertirClave.status}`);
+  await req(plataforma, "/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "admin@agenda.test", password: "AgendaDev2026!" }),
+  });
+
   const tabla = await req(plataforma, "/dashboard/plataforma/organizaciones");
   check(
     "la tabla muestra al administrador con su correo",
-    tabla.status === 200 && tabla.text.includes("camila.rojas@clinicadental.test"),
+    tabla.status === 200 && tabla.text.includes(FIX.adminEmail),
     `status=${tabla.status}`,
   );
   check("la tabla ofrece editar y restablecer", tabla.text.includes("Editar") && tabla.text.includes("Contraseña"), "");
@@ -1699,6 +1900,65 @@ let FICHA_PATIENT = null;
     }
   };
 
+  // -- Paciente de prueba autocontenido (antes era semilla fija 'Mauricio') --
+  const altaMauricio = await req(admin, "/api/ficha/patients", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      full_name: "Mauricio Panel",
+      rut: rutUnico(),
+      email: `mauricio.${Date.now()}@test.cl`,
+    }),
+  });
+  FICHA_PATIENT = json(altaMauricio).patient?.id ?? null;
+  check("se crea el paciente de prueba 'Mauricio Panel'", Boolean(FICHA_PATIENT), `status=${altaMauricio.status}`);
+
+  const bgMauricio = await req(admin, `/api/ficha/patients/${FICHA_PATIENT}/background`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      patient_id: FICHA_PATIENT,
+      motivo_consulta: "Control",
+      alergias: ["penicilina"],
+      medicamentos: [],
+    }),
+  });
+  check("se registran sus antecedentes", bgMauricio.status === 200, `status=${bgMauricio.status}`);
+
+  const chartMauricio = await req(admin, `/api/ficha/patients/${FICHA_PATIENT}/chart`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ entries: [{ tooth: 16, face: "occlusal", state: "caries" }] }),
+  });
+  check("se siembra caries en pieza 16", chartMauricio.status === 201, `status=${chartMauricio.status}`);
+
+  const cat1 = await req(admin, "/api/ficha/catalog", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: "Limpieza Panel", default_value: 50000, active: true }),
+  });
+  const cat2 = await req(admin, "/api/ficha/catalog", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: "Obturación Panel", default_value: 80000, active: true }),
+  });
+  const planMauricio = await req(admin, `/api/ficha/patients/${FICHA_PATIENT}/plan`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify([
+      { patient_id: FICHA_PATIENT, treatment_id: json(cat1).item?.id ?? null, tooth: 16, value: 80000 },
+      { patient_id: FICHA_PATIENT, treatment_id: json(cat2).item?.id ?? null, value: 50000 },
+    ]),
+  });
+  check("se siembran 2 ítems del plan", planMauricio.status === 201, `status=${planMauricio.status}`);
+
+  const recetaMauricio = await req(admin, `/api/ficha/patients/${FICHA_PATIENT}/prescriptions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ medication: "Paracetamol", dose: "500mg" }),
+  });
+  check("se siembra una receta", recetaMauricio.status === 201, `status=${recetaMauricio.status}`);
+
   // -- Acceso del admin de la clínica --
   const lista = await req(admin, "/api/ficha/patients");
   check(
@@ -1708,7 +1968,6 @@ let FICHA_PATIENT = null;
   );
   const mauricio = (json(lista).patients ?? []).find((p) => p.full_name?.includes("Mauricio"));
   check("aparece el paciente demo 'Mauricio'", Boolean(mauricio?.id), mauricio?.full_name);
-  if (mauricio?.id) FICHA_PATIENT = mauricio.id;
 
   // -- Detalle con antecedentes --
   const detalle = await req(admin, `/api/ficha/patients/${FICHA_PATIENT}`);
@@ -1727,7 +1986,7 @@ let FICHA_PATIENT = null;
   await req(recepcion, "/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: "recepcion@clinicadental.test", password: "AgendaDev2026!" }),
+    body: JSON.stringify({ email: FIX.recepEmail, password: "AgendaDev2026!" }),
   });
   const recLista = await req(recepcion, "/api/ficha/patients");
   check("la recepción lista pacientes por contacto", recLista.status === 200 && Array.isArray(json(recLista).patients),
@@ -1739,7 +1998,7 @@ let FICHA_PATIENT = null;
   await req(psicologa, "/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: "valentina.soto@espaciocalma.test", password: "AgendaDev2026!" }),
+    body: JSON.stringify({ email: FIX.psiProEmail, password: "AgendaDev2026!" }),
   });
   const ajena = await req(psicologa, `/api/ficha/patients/${FICHA_PATIENT}`);
   check("un profesional de otra clínica obtiene 404", ajena.status === 404, `status=${ajena.status}`);
@@ -1951,9 +2210,28 @@ let FICHA_PATIENT = null;
     nuevoPaciente = null;
 
     // Un paciente que tiene (o tuvo) citas nunca se borra: el registro de
-    // agenda permanece, aunque la cita esté cancelada o completada.
-    const listaPanel = await req(admin, `/api/ficha/patients?q=${encodeURIComponent("Paciente Panel")}&limit=20`);
-    const conCita = (JSON.parse(listaPanel.text).patients ?? [])[0];
+    // agenda permanece, aunque la cita esté cancelada o completada. Se
+    // reserva una cita propia en vez de depender de la de [5].
+    const slotConCita = hoy.slots.find((s) => s.doctor_id === CAMILA) ?? hoy.slots[0];
+    const reservaConCita = await req(null, "/api/bookings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        serviceId: SERVICE,
+        doctorId: slotConCita.doctor_id,
+        slotStart: slotConCita.slot_start,
+        fullName: "Paciente ConCita",
+        rut: rutUnico(),
+        phone: "+56900000003",
+        email: `concita.${Date.now()}@test.cl`,
+        consent: true,
+      }),
+    });
+    const idCitaConCita = json(reservaConCita).appointmentId ?? null;
+    const listaConCita = await req(admin, "/api/ficha/patients?q=ConCita&limit=20");
+    const conCita = (JSON.parse(listaConCita.text).patients ?? []).find((p) =>
+      (p.full_name ?? "").includes("ConCita"),
+    );
     const delConCita = conCita
       ? await req(admin, `/api/ficha/patients/${conCita.id}`, { method: "DELETE" })
       : null;
@@ -1962,6 +2240,13 @@ let FICHA_PATIENT = null;
       delConCita?.status === 409 && json(delConCita).code === "tiene_citas",
       delConCita ? `status=${delConCita.status} code=${json(delConCita).code}` : "sin paciente con citas",
     );
+    if (idCitaConCita) {
+      await req(admin, "/api/dashboard/appointments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ appointmentId: idCitaConCita, action: "cancelled" }),
+      });
+    }
 
     const recDel = await req(recepcion, `/api/ficha/patients/${FICHA_PATIENT}`, { method: "DELETE" });
     check("la recepción no borra pacientes", recDel.status === 403, `status=${recDel.status}`);
@@ -2041,7 +2326,8 @@ console.log("\n[12] Listado de pacientes: tabla, orden y paginación");
 
     // -- Paginación (10 por página) --
     const pag1 = html1.match(/Página (\d+) de (\d+)/);
-    const filasPag1 = (html1.match(/\/dashboard\/pacientes\/[0-9a-f-]{36}"/g) ?? []).length;
+    // Una fila = un botón verde "Abrir ficha" (el nombre enlaza también).
+  const filasPag1 = (html1.match(/aria-label="Abrir ficha de/g) ?? []).length;
     check(
       "la tabla pagina de 10 en 10",
       html1.includes('data-testid="patients-pagination"') &&
@@ -2089,7 +2375,7 @@ console.log("\n[12] Listado de pacientes: tabla, orden y paginación");
     await req(recep, "/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: "recepcion@clinicadental.test", password: "AgendaDev2026!" }),
+      body: JSON.stringify({ email: FIX.recepEmail, password: "AgendaDev2026!" }),
     });
     const recPrimera = await req(recep, "/dashboard/pacientes");
     check(
@@ -2123,6 +2409,27 @@ console.log("\n[13] Logout");
     after.status >= 300 && after.status < 400,
     `status=${after.status}`,
   );
+}
+
+console.log("\n[14] Limpieza de las clínicas de prueba");
+{
+  const borrarTotal = (slug) =>
+    req(plataforma, "/api/platform/organizations", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug, force: true }),
+    });
+  for (const slug of [FIX.orgSlug, FIX.psiOrgSlug]) {
+    if (!slug) continue;
+    const r = await borrarTotal(slug);
+    check(
+      `borrado total de ${slug}`,
+      r.status === 200 && JSON.parse(r.text).ok === true,
+      `status=${r.status} ${r.text.slice(0, 100)}`,
+    );
+    const publica = await req(null, `/${slug}`);
+    check(`/${slug} deja de existir`, publica.status === 404, `status=${publica.status}`);
+  }
 }
 
 console.log(`\n== ${pass} pass, ${fail} fail ==`);
