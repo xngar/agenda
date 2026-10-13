@@ -169,9 +169,16 @@ export function PatientsTable({
                 </td>
                 <td className="whitespace-nowrap px-4 py-3">{statusPill(p.patient_status)}</td>
                 <td className="px-4 py-3 text-right">
-                  <span aria-hidden className="text-lg text-neutral-400">
-                    ›
-                  </span>
+                  <Link
+                    href={`/dashboard/pacientes/${p.id}`}
+                    aria-label={`Abrir ficha de ${p.full_name}`}
+                    title="Abrir ficha"
+                    className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg bg-emerald-600 px-2.5 text-white transition-colors hover:bg-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+                      <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </Link>
                 </td>
               </tr>
             ))}

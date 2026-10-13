@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, inputClasses } from "@/components/ui";
+import { formatRutPartial, normalizeRut } from "@/lib/rut";
+import { formatPhonePartial, normalizePhone } from "@/lib/phone";
 
 interface PatientDraft {
   id?: string;
@@ -12,10 +14,6 @@ interface PatientDraft {
   email?: string | null;
   birth_date?: string | null;
   sex?: string | null;
-}
-
-function normalizeRut(raw: string): string {
-  return raw.replace(/[^0-9Kk]/g, "").toUpperCase();
 }
 
 export function PatientFormModal({
@@ -31,8 +29,8 @@ export function PatientFormModal({
 }) {
   const router = useRouter();
   const [fullName, setFullName] = useState(initial?.full_name ?? "");
-  const [rut, setRut] = useState(initial?.rut ?? "");
-  const [phone, setPhone] = useState(initial?.phone ?? "");
+  const [rut, setRut] = useState(formatRutPartial(initial?.rut ?? ""));
+  const [phone, setPhone] = useState(formatPhonePartial(initial?.phone ?? ""));
   const [email, setEmail] = useState(initial?.email ?? "");
   const [birthDate, setBirthDate] = useState(initial?.birth_date?.slice(0, 10) ?? "");
   const [sex, setSex] = useState(initial?.sex ?? "");
@@ -43,6 +41,16 @@ export function PatientFormModal({
 
   const editing = Boolean(initial?.id);
 
+  function handleRutChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const { value, selectionStart } = event.target;
+    const atEnd = selectionStart === null || selectionStart === value.length;
+    setRut(atEnd ? formatRutPartial(value) : value);
+  }
+
+  function handleRutBlur() {
+    setRut((v) => formatRutPartial(v));
+  }
+
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -50,12 +58,12 @@ export function PatientFormModal({
 
     const body: Record<string, unknown> = {
       full_name: fullName.trim(),
-      phone: phone.trim() || "",
+      phone: normalizePhone(phone),
       email: email.trim() || null,
       birth_date: birthDate || null,
       sex: sex || null,
     };
-    if (rut.trim()) body.rut = normalizeRut(rut);
+    if (normalizeRut(rut)) body.rut = normalizeRut(rut);
 
     try {
       const url = editing ? `/api/ficha/patients/${initial?.id}` : "/api/ficha/patients";
@@ -130,7 +138,9 @@ export function PatientFormModal({
                 value={rut}
                 placeholder="12.345.678-9"
                 maxLength={16}
-                onChange={(e) => setRut(e.target.value)}
+                inputMode="text"
+                onChange={handleRutChange}
+                onBlur={handleRutBlur}
               />
             </label>
             <label className="block">
@@ -139,8 +149,12 @@ export function PatientFormModal({
                 className={inputClasses}
                 value={phone}
                 placeholder="+56 9 1234 5678"
-                onChange={(e) => setPhone(e.target.value)}
+                inputMode="tel"
+                onChange={(e) => setPhone(formatPhonePartial(e.target.value))}
               />
+              <span className="mt-1 block text-xs text-neutral-500">
+                Escribe sólo el número: el +56 ya está puesto.
+              </span>
             </label>
           </div>
 
