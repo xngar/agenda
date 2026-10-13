@@ -76,6 +76,10 @@ const ADJUNTO_TIPO: Record<string, string> = {
 
 const text = (value: unknown): string => String(value ?? "");
 const fecha = (value: unknown): string => text(value).slice(0, 10);
+const moneda = (value: number): string =>
+  new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(
+    Number.isFinite(value) ? value : 0,
+  );
 const etiqueta = (mapa: Record<string, string>, value: unknown): string =>
   mapa[String(value)] ?? text(value);
 
@@ -240,6 +244,23 @@ async function buildPdf(patient: Record<string, unknown>, ctx: { orgName: string
     }
   }
 
+  const pagos = ordenar(
+    (patient.dental_payments as Record<string, unknown>[] | null) ?? [],
+    "paid_at",
+  );
+  if (pagos.length) {
+    const total = pagos.reduce((s, p) => s + Number(p.amount ?? 0), 0);
+    section(`Pagos (${pagos.length} · total ${moneda(total)})`);
+    for (const p of pagos) {
+      field(
+        "Pago",
+        [`${moneda(Number(p.amount ?? 0))}`, fecha(p.paid_at), text(p.method), text(p.note)]
+          .filter(Boolean)
+          .join(" · "),
+      );
+    }
+  }
+
   const prescriptions = ordenar(
     (patient.prescriptions as Record<string, unknown>[] | null) ?? [],
     "created_at",
@@ -306,7 +327,7 @@ export async function GET(_request: Request, { params }: Params) {
   const { data: patient, error } = await ctx.supabase
     .from("patients")
     .select(
-      "*, patient_medical_background (*), encounters (*), dental_chart_entries (*), dental_treatment_plan_items (*), consents (*), prescriptions (*), periodontal_records (*), attachments (*)",
+      "*, patient_medical_background (*), encounters (*), dental_chart_entries (*), dental_treatment_plan_items (*), dental_payments (*), consents (*), prescriptions (*), periodontal_records (*), attachments (*)",
     )
     .eq("org_id", ctx.session.orgId)
     .eq("id", id)

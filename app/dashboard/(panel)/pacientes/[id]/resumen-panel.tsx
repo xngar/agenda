@@ -405,6 +405,17 @@ export function ResumenPanel({
             <ErrorNotice message={error} />
           </div>
         ) : null}
+        {!editandoPerfil &&
+        orgType === "dental" &&
+        typeof (patient.specialty_profile as SpecialtyValues | null)?.treatmentAlerts === "string" &&
+        ((patient.specialty_profile as SpecialtyValues).treatmentAlerts as string).trim() ? (
+          <div className="px-5 pt-4" role="alert">
+            <p className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900">
+              Alertas para el tratamiento:{" "}
+              {((patient.specialty_profile as SpecialtyValues).treatmentAlerts as string).trim()}
+            </p>
+          </div>
+        ) : null}
         {editandoPerfil ? (
           <form onSubmit={guardarPerfil} className="space-y-6 px-5 py-5">
             <SpecialtyForm

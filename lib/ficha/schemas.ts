@@ -204,9 +204,20 @@ export const treatmentPlanPatchSchema = z.object({
 });
 
 export const catalogItemSchema = z.object({
-  name: z.string().trim().min(2, "Ingresa el nombre del tratamiento").max(120),
+  name: z.string().trim().min(2, "Ingresa el tratamiento").max(120),
   default_value: z.number().min(0).max(999999999),
   active: z.boolean().optional(),
+});
+
+export const paymentMethodSchema = z.enum(["efectivo", "transferencia", "tarjeta", "otro"]);
+
+export const paymentSchema = z.object({
+  patient_id: uuidSchema,
+  plan_item_id: uuidSchema.nullable().optional(),
+  amount: z.number().min(1, "El monto debe ser mayor a cero").max(999999999),
+  paid_at: dateStringSchema.optional(),
+  method: paymentMethodSchema.optional(),
+  note: z.string().trim().max(500).nullable().optional(),
 });
 
 export const auditQuerySchema = z.object({

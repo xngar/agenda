@@ -79,12 +79,16 @@ export interface DentalProfile {
   smilingHigh: boolean;
   notes: string;
   previousXrays: string;
+  lastVisit: string;
+  hygiene: string;
+  treatmentAlerts: string;
 }
 
 export interface DentalEncounterData {
   chartEntries: ToothStateSnapshot[];
   observations: string;
   procedures: string[];
+  orthodontics: string;
 }
 
 export const dentalProfileSchema = z.object({
@@ -93,6 +97,9 @@ export const dentalProfileSchema = z.object({
   smilingHigh: z.boolean().optional(),
   notes: z.string().trim().max(4000).optional(),
   previousXrays: z.string().trim().max(1000).optional(),
+  lastVisit: z.string().trim().max(10).optional(),
+  hygiene: z.string().trim().max(2000).optional(),
+  treatmentAlerts: z.string().trim().max(4000).optional(),
 }) as z.ZodType<DentalProfile>;
 
 export const dentalEncounterSchema = z.object({
@@ -106,6 +113,7 @@ export const dentalEncounterSchema = z.object({
     .optional(),
   observations: z.string().trim().max(4000).optional(),
   procedures: z.array(z.string().max(160)).max(60).optional(),
+  orthodontics: z.string().trim().max(4000).optional(),
 }) as z.ZodType<DentalEncounterData>;
 
 export interface FieldOption {
@@ -136,7 +144,16 @@ export const DENTAL_FIELDS: SectionDef[] = [
       { key: "gumDisease", label: "Enfermedad de encías", kind: "text", optional: true },
       { key: "smilingHigh", label: "Sonrisa alta (muestra encía)", kind: "checkbox", optional: true },
       { key: "previousXrays", label: "Radiografías anteriores", kind: "text", optional: true },
+      { key: "lastVisit", label: "Última visita al dentista", kind: "date", optional: true },
       { key: "notes", label: "Observaciones", kind: "textarea", optional: true },
+    ],
+  },
+  {
+    id: "higiene",
+    label: "Higiene y alertas",
+    fields: [
+      { key: "hygiene", label: "Higiene (cepillado, hilo, frecuencia)", kind: "textarea", optional: true },
+      { key: "treatmentAlerts", label: "Alertas para el tratamiento (anticoagulantes, diabetes, embarazo, anestesia, látex)", kind: "textarea", optional: true },
     ],
   },
 ];
@@ -148,6 +165,7 @@ export const DENTAL_ENCOUNTER_FIELDS: SectionDef[] = [
     fields: [
       { key: "observations", label: "Observaciones de la atención", kind: "textarea", optional: true },
       { key: "procedures", label: "Procedimientos", kind: "text", optional: true },
+      { key: "orthodontics", label: "Ortodoncia (aparato, instalación, controles)", kind: "textarea", optional: true },
     ],
   },
 ];

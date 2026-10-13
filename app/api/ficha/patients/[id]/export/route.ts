@@ -25,7 +25,7 @@ export async function GET(request: Request, { params }: Params) {
   const { data: patient, error } = await ctx.supabase
     .from("patients")
     .select(
-      "*, patient_medical_background (*), encounters (*), dental_chart_entries (*), periodontal_records (*), dental_treatment_plan_items (*), consents (*), prescriptions (*), attachments (*)",
+      "*, patient_medical_background (*), encounters (*), dental_chart_entries (*), periodontal_records (*), dental_treatment_plan_items (*), dental_payments (*), consents (*), prescriptions (*), attachments (*)",
     )
     .eq("org_id", ctx.session.orgId)
     .eq("id", id)

@@ -286,6 +286,21 @@ export interface DentalTreatmentCatalogItem {
   created_at: string;
 }
 
+export type DentalPaymentMethod = "efectivo" | "transferencia" | "tarjeta" | "otro";
+
+export interface DentalPayment {
+  id: string;
+  org_id: string;
+  patient_id: string;
+  plan_item_id: string | null;
+  amount: number;
+  paid_at: string;
+  method: DentalPaymentMethod;
+  note: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
 export interface AuditEntry {
   id: number;
   org_id: string | null;

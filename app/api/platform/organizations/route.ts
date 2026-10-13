@@ -297,6 +297,7 @@ export async function DELETE(request: Request) {
     { tabla: "clinic_holidays", etiqueta: "los feriados" },
     { tabla: "time_off", etiqueta: "las ausencias" },
     { tabla: "notifications", etiqueta: "las notificaciones" },
+    { tabla: "dental_payments", etiqueta: "los pagos" },
     { tabla: "services", etiqueta: "los servicios" },
     { tabla: "doctors", etiqueta: "los profesionales" },
   ];

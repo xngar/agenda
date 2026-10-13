@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Encounter, EncounterVersion, OrganizationType } from "@/lib/ficha/types";
 import { fichaFor } from "@/lib/ficha/definitions";
+import { calcularIMC, etiquetaIMC } from "@/lib/ficha/medical";
+import { interpretarGAD7, interpretarPHQ9 } from "@/lib/ficha/psychological";
 import {
   Card,
   CardHeader,
@@ -71,18 +73,44 @@ function careLabel(v: string): string {
 export function AtencionesPanel({
   patientId,
   orgType,
+  alertasTratamiento,
 }: {
   patientId: string;
   orgType: OrganizationType;
+  /** Alertas del perfil (dental): visibles al registrar y leer atenciones. */
+  alertasTratamiento?: string | null;
 }) {
   const ficha = fichaFor(orgType);
   const esPsicologica = orgType === "psychological";
+  const esMedica = orgType === "medical";
+
+const SIGNOS_VITALES = [
+  { key: "temperatureC", label: "T° (C)" },
+  { key: "systolicMmHg", label: "PAS" },
+  { key: "diastolicMmHg", label: "PAD" },
+  { key: "heartRateBpm", label: "FC" },
+  { key: "respiratoryRate", label: "FR" },
+  { key: "spo2", label: "SpO2 %" },
+  { key: "weightKg", label: "Peso (kg)" },
+  { key: "heightCm", label: "Talla (cm)" },
+] as const;
   const [encounters, setEncounters] = useState<EncounterRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dialogo, setDialogo] = useState<"nueva" | EncounterRow | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [especialidad, setEspecialidad] = useState<SpecialtyValues>({});
+  const [vitalesTxt, setVitalesTxt] = useState<Record<string, string>>({});
   const [guardando, setGuardando] = useState(false);
+
+  function vitalesDe(datos: SpecialtyValues): Record<string, string> {
+    const v = (datos.vitals ?? {}) as Record<string, unknown>;
+    const out: Record<string, string> = {};
+    for (const { key } of SIGNOS_VITALES) {
+      const n = v[key];
+      out[key] = typeof n === "number" && Number.isFinite(n) ? String(n) : "";
+    }
+    return out;
+  }
   const [firmando, setFirmando] = useState<string | null>(null);
   const [versionesDe, setVersionesDe] = useState<string | null>(null);
   const [versiones, setVersiones] = useState<VersionRow[]>([]);
@@ -116,13 +144,16 @@ export function AtencionesPanel({
   function abrirNueva() {
     setForm({ ...EMPTY_FORM, started_at: new Date().toISOString().slice(0, 10) });
     setEspecialidad({});
+    setVitalesTxt({});
     setDialogo("nueva");
     setError(null);
   }
 
   function abrirEditar(e: EncounterRow) {
+    const datos = { ...((e.specialty_data as SpecialtyValues | null) ?? {}) };
     setForm(formFrom(e));
-    setEspecialidad({ ...((e.specialty_data as SpecialtyValues | null) ?? {}) });
+    setEspecialidad(datos);
+    setVitalesTxt(vitalesDe(datos));
     setDialogo(e);
     setError(null);
   }
@@ -133,6 +164,13 @@ export function AtencionesPanel({
     setAviso(null);
     setGuardando(true);
     try {
+      const numeros = Object.entries(vitalesTxt)
+        .map(([key, txt]): [string, number | null] => {
+          const n = txt.trim() === "" ? null : Number(txt.replace(",", "."));
+          return [key, n === null || !Number.isFinite(n) ? null : n];
+        })
+        .filter(([key]) => SIGNOS_VITALES.some((s) => s.key === key));
+      const hayVitales = esMedica && numeros.some(([, n]) => n !== null);
       const payload = {
         started_at: form.started_at || undefined,
         care_type: form.care_type.trim() || null,
@@ -141,7 +179,9 @@ export function AtencionesPanel({
         diagnostico: form.diagnostico.trim() || undefined,
         indicaciones: form.indicaciones.trim() || undefined,
         proxima_cita_at: form.proxima_cita_at || null,
-        specialty_data: especialidad,
+        specialty_data: esMedica
+          ? { ...especialidad, vitals: hayVitales ? Object.fromEntries(numeros) : null }
+          : especialidad,
       };
       const response =
         dialogo === "nueva"
@@ -249,10 +289,17 @@ export function AtencionesPanel({
     );
   }
 
-  return (
+    return (
     <div className="space-y-4">
       {error ? <ErrorNotice message={error} /> : null}
       {aviso ? <InfoNotice>{aviso}</InfoNotice> : null}
+      {alertasTratamiento?.trim() ? (
+        <div role="alert">
+          <p className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900">
+            Alertas para el tratamiento: {alertasTratamiento.trim()}
+          </p>
+        </div>
+      ) : null}
 
       <Card>
         <CardHeader
@@ -336,6 +383,7 @@ export function AtencionesPanel({
                               </p>
                             </div>
                           ) : null}
+
                           {conDatos ? (
                             <div className="sm:col-span-2">
                               <p className="font-semibold text-neutral-700">
@@ -346,6 +394,39 @@ export function AtencionesPanel({
                               </div>
                             </div>
                           ) : null}
+                          {(() => {
+                            if (!esPsicologica) return null;
+                            const inter: string[] = [];
+                            const phq9 = interpretarPHQ9(datos.phq9);
+                            const gad7 = interpretarGAD7(datos.gad7);
+                            if (phq9) inter.push(`PHQ-9 ${String(datos.phq9)} (${phq9})`);
+                            if (gad7) inter.push(`GAD-7 ${String(datos.gad7)} (${gad7})`);
+                            if (inter.length === 0) return null;
+                            return (
+                              <div className="sm:col-span-2">
+                                <p className="font-semibold text-neutral-700">Escalas</p>
+                                <p className="text-neutral-800">{inter.join(" · ")}</p>
+                              </div>
+                            );
+                          })()}
+                          {(() => {
+                            if (!esMedica) return null;
+                            const v = (datos.vitals ?? {}) as Record<string, unknown>;
+                            const partes = SIGNOS_VITALES.filter(
+                              ({ key }) => typeof v[key] === "number",
+                            ).map(({ key, label }) => `${label} ${String(v[key])}`);
+                            if (partes.length === 0) return null;
+                            const imc = calcularIMC(v.weightKg, v.heightCm);
+                            return (
+                              <div className="sm:col-span-2">
+                                <p className="font-semibold text-neutral-700">Signos vitales</p>
+                                <p className="text-neutral-800">
+                                  {partes.join(" · ")}
+                                  {imc !== null ? ` · IMC ${imc} (${etiquetaIMC(imc)})` : ""}
+                                </p>
+                              </div>
+                            );
+                          })()}
                           {typeof datos.privateNotes === "string" && datos.privateNotes.trim() ? (
                             <div className="sm:col-span-2">
                               <p className="font-semibold text-neutral-700">
@@ -464,6 +545,28 @@ export function AtencionesPanel({
                 onChange={(key, next) => setEspecialidad((v) => ({ ...v, [key]: next }))}
                 idPrefix="encuentro"
               />
+              {esMedica ? (
+                <fieldset>
+                  <legend className="mb-3 text-sm font-semibold text-brand-navy">
+                    Signos vitales
+                  </legend>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    {SIGNOS_VITALES.map(({ key, label }) => (
+                      <Field key={key} label={label} htmlFor={`vital-${key}`} required={false}>
+                        <input
+                          id={`vital-${key}`}
+                          type="number"
+                          step="any"
+                          min={0}
+                          className={inputClasses}
+                          value={vitalesTxt[key] ?? ""}
+                          onChange={(e) => setVitalesTxt((v) => ({ ...v, [key]: e.target.value }))}
+                        />
+                      </Field>
+                    ))}
+                  </div>
+                </fieldset>
+              ) : null}
               {esPsicologica && (dialogo === "nueva" || "privateNotes" in especialidad) ? (
                 <Field
                   label="Notas privadas (solo tratante)"

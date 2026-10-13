@@ -192,7 +192,16 @@ export function FichaTabs({
       ) : active === "antecedentes" ? (
         <AntecedentesPanel patientId={patient.id} initial={background} />
       ) : active === "atenciones" ? (
-        <AtencionesPanel patientId={patient.id} orgType={orgType} />
+        <AtencionesPanel
+          patientId={patient.id}
+          orgType={orgType}
+          alertasTratamiento={
+            typeof (patient.specialty_profile as Record<string, unknown> | null)?.treatmentAlerts ===
+            "string"
+              ? ((patient.specialty_profile as Record<string, unknown>).treatmentAlerts as string)
+              : null
+          }
+        />
       ) : active === "odontograma" ? (
         <OdontogramaPanel patientId={patient.id} />
       ) : active === "plan" ? (

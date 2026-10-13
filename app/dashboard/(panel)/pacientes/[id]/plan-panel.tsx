@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { DentalTreatmentCatalogItem, DentalTreatmentPlanItem, TreatmentPlanStatus } from "@/lib/ficha/types";
+import type { DentalPayment, DentalPaymentMethod, DentalTreatmentCatalogItem, DentalTreatmentPlanItem, TreatmentPlanStatus } from "@/lib/ficha/types";
 import { Card, CardHeader, Button, ErrorNotice, InfoNotice, Field, Spinner, inputClasses } from "@/components/ui";
 
 interface PlanItem extends DentalTreatmentPlanItem {
@@ -33,6 +33,13 @@ function estadoBadge(status: TreatmentPlanStatus) {
 const fmt = (v: number) =>
   new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(v);
 
+const METODOS: { value: DentalPaymentMethod; label: string }[] = [
+  { value: "efectivo", label: "Efectivo" },
+  { value: "transferencia", label: "Transferencia" },
+  { value: "tarjeta", label: "Tarjeta" },
+  { value: "otro", label: "Otro" },
+];
+
 export function PlanPanel({
   patientId,
   isAdmin,
@@ -42,8 +49,11 @@ export function PlanPanel({
 }) {
   const [items, setItems] = useState<PlanItem[] | null>(null);
   const [catalog, setCatalog] = useState<DentalTreatmentCatalogItem[]>([]);
+  const [pagos, setPagos] = useState<DentalPayment[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [nuevoPago, setNuevoPago] = useState(false);
+  const [pagoForm, setPagoForm] = useState({ amount: "", paid_at: "", method: "efectivo", note: "" });
   const [nuevo, setNuevo] = useState(false);
   const [form, setForm] = useState({
     treatment_id: "",
@@ -59,12 +69,14 @@ export function PlanPanel({
 
   const cargar = useCallback(async () => {
     try {
-      const [itemsR, catR] = await Promise.all([
+      const [itemsR, catR, pagosR] = await Promise.all([
         fetch(`/api/ficha/patients/${patientId}/plan`),
         fetch("/api/ficha/catalog"),
+        fetch(`/api/ficha/patients/${patientId}/payments`),
       ]);
       const itemsData = (await itemsR.json()) as { items?: PlanItem[]; error?: string };
       const catData = (await catR.json()) as { items?: DentalTreatmentCatalogItem[]; error?: string };
+      const pagosData = (await pagosR.json()) as { payments?: DentalPayment[]; error?: string };
       if (!itemsR.ok) {
         setError(itemsData.error ?? "No se pudo cargar el plan");
         return;
@@ -73,8 +85,13 @@ export function PlanPanel({
         setError(catData.error ?? "No se pudo cargar el catálogo");
         return;
       }
+      if (!pagosR.ok) {
+        setError(pagosData.error ?? "No se pudieron cargar los pagos");
+        return;
+      }
       setItems(itemsData.items ?? []);
       setCatalog(catData.items ?? []);
+      setPagos(pagosData.payments ?? []);
     } catch {
       setError("No pudimos conectarnos.");
     }
@@ -168,6 +185,55 @@ export function PlanPanel({
       setError("No pudimos conectarnos.");
     } finally {
       setGuardando(false);
+    }
+  }
+
+  async function agregarPago(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setAviso(null);
+    setGuardando(true);
+    try {
+      const monto = Number(pagoForm.amount);
+      const response = await fetch(`/api/ficha/patients/${patientId}/payments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: monto,
+          paid_at: pagoForm.paid_at || undefined,
+          method: pagoForm.method,
+          note: pagoForm.note.trim() || null,
+        }),
+      });
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) {
+        setError(data.error ?? "No se pudo registrar el pago");
+        return;
+      }
+      setAviso("Pago registrado.");
+      setNuevoPago(false);
+      setPagoForm({ amount: "", paid_at: "", method: "efectivo", note: "" });
+      cargar();
+    } catch {
+      setError("No pudimos conectarnos.");
+    } finally {
+      setGuardando(false);
+    }
+  }
+
+  async function anularPago(pago: DentalPayment) {
+    setError(null);
+    try {
+      const response = await fetch(`/api/ficha/payments/${pago.id}`, { method: "DELETE" });
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) {
+        setError(data.error ?? "No se pudo anular el pago");
+        return;
+      }
+      setAviso("Pago anulado.");
+      cargar();
+    } catch {
+      setError("No pudimos conectarnos.");
     }
   }
 
@@ -318,6 +384,109 @@ export function PlanPanel({
                     </button>
                   ) : null}
                 </div>
+              </li>
+            ))
+          )}
+        </ul>
+      </Card>
+
+      <Card>
+        <CardHeader
+          title="Pagos y abonos"
+          description="Dinero recibido del paciente contra el plan."
+          action={<Button size="sm" variant="secondary" onClick={() => setNuevoPago(!nuevoPago)}>{nuevoPago ? "Cancelar" : "Registrar pago"}</Button>}
+        />
+        {(() => {
+          const totalPlan = (items ?? []).filter((i) => i.status !== "rechazado").reduce((s, i) => s + Number(i.value), 0);
+          const totalPagado = (pagos ?? []).reduce((s, p) => s + Number(p.amount), 0);
+          const saldo = totalPlan - totalPagado;
+          return (
+            <dl className="grid grid-cols-3 gap-3 border-b border-neutral-100 px-5 py-4 text-center">
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-neutral-500">Plan</dt>
+                <dd className="mt-0.5 text-sm font-semibold tabular-nums text-neutral-900">{fmt(totalPlan)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-neutral-500">Pagado</dt>
+                <dd className="mt-0.5 text-sm font-semibold tabular-nums text-lime-800">{fmt(totalPagado)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-neutral-500">Saldo</dt>
+                <dd className={`mt-0.5 text-sm font-semibold tabular-nums ${saldo > 0 ? "text-brand-navy" : "text-neutral-500"}`}>{fmt(saldo)}</dd>
+              </div>
+            </dl>
+          );
+        })()}
+        {nuevoPago ? (
+          <form onSubmit={agregarPago} className="space-y-4 border-b border-neutral-100 px-5 py-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Monto ($)" htmlFor="pago-monto">
+                <input
+                  id="pago-monto"
+                  type="number"
+                  min={1}
+                  required
+                  className={inputClasses}
+                  value={pagoForm.amount}
+                  onChange={(e) => setPagoForm((f) => ({ ...f, amount: e.target.value }))}
+                />
+              </Field>
+              <Field label="Fecha" htmlFor="pago-fecha" required={false}>
+                <input
+                  id="pago-fecha"
+                  type="date"
+                  className={inputClasses}
+                  value={pagoForm.paid_at}
+                  onChange={(e) => setPagoForm((f) => ({ ...f, paid_at: e.target.value }))}
+                />
+              </Field>
+              <Field label="Método" htmlFor="pago-metodo" required={false}>
+                <select
+                  id="pago-metodo"
+                  className={inputClasses}
+                  value={pagoForm.method}
+                  onChange={(e) => setPagoForm((f) => ({ ...f, method: e.target.value }))}
+                >
+                  {METODOS.map((m) => (
+                    <option key={m.value} value={m.value}>{m.label}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Nota" htmlFor="pago-nota" required={false}>
+                <input
+                  id="pago-nota"
+                  className={inputClasses}
+                  maxLength={500}
+                  value={pagoForm.note}
+                  onChange={(e) => setPagoForm((f) => ({ ...f, note: e.target.value }))}
+                />
+              </Field>
+            </div>
+            <Button type="submit" disabled={guardando}>{guardando ? "Guardando…" : "Registrar pago"}</Button>
+          </form>
+        ) : null}
+        <ul className="divide-y divide-neutral-100">
+          {(pagos ?? []).length === 0 ? (
+            <li className="px-5 py-8 text-sm text-neutral-500">Sin pagos registrados.</li>
+          ) : (
+            (pagos ?? []).map((p) => (
+              <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
+                <div className="min-w-0">
+                  <p className="font-medium tabular-nums text-neutral-900">{fmt(Number(p.amount))}</p>
+                  <p className="text-sm text-neutral-600">
+                    {p.paid_at.slice(0, 10)} · {METODOS.find((m) => m.value === p.method)?.label ?? p.method}
+                    {p.note ? ` · ${p.note}` : ""}
+                  </p>
+                </div>
+                {isAdmin ? (
+                  <button
+                    type="button"
+                    onClick={() => anularPago(p)}
+                    className="rounded-lg border border-neutral-300 px-2 py-1 text-xs text-neutral-600 hover:bg-neutral-100"
+                  >
+                    Anular
+                  </button>
+                ) : null}
               </li>
             ))
           )}
