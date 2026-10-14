@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { formatRutPartial, isValidRut, normalizeRut } from "@/lib/rut";
 import { Button, buttonClasses, inputClasses, Spinner, ErrorNotice, InfoNotice } from "@/components/ui";
@@ -32,6 +33,10 @@ export default function ManageAppointmentModal({
   const [redirecting, setRedirecting] = useState(false);
 
   const rutInputRef = useRef<HTMLInputElement>(null);
+
+  const [portalTarget] = useState<HTMLElement | null>(
+    () => (typeof document === "undefined" ? null : document.body),
+  );
 
   // Abrir y enfocar
   useEffect(() => {
@@ -154,156 +159,159 @@ export default function ManageAppointmentModal({
         )}
       </button>
 
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="modal-title"
-        >
-          <div
-            className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl border border-neutral-200 relative animate-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Botón cerrar */}
-            <button
-              type="button"
-              onClick={() => !loading && setIsOpen(false)}
-              disabled={loading}
-              className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-700 p-1.5 rounded-lg hover:bg-neutral-100 transition-colors"
-              aria-label="Cerrar ventana"
+      {isOpen && portalTarget
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-50 flex overflow-y-auto bg-black/50 p-4 backdrop-blur-sm animate-in fade-in duration-200"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modal-title"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+              <div
+                className="m-auto w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl border border-neutral-200 relative animate-in zoom-in-95 duration-200"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Botón cerrar */}
+                <button
+                  type="button"
+                  onClick={() => !loading && setIsOpen(false)}
+                  disabled={loading}
+                  className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-700 p-1.5 rounded-lg hover:bg-neutral-100 transition-colors"
+                  aria-label="Cerrar ventana"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
 
-            <div className="flex items-center gap-3 mb-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-sky-100 text-brand-navy">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-              </span>
-              <div>
-                <h2 id="modal-title" className="text-xl font-bold text-brand-navy">
-                  Gestionar o cancelar cita
-                </h2>
-                <p className="text-xs text-neutral-500">
-                  {clinicName ? clinicName : "Clínica"} · Agenda online
-                </p>
-              </div>
-            </div>
-
-            <p className="text-sm text-neutral-600 mb-5 leading-relaxed">
-              Ingresa tu <strong>RUT</strong> o tu <strong>correo electrónico</strong> para acceder al detalle de tu hora y poder <strong>reprogramarla o cancelarla</strong>.
-            </p>
-
-            {error && (
-              <div className="mb-4">
-                <ErrorNotice message={error} />
-              </div>
-            )}
-
-            {success && (
-              <div className="mb-5">
-                <InfoNotice>
-                  <div className="flex items-start gap-2.5">
-                    <svg className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-sky-100 text-brand-navy">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                      />
                     </svg>
-                    <div>
-                      <p className="text-sm font-semibold text-neutral-900">{success}</p>
-                      {redirecting && (
-                        <p className="mt-1 text-xs text-neutral-600 flex items-center gap-1.5">
-                          <Spinner label="Cargando tu cita…" />
-                        </p>
-                      )}
-                    </div>
+                  </span>
+                  <div>
+                    <h2 id="modal-title" className="text-xl font-bold text-brand-navy">
+                      Gestionar o cancelar cita
+                    </h2>
+                    <p className="text-xs text-neutral-500">
+                      {clinicName ? clinicName : "Clínica"} · Agenda online
+                    </p>
                   </div>
-                </InfoNotice>
+                </div>
+
+                <p className="text-sm text-neutral-600 mb-5 leading-relaxed">
+                  Ingresa tu <strong>RUT</strong> o tu <strong>correo electrónico</strong> para acceder al detalle de tu hora y poder <strong>reprogramarla o cancelarla</strong>.
+                </p>
+
+                {error && (
+                  <div className="mb-4">
+                    <ErrorNotice message={error} />
+                  </div>
+                )}
+
+                {success && (
+                  <div className="mb-5">
+                    <InfoNotice>
+                      <div className="flex items-start gap-2.5">
+                        <svg className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-semibold text-neutral-900">{success}</p>
+                          {redirecting && (
+                            <p className="mt-1 text-xs text-neutral-600 flex items-center gap-1.5">
+                              <Spinner label="Cargando tu cita…" />
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </InfoNotice>
+                  </div>
+                )}
+
+                {!redirecting && (
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                      <label htmlFor="lookup-rut" className="block text-sm font-semibold text-neutral-800 mb-1">
+                        RUT del paciente
+                      </label>
+                      <input
+                        ref={rutInputRef}
+                        id="lookup-rut"
+                        type="text"
+                        value={rut}
+                        onChange={handleRutChange}
+                        placeholder="12.345.678-9"
+                        disabled={loading}
+                        className={inputClasses}
+                        autoComplete="off"
+                      />
+                      <p className="mt-1 text-xs text-neutral-500">Sin puntos ni guión también funciona.</p>
+                    </div>
+
+                    <div>
+                      <label htmlFor="lookup-email" className="block text-sm font-semibold text-neutral-800 mb-1">
+                        Correo electrónico
+                      </label>
+                      <input
+                        id="lookup-email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="paciente@ejemplo.com"
+                        disabled={loading}
+                        className={inputClasses}
+                        autoComplete="email"
+                      />
+                      <p className="mt-1 text-xs text-neutral-500">
+                        El correo que ingresaste al momento de agendar.
+                      </p>
+                    </div>
+
+                    <div className="rounded-xl bg-neutral-50 p-3.5 border border-neutral-200/80 text-xs text-neutral-600 space-y-1">
+                      <p className="font-semibold text-neutral-700">💡 Acceso rápido y seguro:</p>
+                      <p>
+                        • Si ingresas <strong>RUT y Correo</strong>: entras al instante a la pantalla de tu cita.
+                      </p>
+                      <p>
+                        • Si ingresas sólo uno de ellos: te enviaremos el enlace privado a tu correo para verificar tu identidad.
+                      </p>
+                    </div>
+
+                    <div className="pt-2 flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="md"
+                        onClick={() => setIsOpen(false)}
+                        disabled={loading}
+                        className="w-full sm:w-auto"
+                      >
+                        Cerrar
+                      </Button>
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        size="md"
+                        disabled={loading}
+                        className="w-full sm:w-auto min-w-36"
+                      >
+                        {loading ? <Spinner label="Buscando…" /> : "Buscar mi cita"}
+                      </Button>
+                    </div>
+                  </form>
+                )}
               </div>
-            )}
-
-            {!redirecting && (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="lookup-rut" className="block text-sm font-semibold text-neutral-800 mb-1">
-                    RUT del paciente
-                  </label>
-                  <input
-                    ref={rutInputRef}
-                    id="lookup-rut"
-                    type="text"
-                    value={rut}
-                    onChange={handleRutChange}
-                    placeholder="12.345.678-9"
-                    disabled={loading}
-                    className={inputClasses}
-                    autoComplete="off"
-                  />
-                  <p className="mt-1 text-xs text-neutral-500">Sin puntos ni guión también funciona.</p>
-                </div>
-
-                <div>
-                  <label htmlFor="lookup-email" className="block text-sm font-semibold text-neutral-800 mb-1">
-                    Correo electrónico
-                  </label>
-                  <input
-                    id="lookup-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="paciente@ejemplo.com"
-                    disabled={loading}
-                    className={inputClasses}
-                    autoComplete="email"
-                  />
-                  <p className="mt-1 text-xs text-neutral-500">
-                    El correo que ingresaste al momento de agendar.
-                  </p>
-                </div>
-
-                <div className="rounded-xl bg-neutral-50 p-3.5 border border-neutral-200/80 text-xs text-neutral-600 space-y-1">
-                  <p className="font-semibold text-neutral-700">💡 Acceso rápido y seguro:</p>
-                  <p>
-                    • Si ingresas <strong>RUT y Correo</strong>: entras al instante a la pantalla de tu cita.
-                  </p>
-                  <p>
-                    • Si ingresas sólo uno de ellos: te enviaremos el enlace privado a tu correo para verificar tu identidad.
-                  </p>
-                </div>
-
-                <div className="pt-2 flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="md"
-                    onClick={() => setIsOpen(false)}
-                    disabled={loading}
-                    className="w-full sm:w-auto"
-                  >
-                    Cerrar
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    size="md"
-                    disabled={loading}
-                    className="w-full sm:w-auto min-w-36"
-                  >
-                    {loading ? <Spinner label="Buscando…" /> : "Buscar mi cita"}
-                  </Button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
+            </div>,
+            portalTarget,
+          )
+        : null}
     </>
   );
 }

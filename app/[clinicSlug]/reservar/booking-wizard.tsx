@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo, useState, type ChangeEvent } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Holiday, PublicDoctor, Service, Slot, SlotWithDoctor } from "@/lib/types";
 import { CONSENT_TEXT } from "@/lib/clinic";
@@ -55,7 +54,7 @@ export interface BookingWizardProps {
  * Postgres dice que está libre. El cliente sólo pinta botones.
  */
 export default function BookingWizard(props: BookingWizardProps) {
-  const router = useRouter();
+  const homeHref = `/${props.clinicSlug}`;
 
   const [step, setStep] = useState<Step>(props.initialServiceId ? 3 : 1);
   const [serviceId, setServiceId] = useState<string | null>(props.initialServiceId ?? null);
@@ -65,6 +64,7 @@ export default function BookingWizard(props: BookingWizardProps) {
 
   const [slots, setSlots] = useState<SlotWithDoctor[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
+  const [earliestLoading, setEarliestLoading] = useState(false);
   const [slotsError, setSlotsError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
@@ -188,6 +188,49 @@ export default function BookingWizard(props: BookingWizardProps) {
     setSlotStart(null);
     void loadSlots(dayKey);
   }
+
+  /**
+   * "Cualquiera disponible" cumple lo que promete el paso 2: al entrar al
+   * paso 3 busca la primera hora libre real (servidor, un solo request),
+   * deja ese día cargado y preselecciona la hora más temprana. Si no hay
+   * nada o la búsqueda falla, el paciente elige el día a mano como antes.
+   */
+  const seekEarliest = useCallback(async () => {
+    if (doctorId !== null || day || !serviceId) return;
+
+    setEarliestLoading(true);
+    try {
+      const params = new URLSearchParams({
+        clinicSlug: props.clinicSlug,
+        serviceId,
+      });
+      const response = await fetch(`/api/slots/earliest?${params.toString()}`, {
+        headers: { Accept: "application/json" },
+      });
+      const data = (await response.json()) as {
+        date?: string | null;
+        slots?: SlotWithDoctor[];
+      };
+      if (!response.ok || !data.date || !data.slots || data.slots.length === 0) return;
+
+      const byStart = groupSlotsByStart(data.slots);
+      const first = [...byStart.keys()].sort()[0];
+      if (!first) return;
+      const doctors = byStart.get(first) ?? [];
+
+      // Fijamos el primer profesional (mismo orden que usa el servidor al
+      // asignar): así el paso 3 y el resumen muestran su nombre en vez de
+      // un genérico "primer profesional libre".
+      setDay(data.date);
+      setSlots(data.slots);
+      setDayStatuses((prev) => ({ ...prev, [data.date as string]: { available: true } }));
+      selectSlot(first, doctors[0] ?? null);
+    } catch {
+      // Silencioso: el calendario manual sigue disponible.
+    } finally {
+      setEarliestLoading(false);
+    }
+  }, [serviceId, doctorId, day, props.clinicSlug]);
 
   /**
    * Formatea el RUT en vivo. Sólo reescribimos el valor cuando el cursor está
@@ -354,6 +397,7 @@ export default function BookingWizard(props: BookingWizardProps) {
                 ))}
               </ul>
               <WizardNav
+                backHref={homeHref}
                 onBack={back}
                 nextLabel="Elegir profesional"
                 nextDisabled={!serviceId}
@@ -401,7 +445,7 @@ export default function BookingWizard(props: BookingWizardProps) {
                         Cualquiera disponible
                       </span>
                       <span className="block text-sm text-neutral-600">
-                        Te mostramos la hora más temprana con algún profesional libre
+                        Buscamos la hora más temprana libre y la dejamos seleccionada
                       </span>
                     </span>
                   </label>
@@ -432,7 +476,14 @@ export default function BookingWizard(props: BookingWizardProps) {
                   </li>
                 ))}
               </ul>
-              <WizardNav onBack={back} nextLabel="Elegir fecha y hora" onNext={() => goTo(3)} />
+              <WizardNav
+                onBack={back}
+                nextLabel="Elegir fecha y hora"
+                onNext={() => {
+                  goTo(3);
+                  void seekEarliest();
+                }}
+              />
             </fieldset>
           </Card>
         ) : null}
@@ -458,10 +509,14 @@ export default function BookingWizard(props: BookingWizardProps) {
               />
 
               {!day ? (
-                <EmptyState
-                  title="Primero elige un día"
-                  description="Los domingos, feriados y días sin horas aparecen desactivados."
-                />
+                earliestLoading ? (
+                  <LoadingPanel label="Buscando tu hora más temprana…" />
+                ) : (
+                  <EmptyState
+                    title="Primero elige un día"
+                    description="Los domingos, feriados y días sin horas aparecen desactivados."
+                  />
+                )
               ) : slotsLoading ? (
                 <LoadingPanel label="Buscando horarios…" />
               ) : slotsError ? (
@@ -657,11 +712,7 @@ export default function BookingWizard(props: BookingWizardProps) {
               >
                 Ver mi cita
               </Button>
-              <Link
-                href="/"
-                className={buttonClasses("secondary", "lg")}
-                onClick={() => router.push("/")}
-              >
+              <Link href={homeHref} className={buttonClasses("secondary", "lg")}>
                 Volver al inicio
               </Link>
             </div>
@@ -746,12 +797,14 @@ function StepIndicator({
 
 function WizardNav({
   onBack,
+  backHref,
   onNext,
   nextLabel,
   nextDisabled,
   type = "button",
 }: {
   onBack: () => void;
+  backHref?: string;
   onNext: () => void;
   nextLabel: string;
   nextDisabled?: boolean;
@@ -759,9 +812,15 @@ function WizardNav({
 }) {
   return (
     <div className="mt-6 flex flex-col-reverse gap-2.5 border-t border-neutral-200 pt-5 sm:flex-row sm:justify-between">
-      <Button variant="ghost" onClick={onBack} type="button">
-        Volver
-      </Button>
+      {backHref ? (
+        <Link href={backHref} className={buttonClasses("ghost")}>
+          Volver
+        </Link>
+      ) : (
+        <Button variant="ghost" onClick={onBack} type="button">
+          Volver
+        </Button>
+      )}
       <Button variant="primary" onClick={onNext} disabled={nextDisabled} type={type}>
         {nextLabel}
       </Button>

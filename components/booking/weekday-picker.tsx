@@ -171,13 +171,15 @@ export default function WeekdayPicker({
               title={cell.reason ?? undefined}
               className={[
                 "relative flex min-h-14 flex-col items-center justify-center rounded-xl border text-sm transition-colors sm:min-h-16",
-                cell.past
-                  ? "cursor-not-allowed border-neutral-100 bg-neutral-50 text-neutral-300"
-                  : cell.disabled
-                    ? "cursor-not-allowed border-neutral-200 bg-neutral-100 text-neutral-400 line-through"
-                    : "border-neutral-300 bg-white text-neutral-800 hover:border-brand-navy hover:bg-brand-navy-50",
-                isSelected ? "border-brand-navy bg-brand-navy text-white hover:bg-brand-navy" : "",
-                isToday && !isSelected ? "border-brand-sky bg-brand-sky-50" : "",
+                isSelected
+                  ? "border-brand-navy bg-brand-navy text-white hover:bg-brand-navy"
+                  : cell.past
+                    ? "cursor-not-allowed border-neutral-100 bg-neutral-50 text-neutral-300"
+                    : cell.disabled
+                      ? "cursor-not-allowed border-neutral-200 bg-neutral-100 text-neutral-400 line-through"
+                      : isToday
+                        ? "border-brand-sky bg-brand-sky-50 text-neutral-800 hover:border-brand-navy hover:bg-brand-navy-50"
+                        : "border-neutral-300 bg-white text-neutral-800 hover:border-brand-navy hover:bg-brand-navy-50",
               ]
                 .filter(Boolean)
                 .join(" ")}

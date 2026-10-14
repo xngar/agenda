@@ -17,14 +17,14 @@ const HOY_VIERNES = new Date("2026-10-02T15:00:00Z");
 let root: Root;
 let container: HTMLDivElement;
 
-function renderPicker() {
+function renderPicker(selected: string | null = null) {
   act(() => {
     root.render(
       <WeekdayPicker
         holidays={[]}
         maxDaysAhead={30}
         minNoticeHours={2}
-        selected={null}
+        selected={selected}
         statuses={{}}
         onSelect={vi.fn()}
       />,
@@ -113,5 +113,17 @@ describe("WeekdayPicker", () => {
     // Viernes 2 de octubre: la semana arranca el 28 de septiembre.
     expect(indexOfCell("viernes, 2")).toBe(7 + 4); // 4 días pasados
     expect(container.textContent).toContain("septiembre – octubre");
+  });
+
+  it("el día seleccionado lleva fondo azul sin clases de fondo en conflicto", () => {
+    renderPicker("2026-10-08");
+
+    const idx = indexOfCell("jueves, 8");
+    const boton = gridChildren()[idx] as HTMLButtonElement;
+    expect(boton.getAttribute("aria-pressed")).toBe("true");
+    expect(boton.className).toContain("bg-brand-navy");
+    expect(boton.className).toContain("text-white");
+    expect(boton.className).not.toContain("bg-white");
+    expect(boton.className).not.toContain("bg-brand-sky-50");
   });
 });
