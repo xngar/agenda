@@ -127,7 +127,7 @@ export default function ManageAppointmentModal({
     variant === "link"
       ? "inline-flex items-center gap-1.5 text-sm font-semibold text-brand-navy hover:underline focus-visible:outline-2 focus-visible:outline-brand-navy rounded-md py-1"
       : variant === "nav"
-      ? "inline-flex items-center rounded-lg px-2 py-2 text-sm font-medium text-neutral-700 hover:bg-brand-navy-50 hover:text-brand-navy"
+      ? "inline-flex items-center gap-1.5 rounded-lg border border-brand-navy-300 bg-brand-navy-50 px-3 py-2 text-sm font-medium text-brand-navy transition-colors hover:bg-brand-navy-100"
       : buttonClasses(variant, size, className);
 
   return (

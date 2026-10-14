@@ -7,7 +7,6 @@ export default function SiteHeader({ brand = DEFAULT_BRAND }: { brand?: ClinicBr
   const base = brand.slug ? `/${brand.slug}` : "";
   const homeHref = base || "/";
   const reservarHref = `${base}/reservar`;
-  const privacidadHref = `${base}/privacidad`;
 
   return (
     <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white/95 backdrop-blur">
@@ -34,15 +33,9 @@ export default function SiteHeader({ brand = DEFAULT_BRAND }: { brand?: ClinicBr
               clinicName={brand.name}
               variant="nav"
             >
-              Gestionar cita
+              Gestionar o cancelar cita
             </ManageAppointmentModal>
           ) : null}
-          <Link
-            href={privacidadHref}
-            className="hidden rounded-lg px-2 py-2 text-sm font-medium text-neutral-700 hover:bg-brand-navy-50 hover:text-brand-navy sm:inline-flex"
-          >
-            Privacidad
-          </Link>
           <Link href={reservarHref} className={buttonClasses("primary", "sm")}>
             Reservar hora
           </Link>

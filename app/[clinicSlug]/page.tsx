@@ -47,8 +47,37 @@ export default async function HomePage({ params }: { params: Promise<{ clinicSlu
                 Llamar {phone}
               </a>
             </div>
-            <div className="mt-3.5">
-              <ManageAppointmentModal clinicSlug={clinicSlug} clinicName={settings.name} variant="link" />
+            <div className="mt-3.5 rounded-xl border border-brand-navy-100 bg-white/80 px-4 py-3 shadow-card">
+              <ManageAppointmentModal clinicSlug={clinicSlug} clinicName={settings.name} variant="link">
+                <span className="flex items-center gap-3 text-left">
+                  <span
+                    aria-hidden="true"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-navy-50 text-brand-navy"
+                  >
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </span>
+                  <span>
+                    <span className="block text-sm font-normal text-neutral-600">
+                      ¿Ya tienes cita?
+                    </span>
+                    <span className="block text-sm font-semibold text-brand-navy">
+                      Gestionar o cancelar
+                    </span>
+                  </span>
+                </span>
+              </ManageAppointmentModal>
             </div>
             <p className="mt-5 text-xs text-neutral-600">
               Sin registro ni contraseña. Necesitamos sólo tu nombre, RUT, teléfono y correo.
