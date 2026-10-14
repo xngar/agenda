@@ -58,6 +58,9 @@ export default async function PacientePage({ params }: { params: Promise<{ id: s
       orgId={session.orgId}
       isAdmin={session.isAdmin}
       canEdit={session.isAdmin || patient.doctor_id === session.id}
+      canViewAudit={
+        session.isAdmin || session.isSuperAdmin || patient.doctor_id === session.id
+      }
     />
   );
 }

@@ -52,6 +52,7 @@ export function FichaTabs({
   orgId,
   isAdmin,
   canEdit = false,
+  canViewAudit = false,
 }: {
   patient: Patient;
   background: PatientMedicalBackground | null;
@@ -59,11 +60,13 @@ export function FichaTabs({
   orgId: string;
   isAdmin: boolean;
   canEdit?: boolean;
+  /** El dueño del paciente también ve su historial, no sólo el admin. */
+  canViewAudit?: boolean;
 }) {
   const tabs = orgType === "dental" ? TABS_DENTAL : TABS_CLINICA_COMMON;
   const router = useRouter();
   const [active, setActive] = useState(tabs[0].id);
-  const [auditoria, setAuditoria] = useState(isAdmin);
+  const [auditoria, setAuditoria] = useState(canViewAudit);
   const [editando, setEditando] = useState(false);
   const [confirmandoEliminar, setConfirmandoEliminar] = useState(false);
   const [eliminando, setEliminando] = useState(false);
@@ -89,9 +92,8 @@ export function FichaTabs({
     }
   }
 
-  const visible = auditoria
-    ? [...tabs, { id: "auditoria", label: "Auditoría" }]
-    : tabs;
+  const visible =
+    canViewAudit && auditoria ? [...tabs, { id: "auditoria", label: "Auditoría" }] : tabs;
 
   if (!visible.some((t) => t.id === active)) setActive(visible[0].id);
 
@@ -128,16 +130,18 @@ export function FichaTabs({
                 Editar
               </button>
             ) : null}
-            <label className="flex items-center gap-1.5">
-              <input
-                type="checkbox"
-                checked={auditoria}
-                onChange={(e) => setAuditoria(e.target.checked)}
-                className="h-4 w-4"
-                title="Ver historial de auditoría"
-              />
-              <span className="text-neutral-600">Auditoría</span>
-            </label>
+            {canViewAudit ? (
+              <label className="flex items-center gap-1.5">
+                <input
+                  type="checkbox"
+                  checked={auditoria}
+                  onChange={(e) => setAuditoria(e.target.checked)}
+                  className="h-4 w-4"
+                  title="Ver historial de auditoría"
+                />
+                <span className="text-neutral-600">Auditoría</span>
+              </label>
+            ) : null}
             <a
               className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:bg-brand-navy-50"
               href={`/api/ficha/patients/${patient.id}/export`}
@@ -211,7 +215,7 @@ export function FichaTabs({
       ) : active === "adjuntos" ? (
         <AdjuntosPanel patientId={patient.id} orgId={orgId} />
       ) : active === "auditoria" ? (
-        <AuditoriaPanel patientId={patient.id} isAdmin={isAdmin} />
+        <AuditoriaPanel patientId={patient.id} isAdmin={isAdmin} puedeExportar={canEdit} />
       ) : null}
 
       <PatientFormModal

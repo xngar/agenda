@@ -223,5 +223,6 @@ export const paymentSchema = z.object({
 export const auditQuerySchema = z.object({
   entity: z.string().trim().max(60).optional(),
   entity_id: z.string().trim().max(64).optional(),
+  patient_id: uuidSchema.optional(),
   limit: z.coerce.number().int().min(1).max(200).default(50),
 });

@@ -2,39 +2,32 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { AuditEntry } from "@/lib/ficha/types";
+import { AUDIT_ACCIONES, AUDIT_ENTIDADES } from "@/lib/ficha/audit-view";
 import { Card, CardHeader, ErrorNotice, Spinner } from "@/components/ui";
 
-const ACCIONES: Record<string, string> = {
-  insert: "Creación",
-  update: "Edición",
-  delete: "Eliminación",
-  sign: "Firma",
-  export: "Exportación",
-  view: "Lectura",
-};
+interface AuditRow extends AuditEntry {
+  actor_name?: string | null;
+  detalle?: string;
+}
 
-const ENTIDADES: Record<string, string> = {
-  patients: "Paciente",
-  encounters: "Atención",
-  encounter_versions: "Versión",
-  dental_chart_entries: "Odontograma",
-  dental_treatment_plan_items: "Plan",
-  prescriptions: "Receta",
-  consents: "Consentimiento",
-  attachments: "Adjunto",
-  patient_medical_background: "Antecedentes",
-};
-
-export function AuditoriaPanel({ patientId, isAdmin }: { patientId: string; isAdmin?: boolean }) {
-  const [entries, setEntries] = useState<AuditEntry[] | null>(null);
+export function AuditoriaPanel({
+  patientId,
+  isAdmin,
+  puedeExportar = false,
+}: {
+  patientId: string;
+  isAdmin?: boolean;
+  puedeExportar?: boolean;
+}) {
+  const [entries, setEntries] = useState<AuditRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const cargar = useCallback(async () => {
     try {
       const response = await fetch(
-        `/api/ficha/audit?entity_id=${encodeURIComponent(patientId)}&limit=100`,
+        `/api/ficha/audit?patient_id=${encodeURIComponent(patientId)}&limit=100`,
       );
-      const data = (await response.json()) as { entries?: AuditEntry[]; error?: string };
+      const data = (await response.json()) as { entries?: AuditRow[]; error?: string };
       if (!response.ok) {
         setError(data.error ?? "No se pudo cargar la auditoría");
         return;
@@ -61,26 +54,28 @@ export function AuditoriaPanel({ patientId, isAdmin }: { patientId: string; isAd
     );
   }
 
+  const exporta = isAdmin || puedeExportar;
+
   return (
     <div className="space-y-4">
       {error ? <ErrorNotice message={error} /> : null}
       <Card>
         <CardHeader
           title="Historial de auditoría"
-          description="Registro de cambios sobre los datos de esta ficha (creación, edición, firma, exportación)."
+          description="Quién hizo qué y cuándo sobre esta ficha: creaciones, ediciones, firmas y exportaciones."
           action={
-            isAdmin ? (
+            exporta ? (
               <div className="flex flex-wrap gap-2">
                 <a
                   className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:bg-brand-navy-50"
-                  href={`/api/ficha/audit?entity_id=${encodeURIComponent(patientId)}&limit=500&format=json`}
+                  href={`/api/ficha/audit?patient_id=${encodeURIComponent(patientId)}&limit=500&format=json`}
                   download
                 >
                   Exportar JSON
                 </a>
                 <a
                   className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:bg-brand-navy-50"
-                  href={`/api/ficha/audit?entity_id=${encodeURIComponent(patientId)}&limit=500&format=csv`}
+                  href={`/api/ficha/audit?patient_id=${encodeURIComponent(patientId)}&limit=500&format=csv`}
                   download
                 >
                   Exportar CSV
@@ -97,10 +92,15 @@ export function AuditoriaPanel({ patientId, isAdmin }: { patientId: string; isAd
               <li key={e.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
                 <div className="min-w-0">
                   <p className="font-medium text-neutral-900">
-                    {(ACCIONES[e.action] ?? e.action) + " · " + (ENTIDADES[e.entity] ?? e.entity)}
+                    {(AUDIT_ACCIONES[e.action] ?? e.action) +
+                      " · " +
+                      (AUDIT_ENTIDADES[e.entity] ?? e.entity)}
                   </p>
-                  <p className="truncate text-sm text-neutral-600">
-                    {JSON.stringify(e.summary ?? {}).slice(0, 160) || "—"}
+                  {e.detalle ? (
+                    <p className="truncate text-sm text-neutral-800">{e.detalle}</p>
+                  ) : null}
+                  <p className="truncate text-xs text-neutral-500">
+                    {e.actor_name ?? "Sistema"}
                   </p>
                 </div>
                 <p className="shrink-0 text-sm text-neutral-500">

@@ -1531,9 +1531,10 @@ console.log("\n[10] Organizaciones");
   check("abre el listado de organizaciones", listado.status === 200, `status=${listado.status}`);
   check("lista las clínicas existentes", listado.text.includes(">macarena-allende"));
   check(
-    "el listado muestra el selector de cupo de profesionales",
-    listado.text.includes("data-professional-limit") && listado.text.includes("Sin límite"),
-    listado.text.includes("data-professional-limit") ? "sin etiqueta Sin límite" : "sin selector de cupo",
+    "el listado muestra el combobox de cupo de profesionales",
+    listado.text.includes("data-professional-limit") &&
+      listado.text.includes("Cupo de profesionales, actual:"),
+    listado.text.includes("data-professional-limit") ? "sin valor actual" : "sin selector de cupo",
   );
 
   const nuevaPagina = await req(plataforma, "/dashboard/plataforma/organizaciones/nueva");
@@ -2107,6 +2108,29 @@ let FICHA_PATIENT = null;
     "la auditoría registra la firma de la atención",
     auditEnc.status === 200 && accionesEnc.includes("sign"),
     `status=${auditEnc.status} acciones=${[...new Set(accionesEnc)].join(",")}`,
+  );
+
+  // Vista por paciente: trae todas las entidades con autor y detalle curado.
+  const auditPac = await req(admin, `/api/ficha/audit?patient_id=${FICHA_PATIENT}&limit=200`);
+  const entradasPac = json(auditPac).entries ?? [];
+  const firma = entradasPac.find((e) => e.action === "sign");
+  check(
+    "la vista por paciente incluye la firma",
+    auditPac.status === 200 && Boolean(firma),
+    `status=${auditPac.status} n=${entradasPac.length}`,
+  );
+  check(
+    "la firma trae autor y detalle legible",
+    Boolean(firma?.actor_name) && Boolean(firma?.detalle),
+    `autor=${firma?.actor_name} detalle=${firma?.detalle}`,
+  );
+  const conNotas = entradasPac.filter((e) =>
+    JSON.stringify(e.summary ?? {}).includes("privateNotes"),
+  );
+  check(
+    "la auditoría no expone notas privadas",
+    conNotas.length === 0,
+    `${conNotas.length} con notas`,
   );
 
   const auditCsv = await req(admin, `/api/ficha/audit?entity_id=${FICHA_PATIENT}&limit=200&format=csv`);
