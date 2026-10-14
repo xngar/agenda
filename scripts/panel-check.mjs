@@ -104,7 +104,12 @@ async function req(cookies, path, init = {}) {
   });
   cookies?.absorb(res);
   const text = await res.text();
-  return { status: res.status, location: res.headers.get("location"), text };
+  return {
+    status: res.status,
+    location: res.headers.get("location"),
+    text,
+    header: (name) => res.headers.get(name),
+  };
 }
 
 let hoy = { slots: [] };
@@ -2131,6 +2136,45 @@ let FICHA_PATIENT = null;
     "la auditoría no expone notas privadas",
     conNotas.length === 0,
     `${conNotas.length} con notas`,
+  );
+
+  // -- Descargas: antes pedían limit=500 (tope 200) y daban 422 --
+  const descargaJson = await req(admin, `/api/ficha/audit?patient_id=${FICHA_PATIENT}&limit=200&format=json`);
+  const cuerpoJson = json(descargaJson);
+  check(
+    "la descarga JSON responde y va sin snapshots crudos",
+    descargaJson.status === 200 &&
+      Array.isArray(cuerpoJson.entries) &&
+      cuerpoJson.entries.length >= 1 &&
+      cuerpoJson.entries.every((e) => !("summary" in e) && Boolean(e.actor_name) && Boolean(e.detalle)),
+    `status=${descargaJson.status} n=${cuerpoJson.entries?.length ?? 0}`,
+  );
+  check(
+    "el JSON se ofrece como adjunto con nombre legible",
+    (descargaJson.header("content-disposition") ?? "").includes('filename="auditoria-mauricio-panel-'),
+    `${descargaJson.header("content-disposition") ?? "sin header"}`,
+  );
+
+  // res.text() pela el BOM: se leen los bytes crudos para verificarlo.
+  const cruda = await fetch(
+    `${BASE}/api/ficha/audit?patient_id=${FICHA_PATIENT}&limit=200&format=csv`,
+    { headers: { Cookie: admin.header() } },
+  );
+  const buf = Buffer.from(await cruda.arrayBuffer());
+  const descargaCsv = await req(admin, `/api/ficha/audit?patient_id=${FICHA_PATIENT}&limit=200&format=csv`);
+  check(
+    "la descarga CSV trae BOM y encabezados",
+    cruda.status === 200 &&
+      buf[0] === 0xef &&
+      buf[1] === 0xbb &&
+      buf[2] === 0xbf &&
+      buf.toString("utf8").includes("fecha;autor;accion;entidad;detalle"),
+    `status=${cruda.status} bytes=${[...buf.subarray(0, 3)].join(",")}`,
+  );
+  check(
+    "el CSV no expone notas privadas",
+    !descargaCsv.text.includes("privateNotes"),
+    "",
   );
 
   const auditCsv = await req(admin, `/api/ficha/audit?entity_id=${FICHA_PATIENT}&limit=200&format=csv`);

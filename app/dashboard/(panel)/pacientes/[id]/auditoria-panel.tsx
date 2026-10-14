@@ -68,14 +68,14 @@ export function AuditoriaPanel({
               <div className="flex flex-wrap gap-2">
                 <a
                   className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:bg-brand-navy-50"
-                  href={`/api/ficha/audit?patient_id=${encodeURIComponent(patientId)}&limit=500&format=json`}
+                  href={`/api/ficha/audit?patient_id=${encodeURIComponent(patientId)}&limit=200&format=json`}
                   download
                 >
                   Exportar JSON
                 </a>
                 <a
                   className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:bg-brand-navy-50"
-                  href={`/api/ficha/audit?patient_id=${encodeURIComponent(patientId)}&limit=500&format=csv`}
+                  href={`/api/ficha/audit?patient_id=${encodeURIComponent(patientId)}&limit=200&format=csv`}
                   download
                 >
                   Exportar CSV

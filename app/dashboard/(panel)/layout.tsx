@@ -30,17 +30,23 @@ export default async function PanelLayout({ children }: { children: React.ReactN
     <div className="min-h-dvh bg-neutral-50">
       <header className="border-b border-neutral-200 bg-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-          <Link href="/dashboard" className="font-semibold text-brand-navy">
+          <Link href="/dashboard" className="shrink-0 font-semibold text-brand-navy">
             Agenda · Panel
           </Link>
 
           <NavLinks isAdmin={session.isAdmin} isSuperAdmin={session.isSuperAdmin} />
 
-          <div className="flex items-center gap-3">
-            <div className="text-right text-sm leading-tight">
-              <p className="font-medium text-neutral-800">{session.full_name}</p>
+          <div className="flex shrink-0 items-center gap-3">
+            <div className="min-w-0 text-right text-sm leading-tight">
+              <Link
+                href="/dashboard/perfil"
+                title="Mi perfil"
+                className="block max-w-48 truncate font-medium text-neutral-800 hover:text-brand-navy hover:underline"
+              >
+                {session.full_name}
+              </Link>
               {session.specialty ? (
-                <p className="text-xs text-neutral-500">{session.specialty}</p>
+                <p className="max-w-48 truncate text-xs text-neutral-500">{session.specialty}</p>
               ) : null}
             </div>
             <LogoutButton />

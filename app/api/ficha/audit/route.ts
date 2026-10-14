@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import {
   fichaContext,
   unauthorized,
@@ -55,10 +55,11 @@ export async function GET(request: Request) {
   const download = format !== null;
 
   // El dueño del paciente también ve su historial, no sólo el admin.
+  let nombreArchivo = "general";
   if (body.data.patient_id) {
     const { data: dueno, error: duenoError } = await ctx.supabase
       .from("patients")
-      .select("id,doctor_id")
+      .select("id,doctor_id,full_name")
       .eq("org_id", ctx.session.orgId)
       .eq("id", body.data.patient_id)
       .maybeSingle();
@@ -69,6 +70,7 @@ export async function GET(request: Request) {
     if (!ctx.session.isAdmin && !ctx.session.isSuperAdmin && dueno.doctor_id !== ctx.session.id) {
       return forbidden("Sólo el administrador o el profesional tratante ve la auditoría");
     }
+    nombreArchivo = slugNombre((dueno.full_name as string | null) ?? "paciente");
   } else if (!ctx.session.isAdmin && !ctx.session.isSuperAdmin) {
     return forbidden("Sólo el administrador ve la auditoría");
   }
@@ -110,12 +112,15 @@ export async function GET(request: Request) {
     }
   }
 
+  const hoy = new Date().toISOString().slice(0, 10);
+  const nombreBase = `auditoria-${nombreArchivo}-${hoy}`;
+
   if (format === "csv") {
     const headers = ["fecha", "autor", "accion", "entidad", "detalle"];
     const filas = entries.map((e) =>
       [
         new Date(String(e.created_at)).toLocaleString("es-CL"),
-        String(e.actor_name ?? ""),
+        String(e.actor_name ?? "—"),
         AUDIT_ACCIONES[String(e.action)] ?? String(e.action),
         AUDIT_ENTIDADES[String(e.entity)] ?? String(e.entity),
         String(e.detalle ?? ""),
@@ -123,23 +128,44 @@ export async function GET(request: Request) {
         .map((c) => enc(c))
         .join(";"),
     );
-    const csv = [headers.join(";"), ...filas].join("\n");
+    // BOM para que Excel en Windows abra los tildes sin mojibake.
+    const csv = "\uFEFF" + [headers.join(";"), ...filas].join("\n");
     return new NextResponse(csv, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="auditoria-${body.data.entity_id ?? body.data.patient_id ?? "general"}.csv"`,
+        "Content-Disposition": `attachment; filename="${nombreBase}.csv"`,
       },
     });
   }
 
-  return NextResponse.json(
-    { entries },
-    {
-      headers: download
-        ? { "Content-Disposition": `attachment; filename="auditoria-${body.data.entity_id ?? body.data.patient_id ?? "general"}.json"` }
-        : undefined,
-    },
-  );
+  if (download) {
+    // En descargas no va el snapshot crudo: sólo lo curado.
+    const limpio = entries.map((e) => {
+      const copia = { ...(e as Fila) };
+      delete copia.summary;
+      return copia;
+    });
+    return NextResponse.json(
+      { entries: limpio },
+      {
+        headers: { "Content-Disposition": `attachment; filename="${nombreBase}.json"` },
+      },
+    );
+  }
+
+  return NextResponse.json({ entries });
+}
+
+/** "Mauricio Auditoría" -> "mauricio-auditoria" para el nombre de archivo. */
+function slugNombre(nombre: string): string {
+  const slug = nombre
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+  return slug || "paciente";
 }
 
 /**

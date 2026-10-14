@@ -203,6 +203,20 @@ export const serviceUpdateSchema = z.object({
   active: z.boolean().optional(),
 });
 
+/** Mi perfil: cualquier usuario del panel edita nombre y especialidad. */
+export const profileUpdateSchema = z.object({
+  fullName: fullNameSchema,
+  specialty: z.string().trim().max(80, "La especialidad es demasiado larga").optional(),
+});
+
+/** Mi perfil: cambio de contraseña con verificación de la actual. */
+export const profilePasswordSchema = z.object({
+  actual: z.string().min(1, "Ingresa tu contraseña actual"),
+  nueva: z
+    .string()
+    .min(8, "La contraseña debe tener al menos 8 caracteres")
+    .max(72, "La contraseña es demasiado larga"),
+});
 /** Alta de un miembro del equipo desde el panel del administrador. */
 export const doctorSchema = z.object({
   email: emailSchema,
