@@ -56,7 +56,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const doctorId = url.searchParams.get("doctorId") ?? session.id;
 
-  if (doctorId !== session.id && !session.isAdmin) {
+  if (doctorId !== session.id && !session.isAdmin && session.role !== "reception") {
     return NextResponse.json(
       { error: "Sólo puedes ver tu propio horario" },
       { status: 403 },
@@ -91,7 +91,7 @@ export async function POST(request: Request) {
 
   const { doctorId, rules } = body.data;
 
-  if (doctorId !== session.id && !session.isAdmin) {
+  if (doctorId !== session.id && !session.isAdmin && session.role !== "reception") {
     return NextResponse.json(
       { error: "Sólo puedes modificar tu propio horario" },
       { status: 403 },

@@ -16,10 +16,11 @@ interface PageProps {
 /**
  * Horario de atención semanal.
  *
- * La regla de permisos vive en RLS (`doctor_id = auth.uid() OR is_admin()`):
- * un profesional edita lo suyo, un admin el de cualquiera. Esta página sólo
- * decide a quién se le pide la información; si alguien manipula `?doctor=`,
- * la consulta devuelve vacío y el formulario no tiene nada que guardar.
+ * La regla de permisos vive en RLS (`doctor_id = auth.uid() OR is_admin()
+ * OR recepción de la organización`): un profesional edita lo suyo, un admin
+ * o la recepción el de cualquier profesional. Esta página sólo decide a
+ * quién se le pide la información; si alguien manipula `?doctor=`, la
+ * consulta devuelve vacío y el formulario no tiene nada que guardar.
  *
  * El horario no está ligado a las citas existentes: cambiarlo decide qué
  * horas se ofrecen a partir de ahora y no reagenda lo ya reservado. Por eso
@@ -29,10 +30,18 @@ export default async function HorarioPage({ searchParams }: PageProps) {
   const session = await requireDoctor();
   const { doctor: doctorParam } = await searchParams;
 
-  const soloAdmin = session.isAdmin && doctorParam && doctorParam !== "all";
-  const doctorId = soloAdmin ? doctorParam : session.id;
+  const puedeGestionar = session.isAdmin || session.role === "reception";
 
   const supabase = await supabaseServer();
+  const team = puedeGestionar ? await getTeam() : [];
+
+  // Recepción sin ?doctor=: primer profesional activo. Profesional común: lo suyo.
+  const doctorId =
+    puedeGestionar && doctorParam && doctorParam !== "all"
+      ? doctorParam
+      : puedeGestionar
+        ? (team[0]?.id ?? session.id)
+        : session.id;
 
   const { data: rules } = await supabase
     .from("availability_rules")
@@ -51,7 +60,6 @@ export default async function HorarioPage({ searchParams }: PageProps) {
     endTime: String(r.end_time).slice(0, 5),
   }));
 
-  const team = session.isAdmin ? await getTeam() : [];
   const seleccionado = team.find((d) => d.id === doctorId);
 
   return (
@@ -68,7 +76,7 @@ export default async function HorarioPage({ searchParams }: PageProps) {
           </p>
         </div>
 
-        {session.isAdmin ? (
+        {puedeGestionar ? (
           <DoctorPicker
             current={doctorId}
             canFilter
@@ -82,7 +90,7 @@ export default async function HorarioPage({ searchParams }: PageProps) {
       <ScheduleEditor
         key={doctorId}
         doctorId={doctorId}
-        isAdmin={session.isAdmin}
+        isAdmin={puedeGestionar}
         initial={inicial}
       />
 
@@ -95,12 +103,14 @@ export default async function HorarioPage({ searchParams }: PageProps) {
   );
 }
 
-/** Equipo, para poder cambiar de profesional desde esta página. */
+/** Profesionales activos, para poder cambiar de profesional desde esta página. */
 async function getTeam(): Promise<PublicDoctor[]> {
   const supabase = await supabaseServer();
   const { data } = await supabase
     .from("doctors")
     .select("id, full_name")
+    .eq("role", "professional")
+    .eq("active", true)
     .order("full_name");
   return (data ?? []) as unknown as PublicDoctor[];
 }

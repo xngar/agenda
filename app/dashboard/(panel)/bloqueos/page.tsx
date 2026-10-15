@@ -23,17 +23,26 @@ interface PageProps {
  * quedarían dentro y pide confirmación. Igual que en el horario.
  *
  * La autorización es RLS de `time_off` (`doctor_id = auth.uid() OR
- * is_admin()`); el `?doctor=` sólo decide a quién se le pide la lista.
+ * is_admin() OR recepción de la organización`); el `?doctor=` sólo decide
+ * a quién se le pide la lista.
  */
 export default async function BloqueosPage({ searchParams }: PageProps) {
   const session = await requireDoctor();
   const { doctor: doctorParam } = await searchParams;
 
-  const soloAdmin = session.isAdmin && doctorParam && doctorParam !== "all";
-  const doctorId = soloAdmin ? doctorParam : session.id;
+  const puedeGestionar = session.isAdmin || session.role === "reception";
 
   const settings = await getOrgSettings(session.orgId);
   const supabase = await supabaseServer();
+  const team = puedeGestionar ? await getTeam() : [];
+
+  // Recepción sin ?doctor=: primer profesional activo. Profesional común: lo suyo.
+  const doctorId =
+    puedeGestionar && doctorParam && doctorParam !== "all"
+      ? doctorParam
+      : puedeGestionar
+        ? (team[0]?.id ?? session.id)
+        : session.id;
 
   const { data: bloques } = await supabase
     .from("time_off")
@@ -55,7 +64,6 @@ export default async function BloqueosPage({ searchParams }: PageProps) {
     };
   });
 
-  const team = session.isAdmin ? await getTeam() : [];
   const seleccionado = team.find((d) => d.id === doctorId);
 
   return (
@@ -72,7 +80,7 @@ export default async function BloqueosPage({ searchParams }: PageProps) {
           </p>
         </div>
 
-        {session.isAdmin ? (
+        {puedeGestionar ? (
           <DoctorPicker
             current={doctorId}
             canFilter
@@ -99,9 +107,14 @@ export default async function BloqueosPage({ searchParams }: PageProps) {
   );
 }
 
-/** Equipo, para poder cambiar de profesional desde esta página. */
+/** Profesionales activos, para poder cambiar de profesional desde esta página. */
 async function getTeam(): Promise<PublicDoctor[]> {
   const supabase = await supabaseServer();
-  const { data } = await supabase.from("doctors").select("id, full_name").order("full_name");
+  const { data } = await supabase
+    .from("doctors")
+    .select("id, full_name")
+    .eq("role", "professional")
+    .eq("active", true)
+    .order("full_name");
   return (data ?? []) as unknown as PublicDoctor[];
 }

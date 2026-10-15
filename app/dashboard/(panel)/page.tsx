@@ -201,12 +201,13 @@ function dayLabel(dayKey: string): string {
   }).format(new Date(`${dayKey}T12:00:00Z`));
 }
 
-/** Equipo activo, para el filtro del admin. */
+/** Profesionales activos, para el filtro de agenda (sin recepción). */
 async function getActiveDoctors() {
   const supabase = await supabaseServer();
   const { data } = await supabase
     .from("doctors")
     .select("id, full_name")
+    .eq("role", "professional")
     .eq("active", true)
     .order("full_name");
 
