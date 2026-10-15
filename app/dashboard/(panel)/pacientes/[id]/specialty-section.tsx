@@ -9,6 +9,10 @@ function texto(valor: unknown): string | null {
   if (valor === undefined || valor === null) return null;
   if (typeof valor === "boolean") return valor ? "Sí" : "No";
   if (typeof valor === "number") return Number.isFinite(valor) ? String(valor) : null;
+  if (Array.isArray(valor)) {
+    const s = valor.map((v) => String(v).trim()).filter(Boolean).join(", ");
+    return s ? s : null;
+  }
   const s = String(valor).trim();
   return s ? s : null;
 }
@@ -160,7 +164,7 @@ function Campo({
       <input
         id={id}
         className={inputClasses}
-        value={typeof value === "string" || typeof value === "number" ? String(value) : ""}
+        value={Array.isArray(value) ? value.join(", ") : typeof value === "string" || typeof value === "number" ? String(value) : ""}
         onChange={(e) => onChange(field.key, e.target.value)}
       />
     </Field>

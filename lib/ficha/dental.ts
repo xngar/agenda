@@ -154,7 +154,12 @@ export const dentalEncounterSchema = z.object({
     )
     .optional(),
   observations: z.string().trim().max(4000).optional(),
-  procedures: z.array(z.string().max(160)).max(60).optional(),
+  procedures: z
+    .preprocess(
+      (v) => (typeof v === "string" ? v.split(/[,\n]/).map((s) => s.trim()).filter(Boolean) : v),
+      z.array(z.string().max(160)).max(60),
+    )
+    .optional(),
   orthodontics: z.string().trim().max(4000).optional(),
 }) as z.ZodType<DentalEncounterData>;
 

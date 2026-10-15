@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { DentalPayment, DentalPaymentMethod, DentalTreatmentCatalogItem, DentalTreatmentPlanItem, TreatmentPlanStatus } from "@/lib/ficha/types";
-import { Card, CardHeader, Button, ErrorNotice, Field, Spinner, inputClasses } from "@/components/ui";
+import { Card, CardHeader, Button, ErrorNotice, Field, Spinner, inputClasses, buttonClasses } from "@/components/ui";
+import { formatMiles, parseMiles } from "@/lib/clp";
 
 interface PlanItem extends DentalTreatmentPlanItem {
   dental_treatments_catalog?: { name: string } | null;
@@ -66,6 +67,9 @@ export function PlanPanel({
   const [adminCat, setAdminCat] = useState(false);
   const [catNombre, setCatNombre] = useState("");
   const [catValor, setCatValor] = useState("");
+  const [editCat, setEditCat] = useState<{ id: string; name: string; value: string } | null>(null);
+  const [porEliminarCat, setPorEliminarCat] = useState<DentalTreatmentCatalogItem | null>(null);
+  const [eliminandoCat, setEliminandoCat] = useState(false);
 
   const cargar = useCallback(async () => {
     try {
@@ -117,7 +121,7 @@ export function PlanPanel({
             treatment_id: form.treatment_id || null,
             tooth: form.tooth ? Number(form.tooth) : null,
             description: form.description.trim() || undefined,
-            value: form.value !== "" ? Number(form.value) : treatment?.default_value ?? 0,
+            value: form.value !== "" ? (parseMiles(form.value) ?? 0) : (treatment?.default_value ?? 0),
             priority: form.priority !== "" ? Number(form.priority) : null,
           },
         ]),
@@ -168,7 +172,7 @@ export function PlanPanel({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: catNombre.trim(),
-          default_value: Number(catValor) || 0,
+          default_value: parseMiles(catValor) ?? 0,
           active: true,
         }),
       });
@@ -188,12 +192,65 @@ export function PlanPanel({
     }
   }
 
+  async function editarCatalogo(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editCat) return;
+    setError(null);
+    setGuardando(true);
+    try {
+      const original = catalog.find((c) => c.id === editCat.id);
+      const response = await fetch(`/api/ficha/catalog/${editCat.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editCat.name.trim(),
+          default_value: parseMiles(editCat.value) ?? 0,
+          active: original?.active ?? true,
+        }),
+      });
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) {
+        setError(data.error ?? "No se pudo actualizar el tratamiento del catálogo");
+        return;
+      }
+      toast.success("Tratamiento del catálogo actualizado");
+      setEditCat(null);
+      cargar();
+    } catch {
+      setError("No pudimos conectarnos.");
+    } finally {
+      setGuardando(false);
+    }
+  }
+
+  async function eliminarCatalogo() {
+    if (!porEliminarCat) return;
+    setEliminandoCat(true);
+    try {
+      const response = await fetch(`/api/ficha/catalog/${porEliminarCat.id}`, {
+        method: "DELETE",
+      });
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) {
+        toast.error(data.error ?? "No se pudo eliminar el tratamiento del catálogo");
+        return;
+      }
+      toast.success(`"${porEliminarCat.name}" eliminado del catálogo`);
+      setPorEliminarCat(null);
+      cargar();
+    } catch {
+      toast.error("No pudimos conectarnos. Intenta de nuevo.");
+    } finally {
+      setEliminandoCat(false);
+    }
+  }
+
   async function agregarPago(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setGuardando(true);
     try {
-      const monto = Number(pagoForm.amount);
+      const monto = parseMiles(pagoForm.amount) ?? 0;
       const response = await fetch(`/api/ficha/patients/${patientId}/payments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -289,7 +346,7 @@ export function PlanPanel({
                     setForm((f) => ({
                       ...f,
                       treatment_id: e.target.value,
-                      value: t ? String(t.default_value) : f.value,
+                      value: t ? formatMiles(String(t.default_value)) : f.value,
                     }));
                   }}
                 >
@@ -324,10 +381,12 @@ export function PlanPanel({
                 <Field label="Valor ($)" htmlFor="value" required={false}>
                   <input
                     id="value"
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="0"
                     className={inputClasses}
                     value={form.value}
-                    onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
+                    onChange={(e) => setForm((f) => ({ ...f, value: formatMiles(e.target.value) }))}
                   />
                 </Field>
                 <Field label="Prioridad" htmlFor="priority" required={false}>
@@ -421,12 +480,13 @@ export function PlanPanel({
               <Field label="Monto ($)" htmlFor="pago-monto">
                 <input
                   id="pago-monto"
-                  type="number"
-                  min={1}
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0"
                   required
                   className={inputClasses}
                   value={pagoForm.amount}
-                  onChange={(e) => setPagoForm((f) => ({ ...f, amount: e.target.value }))}
+                  onChange={(e) => setPagoForm((f) => ({ ...f, amount: formatMiles(e.target.value) }))}
                 />
               </Field>
               <Field label="Fecha" htmlFor="pago-fecha" required={false}>
@@ -504,27 +564,83 @@ export function PlanPanel({
                 <span className="mb-1 block text-xs font-medium text-neutral-600">Nombre del tratamiento</span>
                 <input className={inputClasses} value={catNombre} onChange={(e) => setCatNombre(e.target.value)} required />
               </label>
-              <label className="block w-32">
+              <label className="block w-36">
                 <span className="mb-1 block text-xs font-medium text-neutral-600">Valor ($)</span>
-                <input type="number" className={inputClasses} value={catValor} onChange={(e) => setCatValor(e.target.value)} />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0"
+                  className={inputClasses}
+                  value={catValor}
+                  onChange={(e) => setCatValor(formatMiles(e.target.value))}
+                />
               </label>
               <Button type="submit" disabled={guardando || !catNombre.trim()}>Agregar</Button>
             </form>
           ) : null}
           <ul className="divide-y divide-neutral-100">
             {catalog.map((c) => (
-              <li key={c.id} className="flex items-center justify-between gap-3 px-5 py-3">
-                <div>
-                  <p className="font-medium text-neutral-900">{c.name}</p>
-                  <p className="text-sm text-neutral-600">{fmt(c.default_value)}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => alternarCatalogo(c)}
-                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium ${c.active ? "border-neutral-300 text-neutral-600 hover:bg-neutral-100" : "border-brand-navy-200 text-brand-navy"}`}
-                >
-                  {c.active ? "Desactivar" : "Activar"}
-                </button>
+              <li key={c.id} className="px-5 py-3">
+                {editCat?.id === c.id ? (
+                  <form onSubmit={editarCatalogo} className="flex flex-wrap items-end gap-3">
+                    <label className="block min-w-40 flex-1">
+                      <span className="mb-1 block text-xs font-medium text-neutral-600">Nombre del tratamiento</span>
+                      <input
+                        className={inputClasses}
+                        value={editCat.name}
+                        onChange={(e) => setEditCat({ ...editCat, name: e.target.value })}
+                        required
+                      />
+                    </label>
+                    <label className="block w-36">
+                      <span className="mb-1 block text-xs font-medium text-neutral-600">Valor ($)</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="0"
+                        className={inputClasses}
+                        value={editCat.value}
+                        onChange={(e) => setEditCat({ ...editCat, value: formatMiles(e.target.value) })}
+                      />
+                    </label>
+                    <Button type="submit" size="sm" disabled={guardando || !editCat.name.trim()}>
+                      {guardando ? "Guardando…" : "Guardar"}
+                    </Button>
+                    <Button type="button" size="sm" variant="ghost" disabled={guardando} onClick={() => setEditCat(null)}>
+                      Cancelar
+                    </Button>
+                  </form>
+                ) : (
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-neutral-900">{c.name}</p>
+                      <p className="text-sm text-neutral-600">{fmt(c.default_value)}</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditCat({ id: c.id, name: c.name, value: formatMiles(String(c.default_value)) })}
+                        className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-600 hover:bg-neutral-100"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => alternarCatalogo(c)}
+                        className={`rounded-lg border px-3 py-1.5 text-sm font-medium ${c.active ? "border-neutral-300 text-neutral-600 hover:bg-neutral-100" : "border-brand-navy-200 text-brand-navy"}`}
+                      >
+                        {c.active ? "Desactivar" : "Activar"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPorEliminarCat(c)}
+                        className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </li>
             ))}
             {catalog.length === 0 ? (
@@ -532,6 +648,45 @@ export function PlanPanel({
             ) : null}
           </ul>
         </Card>
+      ) : null}
+
+      {porEliminarCat ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="dialog-eliminar-catalogo-titulo"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        >
+          <div
+            className="absolute inset-0 bg-neutral-900/50"
+            onClick={() => {
+              if (!eliminandoCat) setPorEliminarCat(null);
+            }}
+          />
+          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-card">
+            <h2 id="dialog-eliminar-catalogo-titulo" className="text-lg font-bold text-brand-navy">
+              ¿Eliminar {porEliminarCat.name}?
+            </h2>
+            <p className="mt-2 text-sm text-neutral-600">
+              Se quitará del catálogo de la organización. Los tratamientos del plan que lo usen
+              se conservan. Esta acción no se puede deshacer.
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <Button variant="ghost" size="sm" disabled={eliminandoCat} onClick={() => setPorEliminarCat(null)}>
+                Cancelar
+              </Button>
+              <button
+                type="button"
+                onClick={eliminarCatalogo}
+                disabled={eliminandoCat}
+                className={buttonClasses("danger", "sm")}
+              >
+                {eliminandoCat ? "Eliminando…" : "Eliminar"}
+              </button>
+            </div>
+          </div>
+        </div>
       ) : null}
     </div>
   );

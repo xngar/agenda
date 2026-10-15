@@ -70,6 +70,12 @@ function careLabel(v: string): string {
   return CARE_TYPES.find((c) => c.value === v)?.label ?? v;
 }
 
+function normalizarProcedimientos(valor: unknown): string[] | undefined {
+  const lista = Array.isArray(valor) ? valor : typeof valor === "string" ? valor.split(/[,\n]/) : [];
+  const limpios = lista.map((v) => String(v).trim()).filter(Boolean);
+  return limpios.length > 0 ? limpios : undefined;
+}
+
 export function AtencionesPanel({
   patientId,
   orgType,
@@ -169,6 +175,10 @@ const SIGNOS_VITALES = [
         })
         .filter(([key]) => SIGNOS_VITALES.some((s) => s.key === key));
       const hayVitales = esMedica && numeros.some(([, n]) => n !== null);
+      const procedimientos = normalizarProcedimientos(especialidad.procedures);
+      const especialidadLimpia = { ...especialidad };
+      if (procedimientos === undefined) delete especialidadLimpia.procedures;
+      else especialidadLimpia.procedures = procedimientos;
       const payload = {
         started_at: form.started_at || undefined,
         care_type: form.care_type.trim() || null,
@@ -178,8 +188,8 @@ const SIGNOS_VITALES = [
         indicaciones: form.indicaciones.trim() || undefined,
         proxima_cita_at: form.proxima_cita_at || null,
         specialty_data: esMedica
-          ? { ...especialidad, vitals: hayVitales ? Object.fromEntries(numeros) : null }
-          : especialidad,
+          ? { ...especialidadLimpia, vitals: hayVitales ? Object.fromEntries(numeros) : null }
+          : especialidadLimpia,
       };
       const response =
         dialogo === "nueva"
