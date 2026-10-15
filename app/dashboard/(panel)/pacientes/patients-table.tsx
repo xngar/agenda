@@ -129,8 +129,7 @@ export function PatientsTable({
                 );
               })}
               <th scope="col" className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                <span className="sr-only">Abrir ficha</span>
-                <span aria-hidden>›</span>
+                Ficha paciente
               </th>
             </tr>
           </thead>
@@ -173,8 +172,9 @@ export function PatientsTable({
                     href={`/dashboard/pacientes/${p.id}`}
                     aria-label={`Abrir ficha de ${p.full_name}`}
                     title="Abrir ficha"
-                    className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg bg-emerald-600 px-2.5 text-white transition-colors hover:bg-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+                    className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
                   >
+                    Ver ficha
                     <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
                       <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>

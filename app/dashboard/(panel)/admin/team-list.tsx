@@ -28,6 +28,11 @@ export function TeamList({ initial, selfId }: { initial: TeamMember[]; selfId: s
   const router = useRouter();
   const [pendiente, setPendiente] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<"activos" | "desactivados">("activos");
+
+  const activos = initial.filter((d) => d.active);
+  const desactivados = initial.filter((d) => !d.active);
+  const visibles = tab === "activos" ? activos : desactivados;
 
   async function cambiar(doctorId: string, active: boolean) {
     setError(null);
@@ -66,8 +71,44 @@ export function TeamList({ initial, selfId }: { initial: TeamMember[]; selfId: s
         </p>
       ) : null}
 
+      <div role="tablist" aria-label="Estado de profesionales" className="flex gap-1 rounded-xl border border-neutral-200 bg-neutral-50 p-1">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === "activos"}
+          onClick={() => setTab("activos")}
+          className={`flex-1 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+            tab === "activos"
+              ? "bg-white text-brand-navy shadow-sm"
+              : "text-neutral-600 hover:text-neutral-900"
+          }`}
+        >
+          Activos ({activos.length})
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === "desactivados"}
+          onClick={() => setTab("desactivados")}
+          className={`flex-1 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+            tab === "desactivados"
+              ? "bg-white text-brand-navy shadow-sm"
+              : "text-neutral-600 hover:text-neutral-900"
+          }`}
+        >
+          Desactivados ({desactivados.length})
+        </button>
+      </div>
+
       <ul className="space-y-2">
-        {initial.map((d) => {
+        {visibles.length === 0 ? (
+          <li className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-6 text-center text-sm text-neutral-500">
+            {tab === "activos"
+              ? "No hay profesionales activos."
+              : "No hay profesionales desactivados."}
+          </li>
+        ) : null}
+        {visibles.map((d) => {
           const esYo = d.id === selfId;
           const ocupado = pendiente === d.id;
 
