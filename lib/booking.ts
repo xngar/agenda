@@ -328,7 +328,7 @@ const settings = await getSettings(orgId);
       startsAt,
       endsAt,
       timezone: settings.timezone,
-      manageUrl: manageUrl(token),
+      manageUrl: manageAbsoluteUrl(token),
       appointmentId: appointmentId as string,
     }),
     notifyDoctorNewBooking({
@@ -427,7 +427,7 @@ export async function getAppointmentByToken(token: string): Promise<{
     .maybeSingle();
 
   if (error || !data) return null;
-  return { row: data as unknown as AppointmentRow, manageUrl: manageUrl(token) };
+  return { row: data as unknown as AppointmentRow, manageUrl: managePath(token) };
 }
 
 export async function toPatientView(
@@ -492,7 +492,7 @@ export async function rescheduleByToken(
       view,
       clinicName: settings.name,
       timezone: settings.timezone,
-      manageUrl: manageUrl(token),
+      manageUrl: manageAbsoluteUrl(token),
     }),
     notifyDoctorChange(row.doctor_id, row.patients?.full_name ?? "Paciente", view, "rescheduled", settings),
   ]);
@@ -537,7 +537,7 @@ export async function cancelByToken(
         timeLabel: formatRange(view.startsAt, view.endsAt, settings.timezone),
         clinicAddress: CLINIC_ADDRESS,
         reason: reason ?? null,
-        manageUrl: manageUrl(token),
+        manageUrl: manageAbsoluteUrl(token),
       }),
     }),
     notifyDoctorChange(
@@ -556,7 +556,11 @@ export async function cancelByToken(
 /* Correos                                                              */
 /* ------------------------------------------------------------------ */
 
-function manageUrl(token: string): string {
+function managePath(token: string): string {
+  return `/cita/${token}`;
+}
+
+function manageAbsoluteUrl(token: string): string {
   return `${serverEnv().NEXT_PUBLIC_APP_URL}/cita/${token}`;
 }
 
@@ -777,7 +781,7 @@ export async function sendDueReminders(): Promise<ReminderSummary> {
         dateLabel: formatDateLong(startsAt, settings.timezone),
         timeLabel: formatRange(startsAt, endsAt, settings.timezone),
         clinicAddress: CLINIC_ADDRESS,
-        manageUrl: manageUrl(token),
+        manageUrl: manageAbsoluteUrl(token),
       }),
     });
 
@@ -900,7 +904,7 @@ export async function requestAppointmentAccess(
     throw new BusinessError("A0009", 500);
   }
 
-  const url = manageUrl(token);
+  const emailUrl = manageAbsoluteUrl(token);
   const view = await toPatientView(targetAppt);
 
   // 5. Enviar el correo con Resend
@@ -917,9 +921,9 @@ export async function requestAppointmentAccess(
         dateLabel: formatDateLong(view.startsAt, org.timezone),
         timeLabel: formatRange(view.startsAt, view.endsAt, org.timezone),
         clinicAddress: org.address ?? CLINIC_ADDRESS,
-        manageUrl: url,
+        manageUrl: emailUrl,
       }),
-      text: `Accede a gestionar o cancelar tu cita en ${org.name} en el siguiente enlace: ${url}`,
+      text: `Accede a gestionar o cancelar tu cita en ${org.name} en el siguiente enlace: ${emailUrl}`,
     });
   }
 
@@ -934,7 +938,7 @@ export async function requestAppointmentAccess(
     return {
       found: true,
       directAccess: true,
-      manageUrl: url,
+      manageUrl: managePath(token),
       maskedEmail: masked,
       message: "¡Cita encontrada! Redirigiendo...",
     };

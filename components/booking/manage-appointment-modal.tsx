@@ -111,7 +111,21 @@ export default function ManageAppointmentModal({
         setSuccess("¡Cita encontrada! Redirigiendo a tu pantalla de gestión...");
         setRedirecting(true);
         setTimeout(() => {
-          router.push(data.manageUrl);
+          try {
+            const raw = String(data.manageUrl);
+            const target = new URL(raw, window.location.origin);
+            if (target.origin !== window.location.origin || !target.pathname.startsWith("/cita/")) {
+              setError("Encontramos tu cita, pero el enlace no es válido en este sitio. Intenta de nuevo.");
+              setRedirecting(false);
+              setLoading(false);
+              return;
+            }
+            router.push(`${target.pathname}${target.search}${target.hash}`);
+          } catch {
+            setError("Encontramos tu cita, pero no pudimos abrirla. Intenta de nuevo.");
+            setRedirecting(false);
+            setLoading(false);
+          }
         }, 1200);
       } else {
         setSuccess(data.message);

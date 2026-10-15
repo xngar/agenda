@@ -75,7 +75,7 @@ export async function POST(request: Request) {
     const result = await bookAppointment(parsed.data);
     return NextResponse.json(
       {
-        manageUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/cita/${result.token}`,
+        manageUrl: `/cita/${result.token}`,
         appointmentId: result.appointmentId,
       },
       { status: 201 },

@@ -707,7 +707,9 @@ export default function BookingWizard(props: BookingWizardProps) {
                 variant="primary"
                 size="lg"
                 onClick={() => {
-                  window.location.href = manageUrl;
+                  const target = new URL(manageUrl, window.location.origin);
+                  if (target.origin !== window.location.origin || !target.pathname.startsWith("/cita/")) return;
+                  window.location.href = target.href;
                 }}
               >
                 Ver mi cita
