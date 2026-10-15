@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { StatusBadge } from "@/components/ui";
 
 export interface TeamMember {
@@ -27,7 +28,6 @@ export interface TeamMember {
 export function TeamList({ initial, selfId }: { initial: TeamMember[]; selfId: string }) {
   const router = useRouter();
   const [pendiente, setPendiente] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<"activos" | "desactivados">("activos");
 
   const activos = initial.filter((d) => d.active);
@@ -35,7 +35,6 @@ export function TeamList({ initial, selfId }: { initial: TeamMember[]; selfId: s
   const visibles = tab === "activos" ? activos : desactivados;
 
   async function cambiar(doctorId: string, active: boolean) {
-    setError(null);
     setPendiente(doctorId);
 
     try {
@@ -48,13 +47,14 @@ export function TeamList({ initial, selfId }: { initial: TeamMember[]; selfId: s
       const data = (await response.json().catch(() => ({}))) as { error?: string };
 
       if (!response.ok) {
-        setError(data.error ?? "No se pudo actualizar la cuenta");
+        toast.error(data.error ?? "No se pudo actualizar la cuenta");
         return;
       }
 
+      toast.success(active ? "Cuenta activada" : "Cuenta desactivada");
       router.refresh();
     } catch {
-      setError("No pudimos conectarnos. Intenta de nuevo.");
+      toast.error("No pudimos conectarnos. Intenta de nuevo.");
     } finally {
       setPendiente(null);
     }
@@ -62,15 +62,6 @@ export function TeamList({ initial, selfId }: { initial: TeamMember[]; selfId: s
 
   return (
     <div className="space-y-3">
-      {error ? (
-        <p
-          role="alert"
-          className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800"
-        >
-          {error}
-        </p>
-      ) : null}
-
       <div role="tablist" aria-label="Estado de profesionales" className="flex gap-1 rounded-xl border border-neutral-200 bg-neutral-50 p-1">
         <button
           type="button"

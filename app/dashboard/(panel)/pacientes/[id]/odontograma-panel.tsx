@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import type { DentalChartEntry, DentalFace, DentalState } from "@/lib/ficha/types";
 import { aggregateToothState } from "@/lib/ficha/dental";
-import { Card, CardHeader, Button, ErrorNotice, InfoNotice, Spinner, modalClasses } from "./panels-shared";
+import { Card, CardHeader, Button, ErrorNotice, Spinner, modalClasses } from "./panels-shared";
 
 const STATES: { value: DentalState; label: string }[] = [
   { value: "sana", label: "Sana" },
@@ -57,7 +58,6 @@ function toothFaces(tooth: number): DentalFace[] {
 export function OdontogramaPanel({ patientId }: { patientId: string }) {
   const [chart, setChart] = useState<DentalChartEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [edits, setEdits] = useState<Record<string, DentalState>>({});
   const [iniciales, setIniciales] = useState<Record<string, DentalState>>({});
@@ -144,7 +144,6 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
     if (!selected) return;
     setGuardando(true);
     setError(null);
-    setAviso(null);
     try {
       const entries = diferencias().map(({ face, state }) => ({
         tooth: selected,
@@ -166,7 +165,7 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
         setError(data.error ?? "No se pudo guardar el odontograma");
         return;
       }
-      setAviso("Odontograma actualizado.");
+      toast.success("Odontograma actualizado");
       setSelected(null);
       cargar();
     } catch {
@@ -207,7 +206,6 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
   return (
     <div className="space-y-4">
       {error ? <ErrorNotice message={error} /> : null}
-      {aviso ? <InfoNotice>{aviso}</InfoNotice> : null}
 
       <Card>
         <CardHeader

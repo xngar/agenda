@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button, ErrorNotice, InfoNotice, inputClasses } from "@/components/ui";
 
 export interface Holiday {
@@ -31,13 +32,11 @@ export function HolidaysEditor({ initial }: { initial: Holiday[] }) {
   const [date, setDate] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [eliminando, setEliminando] = useState<string | null>(null);
 
   async function crear() {
     setError(null);
-    setAviso(null);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       setError("Elige una fecha");
       return;
@@ -69,7 +68,7 @@ export function HolidaysEditor({ initial }: { initial: Holiday[] }) {
           [...prev, data.holiday!].sort((a, b) => a.date.localeCompare(b.date)),
         );
       }
-      setAviso("Feriado guardado: ese día no se ofrecerán horas.");
+      toast.success("Feriado guardado: ese día no se ofrecerán horas");
       setDate("");
       setName("");
       router.refresh();
@@ -95,7 +94,7 @@ export function HolidaysEditor({ initial }: { initial: Holiday[] }) {
         return;
       }
       setHolidays((prev) => prev.filter((h) => h.date !== dia));
-      setAviso("Feriado eliminado: ese día vuelve a ofrecer horas.");
+      toast.success("Feriado eliminado: ese día vuelve a ofrecer horas");
       router.refresh();
     } catch {
       setError("No pudimos conectarnos. Intenta de nuevo.");
@@ -107,7 +106,6 @@ export function HolidaysEditor({ initial }: { initial: Holiday[] }) {
   return (
     <div className="space-y-4">
       {error ? <ErrorNotice message={error} /> : null}
-      {aviso ? <InfoNotice>{aviso}</InfoNotice> : null}
 
       <section className="rounded-2xl border border-neutral-200 bg-white p-4" aria-label="Nuevo feriado">
         <h2 className="font-semibold text-neutral-900">Agregar feriado</h2>

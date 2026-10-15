@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 const inputCls =
   "w-full min-h-11 rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 focus:border-brand-navy focus:outline-none";
@@ -24,16 +25,12 @@ export function AddMemberForm() {
   const [abierto, setAbierto] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [rol, setRol] = useState<"professional" | "reception">("professional");
-  const [error, setError] = useState<string | null>(null);
-  const [exito, setExito] = useState<string | null>(null);
 
   async function crear(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const datos = new FormData(form);
 
-    setError(null);
-    setExito(null);
     setEnviando(true);
 
     try {
@@ -56,7 +53,7 @@ export function AddMemberForm() {
       };
 
       if (!response.ok) {
-        setError(data.error ?? "No se pudo crear la cuenta");
+        toast.error(data.error ?? "No se pudo crear la cuenta");
         return;
       }
 
@@ -64,10 +61,12 @@ export function AddMemberForm() {
       form.reset();
       setRol("professional");
       setAbierto(false);
-      setExito(`Se creó la cuenta de ${nombre}. Comparte la contraseña temporal por un canal seguro.`);
+      toast.success(`Se creó la cuenta de ${nombre}. Comparte la contraseña temporal por un canal seguro.`, {
+        duration: 8000,
+      });
       router.refresh();
     } catch {
-      setError("No pudimos conectarnos. Intenta de nuevo.");
+      toast.error("No pudimos conectarnos. Intenta de nuevo.");
     } finally {
       setEnviando(false);
     }
@@ -75,18 +74,6 @@ export function AddMemberForm() {
 
   return (
     <div className="space-y-3">
-      {exito ? (
-        <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
-          {exito}
-        </p>
-      ) : null}
-
-      {error ? (
-        <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-          {error}
-        </p>
-      ) : null}
-
       {abierto ? (
         <form onSubmit={crear} className="space-y-4 rounded-2xl border border-neutral-200 bg-white p-4">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -188,16 +175,15 @@ export function AddMemberForm() {
             <button type="submit" disabled={enviando} className={primaryBtn}>
               {enviando ? "Creando…" : "Crear miembro"}
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                setAbierto(false);
-                setError(null);
-              }}
-              className={ghostBtn}
-            >
-              Cancelar
-            </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAbierto(false);
+                }}
+                className={ghostBtn}
+              >
+                Cancelar
+              </button>
           </div>
         </form>
       ) : (

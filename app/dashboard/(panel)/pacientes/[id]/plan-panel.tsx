@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import type { DentalPayment, DentalPaymentMethod, DentalTreatmentCatalogItem, DentalTreatmentPlanItem, TreatmentPlanStatus } from "@/lib/ficha/types";
-import { Card, CardHeader, Button, ErrorNotice, InfoNotice, Field, Spinner, inputClasses } from "@/components/ui";
+import { Card, CardHeader, Button, ErrorNotice, Field, Spinner, inputClasses } from "@/components/ui";
 
 interface PlanItem extends DentalTreatmentPlanItem {
   dental_treatments_catalog?: { name: string } | null;
@@ -51,7 +52,6 @@ export function PlanPanel({
   const [catalog, setCatalog] = useState<DentalTreatmentCatalogItem[]>([]);
   const [pagos, setPagos] = useState<DentalPayment[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
   const [nuevoPago, setNuevoPago] = useState(false);
   const [pagoForm, setPagoForm] = useState({ amount: "", paid_at: "", method: "efectivo", note: "" });
   const [nuevo, setNuevo] = useState(false);
@@ -105,7 +105,6 @@ export function PlanPanel({
   async function agregar(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setAviso(null);
     setGuardando(true);
     try {
       const treatment = catalog.find((c) => c.id === form.treatment_id);
@@ -128,7 +127,7 @@ export function PlanPanel({
         setError(data.error ?? "No se pudo agregar el tratamiento");
         return;
       }
-      setAviso("Tratamiento agregado al plan.");
+      toast.success("Tratamiento agregado al plan");
       setNuevo(false);
       setForm({ treatment_id: "", tooth: "", description: "", value: "", priority: "" });
       cargar();
@@ -152,6 +151,7 @@ export function PlanPanel({
         setError(data.error ?? "No se pudo actualizar el plan");
         return;
       }
+      toast.success("Plan actualizado");
       cargar();
     } catch {
       setError("No pudimos conectarnos.");
@@ -177,7 +177,7 @@ export function PlanPanel({
         setError(data.error ?? "No se pudo agregar el tratamiento al catálogo");
         return;
       }
-      setAviso("Tratamiento agregado al catálogo.");
+      toast.success("Tratamiento agregado al catálogo");
       setCatNombre("");
       setCatValor("");
       cargar();
@@ -191,7 +191,6 @@ export function PlanPanel({
   async function agregarPago(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setAviso(null);
     setGuardando(true);
     try {
       const monto = Number(pagoForm.amount);
@@ -210,7 +209,7 @@ export function PlanPanel({
         setError(data.error ?? "No se pudo registrar el pago");
         return;
       }
-      setAviso("Pago registrado.");
+      toast.success("Pago registrado");
       setNuevoPago(false);
       setPagoForm({ amount: "", paid_at: "", method: "efectivo", note: "" });
       cargar();
@@ -230,7 +229,7 @@ export function PlanPanel({
         setError(data.error ?? "No se pudo anular el pago");
         return;
       }
-      setAviso("Pago anulado.");
+      toast.success("Pago anulado");
       cargar();
     } catch {
       setError("No pudimos conectarnos.");
@@ -270,7 +269,6 @@ export function PlanPanel({
   return (
     <div className="space-y-4">
       {error ? <ErrorNotice message={error} /> : null}
-      {aviso ? <InfoNotice>{aviso}</InfoNotice> : null}
 
       <Card>
         <CardHeader

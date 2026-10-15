@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { getDoctorSession } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
-import { serviceSchema, serviceUpdateSchema } from "@/lib/validation";
+import { serviceSchema, serviceUpdateSchema, uuidSchema } from "@/lib/validation";
 import { toBusinessError } from "@/lib/errors";
 
 const createSchema = serviceSchema;
@@ -150,4 +151,77 @@ export async function PATCH(request: Request) {
   }
 
   return NextResponse.json({ service: data });
+}
+
+const deleteSchema = z.object({ serviceId: uuidSchema });
+
+export async function DELETE(request: Request) {
+  const session = await getDoctorSession();
+  if (!session) {
+    return NextResponse.json({ error: "Sesión no válida" }, { status: 401 });
+  }
+  if (!session.isAdmin) {
+    return NextResponse.json(
+      { error: "Solo un administrador puede gestionar servicios" },
+      { status: 403 },
+    );
+  }
+
+  const body = await request.json().catch(() => null);
+  const parsed = deleteSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Revisa los datos" },
+      { status: 422 },
+    );
+  }
+
+  const supabase = await supabaseServer();
+
+  const { data: servicio } = await supabase
+    .from("services")
+    .select("id")
+    .eq("id", parsed.data.serviceId)
+    .eq("org_id", session.orgId)
+    .maybeSingle();
+
+  if (!servicio) {
+    return NextResponse.json({ error: "Servicio no encontrado" }, { status: 404 });
+  }
+
+  const { data: enUso } = await supabase
+    .from("appointments")
+    .select("id")
+    .eq("service_id", parsed.data.serviceId)
+    .limit(1)
+    .maybeSingle();
+
+  if (enUso) {
+    return NextResponse.json(
+      { error: "Este servicio tiene citas asociadas. Desactívalo en vez de eliminarlo." },
+      { status: 409 },
+    );
+  }
+
+  const { error } = await supabase
+    .from("services")
+    .delete()
+    .eq("id", parsed.data.serviceId)
+    .eq("org_id", session.orgId);
+
+  if (error) {
+    if (error.code === "23503") {
+      return NextResponse.json(
+        { error: "Este servicio tiene citas asociadas. Desactívalo en vez de eliminarlo." },
+        { status: 409 },
+      );
+    }
+    const business = toBusinessError(error);
+    return NextResponse.json(
+      { error: business.message, code: business.code },
+      { status: business.status },
+    );
+  }
+
+  return NextResponse.json({ ok: true });
 }

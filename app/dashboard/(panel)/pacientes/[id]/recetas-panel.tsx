@@ -1,13 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import type { Prescription } from "@/lib/ficha/types";
-import { Card, CardHeader, Button, ErrorNotice, InfoNotice, Field, Spinner, inputClasses } from "@/components/ui";
+import { Card, CardHeader, Button, ErrorNotice, Field, Spinner, inputClasses } from "@/components/ui";
 
 export function RecetasPanel({ patientId }: { patientId: string }) {
   const [recetas, setRecetas] = useState<Prescription[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
   const [nueva, setNueva] = useState(false);
   const [form, setForm] = useState({ medication: "", dose: "", route: "", frequency: "", duration: "" });
   const [guardando, setGuardando] = useState(false);
@@ -34,7 +34,6 @@ export function RecetasPanel({ patientId }: { patientId: string }) {
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setAviso(null);
     setGuardando(true);
     try {
       const response = await fetch(`/api/ficha/patients/${patientId}/prescriptions`, {
@@ -54,7 +53,7 @@ export function RecetasPanel({ patientId }: { patientId: string }) {
         setError(data.error ?? "No se pudo guardar la receta");
         return;
       }
-      setAviso("Receta registrada.");
+      toast.success("Receta registrada");
       setNueva(false);
       setForm({ medication: "", dose: "", route: "", frequency: "", duration: "" });
       cargar();
@@ -79,7 +78,6 @@ export function RecetasPanel({ patientId }: { patientId: string }) {
   return (
     <div className="space-y-4">
       {error ? <ErrorNotice message={error} /> : null}
-      {aviso ? <InfoNotice>{aviso}</InfoNotice> : null}
 
       <Card>
         <CardHeader

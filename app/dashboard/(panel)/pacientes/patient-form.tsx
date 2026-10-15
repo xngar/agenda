@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button, inputClasses } from "@/components/ui";
 import { formatRutPartial, normalizeRut } from "@/lib/rut";
 import { formatPhonePartial, normalizePhone } from "@/lib/phone";
@@ -36,6 +37,20 @@ export function PatientFormModal({
   const [sex, setSex] = useState(initial?.sex ?? "");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  /* eslint-disable react-hooks/set-state-in-effect -- resincroniza el formulario al abrir con datos frescos */
+  useEffect(() => {
+    if (open) {
+      setFullName(initial?.full_name ?? "");
+      setRut(formatRutPartial(initial?.rut ?? ""));
+      setPhone(formatPhonePartial(initial?.phone ?? ""));
+      setEmail(initial?.email ?? "");
+      setBirthDate(initial?.birth_date?.slice(0, 10) ?? "");
+      setSex(initial?.sex ?? "");
+      setError(null);
+    }
+  }, [open, initial]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   if (!open) return null;
 
@@ -80,9 +95,11 @@ export function PatientFormModal({
       }
 
       if (editing) {
+        toast.success("Paciente actualizado");
         onSaved?.();
         router.refresh();
       } else {
+        toast.success("Paciente creado");
         router.push(`/dashboard/pacientes/${data.patient.id}`);
         router.refresh();
       }

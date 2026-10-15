@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import type { Attachment, AttachmentKind } from "@/lib/ficha/types";
 import { supabaseBrowser } from "@/lib/supabase/browser";
-import { Card, CardHeader, Button, ErrorNotice, InfoNotice, Field, Spinner, inputClasses } from "@/components/ui";
+import { Card, CardHeader, Button, ErrorNotice, Field, Spinner, inputClasses } from "@/components/ui";
 
 const KINDS: { value: AttachmentKind; label: string }[] = [
   { value: "document", label: "Documento" },
@@ -25,7 +26,6 @@ const fmtBytes = (b: number) => (b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB`
 export function AdjuntosPanel({ patientId, orgId }: { patientId: string; orgId: string }) {
   const [attachments, setAttachments] = useState<Attachment[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [kind, setKind] = useState<AttachmentKind>("document");
   const [description, setDescription] = useState("");
@@ -54,7 +54,6 @@ export function AdjuntosPanel({ patientId, orgId }: { patientId: string; orgId: 
   async function subir(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setAviso(null);
     if (!file) {
       setError("Selecciona un archivo");
       return;
@@ -96,7 +95,7 @@ export function AdjuntosPanel({ patientId, orgId }: { patientId: string; orgId: 
         setError(data.error ?? "No se pudo registrar el adjunto");
         return;
       }
-      setAviso("Adjunto subido y registrado.");
+      toast.success("Adjunto subido y registrado");
       setFile(null);
       setDescription("");
       setTakenAt("");
@@ -123,7 +122,6 @@ export function AdjuntosPanel({ patientId, orgId }: { patientId: string; orgId: 
   return (
     <div className="space-y-4">
       {error ? <ErrorNotice message={error} /> : null}
-      {aviso ? <InfoNotice>{aviso}</InfoNotice> : null}
 
       <Card>
         <CardHeader title="Subir adjunto" description="Radiografías, fotografías o documentos complementarios." />

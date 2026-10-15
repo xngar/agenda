@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button, ErrorNotice, InfoNotice, inputClasses } from "@/components/ui";
 import { addDaysToKey, dateKey, isValidDayKey, zonedInstant } from "@/lib/dates";
 
@@ -70,14 +71,12 @@ export function TimeOffEditor({
   const [hasta, setHasta] = useState("14:30");
   const [motivo, setMotivo] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
   const [conflictos, setConflictos] = useState<Conflicto[] | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [eliminando, setEliminando] = useState<string | null>(null);
 
   async function crear(confirmado = false) {
     setError(null);
-    setAviso(null);
     setConflictos(null);
 
     const desdeOk = normalizar(desde);
@@ -145,10 +144,11 @@ export function TimeOffEditor({
         );
       }
 
-      setAviso(
+      toast.success(
         (data.warnings ?? 0) > 0
           ? `Bloqueo guardado. ${data.warnings} cita${data.warnings === 1 ? "" : "s"} quedó${data.warnings === 1 ? "" : "n"} dentro; no se movieron ni cancelaron.`
-          : "Bloqueo guardado.",
+          : "Bloqueo guardado",
+        { duration: 7000 },
       );
       setMotivo("");
       router.refresh();
@@ -173,7 +173,7 @@ export function TimeOffEditor({
         return;
       }
       setBlocks((prev) => prev.filter((b) => b.id !== id));
-      setAviso("Bloqueo eliminado: esas horas vuelven a ofrecerse.");
+      toast.success("Bloqueo eliminado: esas horas vuelven a ofrecerse");
       router.refresh();
     } catch {
       setError("No pudimos conectarnos. Intenta de nuevo.");
@@ -185,7 +185,6 @@ export function TimeOffEditor({
   return (
     <div className="space-y-4">
       {error ? <ErrorNotice message={error} /> : null}
-      {aviso ? <InfoNotice>{aviso}</InfoNotice> : null}
 
       <section className="rounded-2xl border border-neutral-200 bg-white p-4" aria-label="Nuevo bloqueo">
         <h2 className="font-semibold text-neutral-900">Bloquear un rango</h2>

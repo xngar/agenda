@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button, ErrorNotice, InfoNotice, inputClasses } from "@/components/ui";
 import {
   availabilityOverlaps,
@@ -90,7 +91,6 @@ export function ScheduleEditor({
     initial.map((r, i) => ({ ...r, key: i })),
   );
   const [error, setError] = useState<string | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
   const [conflictos, setConflictos] = useState<Conflicto[] | null>(null);
   const [guardando, setGuardando] = useState(false);
 
@@ -102,7 +102,6 @@ export function ScheduleEditor({
 
   function actualizar(key: number, campo: "startTime" | "endTime", valor: string) {
     setFranjas((prev) => prev.map((f) => (f.key === key ? { ...f, [campo]: valor } : f)));
-    setAviso(null);
   }
 
   function agregar(d: number) {
@@ -128,19 +127,16 @@ export function ScheduleEditor({
 
   function quitar(key: number) {
     setFranjas((prev) => prev.filter((f) => f.key !== key));
-    setAviso(null);
   }
 
   function resetear() {
     setFranjas(initial.map((r, i) => ({ ...r, key: i })));
     setError(null);
-    setAviso(null);
     setConflictos(null);
   }
 
   async function guardar(confirmado = false) {
     setError(null);
-    setAviso(null);
     setConflictos(null);
 
     const reglas = franjas.map((f) => ({
@@ -187,10 +183,11 @@ export function ScheduleEditor({
         setFranjas(data.rules.map((r, i) => ({ ...r, key: i })));
       }
 
-      setAviso(
+      toast.success(
         data.conflicts && data.conflicts.length > 0
           ? `Horario guardado. ${data.conflicts.length} cita${data.conflicts.length === 1 ? "" : "s"} quedó${data.conflicts.length === 1 ? "" : "n"} fuera del horario; no se movieron.`
-          : "Horario guardado.",
+          : "Horario guardado",
+        { duration: 7000 },
       );
       router.refresh();
     } catch {
@@ -206,7 +203,6 @@ export function ScheduleEditor({
   return (
     <div className="space-y-4">
       {error ? <ErrorNotice message={error} /> : null}
-      {aviso ? <InfoNotice>{aviso}</InfoNotice> : null}
 
       {conflictos ? (
         <div className="rounded-card border border-amber-300 bg-amber-50 p-4">

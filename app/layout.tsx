@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { AppToaster } from "@/components/toaster";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -44,6 +45,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <main id="contenido" className="flex flex-1 flex-col">
           {children}
         </main>
+        <AppToaster />
       </body>
     </html>
   );

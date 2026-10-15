@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import type { Encounter, EncounterVersion, OrganizationType } from "@/lib/ficha/types";
 import { fichaFor } from "@/lib/ficha/definitions";
 import { calcularIMC, etiquetaIMC } from "@/lib/ficha/medical";
@@ -10,7 +11,6 @@ import {
   CardHeader,
   Button,
   ErrorNotice,
-  InfoNotice,
   Field,
   Spinner,
   inputClasses,
@@ -116,7 +116,6 @@ const SIGNOS_VITALES = [
   const [versiones, setVersiones] = useState<VersionRow[]>([]);
   const [corrigiendo, setCorrigiendo] = useState<string | null>(null);
   const [razon, setRazon] = useState("");
-  const [aviso, setAviso] = useState<string | null>(null);
 
   const cargar = useCallback(async () => {
     try {
@@ -161,7 +160,6 @@ const SIGNOS_VITALES = [
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setAviso(null);
     setGuardando(true);
     try {
       const numeros = Object.entries(vitalesTxt)
@@ -200,7 +198,7 @@ const SIGNOS_VITALES = [
         setError(data.error ?? "No se pudo guardar la atención");
         return;
       }
-      setAviso(dialogo === "nueva" ? "Atención registrada." : "Atención actualizada.");
+      toast.success(dialogo === "nueva" ? "Atención registrada" : "Atención actualizada");
       setDialogo(null);
       cargar();
     } catch {
@@ -213,7 +211,6 @@ const SIGNOS_VITALES = [
   async function firmar(e: EncounterRow) {
     setFirmando(e.id);
     setError(null);
-    setAviso(null);
     try {
       const response = await fetch(`/api/ficha/encounters/${e.id}`, { method: "POST" });
       const data = (await response.json().catch(() => ({}))) as { error?: string };
@@ -221,7 +218,9 @@ const SIGNOS_VITALES = [
         setError(data.error ?? "No se pudo firmar la atención");
         return;
       }
-      setAviso("Atención firmada. Desde ahora es inmutable; las correcciones quedan en el historial.");
+      toast.success("Atención firmada. Desde ahora es inmutable; las correcciones quedan en el historial.", {
+        duration: 7000,
+      });
       cargar();
     } catch {
       setError("No pudimos conectarnos.");
@@ -267,7 +266,7 @@ const SIGNOS_VITALES = [
         setError(data.error ?? "No se pudo registrar la corrección");
         return;
       }
-      setAviso("Corrección registrada en el historial.");
+      toast.success("Corrección registrada en el historial");
       setCorrigiendo(null);
       setRazon("");
       verVersiones(encounters?.find((en) => en.id === corrigiendo) as EncounterRow);
@@ -292,7 +291,6 @@ const SIGNOS_VITALES = [
     return (
     <div className="space-y-4">
       {error ? <ErrorNotice message={error} /> : null}
-      {aviso ? <InfoNotice>{aviso}</InfoNotice> : null}
       {alertasTratamiento?.trim() ? (
         <div role="alert">
           <p className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900">

@@ -38,15 +38,14 @@ export default function ManageAppointmentModal({
     () => (typeof document === "undefined" ? null : document.body),
   );
 
-  // Abrir y enfocar
-  useEffect(() => {
-    if (isOpen) {
-      setError(null);
-      setSuccess(null);
-      setRedirecting(false);
-      setTimeout(() => rutInputRef.current?.focus(), 50);
-    }
-  }, [isOpen]);
+  // Abrir: resetea el formulario y enfoca el RUT
+  function abrir() {
+    setError(null);
+    setSuccess(null);
+    setRedirecting(false);
+    setIsOpen(true);
+    setTimeout(() => rutInputRef.current?.focus(), 50);
+  }
 
   // Manejo de tecla Escape
   useEffect(() => {
@@ -148,7 +147,7 @@ export default function ManageAppointmentModal({
     <>
       <button
         type="button"
-        onClick={() => setIsOpen(true)}
+        onClick={abrir}
         className={triggerClasses}
         aria-haspopup="dialog"
       >

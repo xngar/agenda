@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 const inputCls =
   "w-full min-h-11 rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 focus:border-brand-navy focus:outline-none";
@@ -27,13 +28,11 @@ export function ServiceForm({
 }) {
   const router = useRouter();
   const [enviando, setEnviando] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   async function guardar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const datos = new FormData(form);
-    setError(null);
     setEnviando(true);
 
     try {
@@ -59,15 +58,16 @@ export function ServiceForm({
       const data = (await response.json().catch(() => ({}))) as { error?: string };
 
       if (!response.ok) {
-        setError(data.error ?? "No se pudo guardar el servicio");
+        toast.error(data.error ?? "No se pudo guardar el servicio");
         return;
       }
 
+      toast.success(edit ? "Servicio actualizado" : "Servicio agregado");
       form.reset();
       onCancel();
       router.refresh();
     } catch {
-      setError("No pudimos conectarnos. Intenta de nuevo.");
+      toast.error("No pudimos conectarnos. Intenta de nuevo.");
     } finally {
       setEnviando(false);
     }
@@ -75,12 +75,6 @@ export function ServiceForm({
 
   return (
     <form onSubmit={guardar} className="space-y-4 rounded-2xl border border-neutral-200 bg-white p-4">
-      {error ? (
-        <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-          {error}
-        </p>
-      ) : null}
-
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="sm:col-span-2">
           <label className={labelCls} htmlFor="servicio-nombre">

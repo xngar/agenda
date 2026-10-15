@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import type { AppointmentStatus, DoctorAppointment } from "@/lib/types";
 import { APPOINTMENT_STATUSES, STATUS_LABEL } from "@/lib/types";
 import {
@@ -62,7 +63,6 @@ export function MonthView({
   const router = useRouter();
   const [menu, setMenu] = useState<{ x: number; y: number; cita: DoctorAppointment } | null>(null);
   const [pendiente, setPendiente] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [nuevas, setNuevas] = useState(0);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -141,7 +141,6 @@ export function MonthView({
     const alto = 56 + accionesDe(cita).length * 40;
     const x = Math.max(8, Math.min(e.clientX, window.innerWidth - ancho - 8));
     const y = Math.max(8, Math.min(e.clientY, window.innerHeight - alto - 8));
-    setError(null);
     setMenu({ x, y, cita });
   }
 
@@ -170,7 +169,6 @@ export function MonthView({
   }, [menu]);
 
   async function ejecutar(appointmentId: string, action: string) {
-    setError(null);
     setPendiente(appointmentId + action);
     try {
       const response = await fetch("/api/dashboard/appointments", {
@@ -180,14 +178,15 @@ export function MonthView({
       });
       const data = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) {
-        setError(data.error ?? "No se pudo actualizar la cita");
+        toast.error(data.error ?? "No se pudo actualizar la cita");
         return;
       }
       setMenu(null);
       setNuevas(0);
+      toast.success("Cita actualizada");
       router.refresh();
     } catch {
-      setError("No pudimos conectarnos. Intenta de nuevo.");
+      toast.error("No pudimos conectarnos. Intenta de nuevo.");
     } finally {
       setPendiente(null);
     }
@@ -430,11 +429,6 @@ export function MonthView({
               );
             })}
 
-            {error ? (
-              <p role="alert" className="px-2.5 pb-1.5 pt-2 text-xs font-medium text-red-700">
-                {error}
-              </p>
-            ) : null}
           </div>
         </>
       ) : null}

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import type { OrganizationType, Patient } from "@/lib/ficha/types";
 import { fichaFor, ORG_TYPE_LABEL } from "@/lib/ficha/definitions";
-import { Card, CardHeader, Button, ErrorNotice, InfoNotice, Field, inputClasses } from "@/components/ui";
+import { Card, CardHeader, Button, Field, inputClasses } from "@/components/ui";
 import { SpecialtyForm, SpecialtyView, type SpecialtyValues } from "./specialty-section";
 
 const SEXOS = [
@@ -65,7 +66,7 @@ interface FormState {
 function formFrom(p: Patient): FormState {
   return {
     full_name: p.full_name ?? "",
-    birth_date: p.birth_date ?? "",
+    birth_date: p.birth_date?.slice(0, 10) ?? "",
     sex: p.sex ?? "",
     nationality: p.nationality ?? "",
     marital_status: p.marital_status ?? "",
@@ -104,9 +105,12 @@ export function ResumenPanel({
   const router = useRouter();
   const [editando, setEditando] = useState(false);
   const [form, setForm] = useState<FormState>(() => formFrom(patient));
-  const [error, setError] = useState<string | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resincroniza el formulario cuando llega el paciente actualizado
+    setForm(formFrom(patient));
+  }, [patient]);
 
   const ficha = fichaFor(orgType);
   const [editandoPerfil, setEditandoPerfil] = useState(false);
@@ -121,8 +125,6 @@ export function ResumenPanel({
 
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-    setAviso(null);
     setGuardando(true);
     try {
       const response = await fetch(`/api/ficha/patients/${patient.id}`, {
@@ -154,14 +156,14 @@ export function ResumenPanel({
       });
       const data = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) {
-        setError(data.error ?? "No se pudo guardar la ficha");
+        toast.error(data.error ?? "No se pudo guardar la ficha");
         return;
       }
-      setAviso("Ficha actualizada");
+      toast.success("Ficha actualizada");
       setEditando(false);
       router.refresh();
     } catch {
-      setError("No pudimos conectarnos. Intenta de nuevo.");
+      toast.error("No pudimos conectarnos. Intenta de nuevo.");
     } finally {
       setGuardando(false);
     }
@@ -169,8 +171,6 @@ export function ResumenPanel({
 
   async function guardarPerfil(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-    setAviso(null);
     setGuardandoPerfil(true);
     try {
       const response = await fetch(`/api/ficha/patients/${patient.id}`, {
@@ -180,14 +180,14 @@ export function ResumenPanel({
       });
       const data = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) {
-        setError(data.error ?? "No se pudo guardar el perfil de especialidad");
+        toast.error(data.error ?? "No se pudo guardar el perfil de especialidad");
         return;
       }
-      setAviso("Perfil de especialidad actualizado");
+      toast.success("Perfil de especialidad actualizado");
       setEditandoPerfil(false);
       router.refresh();
     } catch {
-      setError("No pudimos conectarnos. Intenta de nuevo.");
+      toast.error("No pudimos conectarnos. Intenta de nuevo.");
     } finally {
       setGuardandoPerfil(false);
     }
@@ -198,7 +198,6 @@ export function ResumenPanel({
       <Card>
         <CardHeader title="Editar ficha" description="Datos de identificación, contacto y previsión" />
         <form onSubmit={guardar} className="space-y-6 px-5 py-5">
-          {error ? <ErrorNotice message={error} /> : null}
           <fieldset>
             <legend className="mb-3 text-sm font-semibold text-brand-navy">Datos personales</legend>
             <div className="grid gap-3 md:grid-cols-2">
@@ -400,11 +399,6 @@ export function ResumenPanel({
             ) : undefined
           }
         />
-        {error && editandoPerfil ? (
-          <div className="px-5 pt-4">
-            <ErrorNotice message={error} />
-          </div>
-        ) : null}
         {!editandoPerfil &&
         orgType === "dental" &&
         typeof (patient.specialty_profile as SpecialtyValues | null)?.treatmentAlerts === "string" &&
@@ -441,7 +435,6 @@ export function ResumenPanel({
         )}
       </Card>
 
-      {aviso ? <InfoNotice>{aviso}</InfoNotice> : null}
     </div>
   );
 }

@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import type { PatientMedicalBackground } from "@/lib/ficha/types";
-import { Card, CardHeader, Button, ErrorNotice, InfoNotice, Field, inputClasses } from "@/components/ui";
+import { Card, CardHeader, Button, Field, inputClasses } from "@/components/ui";
 
 interface FormState {
   motivo_consulta: string;
@@ -54,8 +55,6 @@ export function AntecedentesPanel({
 }) {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(() => backgroundFrom(initial));
-  const [error, setError] = useState<string | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [guardado, setGuardado] = useState(false);
 
@@ -65,8 +64,6 @@ export function AntecedentesPanel({
 
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-    setAviso(null);
     setGuardando(true);
     try {
       const habitos: Record<string, string | boolean> = {
@@ -97,14 +94,14 @@ export function AntecedentesPanel({
       });
       const data = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) {
-        setError(data.error ?? "No se pudieron guardar los antecedentes");
+        toast.error(data.error ?? "No se pudieron guardar los antecedentes");
         return;
       }
-      setAviso("Antecedentes guardados");
+      toast.success("Antecedentes guardados");
       setGuardado(true);
       router.refresh();
     } catch {
-      setError("No pudimos conectarnos. Intenta de nuevo.");
+      toast.error("No pudimos conectarnos. Intenta de nuevo.");
     } finally {
       setGuardando(false);
     }
@@ -112,8 +109,6 @@ export function AntecedentesPanel({
 
   return (
     <div className="space-y-4">
-      {error ? <ErrorNotice message={error} /> : null}
-      {aviso ? <InfoNotice>{aviso}</InfoNotice> : null}
       {guardado ? (
         <p className="text-sm text-neutral-600">
           Antecedentes guardados con fecha de actualización {new Date().toLocaleDateString("es-CL")}.

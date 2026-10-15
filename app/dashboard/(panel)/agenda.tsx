@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import type { DoctorAppointment } from "@/lib/types";
 import { formatTime } from "@/lib/dates";
 import { StatusBadge, EmptyState } from "@/components/ui";
@@ -40,7 +41,6 @@ export function Agenda({
   const [filtro, setFiltro] = useState<Filtro>("todas");
   const [busqueda, setBusqueda] = useState("");
   const [pendiente, setPendiente] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [nuevas, setNuevas] = useState(0);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -63,7 +63,6 @@ export function Agenda({
   );
 
   async function cambiar(appointmentId: string, action: string) {
-    setError(null);
     setPendiente(appointmentId + action);
 
     try {
@@ -76,14 +75,15 @@ export function Agenda({
       const data = (await response.json().catch(() => ({}))) as { error?: string };
 
       if (!response.ok) {
-        setError(data.error ?? "No se pudo actualizar la cita");
+        toast.error(data.error ?? "No se pudo actualizar la cita");
         return;
       }
 
       setNuevas(0);
+      toast.success("Cita actualizada");
       router.refresh();
     } catch {
-      setError("No pudimos conectarnos. Intenta de nuevo.");
+      toast.error("No pudimos conectarnos. Intenta de nuevo.");
     } finally {
       setPendiente(null);
     }
@@ -168,12 +168,6 @@ export function Agenda({
         >
           Hay cambios nuevos en la agenda · actualizar
         </button>
-      ) : null}
-
-      {error ? (
-        <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-          {error}
-        </p>
       ) : null}
 
       {busqueda.trim() ? (
