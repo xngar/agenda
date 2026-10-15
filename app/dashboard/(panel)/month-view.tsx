@@ -44,7 +44,9 @@ interface Props {
  *
  * La fuente de verdad sigue siendo el servidor: cada acción hace
  * `router.refresh()` (mismo patrón que `Agenda`), así que la grilla nunca
- * se muta en el cliente y los cambios de otros profesionales aparecen solos.
+ * se muta en el cliente. Las notificaciones Realtime también refrescan
+ * solas con debounce, así los cambios de otros profesionales o del
+ * paciente aparecen sin clic manual (el aviso queda como respaldo).
  */
 export function MonthView({
   initial,
@@ -63,12 +65,24 @@ export function MonthView({
   const [error, setError] = useState<string | null>(null);
   const [nuevas, setNuevas] = useState(0);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (refreshTimer.current) clearTimeout(refreshTimer.current);
+    };
+  }, []);
 
   const { connected, error: realtimeError } = useRealtimeNotifications(
     realtimeDoctorId,
     useCallback(() => {
       setNuevas((n) => n + 1);
-    }, []),
+      if (refreshTimer.current) clearTimeout(refreshTimer.current);
+      refreshTimer.current = setTimeout(() => {
+        router.refresh();
+        setNuevas(0);
+      }, 1500);
+    }, [router]),
   );
 
   /** Citas agrupadas por DÍA LOCAL de la clínica, no por día UTC. */

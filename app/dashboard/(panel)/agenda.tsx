@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { DoctorAppointment } from "@/lib/types";
 import { formatTime } from "@/lib/dates";
@@ -23,10 +23,11 @@ type Filtro = "todas" | "activas" | "canceladas";
 /**
  * Lista de citas del día con acciones de estado.
  *
- * Al llegar una notificación por Realtime se hace `router.refresh()`, que
- * vuelve a pedir la agenda al servidor. Se prefiere eso a mutar la lista
- * en el cliente: la fuente de verdad es el servidor, y el refresco
- * también trae cambios hechos por otro profesional.
+ * Al llegar una notificación por Realtime se refresca la agenda
+ * automáticamente (`router.refresh()` con debounce): la fuente de verdad
+ * es el servidor, y el refresco también trae cambios hechos por otro
+ * profesional o por el paciente (ej. reprogramaciones desde /cita/[token]).
+ * El aviso manual queda como respaldo por si el refresco automático falla.
  */
 export function Agenda({
   initial,
@@ -41,12 +42,24 @@ export function Agenda({
   const [pendiente, setPendiente] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [nuevas, setNuevas] = useState(0);
+  const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (refreshTimer.current) clearTimeout(refreshTimer.current);
+    };
+  }, []);
 
   const { connected, error: realtimeError } = useRealtimeNotifications(
     doctorId,
     useCallback(() => {
       setNuevas((n) => n + 1);
-    }, []),
+      if (refreshTimer.current) clearTimeout(refreshTimer.current);
+      refreshTimer.current = setTimeout(() => {
+        router.refresh();
+        setNuevas(0);
+      }, 1500);
+    }, [router]),
   );
 
   async function cambiar(appointmentId: string, action: string) {
