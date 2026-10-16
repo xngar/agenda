@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDoctorSession, isClinical } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
-import { Card, CardHeader, EmptyState, buttonClasses } from "@/components/ui";
+import { Card, EmptyState } from "@/components/ui";
 import { PatientsSearch } from "./patients-search";
 import { NewPatientButton } from "./patient-form";
 import { PatientsTable, type ListPatient } from "./patients-table";
@@ -88,15 +88,8 @@ export default async function PacientesPage({
         {clinical ? <NewPatientButton /> : null}
       </div>
 
-      <Card>
-        <CardHeader
-          title="Buscar pacientes"
-          description="Por nombre, RUT o correo"
-          action={<Link className={buttonClasses("secondary", "sm")} href="/dashboard/pacientes">Limpiar</Link>}
-        />
-        <div className="px-5 py-4">
-          <PatientsSearch initialQ={q} initialStatus={stat} />
-        </div>
+      <Card className="px-4 py-3">
+        <PatientsSearch initialQ={q} initialStatus={stat} />
       </Card>
 
       {errorText ? (
