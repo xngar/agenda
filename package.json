@@ -15,6 +15,7 @@
     "check": "npm run lint && npm run typecheck && npm run test",
     "check:panel": "node scripts/panel-check.mjs",
     "seed:dev": "tsx scripts/seed-dev.ts",
+    "migrate:clinic": "tsx scripts/migrate-clinic/run.ts",
     "db:test": "supabase db reset --db-only"
   },
   "dependencies": {

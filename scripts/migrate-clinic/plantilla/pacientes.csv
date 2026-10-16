@@ -1,0 +1,4 @@
+nombre,rut,telefono,email,fecha_nacimiento,sexo,profesional,id_externo
+Juan Pérez,12.345.678-5,+56912345678,juan@correo.cl,1990-04-12,male,camila@clinicaejemplo.cl,pac-001
+María González,9.876.543-3,+56987654321,maria@correo.cl,1985-11-30,female,prof-002,pac-002
+Pedro Soto,,,pedro@correo.cl,,,,

@@ -1,0 +1,6 @@
+profesional,paciente,servicio,inicio,estado,motivo,motivo_cancelacion
+camila@clinicaejemplo.cl,juan@correo.cl,Limpieza dental,2026-11-03 10:30,confirmada,Control semestral,
+prof-002,9.876.543-3,Endodoncia unirradicular,2026-11-04 15:00,por_confirmar,Primera consulta,
+camila@clinicaejemplo.cl,pac-001,Limpieza dental,2026-09-10 09:00,realizada,Control semestral,
+prof-002,pac-002,,2026-09-12 11:00,cancelada,,Paciente lo pidió
+camila@clinicaejemplo.cl,pedro@correo.cl,Control ortodoncia,2026-08-20 16:00,no_asistio,,
