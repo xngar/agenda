@@ -76,6 +76,21 @@ describe("AgendaTable", () => {
     expect(onAccion).toHaveBeenCalledWith("c1", "confirmed");
   });
 
+  it("ofrece Reagendar en citas vigentes y la delega como reschedule", () => {
+    const onAccion = renderTable();
+    const filas = container.querySelectorAll("tbody tr");
+    expect(filas[0]?.textContent).toContain("Reagendar");
+    expect(filas[1]?.textContent).toContain("Reagendar");
+    expect(filas[2]?.textContent).not.toContain("Reagendar");
+    const reagendar = [...filas[0]?.querySelectorAll("button") ?? []].find(
+      (b) => b.textContent === "Reagendar",
+    );
+    act(() => {
+      reagendar?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(onAccion).toHaveBeenCalledWith("c1", "reschedule");
+  });
+
   it("deshabilita los botones de la cita en curso", () => {
     act(() => {
       root.render(<AgendaTable citas={CITAS} pendiente="c1conf" onAccion={vi.fn()} />);

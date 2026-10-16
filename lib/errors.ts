@@ -55,6 +55,23 @@ function readPgCode(error: unknown): string | null {
   return null;
 }
 
+/**
+ * Error de infraestructura (PostgREST/red), no de negocio: función
+ * inexistente (migración sin aplicar), esquema desactualizado, caída de
+ * red, etc. Estos nunca deben presentarse como "horario no disponible":
+ * las rutas los convierten en 500 explícito.
+ */
+export function isInfraError(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) return false;
+  const code = (error as { code?: unknown }).code;
+  if (typeof code === "string" && code.startsWith("PGRST")) return true;
+  const message = (error as { message?: unknown }).message;
+  return (
+    typeof message === "string" &&
+    /could not find the .* function|fetch failed|network/i.test(message)
+  );
+}
+
 /** Respuesta JSON genérica. Nunca filtra detalles internos. */
 export function errorResponse(code: BusinessErrorCode, extra?: { field?: string }) {
   return Response.json(

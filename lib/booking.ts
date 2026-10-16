@@ -500,6 +500,84 @@ export async function rescheduleByToken(
   return { appointment: view, token };
 }
 
+/**
+ * Reserva creada por el equipo desde el dashboard.
+ *
+ * Reutiliza el mismo camino transaccional que la reserva pública
+ * (book_appointment: revalida disponibilidad, reutiliza al paciente por
+ * email/RUT, crea la notificación y envía confirmación con ICS al paciente
+ * más aviso al profesional), pero la cita nace `confirmed`: el staff ya
+ * verificó al paciente por teléfono o presencialmente. Sin captcha ni
+ * rate limit público: la sesión autenticada reemplaza esas defensas. La
+ * autorización por rol (qué profesional puede reservar quién) vive en la
+ * API que llama acá.
+ */
+export async function bookAppointmentByStaff(
+  input: PatientDetailsInput & { clinicSlug?: string },
+): Promise<BookResult> {
+  const result = await bookAppointment(input);
+  const { error } = await supabaseAdmin()
+    .from("appointments")
+    .update({ status: "confirmed" })
+    .eq("id", result.appointmentId);
+  if (error) throw toBusinessError(error);
+  return result;
+}
+
+/**
+ * Reprogramación hecha por el equipo desde el dashboard.
+ *
+ * Igual que rescheduleByToken pero localizada por id de cita (el staff no
+ * tiene el token del paciente). Usa reschedule_appointment_by_id, que
+ * revalida el slot en-transacción igual que el flujo público. El enlace
+ * de gestión del correo se recupera con open_manage_token; si la cita es
+ * anterior al sellado de tokens se enlaza al sitio en su lugar.
+ */
+export async function rescheduleById(
+  appointmentId: string,
+  slotStart: string,
+  doctorId: string | null,
+): Promise<PatientAppointmentView> {
+  const supabase = supabaseAdmin();
+
+  const { data, error } = await supabase.rpc("reschedule_appointment_by_id", {
+    p_appointment: appointmentId,
+    p_start: slotStart,
+    p_doctor: doctorId,
+  });
+
+  if (error) throw toBusinessError(error);
+  if (!data) throw new BusinessError("A0002");
+
+  const row = await loadAppointmentRow(data as string);
+  if (!row) throw new BusinessError("A0003", 404);
+
+  const settings = await getSettings(row.org_id);
+  const view = await toPatientView(row);
+
+  const { data: token } = await supabase.rpc("open_manage_token", {
+    p_appointment: row.id,
+    p_key: serverEnv().MANAGE_TOKEN_KEY,
+  });
+  const manageUrl =
+    typeof token === "string" && token
+      ? manageAbsoluteUrl(token)
+      : `${serverEnv().NEXT_PUBLIC_APP_URL}`;
+
+  await Promise.all([
+    sendRescheduleEmail({
+      to: row.patients?.email ?? "",
+      view,
+      clinicName: settings.name,
+      timezone: settings.timezone,
+      manageUrl,
+    }),
+    notifyDoctorChange(row.doctor_id, row.patients?.full_name ?? "Paciente", view, "rescheduled", settings),
+  ]);
+
+  return view;
+}
+
 export async function cancelByToken(
   token: string,
   reason: string | undefined,

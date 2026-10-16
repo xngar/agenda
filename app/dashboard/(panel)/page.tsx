@@ -16,6 +16,11 @@ import { DayNav } from "./day-nav";
 import { DoctorPicker } from "./doctor-picker";
 import { MonthView } from "./month-view";
 import { ViewToggle } from "./view-toggle";
+import {
+  StaffBookingButton,
+  type StaffDoctor,
+  type StaffService,
+} from "./staff-booking-button";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -121,6 +126,26 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   // (admin y recepción).
   const team = veTodoElEquipo ? await getActiveDoctors() : [];
 
+  // Catálogo y profesionales para la reserva del equipo: todos los roles
+  // autenticados pueden leerlos (RLS), pero cada rol sólo reserva donde
+  // le corresponde (lo impone la API, no este listado).
+  const { data: serviceRows } = await supabase
+    .from("services")
+    .select("id, name, duration_min")
+    .eq("org_id", session.orgId)
+    .eq("active", true)
+    .order("name");
+  const bookingServices = (serviceRows ?? []) as StaffService[];
+  let bookingDoctors: StaffDoctor[] = team.map((d) => ({ id: d.id, full_name: d.full_name }));
+  if (!veTodoElEquipo) {
+    const { data: me } = await supabase
+      .from("doctors")
+      .select("id, full_name")
+      .eq("id", session.id)
+      .maybeSingle();
+    bookingDoctors = me ? [{ id: me.id as string, full_name: me.full_name as string }] : [];
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -144,6 +169,14 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {bookingServices.length > 0 && bookingDoctors.length > 0 ? (
+            <StaffBookingButton
+              services={bookingServices}
+              doctors={bookingDoctors}
+              defaultDoctorId={onlyDoctorId ?? (veTodoElEquipo ? null : session.id)}
+              defaultDate={dayKey}
+            />
+          ) : null}
           <ViewToggle verMes={verMes} dayKey={dayKey} mesKey={mesKey} doctor={onlyDoctorId} />
           {veTodoElEquipo ? (
             <DoctorPicker current={onlyDoctorId} canFilter={veTodoElEquipo} doctors={team} />
@@ -179,6 +212,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           doctorId={onlyDoctorId ?? session.id}
           unreadCount={unreadCount}
           diasConCitas={diasConCitas}
+          doctors={bookingDoctors}
         />
       )}
 

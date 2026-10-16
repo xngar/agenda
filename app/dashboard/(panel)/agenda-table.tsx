@@ -200,6 +200,14 @@ export function AgendaTable({
                           disabled={ocupado}
                           compacto
                         />
+                        {cita.status === "pending" || cita.status === "confirmed" ? (
+                          <Accion
+                            etiqueta="Reagendar"
+                            onClick={() => onAccion(cita.id, "reschedule")}
+                            disabled={ocupado}
+                            compacto
+                          />
+                        ) : null}
                         <Accion
                           etiqueta="Cancelar"
                           onClick={() => onAccion(cita.id, "cancelled")}

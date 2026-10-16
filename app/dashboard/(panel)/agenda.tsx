@@ -9,6 +9,11 @@ import { StatusBadge, EmptyState } from "@/components/ui";
 import { useRealtimeNotifications } from "../use-realtime";
 import { parseAppointmentRange } from "@/lib/range";
 import { Accion, AgendaTable, RIEL } from "./agenda-table";
+import {
+  StaffRescheduleModal,
+  type ReschedulableAppointment,
+} from "./staff-reschedule-modal";
+import type { StaffDoctor } from "./staff-booking-button";
 
 interface Props {
   initial: DoctorAppointment[];
@@ -17,6 +22,8 @@ interface Props {
   unreadCount: number;
   /** Días cercanos que sí tienen citas, para explicar un día vacío. */
   diasConCitas: { day: string; total: number; pendientes: number }[];
+  /** Profesionales entre los que el rol puede elegir al reagendar. */
+  doctors: StaffDoctor[];
 }
 
 type Filtro = "todas" | "activas" | "canceladas";
@@ -36,12 +43,14 @@ export function Agenda({
   doctorId,
   unreadCount,
   diasConCitas,
+  doctors,
 }: Props) {
   const router = useRouter();
   const [filtro, setFiltro] = useState<Filtro>("todas");
   const [busqueda, setBusqueda] = useState("");
   const [pendiente, setPendiente] = useState<string | null>(null);
   const [nuevas, setNuevas] = useState(0);
+  const [reagendando, setReagendando] = useState<DoctorAppointment | null>(null);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -106,6 +115,30 @@ export function Agenda({
     if (!q) return true;
     return normalizar(a.patient?.full_name ?? "").includes(q);
   });
+
+  function paraReagendar(cita: DoctorAppointment): ReschedulableAppointment {
+    const { start } = parseAppointmentRange(cita.during);
+    return {
+      id: cita.id,
+      patientName: cita.patient?.full_name ?? "Paciente",
+      currentStart: start,
+      doctorId: cita.doctor_id,
+      doctorName: doctors.find((d) => d.id === cita.doctor_id)?.full_name ?? "Profesional",
+      serviceName: cita.service?.name ?? "Atención",
+    };
+  }
+
+  function accionar(appointmentId: string, action: string) {
+    if (action === "reschedule") {
+      const cita = visibles.find((c) => c.id === appointmentId);
+      if (cita) setReagendando(cita);
+      return;
+    }
+    cambiar(appointmentId, action);
+  }
+
+  const reprogramable = (cita: DoctorAppointment) =>
+    cita.status === "pending" || cita.status === "confirmed";
 
   return (
     <section className="space-y-3">
@@ -213,7 +246,7 @@ export function Agenda({
       ) : (
         <>
           <div className="hidden md:block">
-            <AgendaTable citas={visibles} pendiente={pendiente} onAccion={cambiar} />
+            <AgendaTable citas={visibles} pendiente={pendiente} onAccion={accionar} />
           </div>
 
           <ul className="space-y-2 md:hidden" data-testid="agenda-cards">
@@ -302,6 +335,13 @@ export function Agenda({
                           onClick={() => cambiar(cita.id, "no_show")}
                           disabled={ocupado}
                         />
+                        {reprogramable(cita) ? (
+                          <Accion
+                            etiqueta="Reagendar"
+                            onClick={() => setReagendando(cita)}
+                            disabled={ocupado}
+                          />
+                        ) : null}
                         <Accion
                           etiqueta="Cancelar"
                           onClick={() => cambiar(cita.id, "cancelled")}
@@ -322,6 +362,16 @@ export function Agenda({
       <p className="sr-only" aria-live="polite">
         {pendiente ? "Actualizando cita" : ""}
       </p>
+
+      {reagendando ? (
+        <StaffRescheduleModal
+          appointment={paraReagendar(reagendando)}
+          doctors={doctors}
+          defaultDate={dayKey}
+          onClose={() => setReagendando(null)}
+          onDone={() => setReagendando(null)}
+        />
+      ) : null}
     </section>
   );
 }

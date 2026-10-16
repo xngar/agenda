@@ -86,6 +86,34 @@ export const rescheduleSchema = z.object({
   doctorId: uuidSchema.nullable().optional(),
 });
 
+/**
+ * Reserva creada por el equipo desde el dashboard.
+ *
+ * Mismos datos que la reserva pública menos consentimiento y captcha: el
+ * paciente está presente o al teléfono, así que el staff ya verificó su
+ * identidad. El doctor es obligatorio (nada de "cualquiera disponible"):
+ * la recepción agenda *para* un profesional concreto.
+ */
+export const staffBookingSchema = z.object({
+  serviceId: uuidSchema,
+  doctorId: uuidSchema,
+  slotStart: z.string().min(10).max(40),
+  fullName: fullNameSchema,
+  rut: rutSchema,
+  phone: phoneSchema,
+  email: emailSchema,
+});
+
+/**
+ * Reprogramación hecha por el equipo: mueve la cita conservando paciente,
+ * servicio e historial. El doctor nuevo es opcional (por defecto, el mismo).
+ */
+export const staffRescheduleSchema = z.object({
+  appointmentId: uuidSchema,
+  slotStart: z.string().min(10).max(40),
+  doctorId: uuidSchema.nullable().optional(),
+});
+
 /** Login del doctor. */
 export const loginSchema = z.object({
   email: emailSchema,
