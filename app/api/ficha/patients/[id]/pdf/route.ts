@@ -11,6 +11,8 @@ import {
 } from "@/lib/ficha/http";
 import { FACE_LABEL, STATE_LABEL } from "@/lib/ficha/dental";
 import { redactEncounters } from "@/lib/ficha/privacy";
+import { formatRut } from "@/lib/rut";
+import { formatPhonePartial } from "@/lib/phone";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -82,6 +84,14 @@ const moneda = (value: number): string =>
   );
 const etiqueta = (mapa: Record<string, string>, value: unknown): string =>
   mapa[String(value)] ?? text(value);
+
+/** Muestra el RUT con puntos y guion aunque esté guardado sin formato. */
+const rutMostrado = (value: unknown): unknown =>
+  typeof value === "string" && value ? (formatRut(value) ?? value) : value;
+
+/** Muestra el teléfono como "+56 9 1234 5678" aunque esté guardado sin formato. */
+const fonoMostrado = (value: unknown): unknown =>
+  typeof value === "string" && value ? formatPhonePartial(value) : value;
 
 /** Ordena una sublista con el mismo criterio que las rutas del panel. */
 function ordenar(
@@ -162,12 +172,12 @@ async function buildPdf(patient: Record<string, unknown>, ctx: { orgName: string
 
   section("Contacto de emergencia");
   field("Contacto", [patient.emergency_name, patient.emergency_relation ? `(${text(patient.emergency_relation)})` : ""].filter(Boolean).join(" "));
-  field("Teléfono", patient.emergency_phone);
+  field("Teléfono", fonoMostrado(patient.emergency_phone));
 
   section("Apoderado o tutor");
   field("Apoderado/a", [patient.tutor_name, patient.tutor_relation ? `(${text(patient.tutor_relation)})` : ""].filter(Boolean).join(" "));
-  field("RUT apoderado", patient.tutor_rut);
-  field("Teléfono apoderado", patient.tutor_phone);
+  field("RUT apoderado", rutMostrado(patient.tutor_rut));
+  field("Teléfono apoderado", fonoMostrado(patient.tutor_phone));
 
   const background = patient.patient_medical_background as Record<string, unknown> | null;
   if (background) {

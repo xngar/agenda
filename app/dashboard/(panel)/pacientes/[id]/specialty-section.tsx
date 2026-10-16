@@ -160,12 +160,18 @@ function Campo({
   }
 
   return (
-    <Field label={field.label} htmlFor={id} required={false}>
+    <Field label={field.label} htmlFor={id} required={false} hint={field.hint}>
       <input
         id={id}
         className={inputClasses}
+        placeholder={field.placeholder}
         value={Array.isArray(value) ? value.join(", ") : typeof value === "string" || typeof value === "number" ? String(value) : ""}
-        onChange={(e) => onChange(field.key, e.target.value)}
+        onChange={(e) =>
+          onChange(
+            field.key,
+            field.key === "cie10" ? e.target.value.toUpperCase().replace(/\s+/g, "") : e.target.value,
+          )
+        }
       />
     </Field>
   );

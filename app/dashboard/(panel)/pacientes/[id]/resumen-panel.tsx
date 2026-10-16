@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import type { OrganizationType, Patient } from "@/lib/ficha/types";
 import { fichaFor, ORG_TYPE_LABEL } from "@/lib/ficha/definitions";
 import { Card, CardHeader, Button, Field, inputClasses } from "@/components/ui";
+import { formatRut, formatRutPartial, normalizeRut } from "@/lib/rut";
+import { formatPhonePartial, normalizePhone } from "@/lib/phone";
 import { SpecialtyForm, SpecialtyView, type SpecialtyValues } from "./specialty-section";
 
 const SEXOS = [
@@ -79,11 +81,11 @@ function formFrom(p: Patient): FormState {
     isapre_plan: p.isapre_plan ?? "",
     emergency_name: p.emergency_name ?? "",
     emergency_relation: p.emergency_relation ?? "",
-    emergency_phone: p.emergency_phone ?? "",
+    emergency_phone: formatPhonePartial(p.emergency_phone ?? ""),
     tutor_name: p.tutor_name ?? "",
-    tutor_rut: p.tutor_rut ?? "",
+    tutor_rut: formatRutPartial(p.tutor_rut ?? ""),
     tutor_relation: p.tutor_relation ?? "",
-    tutor_phone: p.tutor_phone ?? "",
+    tutor_phone: formatPhonePartial(p.tutor_phone ?? ""),
     referral_source: p.referral_source ?? "",
     patient_status: p.patient_status,
   };
@@ -145,11 +147,11 @@ export function ResumenPanel({
           isapre_plan: empty(form.isapre_plan) ?? undefined,
           emergency_name: empty(form.emergency_name) ?? undefined,
           emergency_relation: empty(form.emergency_relation) ?? undefined,
-          emergency_phone: empty(form.emergency_phone) ?? undefined,
+          emergency_phone: empty(normalizePhone(form.emergency_phone)) ?? undefined,
           tutor_name: empty(form.tutor_name) ?? undefined,
-          tutor_rut: empty(form.tutor_rut) ?? undefined,
+          tutor_rut: empty(normalizeRut(form.tutor_rut)) ?? undefined,
           tutor_relation: empty(form.tutor_relation) ?? undefined,
-          tutor_phone: empty(form.tutor_phone) ?? undefined,
+          tutor_phone: empty(normalizePhone(form.tutor_phone)) ?? undefined,
           referral_source: empty(form.referral_source) ?? undefined,
           patient_status: form.patient_status,
         }),
@@ -290,7 +292,17 @@ export function ResumenPanel({
                 <input id="emergency_relation" className={inputClasses} value={form.emergency_relation} onChange={(e) => set("emergency_relation", e.target.value)} />
               </Field>
               <Field label="Teléfono" htmlFor="emergency_phone" required={false}>
-                <input id="emergency_phone" className={inputClasses} value={form.emergency_phone} onChange={(e) => set("emergency_phone", e.target.value)} />
+                <input
+                  id="emergency_phone"
+                  className={inputClasses}
+                  value={form.emergency_phone}
+                  placeholder="+56 9 1234 5678"
+                  inputMode="tel"
+                  onChange={(e) => set("emergency_phone", formatPhonePartial(e.target.value))}
+                />
+                <span className="mt-1 block text-xs text-neutral-500">
+                  Escribe sólo el número: el +56 ya está puesto.
+                </span>
               </Field>
             </div>
           </fieldset>
@@ -302,13 +314,36 @@ export function ResumenPanel({
                 <input id="tutor_name" className={inputClasses} value={form.tutor_name} onChange={(e) => set("tutor_name", e.target.value)} />
               </Field>
               <Field label="RUT" htmlFor="tutor_rut" required={false}>
-                <input id="tutor_rut" className={inputClasses} value={form.tutor_rut} onChange={(e) => set("tutor_rut", e.target.value)} />
+                <input
+                  id="tutor_rut"
+                  className={inputClasses}
+                  value={form.tutor_rut}
+                  placeholder="12.345.678-9"
+                  maxLength={16}
+                  inputMode="text"
+                  onChange={(e) => {
+                    const { value, selectionStart } = e.target;
+                    const atEnd = selectionStart === null || selectionStart === value.length;
+                    set("tutor_rut", atEnd ? formatRutPartial(value) : value);
+                  }}
+                  onBlur={() => setForm((f) => ({ ...f, tutor_rut: formatRutPartial(f.tutor_rut) }))}
+                />
               </Field>
               <Field label="Parentesco" htmlFor="tutor_relation" required={false}>
                 <input id="tutor_relation" className={inputClasses} value={form.tutor_relation} onChange={(e) => set("tutor_relation", e.target.value)} />
               </Field>
               <Field label="Teléfono" htmlFor="tutor_phone" required={false}>
-                <input id="tutor_phone" className={inputClasses} value={form.tutor_phone} onChange={(e) => set("tutor_phone", e.target.value)} />
+                <input
+                  id="tutor_phone"
+                  className={inputClasses}
+                  value={form.tutor_phone}
+                  placeholder="+56 9 1234 5678"
+                  inputMode="tel"
+                  onChange={(e) => set("tutor_phone", formatPhonePartial(e.target.value))}
+                />
+                <span className="mt-1 block text-xs text-neutral-500">
+                  Escribe sólo el número: el +56 ya está puesto.
+                </span>
               </Field>
             </div>
           </fieldset>
@@ -370,10 +405,10 @@ export function ResumenPanel({
         <CardHeader title="Emergencia y apoderado" />
         <dl className="grid gap-4 px-5 py-4 sm:grid-cols-2">
           <Campo etiqueta="Contacto emergencia" valor={patient.emergency_name ? `${patient.emergency_name} (${patient.emergency_relation ?? ""})` : null} />
-          <Campo etiqueta="Teléfono emergencia" valor={patient.emergency_phone} />
+          <Campo etiqueta="Teléfono emergencia" valor={patient.emergency_phone ? formatPhonePartial(patient.emergency_phone) : null} />
           <Campo etiqueta="Apoderado/a" valor={patient.tutor_name ? `${patient.tutor_name} (${patient.tutor_relation ?? ""})` : null} />
-          <Campo etiqueta="RUT apoderado" valor={patient.tutor_rut} />
-          <Campo etiqueta="Teléfono apoderado" valor={patient.tutor_phone} />
+          <Campo etiqueta="RUT apoderado" valor={patient.tutor_rut ? (formatRut(patient.tutor_rut) ?? patient.tutor_rut) : null} />
+          <Campo etiqueta="Teléfono apoderado" valor={patient.tutor_phone ? formatPhonePartial(patient.tutor_phone) : null} />
         </dl>
       </Card>
 

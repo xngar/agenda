@@ -174,6 +174,8 @@ export interface FieldDef {
   kind: "text" | "textarea" | "select" | "radio" | "date" | "checkbox";
   options?: FieldOption[];
   optional?: boolean;
+  placeholder?: string;
+  hint?: string;
 }
 
 export interface SectionDef {

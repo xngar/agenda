@@ -37,13 +37,13 @@ export interface MedicalEncounterData {
 
 const numOrNull = z.number().min(0).max(9999).nullable().optional();
 
-/** Código CIE-10: letra + 2 dígitos, con sufijo opcional (p. ej. J06.9). */
+/** Código CIE-10 individual: letra + 2 dígitos, con sufijo opcional (p. ej. J06.9). Los rangos de capítulo (G00-G99) no son códigos y se rechazan. */
 export const cie10Schema = z
   .string()
   .trim()
   .toUpperCase()
   .max(8)
-  .refine((v) => v === "" || /^[A-TV-Z]\d{2}(\.\w{1,4})?$/.test(v), "CIE-10 inválido (p. ej. J06.9)")
+  .refine((v) => v === "" || /^[A-TV-Z]\d{2}(\.\w{1,4})?$/.test(v), "Usa un código CIE-10 como J06.9 o F32 (los rangos como G00-G99 no son válidos)")
   .optional();
 
 export const medicalProfileSchema = z.object({
@@ -125,7 +125,14 @@ export const MEDICAL_ENCOUNTER_FIELDS: SectionDef[] = [
       { key: "symptoms", label: "Síntomas (anamnesis)", kind: "textarea", optional: true },
       { key: "physicalExam", label: "Examen físico", kind: "textarea", optional: true },
       { key: "differentialDiagnosis", label: "Diagnóstico diferencial", kind: "textarea", optional: true },
-      { key: "cie10", label: "Código CIE-10", kind: "text", optional: true },
+      {
+        key: "cie10",
+        label: "Código CIE-10",
+        kind: "text",
+        optional: true,
+        placeholder: "J06.9",
+        hint: "Un código por atención (p. ej. J06.9, F32). Los rangos como G00-G99 van en el Diagnóstico, no acá.",
+      },
       { key: "treatmentFocus", label: "Enfoque del tratamiento", kind: "textarea", optional: true },
     ],
   },

@@ -54,6 +54,16 @@ describe("ficha por tipo de organización", () => {
 });
 
 describe("fase 3: campos por especialidad", () => {
+  it("CIE-10 rechaza rangos de capítulo y explica el formato", () => {
+    expect(cie10Schema.safeParse("G00-G99").success).toBe(false);
+    expect(cie10Schema.safeParse("G00G99").success).toBe(false);
+    expect(cie10Schema.safeParse(" j06.9 ").success).toBe(true);
+    const malo = cie10Schema.safeParse("G00-G99");
+    expect(malo.success).toBe(false);
+    if (!malo.success) {
+      expect(malo.error.issues[0]?.message).toContain("G00-G99");
+    }
+  });
   it("CIE-10 acepta códigos válidos y rechaza basura", () => {
     expect(cie10Schema.safeParse("J06.9").success).toBe(true);
     expect(cie10Schema.safeParse("j06.9").success).toBe(true);
