@@ -66,7 +66,6 @@ export function FichaTabs({
   const tabs = orgType === "dental" ? TABS_DENTAL : TABS_CLINICA_COMMON;
   const router = useRouter();
   const [active, setActive] = useState(tabs[0].id);
-  const [auditoria, setAuditoria] = useState(canViewAudit);
   const [editando, setEditando] = useState(false);
   const [confirmandoEliminar, setConfirmandoEliminar] = useState(false);
   const [eliminando, setEliminando] = useState(false);
@@ -93,7 +92,7 @@ export function FichaTabs({
   }
 
   const visible =
-    canViewAudit && auditoria ? [...tabs, { id: "auditoria", label: "Auditoría" }] : tabs;
+    canViewAudit ? [...tabs, { id: "auditoria", label: "Auditoría" }] : tabs;
 
   if (!visible.some((t) => t.id === active)) setActive(visible[0].id);
 
@@ -130,25 +129,6 @@ export function FichaTabs({
                 Editar
               </button>
             ) : null}
-            {canViewAudit ? (
-              <label className="flex items-center gap-1.5">
-                <input
-                  type="checkbox"
-                  checked={auditoria}
-                  onChange={(e) => setAuditoria(e.target.checked)}
-                  className="h-4 w-4"
-                  title="Ver historial de auditoría"
-                />
-                <span className="text-neutral-600">Auditoría</span>
-              </label>
-            ) : null}
-            <a
-              className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:bg-brand-navy-50"
-              href={`/api/ficha/patients/${patient.id}/export`}
-              title="Descargar datos en JSON"
-            >
-              Exportar
-            </a>
             <a
               className="inline-flex min-h-9 items-center rounded-xl bg-brand-navy px-3 text-sm font-semibold text-white hover:bg-brand-navy-700"
               href={`/api/ficha/patients/${patient.id}/pdf`}

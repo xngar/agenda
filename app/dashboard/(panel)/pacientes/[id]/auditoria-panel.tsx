@@ -68,17 +68,27 @@ export function AuditoriaPanel({
               <div className="flex flex-wrap gap-2">
                 <a
                   className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:bg-brand-navy-50"
+                  href={`/api/ficha/patients/${patientId}/export`}
+                  download
+                  title="Descargar los datos de la ficha en JSON"
+                >
+                  Ficha (JSON)
+                </a>
+                <a
+                  className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:bg-brand-navy-50"
                   href={`/api/ficha/audit?patient_id=${encodeURIComponent(patientId)}&limit=200&format=json`}
                   download
+                  title="Descargar el historial de cambios en JSON"
                 >
-                  Exportar JSON
+                  Historial (JSON)
                 </a>
                 <a
                   className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:bg-brand-navy-50"
                   href={`/api/ficha/audit?patient_id=${encodeURIComponent(patientId)}&limit=200&format=csv`}
                   download
+                  title="Descargar el historial de cambios en CSV"
                 >
-                  Exportar CSV
+                  Historial (CSV)
                 </a>
               </div>
             ) : undefined
