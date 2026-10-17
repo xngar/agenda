@@ -23,6 +23,10 @@
 - [x] Fechas como claves YYYY-MM-DD, zona America/Santiago
 - [x] RLS estricto por org/rol
 - [x] Clientes Supabase separados (server/browser/admin)
+- [x] Adaptación móvil: menú de hamburguesa en landing, sitio público y panel (`md:hidden`)
+- [x] Adaptación móvil: vistas de tarjetas para tablas de agenda, pacientes y organizaciones
+- [x] Sin desborde horizontal de página (odontograma y calendario mensual con scroll contenido)
+- [x] Una sola página por URL: raíz `/` = landing; se eliminó `app/(site)/page.tsx` duplicado
 
 ### Migraciones y datos
 - [x] Migraciones completas schema + RLS + RPCs + ficha + multi-tenant

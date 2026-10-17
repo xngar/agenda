@@ -3,8 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, KeyRound, Pencil, Settings, Trash2 } from "lucide-react";
 import { cn } from "cn";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Command,
   CommandEmpty,
@@ -108,6 +115,60 @@ function CupoCombobox({
         </Command>
       </PopoverContent>
     </Popover>
+  );
+}
+
+/**
+ * Acciones de una organización agrupadas en un menú (editar, restablecer
+ * contraseña y borrar). Se usa en la tabla y en las tarjetas móviles.
+ */
+function OrgActionsMenu({
+  org,
+  onResetPassword,
+  onDelete,
+}: {
+  org: OrganizationRow;
+  onResetPassword: (org: OrganizationRow) => void;
+  onDelete: (org: OrganizationRow) => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label={`Acciones para ${org.name}`}
+          aria-haspopup="menu"
+          className="inline-flex rounded-lg border border-neutral-300 p-1.5 text-neutral-700 hover:bg-neutral-100"
+        >
+          <Settings className="size-4" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuItem asChild>
+          <Link href={`/dashboard/plataforma/organizaciones/${org.id}`}>
+            <Pencil />
+            Editar
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          disabled={!org.admin}
+          title={org.admin ? "Restablecer contraseña" : "Sin administrador"}
+          onSelect={() => onResetPassword(org)}
+        >
+          <KeyRound />
+          Contraseña
+        </DropdownMenuItem>
+        {org.slug === "plataforma" ? null : (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive" onSelect={() => onDelete(org)}>
+              <Trash2 />
+              Eliminar
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -324,35 +385,16 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-neutral-600">{org.createdAt}</td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-2">
-                      <Link
-                        href={`/dashboard/plataforma/organizaciones/${org.id}`}
-                        className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100"
-                      >
-                        Editar
-                      </Link>
-                      <button
-                        type="button"
-                        disabled={!org.admin}
-                        onClick={() => {
+                    <div className="flex items-center justify-end">
+                      <OrgActionsMenu
+                        org={org}
+                        onResetPassword={(o) => {
                           setError(null);
                           setResetOk(null);
-                          setResetear(org);
+                          setResetear(o);
                         }}
-                        title={org.admin ? "Restablecer contraseña" : "Sin administrador"}
-                        className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        Contraseña
-                      </button>
-                      {org.slug === "plataforma" ? null : (
-                        <button
-                          type="button"
-                          onClick={() => setConfirmar(org)}
-                          className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100 hover:text-[color:var(--color-danger,#b91c1c)]"
-                        >
-                          Eliminar
-                        </button>
-                      )}
+                        onDelete={(o) => setConfirmar(o)}
+                      />
                     </div>
                   </td>
                 </tr>
@@ -430,35 +472,16 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
                 </div>
               </dl>
 
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Link
-                  href={`/dashboard/plataforma/organizaciones/${org.id}`}
-                  className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100"
-                >
-                  Editar
-                </Link>
-                <button
-                  type="button"
-                  disabled={!org.admin}
-                  onClick={() => {
+              <div className="mt-3 flex justify-end">
+                <OrgActionsMenu
+                  org={org}
+                  onResetPassword={(o) => {
                     setError(null);
                     setResetOk(null);
-                    setResetear(org);
+                    setResetear(o);
                   }}
-                  title={org.admin ? "Restablecer contraseña" : "Sin administrador"}
-                  className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Contraseña
-                </button>
-                {org.slug === "plataforma" ? null : (
-                  <button
-                    type="button"
-                    onClick={() => setConfirmar(org)}
-                    className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100 hover:text-[color:var(--color-danger,#b91c1c)]"
-                  >
-                    Eliminar
-                  </button>
-                )}
+                  onDelete={(o) => setConfirmar(o)}
+                />
               </div>
             </li>
           ))}

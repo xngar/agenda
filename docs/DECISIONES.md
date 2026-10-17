@@ -122,6 +122,22 @@ Registro de decisiones técnicas tomadas y su motivo, deducidas únicamente del 
 
 **Consecuencia.** Seguridad correcta (admin nunca en cliente). Cookies gestionadas correctamente SSR. RLS respeta contexto.
 
+## 16. Una sola página por URL: el landing es la raíz
+
+**Contexto.** La carpeta `(site)` es un route group: los paréntesis no añaden segmento a la URL, solo sirven para compartir layout. Esto permitía que `app/page.tsx` (landing) y `app/(site)/page.tsx` (home de la clínica por defecto) resolvieran **las dos a `/`**. Next.js no define cuál gana: el build registraba las dos entradas en `app-path-routes-manifest.json` y ganaba una por orden interno, dejando la otra como código muerto y con riesgo de que dev y producción difieran (o de que una actualización de Next lo trate como error).
+
+**Decisión.** Cada URL la define **exactamente una** página. La raíz `/` es el landing de producto (`app/page.tsx`, marketing). Se eliminó `app/(site)/page.tsx`. El home por clínica vive en `/[clinicSlug]`, y el group `(site)` se mantiene solo para `/reservar` y `/privacidad` con el branding de la organización por defecto.
+
+**Consecuencia.** `/` tiene un dueño inequívoco y verificable en el manifest de build. Se elimina código muerto. Sin cambio visible: la raíz ya mostraba el landing. El home de la clínica por defecto (hero + datos de clínica + aviso al profesional) ya no existe en `/`; su equivalente por clínica sigue en `/[clinicSlug]`.
+
+## 17. Cabeceras con hamburguesa y tablas con vista de tarjetas
+
+**Contexto.** En móvil las cabeceras del panel y del sitio público no generaban menú de hamburguesa: eran filas únicas sin wrap que desbordaban horizontalmente toda la página (el proyecto no usa `overflow-x-hidden` global). Las tablas anchas obligaban a scroll horizontal.
+
+**Decisión.** Patrón único de navegación móvil: enlaces ocultos bajo `md` y botón `Menu`/`X` (lucide-react, ya en el proyecto) que despliega un panel. Para tablas, vista de tarjetas en `md:hidden` y tabla en `hidden md:block`, reusando el patrón que ya existía en la agenda. Los elementos que no caben (odontograma, calendario mensual) usan scroll horizontal contenido (`overflow-x-auto` + `min-w-max`).
+
+**Consecuencia.** Sin desbordes a nivel de página y navegación usable en teléfono. Costo: el markup móvil y de escritorio coexisten en el DOM, por lo que los tests que cuentan enlaces (`tests/nav-links.test.tsx`) dependen de que el panel esté cerrado al renderizar. No se usa `overflow-x-hidden` global: preferimos corregir la causa.
+
 ## Notas
 
 - Decisiones basadas exclusivamente en código/migraciones revisadas (package.json, lib/*, app/api/*, supabase/migrations/*, DECISIONS.md existente, tests).

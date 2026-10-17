@@ -92,6 +92,12 @@ Migraciones aplican RLS por tablas:
 - **Ficha firmada**: inmutable - RLS bloquea UPDATE sobre status!='draft', trigger puede bloquear/gestionar versiones. Creación de `encounter_versions` para correcciones (histórico inmutable).
 - **Eliminación encounters borradores**: solo doctor autor o admin.
 
+## Exposición de datos al cliente (bundle del navegador)
+
+- Los componentes marcados `"use client"` envían a serializarse al bundle del navegador lo que reciben por props y lo que usan. Mantener esto en mind al mover un componente de servidor a cliente.
+- **`SiteHeader` (`components/site-header.tsx`) es cliente** (para el menú hamburguesa móvil). Recibe `brand: ClinicBrand`, que solo contiene datos públicos de contacto (`name`, `slug`, `address`, `phone`, `supportEmail`) ya renderizados en el footer. No incluye secretos ni claves; el org se resuelve en servidor (`getPublicOrganization`/`getDefaultOrganization`) y solo se pasa el subconjunto público.
+- No pasar nunca objetos de sesión, cookies, filas de BD completas ni nada marcado `server-only` a un componente cliente. Las variables secretas (`SUPABASE_SERVICE_ROLE_KEY`, `MANAGE_TOKEN_KEY`, etc.) solo existen en servidor por validación Zod (`lib/env.ts`) y no deben referenciarse desde cliente.
+
 ## Headers, CORS, runtime
 
 - Next.js App Router route handlers. `runtime = "nodejs"` en algunos endpoints (bookings). Usa server-only imports.
@@ -110,6 +116,7 @@ Variables críticas (server-only): `SUPABASE_SERVICE_ROLE_KEY`, `MANAGE_TOKEN_KE
 - **Tokens hash-only**: correcto, evita fuga si BD comprometida (hash SHA-256). Copia cifrada backup es aceptable con clave fuerte.
 - **Fail-fast env**: evita errores silenciosos en producción.
 - **Exclusión GIST**: previene race conditions de doble reserva a nivel DB.
+- **Scope de cliente**: los componentes cliente (p. ej. `SiteHeader`) solo reciben datos ya públicos; no hay secretos en el bundle. Revisar al convertir server→client.
 - **No comentarios innecesarios en código** (regla repo) pero migraciones documentadas.
 
 **POR CONFIRMAR**: Políticas Storage bucket `ficha-adjuntos` (lectura/escritura por org/rol), configuración CORS Supabase, CSP/headers HTTP a nivel Next (no visibles en código revisado), logging de errores (posibles PII en logs). También confirmar si `service_role` se usa únicamente donde necesario.

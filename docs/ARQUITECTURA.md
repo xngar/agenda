@@ -13,6 +13,16 @@ El proyecto sigue arquitectura por capas con Next.js 16 App Router:
 | **Persistencia** | `supabase/migrations/` | Esquema PostgreSQL, funciones SQL (RPC), políticas RLS, triggers, índices. |
 | **Notificaciones/Email** | `lib/email/` | Envío de emails via Resend con plantillas. Fallback a console.log si no configurado. |
 
+## Rutas públicas y portada (App Router)
+
+- `/` → **landing de producto** (`app/page.tsx`, componentes en `components/landing/`). Es la única página que define la raíz.
+- Rutas públicas heredadas de clínica por defecto viven en el route group `(site)`: `/reservar`, `/privacidad` (+ `app/(site)/layout.tsx` aporta `SiteHeader`/`SiteFooter` con branding de la organización por defecto).
+- Home por clínica: `/[clinicSlug]` (`app/[clinicSlug]/page.tsx`), con su propio layout y branding por slug.
+- Gestión de cita: `/cita/[token]`.
+- Dashboard: `/dashboard/*` (grupos `(panel)` y `(platform)`).
+
+**Regla**: los route groups `(site)`, `(landing)`, `(panel)`, `(platform)` **no añaden segmento a la URL** (sirven para compartir layout). Por eso **una sola página puede definir cada ruta**: exactamente una por URL. Ver DECISIONES.md #16.
+
 ## Módulos principales
 
 ### 1. Reservas públicas (Booking)
@@ -22,7 +32,7 @@ El proyecto sigue arquitectura por capas con Next.js 16 App Router:
 - Token de gestión: `manage_token_hash = sha256(tokenClaro)`. Token en claro **nunca** se guarda.
 - Validación: Zod + reglas de negocio (min notice hours, max days ahead, holidays, time-off, active doctors).
 
-Ubicaciones: `app/(site)/reservar/`, `app/api/bookings/`, `lib/booking.ts`, `lib/token.ts`, `app/cita/[token]/`.
+Ubicaciones: `app/(site)/reservar/`, `app/[clinicSlug]/reservar/`, `app/api/bookings/`, `lib/booking.ts`, `lib/token.ts`, `app/cita/[token]/`.
 
 ### 2. Panel profesional (Dashboard)
 - Autenticación con RUT+password via Supabase Auth
@@ -33,7 +43,16 @@ Ubicaciones: `app/(site)/reservar/`, `app/api/bookings/`, `lib/booking.ts`, `lib
 - Gestión: doctores, servicios, disponibilidad (rules), feriados, time-off
 - RPCs para consultas optimizadas (dashboard_appointments, etc.)
 
-Ubicaciones: `app/dashboard/`, `app/api/dashboard/`, `components/dashboard/`.
+Ubicaciones: `app/dashboard/`, `app/api/dashboard/`, `app/dashboard/nav-links.tsx`.
+
+## UI responsive (móvil primero donde aplica)
+
+Regla aplicada de forma consistente en cabeceras y tablas:
+
+- **Cabeceras**: patrón hamburguesa. Los enlaces de navegación se ocultan bajo `md` y se sustituyen por un botón `Menu`/`X` (lucide-react) que despliega un panel. Implementado en las tres cabeceras: landing (`components/landing/navbar.tsx`), sitio público (`components/site-header.tsx`) y panel (`app/dashboard/nav-links.tsx`).
+- **Tablas**: en móvil se muestra una lista de tarjetas (`hidden md:block` para la tabla + `md:hidden` para las tarjetas). Aplicado en agenda, pacientes y organizaciones de plataforma.
+- **Anchos fijos**: elementos que no caben en móvil (odontograma, calendario mensual) usan scroll horizontal **contenido** (`overflow-x-auto` + `min-w-max`), nunca desbordan la página.
+- Se evita `overflow-x-hidden` global para no enmascarar desbordes reales.
 
 ### 3. Ficha clínica (EHR-lite)
 - Pacientes, encuentros (encounters), antecedentes, tratamientos, periodoncia, prescripciones

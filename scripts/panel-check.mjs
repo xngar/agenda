@@ -1798,7 +1798,12 @@ check(
     tabla.status === 200 && tabla.text.includes(FIX.adminEmail),
     `status=${tabla.status}`,
   );
-  check("la tabla ofrece editar y restablecer", tabla.text.includes("Editar") && tabla.text.includes("Contraseña"), "");
+  check(
+    "cada fila ofrece un menú de acciones",
+    tabla.text.includes('data-slot="dropdown-menu-trigger"') &&
+      (tabla.text.match(/Acciones para /g) ?? []).length >= 2,
+    "",
+  );
 
   // -- La organización interna (slug reservado) sigue siendo editable --
   const filas = [...tabla.text.matchAll(/<tr[^>]*data-org-id="([0-9a-f-]{36})"[^>]*>([\s\S]*?)<\/tr>/g)];
