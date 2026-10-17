@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import type { DoctorAppointment } from "@/lib/types";
@@ -8,6 +8,7 @@ import { AgendaCards } from "./agenda-cards";
 import { useAgendaAcciones } from "./agenda-actions";
 import { StaffRescheduleModal } from "./staff-reschedule-modal";
 import type { StaffDoctor } from "./staff-booking-button";
+import { motion, AnimatePresence } from "motion/react";
 
 interface Props {
   initial: DoctorAppointment[];
@@ -81,7 +82,12 @@ export function Agenda({
   }
 
   return (
-    <section className="space-y-3">
+    <motion.section
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22, ease: "easeOut" }}
+      className="space-y-3"
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex gap-1" role="group" aria-label="Filtrar citas">
@@ -199,16 +205,18 @@ export function Agenda({
         {pendiente ? "Actualizando cita" : ""}
       </p>
 
-      {reagendando ? (
-        <StaffRescheduleModal
-          appointment={paraReagendar(reagendando)}
-          doctors={doctors}
-          defaultDate={dayKey}
-          onClose={() => setReagendando(null)}
-          onDone={() => setReagendando(null)}
-        />
-      ) : null}
-    </section>
+      <AnimatePresence>
+        {reagendando ? (
+          <StaffRescheduleModal
+            appointment={paraReagendar(reagendando)}
+            doctors={doctors}
+            defaultDate={dayKey}
+            onClose={() => setReagendando(null)}
+            onDone={() => setReagendando(null)}
+          />
+        ) : null}
+      </AnimatePresence>
+    </motion.section>
   );
 }
 

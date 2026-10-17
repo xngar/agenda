@@ -7,6 +7,7 @@ import { Button, ErrorNotice, inputClasses } from "@/components/ui";
 import { formatTime, todayKey } from "@/lib/dates";
 import { formatRutPartial, isValidRut } from "@/lib/rut";
 import { formatPhonePartial } from "@/lib/phone";
+import { motion, AnimatePresence } from "motion/react";
 
 export interface StaffService {
   id: string;
@@ -48,19 +49,21 @@ export function StaffBookingButton({
       <Button size="sm" onClick={() => setOpen(true)}>
         + Nueva reserva
       </Button>
-      {open ? (
-        <StaffBookingModal
-          services={services}
-          doctors={doctors}
-          defaultDoctorId={defaultDoctorId}
-          defaultDate={defaultDate}
-          onClose={() => setOpen(false)}
-          onCreated={() => {
-            setOpen(false);
-            router.refresh();
-          }}
-        />
-      ) : null}
+      <AnimatePresence>
+        {open ? (
+          <StaffBookingModal
+            services={services}
+            doctors={doctors}
+            defaultDoctorId={defaultDoctorId}
+            defaultDate={defaultDate}
+            onClose={() => setOpen(false)}
+            onCreated={() => {
+              setOpen(false);
+              router.refresh();
+            }}
+          />
+        ) : null}
+      </AnimatePresence>
     </>
   );
 }
@@ -218,15 +221,23 @@ function StaffBookingModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-brand-navy-900/40 p-4"
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.16 }}
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-brand-navy-950/50 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-label="Nueva reserva"
       onClick={onClose}
     >
-      <div
-        className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl"
+      <motion.div
+        initial={{ opacity: 0, scale: 0.94, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        transition={{ type: "spring", stiffness: 450, damping: 32 }}
+        className="w-full max-w-2xl rounded-2xl border border-neutral-200/80 bg-white p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-semibold text-brand-navy">Nueva reserva</h2>
@@ -399,10 +410,10 @@ function StaffBookingModal({
                       type="button"
                       aria-pressed={slotStart === s.slot_start}
                       onClick={() => setSlotStart(s.slot_start)}
-                      className={`rounded-lg border px-3 py-1.5 text-sm font-medium tabular-nums transition-colors ${
+                      className={`rounded-lg border px-3 py-1.5 text-sm font-semibold tabular-nums transition-all duration-150 ease-out active:scale-95 cursor-pointer ${
                         slotStart === s.slot_start
-                          ? "border-brand-navy bg-brand-navy text-white"
-                          : "border-neutral-300 bg-white text-neutral-700 hover:border-brand-navy-300"
+                          ? "border-brand-navy bg-brand-navy text-white shadow-xs scale-[1.03]"
+                          : "border-neutral-300 bg-white text-neutral-700 hover:border-brand-navy hover:text-brand-navy hover:shadow-2xs"
                       }`}
                     >
                       {formatTime(s.slot_start)}
@@ -422,7 +433,7 @@ function StaffBookingModal({
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

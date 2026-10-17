@@ -9,13 +9,13 @@ type ButtonSize = "sm" | "md" | "lg";
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    "bg-brand-navy text-white hover:bg-brand-navy-700 active:bg-brand-navy-800 shadow-card disabled:bg-neutral-300",
+    "bg-gradient-to-b from-brand-navy to-brand-navy-900 text-white shadow-[0_1px_3px_rgba(11,60,122,0.25),inset_0_1px_0_rgba(255,255,255,0.22)] hover:from-brand-navy-700 hover:to-brand-navy-800 hover:shadow-[0_4px_16px_rgba(11,60,122,0.35),inset_0_1px_0_rgba(255,255,255,0.3)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.96] border border-brand-navy-900/40 disabled:bg-neutral-300 disabled:from-neutral-300 disabled:to-neutral-300 disabled:border-transparent disabled:hover:translate-y-0 disabled:hover:shadow-none",
   secondary:
-    "bg-brand-sky text-brand-navy-900 hover:bg-brand-sky-400 active:bg-brand-sky-600 border border-brand-navy-700/20",
+    "bg-gradient-to-b from-brand-sky-100 to-brand-sky text-brand-navy-900 shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.6)] hover:from-brand-sky-50 hover:to-brand-sky-200 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.96] border border-brand-sky-600/30 disabled:hover:translate-y-0 disabled:hover:shadow-none",
   ghost:
-    "bg-transparent text-brand-navy hover:bg-brand-navy-50 border border-brand-navy-200",
+    "bg-white/90 hover:bg-neutral-100/90 text-brand-navy border border-neutral-200/90 shadow-2xs hover:shadow-xs active:scale-[0.96]",
   danger:
-    "bg-brand-navy-900 text-white hover:bg-brand-navy-800 border border-brand-navy-800",
+    "bg-gradient-to-b from-red-600 to-red-700 text-white shadow-[0_1px_3px_rgba(185,28,28,0.25),inset_0_1px_0_rgba(255,255,255,0.2)] hover:from-red-500 hover:to-red-600 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.96] border border-red-800/40 disabled:hover:translate-y-0 disabled:hover:shadow-none",
 };
 
 const SIZES: Record<ButtonSize, string> = {
@@ -30,9 +30,10 @@ export function buttonClasses(
   className = "",
 ): string {
   return [
-    "inline-flex items-center justify-center rounded-xl font-semibold transition-colors",
+    "inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-150 ease-out",
+    "active:scale-[0.97] cursor-pointer select-none",
     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy",
-    "disabled:opacity-55 disabled:cursor-not-allowed",
+    "disabled:opacity-55 disabled:cursor-not-allowed disabled:active:scale-100",
     VARIANTS[variant],
     SIZES[size],
     className,
@@ -146,8 +147,8 @@ export function Field({
 }
 
 export const inputClasses =
-  "w-full min-h-11 rounded-xl border border-neutral-300 bg-white px-3 py-2 text-base text-neutral-800 " +
-  "placeholder:text-neutral-500 focus:border-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-sky " +
+  "w-full min-h-11 rounded-xl border border-neutral-300 bg-white px-3 py-2 text-base text-neutral-800 transition-all duration-150 ease-out " +
+  "placeholder:text-neutral-500 hover:border-neutral-400 focus:border-brand-navy focus:outline-none focus:ring-4 focus:ring-brand-sky/25 " +
   "disabled:bg-neutral-100 disabled:text-neutral-500 aria-[invalid=true]:border-brand-navy-900";
 
 export const inputErrorClasses = inputClasses;

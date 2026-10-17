@@ -2,14 +2,12 @@
 
 import Link from "next/link";
 
+import { motion } from "motion/react";
+
 export type VistaAgenda = "dia" | "semana" | "mes";
 
 /**
- * Conmutador Día | Semana | Mes de la agenda.
- *
- * Va en la URL como todo el panel (`?date=` / `?view=semana&date=<lunes>` /
- * `?view=mes&month=`): así se puede compartir el enlace, refrescar y volver
- * atrás sin perder el filtro de profesional.
+ * Conmutador Día | Semana | Mes de la agenda con animación elástica compartida.
  */
 export function ViewToggle({
   vista,
@@ -26,13 +24,15 @@ export function ViewToggle({
 }) {
   const sufijo = doctor ? `&doctor=${doctor}` : "";
   const opciones = [
-    { etiqueta: "Día", href: `/dashboard?date=${dayKey}${sufijo}`, activo: vista === "dia" },
+    { id: "dia", etiqueta: "Día", href: `/dashboard?date=${dayKey}${sufijo}`, activo: vista === "dia" },
     {
+      id: "semana",
       etiqueta: "Semana",
       href: `/dashboard?view=semana&date=${weekFrom}${sufijo}`,
       activo: vista === "semana",
     },
     {
+      id: "mes",
       etiqueta: "Mes",
       href: `/dashboard?view=mes&month=${mesKey}${sufijo}`,
       activo: vista === "mes",
@@ -43,19 +43,24 @@ export function ViewToggle({
     <div
       role="group"
       aria-label="Vista de la agenda"
-      className="inline-flex rounded-xl border border-neutral-200 bg-neutral-100 p-1"
+      className="relative inline-flex items-center rounded-xl border border-neutral-200/90 bg-neutral-100 p-1 shadow-inner"
     >
       {opciones.map((op) => (
         <Link
-          key={op.etiqueta}
+          key={op.id}
           href={op.href}
           aria-current={op.activo ? "page" : undefined}
-          className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors duration-150 ${
-            op.activo
-              ? "bg-brand-navy text-white shadow-card"
-              : "text-neutral-600 hover:text-brand-navy"
+          className={`relative z-10 rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors duration-150 active:scale-95 select-none ${
+            op.activo ? "text-white" : "text-neutral-600 hover:text-brand-navy"
           }`}
         >
+          {op.activo && (
+            <motion.div
+              layoutId="view-toggle-indicator"
+              className="absolute inset-0 -z-10 rounded-lg bg-brand-navy shadow-card"
+              transition={{ type: "spring", stiffness: 500, damping: 35 }}
+            />
+          )}
           {op.etiqueta}
         </Link>
       ))}

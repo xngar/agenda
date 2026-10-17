@@ -16,6 +16,7 @@ import { parseAppointmentRange } from "@/lib/range";
 import { useAgendaAcciones } from "./agenda-actions";
 import { StaffRescheduleModal } from "./staff-reschedule-modal";
 import type { StaffDoctor } from "./staff-booking-button";
+import { motion, AnimatePresence } from "motion/react";
 
 /* ------------------------------------------------------------------ */
 /* Constantes de layout                                                 */
@@ -208,7 +209,13 @@ export function WeekView({
   const estaSemanaTieneHoy = dias.includes(hoy);
 
   return (
-    <section className="space-y-3" aria-label="Agenda de la semana">
+    <motion.section
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22, ease: "easeOut" }}
+      className="space-y-3"
+      aria-label="Agenda de la semana"
+    >
       {/* Cabecera de estado */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-neutral-600">
@@ -363,7 +370,7 @@ export function WeekView({
                           marginLeft: 1,
                           marginRight: 1,
                         }}
-                        className={`overflow-hidden rounded-lg border border-transparent border-l-[3px] px-1.5 py-0.5 text-left transition-all duration-100 hover:-translate-y-px hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky ${
+                        className={`overflow-hidden rounded-lg border border-transparent border-l-[3px] px-1.5 py-0.5 text-left transition-all duration-150 ease-out hover:-translate-y-0.5 hover:shadow-lift active:scale-[0.98] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky ${
                           chip.bg
                         } ${chip.border} ${chip.text} ${
                           cancelada ? "opacity-60 line-through decoration-neutral-400" : ""
@@ -435,7 +442,7 @@ export function WeekView({
                   role="menuitem"
                   disabled={Boolean(pendiente)}
                   onClick={() => ejecutar(menu.cita.id, accion.action)}
-                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium transition-all duration-100 ease-out active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${
                     accion.tono === "primario"
                       ? "bg-brand-navy text-white hover:bg-brand-navy-800"
                       : accion.tono === "peligro"
@@ -452,16 +459,18 @@ export function WeekView({
         </>
       ) : null}
 
-      {reagendando ? (
-        <StaffRescheduleModal
-          appointment={paraReagendar(reagendando)}
-          doctors={doctors}
-          defaultDate={dayOf(reagendando, timezone) ?? weekFrom}
-          onClose={() => setReagendando(null)}
-          onDone={() => setReagendando(null)}
-        />
-      ) : null}
-    </section>
+      <AnimatePresence>
+        {reagendando ? (
+          <StaffRescheduleModal
+            appointment={paraReagendar(reagendando)}
+            doctors={doctors}
+            defaultDate={dayOf(reagendando, timezone) ?? weekFrom}
+            onClose={() => setReagendando(null)}
+            onDone={() => setReagendando(null)}
+          />
+        ) : null}
+      </AnimatePresence>
+    </motion.section>
   );
 }
 

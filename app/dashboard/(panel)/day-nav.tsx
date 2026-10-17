@@ -56,7 +56,7 @@ export function DayNav({
         type="button"
         onClick={() => irA(mover(dayKey, -1))}
         disabled={pending}
-        className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm transition-colors hover:border-brand-navy-300 hover:text-brand-navy disabled:opacity-60"
+        className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm transition-all duration-150 ease-out hover:border-brand-navy hover:text-brand-navy hover:shadow-xs active:scale-95 disabled:opacity-60 cursor-pointer"
         aria-label="Día anterior"
       >
         ←
@@ -77,7 +77,7 @@ export function DayNav({
           onChange={(e) => {
             if (e.target.value) irA(e.target.value);
           }}
-          className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm transition-colors hover:border-brand-navy-300 disabled:opacity-60"
+          className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm transition-all duration-150 ease-out hover:border-brand-navy focus:border-brand-navy focus:ring-2 focus:ring-brand-sky/30 disabled:opacity-60"
         />
       </div>
 
@@ -85,7 +85,7 @@ export function DayNav({
         type="button"
         onClick={() => irA(mover(dayKey, 1))}
         disabled={pending}
-        className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm transition-colors hover:border-brand-navy-300 hover:text-brand-navy disabled:opacity-60"
+        className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm transition-all duration-150 ease-out hover:border-brand-navy hover:text-brand-navy hover:shadow-xs active:scale-95 disabled:opacity-60 cursor-pointer"
         aria-label="Día siguiente"
       >
         →
@@ -96,7 +96,7 @@ export function DayNav({
           type="button"
           onClick={() => irA(today)}
           disabled={pending}
-          className="rounded-lg border border-brand-navy px-3 py-2 text-sm font-medium text-brand-navy hover:bg-brand-navy/5 disabled:opacity-60"
+          className="rounded-lg border border-brand-navy bg-white px-3 py-2 text-sm font-semibold text-brand-navy transition-all duration-150 ease-out hover:bg-brand-navy hover:text-white hover:shadow-xs active:scale-95 disabled:opacity-60 cursor-pointer"
         >
           Hoy
         </button>
@@ -110,7 +110,7 @@ export function DayNav({
               type="button"
               onClick={() => irA(r.day)}
               disabled={pending}
-              className="rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium transition-colors hover:border-brand-navy-300 hover:text-brand-navy disabled:opacity-60"
+              className="rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium transition-all duration-150 ease-out hover:border-brand-navy hover:text-brand-navy hover:shadow-xs active:scale-95 disabled:opacity-60 cursor-pointer"
             >
               {r.pendientes > 0
                 ? `${r.day.slice(8)}/${r.day.slice(5, 7)} · ${r.pendientes} por confirmar`

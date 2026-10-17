@@ -15,6 +15,7 @@ import { parseAppointmentRange } from "@/lib/range";
 import { appointmentsByDay } from "@/lib/agenda";
 import { EmptyState, StatusBadge } from "@/components/ui";
 import { useRealtimeNotifications } from "../use-realtime";
+import { motion } from "motion/react";
 
 interface Props {
   initial: DoctorAppointment[];
@@ -197,7 +198,13 @@ export function MonthView({
   const total = initial.length;
 
   return (
-    <section aria-label="Calendario mensual" className="space-y-3">
+    <motion.section
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22, ease: "easeOut" }}
+      aria-label="Calendario mensual"
+      className="space-y-3"
+    >
       {/* Navegación del mes + estado en vivo */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1">
@@ -343,7 +350,7 @@ export function MonthView({
                       onContextMenu={(e) => {
                         if (canAct) abrirMenu(e, cita);
                       }}
-                      className={`w-full truncate rounded-lg border border-neutral-200 border-l-[3px] px-1.5 py-1 text-left text-[11px] leading-tight transition-all duration-150 hover:-translate-y-px hover:shadow-card ${CHIP_TONO[cita.status]}`}
+                      className={`w-full truncate rounded-lg border border-neutral-200 border-l-[3px] px-1.5 py-1 text-left text-[11px] leading-tight transition-all duration-150 ease-out hover:-translate-y-0.5 hover:shadow-card active:scale-[0.98] cursor-pointer ${CHIP_TONO[cita.status]}`}
                     >
                       <span className="font-semibold tabular-nums">{formatTime(start)}</span>{" "}
                       <span className="font-medium">{nombre}</span>
@@ -420,7 +427,7 @@ export function MonthView({
           </div>
         </>
       ) : null}
-    </section>
+    </motion.section>
   );
 }
 

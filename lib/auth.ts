@@ -1,6 +1,7 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { supabaseServer } from "./supabase/server";
 import type { ClinicSettings } from "@/lib/types";
 import type { DoctorRole, OrganizationType } from "@/lib/ficha/types";
@@ -38,7 +39,7 @@ function orgTypeOf(relation: unknown): OrganizationType {
  * `active = false` tampoco, y `is_admin` se lee de la base, no de un
  * claim del token.
  */
-export async function getDoctorSession(): Promise<DoctorSession | null> {
+export const getDoctorSession = cache(async (): Promise<DoctorSession | null> => {
   const supabase = await supabaseServer();
   const {
     data: { user },
@@ -65,7 +66,7 @@ orgSlug: orgSlugOf(doctor.organizations),
     orgType: orgTypeOf(doctor.organizations),
     role: doctor.role === "reception" ? "reception" : "professional",
   };
-}
+});
 
 export async function requireDoctor(): Promise<DoctorSession> {
   const session = await getDoctorSession();
@@ -79,7 +80,7 @@ export async function requireAdmin(): Promise<DoctorSession> {
   return session;
 }
 
-export async function getOrgSettings(orgId: string): Promise<ClinicSettings> {
+export const getOrgSettings = cache(async (orgId: string): Promise<ClinicSettings> => {
   const supabase = await supabaseServer();
   const { data } = await supabase.from("organizations").select("*").eq("id", orgId).single();
 
@@ -87,7 +88,7 @@ export async function getOrgSettings(orgId: string): Promise<ClinicSettings> {
     throw new Error("organizacion sin configuracion; revisa el org_id del profesional");
   }
   return data as ClinicSettings;
-}
+});
 
 
 

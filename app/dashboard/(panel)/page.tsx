@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { getDoctorSession, getOrgSettings } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import {
@@ -70,126 +71,100 @@ export default async function DashboardPage({ searchParams }: PageProps) {
    * del servidor ni en la del navegador: `organizations.timezone` puede ser
    * distinta a America/Santiago y el desfase mueve citas al día equivocado.
    */
-  const { timezone: tzClinica } = await getOrgSettings(session.orgId);
-
   const supabase = await supabaseServer();
 
-  let appointments: DoctorAppointment[] = [];
-  let diasConCitas: { day: string; total: number; pendientes: number }[] = [];
-  let unreadCount = 0;
-  let error: string | null = null;
+  // Ejecutamos todas las consultas independientes en paralelo para evitar la cascada (waterfall) de red
+  const appointmentsPromise = verMes
+    ? supabase.rpc("dashboard_month_appointments", {
+        p_from: grid!.from,
+        p_to: grid!.to,
+        p_doctor: onlyDoctorId,
+      })
+    : vista === "semana"
+      ? supabase.rpc("dashboard_month_appointments", {
+          p_from: week.from,
+          p_to: week.to,
+          p_doctor: onlyDoctorId,
+        })
+      : supabase.rpc("dashboard_appointments", {
+          p_day: dayKey,
+          p_doctor: onlyDoctorId,
+        });
 
-  if (verMes) {
-    /**
-     * El rango de la grilla incluye los días de los meses vecinos (las
-     * semanas se muestran completas), así que se piden junto con sus
-     * citas: una cita del 1 de noviembre se ve en la última fila de
-     * octubre. Misma razón que la agenda del día: `during` es un
-     * tstzrange y el filtro es de solapamiento (&&) dentro de la función.
-     */
-    const { data, error: rpcError } = await supabase.rpc("dashboard_month_appointments", {
-      p_from: grid!.from,
-      p_to: grid!.to,
-      p_doctor: onlyDoctorId,
-    });
-    appointments = (data ?? []) as unknown as DoctorAppointment[];
-    error = rpcError?.message ?? null;
-  } else if (vista === "semana") {
-    /*
-     * La semana usa el mismo RPC que el mes con un rango de 7 días: lunes a
-     * domingo, que es la semana calendario que ya usa la grilla mensual.
-     */
-    const { data, error: rpcError } = await supabase.rpc("dashboard_month_appointments", {
-      p_from: week.from,
-      p_to: week.to,
-      p_doctor: onlyDoctorId,
-    });
-    appointments = (data ?? []) as unknown as DoctorAppointment[];
-    error = rpcError?.message ?? null;
+  const resumenPromise = verMes
+    ? Promise.resolve({ data: [] as unknown[] })
+    : vista === "semana"
+      ? supabase.rpc("dashboard_day_summaries", {
+          p_from: week.from,
+          p_to: week.to,
+          p_doctor: onlyDoctorId,
+        })
+      : supabase.rpc("dashboard_day_summaries", {
+          p_from: dayKey,
+          p_to: addDaysToKey(dayKey, 14),
+          p_doctor: onlyDoctorId,
+        });
 
-    const { data: resumen } = await supabase.rpc("dashboard_day_summaries", {
-      p_from: week.from,
-      p_to: week.to,
-      p_doctor: onlyDoctorId,
-    });
-    diasConCitas = ((resumen ?? []) as unknown as {
-      day: string;
-      total: number;
-      pendientes: number;
-    }[]).map((r) => ({ ...r, day: r.day.slice(0, 10) }));
+  const unreadPromise = verMes
+    ? Promise.resolve({ data: [] as unknown[] })
+    : supabase
+        .from("notifications")
+        .select("id")
+        .eq("doctor_id", session.id)
+        .is("read_at", null);
 
-    const { data: unread } = await supabase
-      .from("notifications")
-      .select("id")
-      .eq("doctor_id", session.id)
-      .is("read_at", null);
-    unreadCount = (unread ?? []).length;
-  } else {
-    /**
-     * La agenda se pide con `dashboard_appointments`, no con un
-     * `.gte("during", …)`: `during` es un `tstzrange` y filtrar un rango con
-     * >= / <= falla con "malformed range literal". La función usa el
-     * solapamiento (&&) y calcula el día con `at time zone`, que ya resuelve
-     * el cambio de hora de verano.
-     *
-     * Pasa por `security invoker`, así que RLS sigue aplicando: un
-     * profesional ve sólo lo suyo y un admin, todo el equipo.
-     */
-    const { data, error: rpcError } = await supabase.rpc("dashboard_appointments", {
-      p_day: dayKey,
-      p_doctor: onlyDoctorId,
-    });
-    appointments = (data ?? []) as unknown as DoctorAppointment[];
-    error = rpcError?.message ?? null;
+  const teamPromise = veTodoElEquipo ? getActiveDoctors() : Promise.resolve([]);
 
-    /**
-     * Días con citas en las próximas dos semanas.
-     *
-     * Sin esto, un día sin citas se veía como una lista vacía sin explicación:
-     * el panel abre en hoy, así que una cita reservada para mañana era
-     * invisible y parecía que la reserva se había perdido.
-     */
-    const { data: resumen } = await supabase.rpc("dashboard_day_summaries", {
-      p_from: dayKey,
-      p_to: addDaysToKey(dayKey, 14),
-      p_doctor: onlyDoctorId,
-    });
-    diasConCitas = ((resumen ?? []) as unknown as {
-      day: string;
-      total: number;
-      pendientes: number;
-    }[]).map((r) => ({ ...r, day: r.day.slice(0, 10) }));
-
-    const { data: unread } = await supabase
-      .from("notifications")
-      .select("id")
-      .eq("doctor_id", session.id)
-      .is("read_at", null);
-    unreadCount = (unread ?? []).length;
-  }
-
-  // El equipo sólo se carga para quienes pueden cambiar el filtro
-  // (admin y recepción).
-  const team = veTodoElEquipo ? await getActiveDoctors() : [];
-
-  // Catálogo y profesionales para la reserva del equipo: todos los roles
-  // autenticados pueden leerlos (RLS), pero cada rol sólo reserva donde
-  // le corresponde (lo impone la API, no este listado).
-  const { data: serviceRows } = await supabase
+  const servicesPromise = supabase
     .from("services")
     .select("id, name, duration_min")
     .eq("org_id", session.orgId)
     .eq("active", true)
     .order("name");
-  const bookingServices = (serviceRows ?? []) as StaffService[];
+
+  const meDoctorPromise = !veTodoElEquipo
+    ? supabase
+        .from("doctors")
+        .select("id, full_name")
+        .eq("id", session.id)
+        .maybeSingle()
+    : Promise.resolve({ data: null });
+
+  const [
+    orgSettings,
+    appointmentsRes,
+    resumenRes,
+    unreadRes,
+    team,
+    serviceRowsRes,
+    meDoctorRes,
+  ] = await Promise.all([
+    getOrgSettings(session.orgId),
+    appointmentsPromise,
+    resumenPromise,
+    unreadPromise,
+    teamPromise,
+    servicesPromise,
+    meDoctorPromise,
+  ]);
+
+  const tzClinica = orgSettings.timezone;
+  const appointments = (appointmentsRes.data ?? []) as unknown as DoctorAppointment[];
+  const error = appointmentsRes.error?.message ?? null;
+
+  const diasConCitas = ((resumenRes.data ?? []) as unknown as {
+    day: string;
+    total: number;
+    pendientes: number;
+  }[]).map((r) => ({ ...r, day: r.day.slice(0, 10) }));
+
+  const unreadCount = (unreadRes.data ?? []).length;
+  const bookingServices = (serviceRowsRes.data ?? []) as StaffService[];
+
   let bookingDoctors: StaffDoctor[] = team.map((d) => ({ id: d.id, full_name: d.full_name }));
-  if (!veTodoElEquipo) {
-    const { data: me } = await supabase
-      .from("doctors")
-      .select("id, full_name")
-      .eq("id", session.id)
-      .maybeSingle();
-    bookingDoctors = me ? [{ id: me.id as string, full_name: me.full_name as string }] : [];
+  if (!veTodoElEquipo && meDoctorRes.data) {
+    const me = meDoctorRes.data as { id: string; full_name: string };
+    bookingDoctors = [{ id: me.id, full_name: me.full_name }];
   }
 
   /*
@@ -319,8 +294,7 @@ function dayLabel(dayKey: string): string {
   }).format(new Date(`${dayKey}T12:00:00Z`));
 }
 
-/** Profesionales activos, para el filtro de agenda (sin recepción). */
-async function getActiveDoctors() {
+const getActiveDoctors = cache(async () => {
   const supabase = await supabaseServer();
   const { data } = await supabase
     .from("doctors")
@@ -330,4 +304,4 @@ async function getActiveDoctors() {
     .order("full_name");
 
   return (data ?? []) as unknown as PublicDoctor[];
-}
+});
