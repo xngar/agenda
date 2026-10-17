@@ -20,6 +20,7 @@ export const AUDIT_ENTIDADES: Record<string, string> = {
   consents: "Consentimiento",
   attachments: "Adjunto",
   patient_medical_background: "Antecedentes",
+  appointments: "Cita",
 };
 
 function texto(valor: unknown, max = 120): string {
@@ -130,5 +131,37 @@ export function detalleAuditoria(entry: {
     return "Actualizó los datos de la ficha";
   }
 
+  /**
+   * Citas: el resumen viene del trigger `audit_appointment_change`, con hora
+   * local de la clínica. La hora movida es la información que un admin necesita
+   * para reconstruir un reclamo, así que va primero cuando existe.
+   */
+  if (entity === "appointments") {
+    if (action === "delete") return "Eliminó una cita";
+
+    const desde = texto(s.desde, 16);
+    const hasta = texto(s.hasta, 16);
+    const motivo = texto(s.motivo, 80);
+
+    if (s.movio_hora === true) {
+      return `Movió la cita del ${desde} al ${hasta}${motivo ? ` · ${motivo}` : ""}`;
+    }
+    if (texto(s.evento) === "cambio_profesional") {
+      return `Cambió el profesional de la cita${motivo ? ` · ${motivo}` : ""}`;
+    }
+
+    const estado = texto(s.estado_hasta, 24);
+    const etiqueta = ESTADO_CITA[estado] ?? (estado ? `estado ${estado}` : "la cita");
+    return `${etiqueta}${desde ? ` · cita del ${desde}` : ""}${motivo ? ` · ${motivo}` : ""}`;
+  }
+
   return "";
 }
+
+const ESTADO_CITA: Record<string, string> = {
+  pending: "Dejó pendiente la cita",
+  confirmed: "Confirmó la cita",
+  cancelled: "Canceló la cita",
+  completed: "Completó la cita",
+  no_show: "Marcó que el paciente no asistió",
+};

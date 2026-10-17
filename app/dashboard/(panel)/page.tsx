@@ -1,21 +1,27 @@
 import "server-only";
 
-import { getDoctorSession } from "@/lib/auth";
+import { getDoctorSession, getOrgSettings } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import {
   addDaysToKey,
+  dateKey,
   isValidDayKey,
   isValidMonthKey,
   monthGridRange,
   monthLabel,
   todayKey,
+  weekLabel,
+  weekRange,
 } from "@/lib/dates";
+import { parseAppointmentRange } from "@/lib/range";
 import type { DoctorAppointment, PublicDoctor } from "@/lib/types";
 import { Agenda } from "./agenda";
 import { DayNav } from "./day-nav";
 import { DoctorPicker } from "./doctor-picker";
 import { MonthView } from "./month-view";
-import { ViewToggle } from "./view-toggle";
+import { ViewToggle, type VistaAgenda } from "./view-toggle";
+import { WeekNav } from "./week-nav";
+import { WeekView } from "./week-view";
 import {
   StaffBookingButton,
   type StaffDoctor,
@@ -32,12 +38,12 @@ interface PageProps {
 /**
  * Agenda del panel.
  *
- * Dos vistas sobre la misma agenda: día (`?date=`) y mes
- * (`?view=mes&month=`). El admin y la recepción pueden ver la de todo el
- * equipo con `?doctor=<id>`; cada profesional ve siempre la suya. La
- * consulta pasa por el cliente de sesión (anon + RLS), no por el service
- * role: así la vista no depende de que el filtro esté bien escrito en el
- * código.
+ * Tres vistas sobre la misma agenda: día (`?date=`), semana
+ * (`?view=semana&date=<lunes>`) y mes (`?view=mes&month=`). El admin y la
+ * recepción pueden ver la de todo el equipo con `?doctor=<id>`; cada
+ * profesional ve siempre la suya. La consulta pasa por el cliente de sesión
+ * (anon + RLS), no por el service role: así la vista no depende de que el
+ * filtro esté bien escrito en el código.
  */
 export default async function DashboardPage({ searchParams }: PageProps) {
   const session = await getDoctorSession();
@@ -52,9 +58,19 @@ export default async function DashboardPage({ searchParams }: PageProps) {
    */
   const veTodoElEquipo = session.isAdmin || session.role === "reception";
   const onlyDoctorId = veTodoElEquipo && doctor && doctor !== "all" ? doctor : null;
-  const verMes = view === "mes";
+  const vista: VistaAgenda = view === "mes" ? "mes" : view === "semana" ? "semana" : "dia";
+  const verMes = vista === "mes";
   const mesKey = isValidMonthKey(month) ? month : dayKey.slice(0, 7);
-  const grid = monthGridRange(mesKey);
+  // Sólo la vista mes necesita la grilla; el resto no la calculaba para nada.
+  const grid = verMes ? monthGridRange(mesKey) : null;
+  const week = weekRange(dayKey);
+
+  /**
+   * Zona de la clínica. Los días de la agenda se calculan en ella, no en la
+   * del servidor ni en la del navegador: `organizations.timezone` puede ser
+   * distinta a America/Santiago y el desfase mueve citas al día equivocado.
+   */
+  const { timezone: tzClinica } = await getOrgSettings(session.orgId);
 
   const supabase = await supabaseServer();
 
@@ -72,12 +88,42 @@ export default async function DashboardPage({ searchParams }: PageProps) {
      * tstzrange y el filtro es de solapamiento (&&) dentro de la función.
      */
     const { data, error: rpcError } = await supabase.rpc("dashboard_month_appointments", {
-      p_from: grid.from,
-      p_to: grid.to,
+      p_from: grid!.from,
+      p_to: grid!.to,
       p_doctor: onlyDoctorId,
     });
     appointments = (data ?? []) as unknown as DoctorAppointment[];
     error = rpcError?.message ?? null;
+  } else if (vista === "semana") {
+    /*
+     * La semana usa el mismo RPC que el mes con un rango de 7 días: lunes a
+     * domingo, que es la semana calendario que ya usa la grilla mensual.
+     */
+    const { data, error: rpcError } = await supabase.rpc("dashboard_month_appointments", {
+      p_from: week.from,
+      p_to: week.to,
+      p_doctor: onlyDoctorId,
+    });
+    appointments = (data ?? []) as unknown as DoctorAppointment[];
+    error = rpcError?.message ?? null;
+
+    const { data: resumen } = await supabase.rpc("dashboard_day_summaries", {
+      p_from: week.from,
+      p_to: week.to,
+      p_doctor: onlyDoctorId,
+    });
+    diasConCitas = ((resumen ?? []) as unknown as {
+      day: string;
+      total: number;
+      pendientes: number;
+    }[]).map((r) => ({ ...r, day: r.day.slice(0, 10) }));
+
+    const { data: unread } = await supabase
+      .from("notifications")
+      .select("id")
+      .eq("doctor_id", session.id)
+      .is("read_at", null);
+    unreadCount = (unread ?? []).length;
   } else {
     /**
      * La agenda se pide con `dashboard_appointments`, no con un
@@ -146,6 +192,20 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     bookingDoctors = me ? [{ id: me.id as string, full_name: me.full_name as string }] : [];
   }
 
+  /*
+   * El chip cuenta el rango que la vista realmente muestra. En el mes eso no
+   * puede ser `appointments.length`: la consulta trae la grilla completa (35 o
+   * 42 días, con semanas completas) y ese total incluía días de los meses
+   * vecinos que no son parte del mes que se está mirando.
+   */
+  const totalCitas = verMes
+    ? appointments.filter((cita) => {
+        const { start } = parseAppointmentRange(cita.during);
+        return start ? dateKey(start).slice(0, 7) === mesKey : false;
+      }).length
+    : appointments.length;
+  const ventana = verMes ? "este mes" : vista === "semana" ? "esta semana" : "este día";
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -156,14 +216,16 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           <h1 className="mt-1 text-3xl font-semibold tracking-tight text-brand-navy">
             {verMes ? (
               <time dateTime={mesKey}>{monthLabel(mesKey)}</time>
+            ) : vista === "semana" ? (
+              <time dateTime={week.from}>{weekLabel(week.from, week.to)}</time>
             ) : (
               <time dateTime={dayKey}>{dayLabel(dayKey)}</time>
             )}
           </h1>
           <p className="mt-1.5">
             <span className="inline-flex items-center rounded-full border border-neutral-200 bg-white px-2.5 py-0.5 text-xs font-medium tabular-nums text-neutral-600">
-              {appointments.length} cita{appointments.length === 1 ? "" : "s"}
-              {appointments.length > 0 ? (verMes ? " este mes" : " este día") : ""}
+              {totalCitas} cita{totalCitas === 1 ? "" : "s"}
+              {totalCitas > 0 ? ` ${ventana}` : ""}
             </span>
           </p>
         </div>
@@ -177,14 +239,24 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               defaultDate={dayKey}
             />
           ) : null}
-          <ViewToggle verMes={verMes} dayKey={dayKey} mesKey={mesKey} doctor={onlyDoctorId} />
+          <ViewToggle
+            vista={vista}
+            dayKey={dayKey}
+            weekFrom={week.from}
+            mesKey={mesKey}
+            doctor={onlyDoctorId}
+          />
           {veTodoElEquipo ? (
             <DoctorPicker current={onlyDoctorId} canFilter={veTodoElEquipo} doctors={team} />
           ) : null}
         </div>
       </div>
 
-      {!verMes ? <DayNav dayKey={dayKey} today={todayKey()} resumen={diasConCitas} /> : null}
+      {verMes ? null : vista === "semana" ? (
+        <WeekNav dayKey={dayKey} today={todayKey()} />
+      ) : (
+        <DayNav dayKey={dayKey} today={todayKey()} resumen={diasConCitas} />
+      )}
 
       {error ? (
         <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
@@ -197,13 +269,25 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           key={mesKey}
           initial={appointments}
           mesKey={mesKey}
-          gridFrom={grid.from}
-          gridTo={grid.to}
-          hoy={todayKey()}
+          gridFrom={grid!.from}
+          gridTo={grid!.to}
+          hoy={todayKey(tzClinica)}
+          timezone={tzClinica}
           currentUserId={session.id}
           canManage={veTodoElEquipo}
           realtimeDoctorId={onlyDoctorId ?? session.id}
           doctorFilter={onlyDoctorId}
+        />
+      ) : vista === "semana" ? (
+        <WeekView
+          key={week.from}
+          initial={appointments}
+          weekFrom={week.from}
+          weekTo={week.to}
+          hoy={todayKey(tzClinica)}
+          timezone={tzClinica}
+          doctorId={onlyDoctorId ?? session.id}
+          doctors={bookingDoctors}
         />
       ) : (
         <Agenda

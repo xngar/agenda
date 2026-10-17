@@ -138,6 +138,58 @@ export function monthLabel(monthKey: string): string {
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
+/* ------------------------------------------------------------------ */
+/* Semanas (vista semanal del panel)                                   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Semana calendario (lunes→domingo) que contiene una fecha.
+ *
+ * Misma convención que `monthGridRange`: la semana empieza en lunes para
+ * coincidir con las cabeceras del picker público, no en domingo. Aritmética
+ * pura de UTC, igual que el resto del módulo.
+ */
+export function weekRange(dayKey: string): { from: string; to: string } {
+  const offset = (weekdayOfKey(dayKey) + 6) % 7; // 0 = lunes
+  const from = addDaysToKey(dayKey, -offset);
+  return { from, to: addDaysToKey(from, 6) };
+}
+
+/** "12 – 18 de octubre de 2026", o el rango completo si cruza de mes. */
+export function weekLabel(from: string, to: string): string {
+  const fmt = (day: string, opciones: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat("es-CL", { ...opciones, timeZone: "UTC" }).format(
+      new Date(`${day}T12:00:00Z`),
+    );
+
+  if (from.slice(0, 7) === to.slice(0, 7)) {
+    const mes = fmt(from, { month: "long" });
+    return `${Number(from.slice(8))} – ${Number(to.slice(8))} de ${mes} de ${from.slice(0, 4)}`;
+  }
+
+  return `${fmt(from, { day: "numeric", month: "long" })} – ${fmt(to, {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  })}`;
+}
+
+/* ------------------------------------------------------------------ */
+/* Posición vertical de una cita (grilla semanal)                      */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Minutos desde la medianoche LOCAL de la clínica. Es la posición vertical del
+ * bloque en la grilla semanal, y por eso no se usa `Date.getHours()`: eso
+ * devuelve la hora del proceso (en CI, UTC) y correría la cita una hora.
+ */
+export function minutesSinceMidnight(iso: string, timezone = DEFAULT_TIMEZONE): number {
+  const [hora, minuto] = formatInTimeZone(iso, timezone, "HH:mm", { locale: es })
+    .split(":")
+    .map(Number);
+  return hora * 60 + minuto;
+}
+
 export function durationMinutes(startIso: string, endIso: string): number {
   return Math.round(
     (new Date(endIso).getTime() - new Date(startIso).getTime()) / 60_000,

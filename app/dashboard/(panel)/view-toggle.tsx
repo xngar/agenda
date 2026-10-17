@@ -2,28 +2,41 @@
 
 import Link from "next/link";
 
+export type VistaAgenda = "dia" | "semana" | "mes";
+
 /**
- * Conmutador Día | Mes de la agenda.
+ * Conmutador Día | Semana | Mes de la agenda.
  *
- * Va en la URL como todo el panel (`?date=` / `?view=mes&month=`): así se
- * puede compartir el enlace, refrescar y volver atrás sin perder el
- * filtro de profesional.
+ * Va en la URL como todo el panel (`?date=` / `?view=semana&date=<lunes>` /
+ * `?view=mes&month=`): así se puede compartir el enlace, refrescar y volver
+ * atrás sin perder el filtro de profesional.
  */
 export function ViewToggle({
-  verMes,
+  vista,
   dayKey,
+  weekFrom,
   mesKey,
   doctor,
 }: {
-  verMes: boolean;
+  vista: VistaAgenda;
   dayKey: string;
+  weekFrom: string;
   mesKey: string;
   doctor: string | null;
 }) {
   const sufijo = doctor ? `&doctor=${doctor}` : "";
   const opciones = [
-    { etiqueta: "Día", href: `/dashboard?date=${dayKey}${sufijo}`, activo: !verMes },
-    { etiqueta: "Mes", href: `/dashboard?view=mes&month=${mesKey}${sufijo}`, activo: verMes },
+    { etiqueta: "Día", href: `/dashboard?date=${dayKey}${sufijo}`, activo: vista === "dia" },
+    {
+      etiqueta: "Semana",
+      href: `/dashboard?view=semana&date=${weekFrom}${sufijo}`,
+      activo: vista === "semana",
+    },
+    {
+      etiqueta: "Mes",
+      href: `/dashboard?view=mes&month=${mesKey}${sufijo}`,
+      activo: vista === "mes",
+    },
   ];
 
   return (

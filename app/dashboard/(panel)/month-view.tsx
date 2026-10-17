@@ -8,11 +8,11 @@ import { APPOINTMENT_STATUSES, STATUS_LABEL } from "@/lib/types";
 import {
   addDaysToKey,
   addMonthsToKey,
-  dateKey,
   formatTime,
   monthLabel,
 } from "@/lib/dates";
 import { parseAppointmentRange } from "@/lib/range";
+import { appointmentsByDay } from "@/lib/agenda";
 import { EmptyState, StatusBadge } from "@/components/ui";
 import { useRealtimeNotifications } from "../use-realtime";
 
@@ -25,6 +25,8 @@ interface Props {
   gridTo: string;
   /** Hoy según la zona de la clínica. */
   hoy: string;
+  /** Zona de la organización: define a qué día local pertenece cada cita. */
+  timezone?: string;
   currentUserId: string;
   /** Admin o recepción: pueden actuar sobre cualquier cita de la organización. */
   canManage: boolean;
@@ -55,6 +57,7 @@ export function MonthView({
   gridFrom,
   gridTo,
   hoy,
+  timezone,
   currentUserId,
   canManage,
   realtimeDoctorId,
@@ -86,22 +89,7 @@ export function MonthView({
   );
 
   /** Citas agrupadas por DÍA LOCAL de la clínica, no por día UTC. */
-  const porDia = useMemo(() => {
-    const mapa = new Map<string, { cita: DoctorAppointment; start: string; end: string }[]>();
-    for (const cita of initial) {
-      const { start, end } = parseAppointmentRange(cita.during);
-      if (!start) continue;
-      const key = dateKey(start);
-      const lista = mapa.get(key);
-      const item = { cita, start, end };
-      if (lista) lista.push(item);
-      else mapa.set(key, [item]);
-    }
-    for (const lista of mapa.values()) {
-      lista.sort((a, b) => a.start.localeCompare(b.start));
-    }
-    return mapa;
-  }, [initial]);
+  const porDia = useMemo(() => appointmentsByDay(initial, timezone), [initial, timezone]);
 
   const dias = useMemo(() => {
     const lista: string[] = [];

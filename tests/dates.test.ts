@@ -10,6 +10,8 @@ import {
   monthGridRange,
   monthLabel,
   weekdayOfKey,
+  weekLabel,
+  weekRange,
   zonedInstant,
 } from "@/lib/dates";
 
@@ -109,6 +111,27 @@ describe("meses del calendario mensual", () => {
     expect(monthLabel("2026-10")).toBe("Octubre 2026");
     expect(monthLabel("2026-01")).toBe("Enero 2026");
     expect(monthLabel("2026-12")).toBe("Diciembre 2026");
+  });
+
+  it("la semana va de lunes a domingo", () => {
+    // Un miércoles queda en medio de la semana del lunes 28/9.
+    expect(weekRange("2026-09-30")).toEqual({ from: "2026-09-28", to: "2026-10-04" });
+    // Un lunes es el inicio de su propia semana.
+    expect(weekRange("2026-09-28")).toEqual({ from: "2026-09-28", to: "2026-10-04" });
+    // Un domingo sigue siendo parte de la semana que empezó el lunes antes:
+    // la semana no empieza en domingo.
+    expect(weekRange("2026-10-04")).toEqual({ from: "2026-09-28", to: "2026-10-04" });
+    // Cruza el cambio de mes y el de año sin moverse de semana.
+    expect(weekRange("2026-11-01")).toEqual({ from: "2026-10-26", to: "2026-11-01" });
+    expect(weekRange("2026-12-31")).toEqual({ from: "2026-12-28", to: "2027-01-03" });
+  });
+
+  it("etiqueta la semana", () => {
+    expect(weekLabel("2026-10-05", "2026-10-11")).toBe("5 – 11 de octubre de 2026");
+    // Una semana que cruza de mes muestra los dos meses, no un rango de días.
+    const cruzada = weekLabel("2026-09-28", "2026-10-04");
+    expect(cruzada).toContain("septiembre");
+    expect(cruzada).toContain("octubre");
   });
 });
 

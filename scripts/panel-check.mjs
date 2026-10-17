@@ -615,6 +615,157 @@ console.log("\n[5] Aislamiento por RLS entre profesionales");
   const otroMes = await req(admin, `/dashboard?view=mes&month=${mesAnterior}&doctor=${slot.doctor_id}`);
   check("la grilla navega a otro mes", otroMes.status === 200, `status=${otroMes.status} mes=${mesAnterior}`);
 
+  // -- Vista semanal: lunes a domingo, el mismo RPC del mes con 7 días --
+  const diaCita = slot.slot_start.slice(0, 10);
+  const inicioSemana = new Date(`${diaCita}T00:00:00Z`);
+  // Lunes de la semana de esa cita, con la misma aritmética que lib/dates.
+  inicioSemana.setUTCDate(inicioSemana.getUTCDate() - ((inicioSemana.getUTCDay() + 6) % 7));
+  const fromSemana = inicioSemana.toISOString().slice(0, 10);
+
+  check(
+    "la vista día ofrece pasar a la vista Semana",
+    conNavegacion.text.includes("view=semana"),
+    "",
+  );
+
+  const vistaSemana = await req(
+    admin,
+    `/dashboard?view=semana&date=${fromSemana}&doctor=${slot.doctor_id}`,
+  );
+  check(
+    "la agenda de la semana muestra la cita del equipo",
+    vistaSemana.status === 200 &&
+      vistaSemana.text.includes("Paciente Panel") &&
+      vistaSemana.text.includes(horaLocal) &&
+      vistaSemana.text.includes('aria-label="Agenda de la semana"'),
+    `status=${vistaSemana.status} nombre=${vistaSemana.text.includes("Paciente Panel")} hora=${horaLocal}`,
+  );
+  check(
+    "la semana ofrece navegar a la semana siguiente",
+    vistaSemana.status === 200 && vistaSemana.text.includes("view=semana&date="),
+    `status=${vistaSemana.status}`,
+  );
+
+  const inicioSiguiente = new Date(inicioSemana);
+  inicioSiguiente.setUTCDate(inicioSiguiente.getUTCDate() + 7);
+  const otraSemana = await req(
+    admin,
+    `/dashboard?view=semana&date=${inicioSiguiente.toISOString().slice(0, 10)}&doctor=${slot.doctor_id}`,
+  );
+  check(
+    "la grilla semanal navega a la semana siguiente",
+    otraSemana.status === 200 &&
+      !otraSemana.text.includes("No pudimos cargar la agenda"),
+    `status=${otraSemana.status}`,
+  );
+
+  /*
+   * Reprogramar desde el panel.
+   *
+   * Esta es la escritura que mueve una cita Y le avisa al paciente, y era la
+   * única de la agenda sin un solo test. Es también la ruta que usaría
+   * arrastrar una cita en la grilla semanal, así que su contrato (qué acepta,
+   * qué rechaza y con qué código) queda fijado acá.
+   *
+   * Se reserva una cita aparte para no mover la que otras secciones afirman.
+   */
+  {
+    const dia = slot.slot_start.slice(0, 10);
+    const libresRes = await req(
+      admin,
+      `/api/dashboard/slots?date=${dia}&serviceId=${SERVICE}&doctorId=${slot.doctor_id}`,
+    );
+    const libres = (jsonBody(libresRes).slots ?? []).map((s) => s.slot_start);
+    const origen = libres[0];
+    const destino = libres.find((s) => s !== origen);
+    check(
+      "hay al menos dos horarios libres para probar la reprogramación",
+      Boolean(origen && destino),
+      `libres=${libres.length}`,
+    );
+
+    const reserva = await req(null, "/api/bookings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        serviceId: SERVICE,
+        doctorId: slot.doctor_id,
+        slotStart: origen,
+        fullName: "Paciente Reagenda",
+        rut: rutUnico(),
+        phone: "+56900000002",
+        email: `panel.reagenda.${Date.now()}@test.cl`,
+        consent: true,
+      }),
+    });
+    check("cita de apoyo para la reprogramación", reserva.status === 201, `status=${reserva.status}`);
+    const cita = jsonBody(reserva);
+
+    const mover = (cookies, slotStart) =>
+      req(cookies, "/api/dashboard/appointments/reschedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ appointmentId: cita.appointmentId, slotStart }),
+      });
+
+    const movida = await mover(admin, destino);
+    check(
+      "la admin reprograma la cita a un horario libre",
+      movida.status === 200 && jsonBody(movida).ok === true,
+      `status=${movida.status} ${movida.text.slice(0, 90)}`,
+    );
+
+    // `slot.slot_start` lo ocupa la cita de [5]: la exclusión anti solapamiento
+    // tiene que ganar aunque la hora "parezca" libre.
+    const tomada = await mover(admin, slot.slot_start);
+    check(
+      "reprogramar a una hora ya reservada da 409 A0001",
+      tomada.status === 409 && jsonBody(tomada).code === "A0001",
+      `status=${tomada.status} ${tomada.text.slice(0, 90)}`,
+    );
+
+    // 03:30 UTC es madrugada local: fuera de cualquier horario de atención.
+    const cerrada = await mover(admin, `${dia}T03:30:00.000Z`);
+    check(
+      "reprogramar a una hora cerrada da 409 A0002",
+      cerrada.status === 409 && jsonBody(cerrada).code === "A0002",
+      `status=${cerrada.status} ${cerrada.text.slice(0, 90)}`,
+    );
+
+    const ajenoMovido = await mover(doc, destino);
+    check(
+      "un profesional sin permisos no mueve la cita ajena",
+      ajenoMovido.status === 403,
+      `status=${ajenoMovido.status}`,
+    );
+
+    // El movimiento tiene que quedar registrado: es la única forma de
+    // reconstruir un reclamo de "me cambiaron la hora sin avisar".
+    const auditoria = await req(admin, "/api/ficha/audit?entity=appointments&limit=10");
+    const movimientos = (jsonBody(auditoria).entries ?? []).filter(
+      (e) => e.entity === "appointments" && e.summary?.movio_hora === true,
+    );
+    check(
+      "el movimiento queda en la auditoría",
+      auditoria.status === 200 && movimientos.length >= 1,
+      `status=${auditoria.status} n=${movimientos.length}`,
+    );
+
+    const movido = movimientos[0];
+    check(
+      "la auditoría guarda la hora de origen y la de destino",
+      typeof movido?.summary?.desde === "string" &&
+        typeof movido?.summary?.hasta === "string" &&
+        movido.summary.desde !== movido.summary.hasta,
+      `${movido?.summary?.desde} -> ${movido?.summary?.hasta}`,
+    );
+    check(
+      "la auditoría identifica a quién movió la cita",
+      Boolean(movido?.actor_id) && typeof movido?.actor_name === "string",
+      `actor=${movido?.actor_name}`,
+    );
+  }
+
   // Sebastián intenta tocar una cita que no es suya.
   const ajeno = await req(doc, "/api/dashboard/appointments", {
     method: "POST",

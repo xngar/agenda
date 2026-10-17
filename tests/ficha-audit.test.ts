@@ -2,6 +2,48 @@ import { describe, expect, it } from "vitest";
 import { detalleAuditoria, redactAuditSummary } from "@/lib/ficha/audit-view";
 
 describe("detalleAuditoria", () => {
+  it("describe un movimiento de cita con la hora de origen y la de destino", () => {
+    expect(
+      detalleAuditoria({
+        action: "update",
+        entity: "appointments",
+        summary: {
+          evento: "movio_hora",
+          movio_hora: true,
+          desde: "2026-10-05 10:00",
+          hasta: "2026-10-05 10:30",
+          estado_desde: "confirmed",
+          estado_hasta: "confirmed",
+        },
+      }),
+    ).toBe("Movió la cita del 2026-10-05 10:00 al 2026-10-05 10:30");
+  });
+
+  it("describe una cancelación de cita con su motivo", () => {
+    expect(
+      detalleAuditoria({
+        action: "update",
+        entity: "appointments",
+        summary: {
+          evento: "cambio_estado",
+          movio_hora: false,
+          desde: "2026-10-05 09:00",
+          hasta: "2026-10-05 09:00",
+          estado_hasta: "cancelled",
+          motivo: "El paciente avisó que no puede",
+        },
+      }),
+    ).toBe("Canceló la cita · cita del 2026-10-05 09:00 · El paciente avisó que no puede");
+  });
+
+  it("describe el resto de estados de cita", () => {
+    const estado = (estado_hasta: string) =>
+      detalleAuditoria({ action: "update", entity: "appointments", summary: { estado_hasta } });
+    expect(estado("confirmed")).toContain("Confirmó");
+    expect(estado("completed")).toContain("Completó");
+    expect(estado("no_show")).toContain("no asistió");
+  });
+
   it("describe la firma con fecha y motivo", () => {
     expect(
       detalleAuditoria({

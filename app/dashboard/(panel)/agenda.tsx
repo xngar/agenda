@@ -1,18 +1,12 @@
-"use client";
+﻿"use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { useMemo, useState } from "react";
 import type { DoctorAppointment } from "@/lib/types";
-import { formatTime } from "@/lib/dates";
-import { StatusBadge, EmptyState } from "@/components/ui";
-import { useRealtimeNotifications } from "../use-realtime";
-import { parseAppointmentRange } from "@/lib/range";
-import { Accion, AgendaTable, RIEL } from "./agenda-table";
-import {
-  StaffRescheduleModal,
-  type ReschedulableAppointment,
-} from "./staff-reschedule-modal";
+import { EmptyState } from "@/components/ui";
+import { AgendaTable } from "./agenda-table";
+import { AgendaCards } from "./agenda-cards";
+import { useAgendaAcciones } from "./agenda-actions";
+import { StaffRescheduleModal } from "./staff-reschedule-modal";
 import type { StaffDoctor } from "./staff-booking-button";
 
 interface Props {
@@ -31,11 +25,10 @@ type Filtro = "todas" | "activas" | "canceladas";
 /**
  * Lista de citas del día con acciones de estado.
  *
- * Al llegar una notificación por Realtime se refresca la agenda
- * automáticamente (`router.refresh()` con debounce): la fuente de verdad
+ * La lógica de confirmar/cancelar/reprogramar y el refresco por Realtime viven
+ * en `useAgendaAcciones`, que la vista semanal también usa: la fuente de verdad
  * es el servidor, y el refresco también trae cambios hechos por otro
  * profesional o por el paciente (ej. reprogramaciones desde /cita/[token]).
- * El aviso manual queda como respaldo por si el refresco automático falla.
  */
 export function Agenda({
   initial,
@@ -45,58 +38,20 @@ export function Agenda({
   diasConCitas,
   doctors,
 }: Props) {
-  const router = useRouter();
   const [filtro, setFiltro] = useState<Filtro>("todas");
   const [busqueda, setBusqueda] = useState("");
-  const [pendiente, setPendiente] = useState<string | null>(null);
-  const [nuevas, setNuevas] = useState(0);
-  const [reagendando, setReagendando] = useState<DoctorAppointment | null>(null);
-  const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    return () => {
-      if (refreshTimer.current) clearTimeout(refreshTimer.current);
-    };
-  }, []);
-
-  const { connected, error: realtimeError } = useRealtimeNotifications(
-    doctorId,
-    useCallback(() => {
-      setNuevas((n) => n + 1);
-      if (refreshTimer.current) clearTimeout(refreshTimer.current);
-      refreshTimer.current = setTimeout(() => {
-        router.refresh();
-        setNuevas(0);
-      }, 1500);
-    }, [router]),
-  );
-
-  async function cambiar(appointmentId: string, action: string) {
-    setPendiente(appointmentId + action);
-
-    try {
-      const response = await fetch("/api/dashboard/appointments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ appointmentId, action }),
-      });
-
-      const data = (await response.json().catch(() => ({}))) as { error?: string };
-
-      if (!response.ok) {
-        toast.error(data.error ?? "No se pudo actualizar la cita");
-        return;
-      }
-
-      setNuevas(0);
-      toast.success("Cita actualizada");
-      router.refresh();
-    } catch {
-      toast.error("No pudimos conectarnos. Intenta de nuevo.");
-    } finally {
-      setPendiente(null);
-    }
-  }
+  const {
+    pendiente,
+    cambiar,
+    reagendando,
+    setReagendando,
+    paraReagendar,
+    nuevas,
+    refrescarAhora,
+    connected,
+    realtimeError,
+  } = useAgendaAcciones({ doctorId, doctors });
 
   const conteos = useMemo(() => {
     let activas = 0;
@@ -116,18 +71,6 @@ export function Agenda({
     return normalizar(a.patient?.full_name ?? "").includes(q);
   });
 
-  function paraReagendar(cita: DoctorAppointment): ReschedulableAppointment {
-    const { start } = parseAppointmentRange(cita.during);
-    return {
-      id: cita.id,
-      patientName: cita.patient?.full_name ?? "Paciente",
-      currentStart: start,
-      doctorId: cita.doctor_id,
-      doctorName: doctors.find((d) => d.id === cita.doctor_id)?.full_name ?? "Profesional",
-      serviceName: cita.service?.name ?? "Atención",
-    };
-  }
-
   function accionar(appointmentId: string, action: string) {
     if (action === "reschedule") {
       const cita = visibles.find((c) => c.id === appointmentId);
@@ -136,9 +79,6 @@ export function Agenda({
     }
     cambiar(appointmentId, action);
   }
-
-  const reprogramable = (cita: DoctorAppointment) =>
-    cita.status === "pending" || cita.status === "confirmed";
 
   return (
     <section className="space-y-3">
@@ -193,10 +133,7 @@ export function Agenda({
       {nuevas > 0 || unreadCount > 0 ? (
         <button
           type="button"
-          onClick={() => {
-            setNuevas(0);
-            router.refresh();
-          }}
+          onClick={refrescarAhora}
           className="w-full rounded-xl border border-brand-sky bg-brand-sky-50 px-4 py-2.5 text-sm font-medium text-brand-navy"
         >
           Hay cambios nuevos en la agenda · actualizar
@@ -234,7 +171,7 @@ export function Agenda({
           /*
             Un día vacío sin más se lee como "no hay nada", pero casi siempre
             significa "no hay nada HOY". Como la cita pendiente suele estar al
-            día siguiente, sesaysólo en qué días hay algo.
+            día siguiente, se indica sólo en qué días hay algo.
           */
           <EmptyState
             title="Sin citas para este día"
@@ -249,113 +186,12 @@ export function Agenda({
             <AgendaTable citas={visibles} pendiente={pendiente} onAccion={accionar} />
           </div>
 
-          <ul className="space-y-2 md:hidden" data-testid="agenda-cards">
-          {visibles.map((cita, i) => {
-            const { start, end } = parseAppointmentRange(cita.during);
-            const cancelada = cita.status === "cancelled";
-            const ocupado = pendiente?.startsWith(cita.id) ?? false;
-
-            return (
-              <li
-                key={cita.id}
-                style={{ animationDelay: `${Math.min(i, 8) * 24}ms` }}
-                className={`anim-month-cell flex gap-3 rounded-2xl border border-l-[4px] p-4 transition-shadow hover:shadow-card sm:gap-4 ${
-                  RIEL[cita.status] ?? "border-l-neutral-300 bg-white"
-                } ${cancelada ? "opacity-70" : ""}`}
-              >
-                {/*
-                  La hora es el ancla de la lectura: gutter tabular a la
-                  izquierda, igual que la grilla mensual usa el riel de
-                  color para contar el estado de un vistazo.
-                */}
-                <div className="w-14 shrink-0 pt-0.5 text-right sm:w-16">
-                  <p className="text-base font-semibold tabular-nums text-brand-navy">
-                    {formatTime(start)}
-                  </p>
-                  <p className="text-xs tabular-nums text-neutral-600">{formatTime(end)}</p>
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-[15px] font-semibold text-neutral-900">
-                        {cita.patient?.full_name ?? "Paciente"}
-                      </p>
-                      {cita.service?.name ? (
-                        <p className="mt-0.5 truncate text-sm text-neutral-600">
-                          {cita.service.name}
-                        </p>
-                      ) : null}
-                      <p className="mt-0.5 truncate text-xs text-neutral-600">
-                        {[cita.patient?.rut, cita.patient?.phone, cita.patient?.email]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </p>
-                    </div>
-
-                    <StatusBadge status={cita.status} />
-                  </div>
-
-                  {cita.status === "cancelled" && cita.cancel_reason ? (
-                    <p className="mt-2 text-sm text-neutral-500">
-                      Motivo: {cita.cancel_reason}
-                    </p>
-                  ) : null}
-
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {cancelada ? (
-                      <Accion
-                        etiqueta="Reabrir"
-                        onClick={() => cambiar(cita.id, "reopen")}
-                        disabled={ocupado}
-                      />
-                    ) : (
-                      <>
-                        {/*
-                          Una cita recién creada queda en `pending`. Mientras
-                          no se confirme, el paciente no tiene garantía de que
-                          el espacio siga reservado para él, así que el botón
-                          va primero cuando corresponde.
-                        */}
-                        {cita.status === "pending" ? (
-                          <Accion
-                            etiqueta="Confirmar"
-                            onClick={() => cambiar(cita.id, "confirmed")}
-                            disabled={ocupado}
-                            destacado
-                          />
-                        ) : null}
-                        <Accion
-                          etiqueta="Completar"
-                          onClick={() => cambiar(cita.id, "completed")}
-                          disabled={ocupado}
-                        />
-                        <Accion
-                          etiqueta="No asistió"
-                          onClick={() => cambiar(cita.id, "no_show")}
-                          disabled={ocupado}
-                        />
-                        {reprogramable(cita) ? (
-                          <Accion
-                            etiqueta="Reagendar"
-                            onClick={() => setReagendando(cita)}
-                            disabled={ocupado}
-                          />
-                        ) : null}
-                        <Accion
-                          etiqueta="Cancelar"
-                          onClick={() => cambiar(cita.id, "cancelled")}
-                          disabled={ocupado}
-                          tono="peligro"
-                        />
-                      </>
-                    )}
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-          </ul>
+          <AgendaCards
+            citas={visibles}
+            pendiente={pendiente}
+            onCambiar={cambiar}
+            onReagendar={setReagendando}
+          />
         </>
       )}
 
