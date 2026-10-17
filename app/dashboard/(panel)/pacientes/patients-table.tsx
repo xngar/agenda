@@ -88,7 +88,7 @@ export function PatientsTable({
         {total === 1 ? "1 paciente" : `${total} pacientes`}
       </p>
 
-      <div className="overflow-x-auto rounded-2xl border border-neutral-200 bg-white">
+      <div className="hidden overflow-x-auto rounded-2xl border border-neutral-200 bg-white md:block">
         <table className="w-full min-w-[720px] text-sm" data-testid="patients-table">
           <caption className="sr-only">Pacientes de la organización</caption>
           <thead className="border-b border-neutral-200 bg-neutral-50">
@@ -185,6 +185,60 @@ export function PatientsTable({
           </tbody>
         </table>
       </div>
+
+      <ul className="space-y-2 md:hidden" data-testid="patients-cards">
+        {patients.map((p) => (
+          <li key={p.id} className="rounded-2xl border border-neutral-200 bg-white p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <Link
+                  href={`/dashboard/pacientes/${p.id}`}
+                  className="font-medium text-neutral-900 transition-colors hover:text-brand-navy hover:underline"
+                >
+                  {p.full_name}
+                </Link>
+                {p.doctor?.full_name ? (
+                  <p className="text-xs text-brand-navy-700">Paciente de {p.doctor.full_name}</p>
+                ) : null}
+              </div>
+              {statusPill(p.patient_status)}
+            </div>
+
+            <dl className="mt-3 space-y-1 text-sm">
+              <div className="flex gap-2">
+                <dt className="w-24 shrink-0 text-neutral-500">RUT</dt>
+                <dd className="min-w-0 truncate text-neutral-800">
+                  {p.rut ? (formatRut(p.rut) ?? p.rut) : "—"}
+                </dd>
+              </div>
+              <div className="flex gap-2">
+                <dt className="w-24 shrink-0 text-neutral-500">Contacto</dt>
+                <dd className="min-w-0 truncate text-neutral-800">
+                  {p.phone ?? p.email ?? "—"}
+                  {p.phone && p.email ? ` · ${p.email}` : ""}
+                </dd>
+              </div>
+              <div className="flex gap-2">
+                <dt className="w-24 shrink-0 text-neutral-500">Nacimiento</dt>
+                <dd className="min-w-0 text-neutral-800">
+                  {p.birth_date ? `${p.birth_date.slice(0, 10)} · ${sexLabel(p.sex)}` : "—"}
+                </dd>
+              </div>
+            </dl>
+
+            <Link
+              href={`/dashboard/pacientes/${p.id}`}
+              aria-label={`Abrir ficha de ${p.full_name}`}
+              className="mt-3 inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+            >
+              Ver ficha
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+          </li>
+        ))}
+      </ul>
 
       {total > 0 ? (
         <nav

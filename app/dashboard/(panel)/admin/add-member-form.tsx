@@ -175,15 +175,15 @@ export function AddMemberForm() {
             <button type="submit" disabled={enviando} className={primaryBtn}>
               {enviando ? "Creando…" : "Crear miembro"}
             </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setAbierto(false);
-                }}
-                className={ghostBtn}
-              >
-                Cancelar
-              </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAbierto(false);
+              }}
+              className={ghostBtn}
+            >
+              Cancelar
+            </button>
           </div>
         </form>
       ) : (

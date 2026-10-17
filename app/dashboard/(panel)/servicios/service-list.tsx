@@ -87,7 +87,7 @@ export function ServiceList({ initial }: { initial: ServiceItem[] }) {
                 <p className="text-sm text-neutral-600">{s.duration_min} minutos</p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-2">
                 <StatusBadge status={s.active ? "confirmed" : "cancelled"} />
                 <button
                   type="button"

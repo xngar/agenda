@@ -245,7 +245,7 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
             onChange={(e) => setBusqueda(e.target.value)}
             placeholder="Buscar clínica por nombre…"
             autoComplete="off"
-            className={`${inputClasses} w-64`}
+            className={`${inputClasses} w-full sm:w-64`}
           />
         </div>
         {q ? (
@@ -264,7 +264,7 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
           </p>
         </Card>
       ) : (
-        <div className="overflow-x-auto rounded-card border border-neutral-200 bg-white shadow-card">
+        <div className="hidden overflow-x-auto rounded-card border border-neutral-200 bg-white shadow-card md:block">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
               <tr>
@@ -361,6 +361,109 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
           </table>
         </div>
       )}
+
+      {visibles.length > 0 ? (
+        <ul className="space-y-2 md:hidden">
+          {visibles.map((org) => (
+            <li
+              key={org.id}
+              data-org-id={org.id}
+              className="rounded-card border border-neutral-200 bg-white p-4 shadow-card"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-neutral-800">{org.name}</p>
+                  <p className="truncate text-xs text-neutral-500">/{org.slug}</p>
+                </div>
+                <span
+                  className={
+                    org.active
+                      ? "shrink-0 rounded-full bg-brand-sky-100 px-2.5 py-0.5 text-xs font-semibold text-brand-navy"
+                      : "shrink-0 rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-semibold text-neutral-600"
+                  }
+                >
+                  {org.active ? "Activa" : "Inactiva"}
+                </span>
+              </div>
+
+              <dl className="mt-3 space-y-1 text-sm">
+                <div className="flex gap-2">
+                  <dt className="w-24 shrink-0 text-neutral-500">Tipo</dt>
+                  <dd className="text-neutral-800">{TIPO_LABEL[org.type] ?? org.type}</dd>
+                </div>
+                <div className="flex gap-2">
+                  <dt className="w-24 shrink-0 text-neutral-500">Administrador</dt>
+                  <dd className="min-w-0 text-neutral-800">
+                    {org.admin ? (
+                      <>
+                        {org.admin.name}
+                        <span className="block truncate text-xs text-neutral-500">
+                          {org.admin.email}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-neutral-400">Sin administrador</span>
+                    )}
+                  </dd>
+                </div>
+                <div className="flex gap-2">
+                  <dt className="w-24 shrink-0 text-neutral-500">Profesionales</dt>
+                  <dd className="text-neutral-700">
+                    {org.professionals}
+                    {org.professionalLimit !== null ? ` de ${org.professionalLimit}` : " de ∞"}
+                  </dd>
+                </div>
+                <div className="flex items-center gap-2">
+                  <dt className="w-24 shrink-0 text-neutral-500">Cupo</dt>
+                  <dd>
+                    <CupoCombobox
+                      orgId={org.id}
+                      professionalLimit={org.professionalLimit}
+                      disabled={actualizando === org.id}
+                      onSelect={cambiarCupo}
+                    />
+                  </dd>
+                </div>
+                <div className="flex gap-2">
+                  <dt className="w-24 shrink-0 text-neutral-500">Creada</dt>
+                  <dd className="text-neutral-600">{org.createdAt}</dd>
+                </div>
+              </dl>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link
+                  href={`/dashboard/plataforma/organizaciones/${org.id}`}
+                  className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100"
+                >
+                  Editar
+                </Link>
+                <button
+                  type="button"
+                  disabled={!org.admin}
+                  onClick={() => {
+                    setError(null);
+                    setResetOk(null);
+                    setResetear(org);
+                  }}
+                  title={org.admin ? "Restablecer contraseña" : "Sin administrador"}
+                  className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Contraseña
+                </button>
+                {org.slug === "plataforma" ? null : (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmar(org)}
+                    className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100 hover:text-[color:var(--color-danger,#b91c1c)]"
+                  >
+                    Eliminar
+                  </button>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : null}
 
       <p className="text-sm text-neutral-500">
         Eliminar una clínica no borra su historial de citas: si ya tiene citas, desactívala desde{" "}

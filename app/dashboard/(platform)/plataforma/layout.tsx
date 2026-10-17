@@ -22,12 +22,12 @@ export default async function PlataformaLayout({ children }: { children: React.R
           <div className="flex items-center gap-3">
             <Link
               href="/dashboard/plataforma/organizaciones"
-              className="text-sm font-medium text-neutral-700 hover:bg-neutral-100 rounded-lg px-3 py-1.5"
+              className="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100 sm:inline-block"
             >
               Organizaciones
             </Link>
-            <div className="text-right text-sm leading-tight">
-              <p className="font-medium text-neutral-800">{session.full_name}</p>
+            <div className="min-w-0 text-right text-sm leading-tight">
+              <p className="max-w-48 truncate font-medium text-neutral-800">{session.full_name}</p>
             </div>
             <LogoutButton />
           </div>

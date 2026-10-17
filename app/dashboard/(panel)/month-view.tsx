@@ -278,9 +278,9 @@ export function MonthView({
 
       {/* Grilla */}
       <div key={mesKey} className="overflow-x-auto pb-1">
-        <div className="grid min-w-[42rem] grid-cols-7 gap-1.5 sm:gap-2">
+        <div className="grid min-w-[24rem] grid-cols-7 gap-1 sm:min-w-[42rem] sm:gap-2">
           {DIAS_SEMANA.map((label) => (
-            <div key={label} className="pb-1 text-center text-xs font-semibold uppercase text-neutral-500">
+            <div key={label} className="pb-1 text-center text-[10px] font-semibold uppercase text-neutral-500 sm:text-xs">
               {label}
             </div>
           ))}
@@ -296,7 +296,7 @@ export function MonthView({
               <div
                 key={dia}
                 style={{ animationDelay: `${Math.min(i, 21) * 16}ms` }}
-                className={`anim-month-cell flex min-h-24 flex-col gap-1 rounded-2xl border p-1.5 transition-colors duration-150 sm:min-h-28 ${
+                className={`anim-month-cell flex min-h-20 flex-col gap-1 rounded-2xl border p-1 transition-colors duration-150 sm:min-h-28 sm:p-1.5 ${
                   esHoy
                     ? "border-brand-sky bg-brand-sky-50"
                     : enMes

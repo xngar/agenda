@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -140,6 +140,12 @@ function navButtonClasses(active: boolean): string {
   }`;
 }
 
+function mobileButtonClasses(active: boolean): string {
+  return `flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+    active ? "bg-brand-navy text-white" : "text-neutral-700 hover:bg-neutral-100"
+  }`;
+}
+
 function esActivo(pathname: string, href: string): boolean {
   return href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
 }
@@ -152,11 +158,23 @@ export function NavLinks({
   isSuperAdmin?: boolean;
 }) {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
 
-  if (isSuperAdmin) {
-    return (
-      <nav aria-label="Secciones del panel">
-        <ul className="flex items-center gap-1">
+  // Horario, Bloqueos y Feriados definen cuándo se puede reservar y cuándo
+  // no: viven juntos en el desplegable "Disponibilidad". Feriados es
+  // solo-admin, así que el resto del equipo ve 2 ítems en vez de 3.
+  const disponibilidad = isAdmin ? [...disponibilidadBase, feriadosItem] : disponibilidadBase;
+  const grupoActivo = disponibilidad.some((item) => esActivo(pathname, item.href));
+  const enlacesFinales = isAdmin ? soloAdmin : [];
+
+  const mobileItems: NavItem[] = isSuperAdmin
+    ? soloSuperAdmin
+    : [...principal, ...disponibilidad, ...enlacesFinales, miPerfil];
+
+  return (
+    <nav aria-label="Secciones del panel">
+      {isSuperAdmin ? (
+        <ul className="hidden items-center gap-1 md:flex">
           {soloSuperAdmin.map((item) => (
             <li key={item.href}>
               <Link
@@ -170,75 +188,97 @@ export function NavLinks({
             </li>
           ))}
         </ul>
-      </nav>
-    );
-  }
+      ) : (
+        <ul className="hidden items-center gap-1 md:flex">
+          {principal.map((item) => (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                aria-current={esActivo(pathname, item.href) ? "page" : undefined}
+                className={navButtonClasses(esActivo(pathname, item.href))}
+              >
+                {item.icon}
+                {item.label}
+              </Link>
+            </li>
+          ))}
 
-  // Horario, Bloqueos y Feriados definen cuándo se puede reservar y cuándo
-  // no: viven juntos en el desplegable "Disponibilidad". Feriados es
-  // solo-admin, así que el resto del equipo ve 2 ítems en vez de 3.
-  const disponibilidad = isAdmin ? [...disponibilidadBase, feriadosItem] : disponibilidadBase;
-  const grupoActivo = disponibilidad.some((item) => esActivo(pathname, item.href));
-  const enlacesFinales = isAdmin ? soloAdmin : [];
-
-  return (
-    <nav aria-label="Secciones del panel">
-      <ul className="flex items-center gap-1">
-        {principal.map((item) => (
-          <li key={item.href}>
-            <Link
-              href={item.href}
-              aria-current={esActivo(pathname, item.href) ? "page" : undefined}
-              className={navButtonClasses(esActivo(pathname, item.href))}
-            >
-              {item.icon}
-              {item.label}
-            </Link>
+          <li>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                aria-haspopup="menu"
+                className={`${navButtonClasses(grupoActivo)} group cursor-pointer`}
+              >
+                <DisponibilidadIcon />
+                Disponibilidad
+                <ChevronDown
+                  aria-hidden="true"
+                  className="h-3.5 w-3.5 opacity-70 transition-transform group-data-[state=open]:rotate-180"
+                />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {disponibilidad.map((item) => {
+                  const active = esActivo(pathname, item.href);
+                  return (
+                    <DropdownMenuItem key={item.href} asChild className={active ? "bg-neutral-100 font-semibold" : undefined}>
+                      <Link href={item.href} aria-current={active ? "page" : undefined}>
+                        {item.icon}
+                        {item.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </li>
-        ))}
 
-        <li>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              aria-haspopup="menu"
-              className={`${navButtonClasses(grupoActivo)} group cursor-pointer`}
-            >
-              <DisponibilidadIcon />
-              Disponibilidad
-              <ChevronDown
-                aria-hidden="true"
-                className="h-3.5 w-3.5 opacity-70 transition-transform group-data-[state=open]:rotate-180"
-              />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              {disponibilidad.map((item) => {
-                const active = esActivo(pathname, item.href);
-                return (
-                  <DropdownMenuItem key={item.href} asChild className={active ? "bg-neutral-100 font-semibold" : undefined}>
-                    <Link href={item.href} aria-current={active ? "page" : undefined}>
-                      {item.icon}
-                      {item.label}
-                    </Link>
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </li>
+          {[...enlacesFinales, miPerfil].map((item) => (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                aria-current={esActivo(pathname, item.href) ? "page" : undefined}
+                className={navButtonClasses(esActivo(pathname, item.href))}
+              >
+                {item.icon}
+                {item.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
 
-        {[...enlacesFinales, miPerfil].map((item) => (
-          <li key={item.href}>
-            <Link
-              href={item.href}
-              aria-current={esActivo(pathname, item.href) ? "page" : undefined}
-              className={navButtonClasses(esActivo(pathname, item.href))}
-            >
-              {item.icon}
-              {item.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <button
+        type="button"
+        aria-label={open ? "Cerrar menú" : "Abrir menú"}
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-neutral-300 bg-white text-neutral-700 transition-colors hover:bg-neutral-100 md:hidden"
+      >
+        {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+      </button>
+
+      {open ? (
+        <div className="fixed inset-x-4 top-16 z-50 rounded-2xl border border-neutral-200 bg-white p-2 shadow-card md:hidden">
+          <ul className="flex flex-col gap-0.5">
+            {mobileItems.map((item) => {
+              const active = esActivo(pathname, item.href);
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    aria-current={active ? "page" : undefined}
+                    onClick={() => setOpen(false)}
+                    className={mobileButtonClasses(active)}
+                  >
+                    {item.icon}
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ) : null}
     </nav>
   );
 }
