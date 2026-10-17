@@ -5,6 +5,7 @@ import { NavLinks } from "@/app/dashboard/nav-links";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard/pacientes",
+  useRouter: () => ({ push: () => {}, replace: () => {}, back: () => {} }),
 }));
 
 let root: Root;

@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { PerfilTrigger } from "./(panel)/perfil/perfil-sheet-provider";
 
 function CalendarioIcon() {
   return (
@@ -123,7 +124,7 @@ const disponibilidadBase: NavItem[] = [
 
 const feriadosItem: NavItem = { href: "/dashboard/feriados", label: "Feriados", icon: <FeriadosIcon /> };
 
-const miPerfil: NavItem = { href: "/dashboard/perfil", label: "Mi perfil", icon: <PerfilIcon /> };
+const PERFIL_ACTIVO = "/dashboard/perfil";
 
 const soloAdmin: NavItem[] = [
   { href: "/dashboard/admin", label: "Equipo", icon: <EquipoIcon /> },
@@ -169,7 +170,7 @@ export function NavLinks({
 
   const mobileItems: NavItem[] = isSuperAdmin
     ? soloSuperAdmin
-    : [...principal, ...disponibilidad, ...enlacesFinales, miPerfil];
+    : [...principal, ...disponibilidad, ...enlacesFinales];
 
   return (
     <nav aria-label="Secciones del panel">
@@ -232,7 +233,7 @@ export function NavLinks({
             </DropdownMenu>
           </li>
 
-          {[...enlacesFinales, miPerfil].map((item) => (
+          {enlacesFinales.map((item) => (
             <li key={item.href}>
               <Link
                 href={item.href}
@@ -244,6 +245,16 @@ export function NavLinks({
               </Link>
             </li>
           ))}
+
+          <li>
+            <PerfilTrigger
+              className={navButtonClasses(esActivo(pathname, PERFIL_ACTIVO))}
+              title="Mi perfil"
+            >
+              <PerfilIcon />
+              Mi perfil
+            </PerfilTrigger>
+          </li>
         </ul>
       )}
 
@@ -276,6 +287,18 @@ export function NavLinks({
                 </li>
               );
             })}
+            {!isSuperAdmin ? (
+              <li>
+                <PerfilTrigger
+                  className={`${mobileButtonClasses(esActivo(pathname, PERFIL_ACTIVO))} w-full`}
+                  title="Mi perfil"
+                  onClick={() => setOpen(false)}
+                >
+                  <PerfilIcon />
+                  Mi perfil
+                </PerfilTrigger>
+              </li>
+            ) : null}
           </ul>
         </div>
       ) : null}
