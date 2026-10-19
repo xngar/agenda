@@ -19,6 +19,8 @@ interface Props {
   diasConCitas: { day: string; total: number; pendientes: number }[];
   /** Profesionales entre los que el rol puede elegir al reagendar. */
   doctors: StaffDoctor[];
+  /** Nombre de la clínica, para el mensaje de WhatsApp. */
+  orgName: string;
 }
 
 type Filtro = "todas" | "activas" | "canceladas";
@@ -38,6 +40,7 @@ export function Agenda({
   unreadCount,
   diasConCitas,
   doctors,
+  orgName,
 }: Props) {
   const [filtro, setFiltro] = useState<Filtro>("todas");
   const [busqueda, setBusqueda] = useState("");
@@ -189,7 +192,12 @@ export function Agenda({
       ) : (
         <>
           <div className="hidden md:block">
-            <AgendaTable citas={visibles} pendiente={pendiente} onAccion={accionar} />
+            <AgendaTable
+              citas={visibles}
+              pendiente={pendiente}
+              onAccion={accionar}
+              orgName={orgName}
+            />
           </div>
 
           <AgendaCards
@@ -197,6 +205,7 @@ export function Agenda({
             pendiente={pendiente}
             onCambiar={cambiar}
             onReagendar={setReagendando}
+            orgName={orgName}
           />
         </>
       )}

@@ -3,6 +3,7 @@
 import type { DoctorAppointment } from "@/lib/types";
 import { formatTime } from "@/lib/dates";
 import { StatusBadge } from "@/components/ui";
+import { WhatsappButton } from "@/components/dashboard/whatsapp-button";
 import { parseAppointmentRange } from "@/lib/range";
 
 /**
@@ -73,10 +74,12 @@ export function AgendaTable({
   citas,
   pendiente,
   onAccion,
+  orgName,
 }: {
   citas: DoctorAppointment[];
   pendiente: string | null;
   onAccion: (appointmentId: string, action: string) => void;
+  orgName: string;
 }) {
   return (
     <div className="overflow-x-auto rounded-2xl border border-neutral-200 bg-white">
@@ -217,6 +220,14 @@ export function AgendaTable({
                         />
                       </>
                     )}
+                    <WhatsappButton
+                      patientId={cita.patient_id}
+                      fullName={cita.patient?.full_name ?? "Paciente"}
+                      phone={cita.patient?.phone ?? null}
+                      orgName={orgName}
+                      compacto
+                      disabled={ocupado}
+                    />
                   </span>
                 </td>
               </tr>

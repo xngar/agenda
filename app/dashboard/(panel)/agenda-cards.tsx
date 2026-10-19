@@ -3,6 +3,7 @@
 import { formatTime } from "@/lib/dates";
 import { parseAppointmentRange } from "@/lib/range";
 import { StatusBadge } from "@/components/ui";
+import { WhatsappButton } from "@/components/dashboard/whatsapp-button";
 import type { DoctorAppointment } from "@/lib/types";
 import { Accion, RIEL } from "./agenda-table";
 import { reprogramable } from "./agenda-actions";
@@ -17,12 +18,15 @@ export function AgendaCards({
   pendiente,
   onCambiar,
   onReagendar,
+  orgName,
 }: {
   citas: DoctorAppointment[];
   /** `id + action` de la cita ocupada, para deshabilitar sus botones. */
   pendiente: string | null;
   onCambiar: (appointmentId: string, action: string) => void;
   onReagendar: (cita: DoctorAppointment) => void;
+  /** Nombre de la clínica, para el mensaje de WhatsApp. */
+  orgName: string;
 }) {
   return (
     <ul className="space-y-2 md:hidden" data-testid="agenda-cards">
@@ -122,6 +126,13 @@ export function AgendaCards({
                     />
                   </>
                 )}
+                <WhatsappButton
+                  patientId={cita.patient_id}
+                  fullName={cita.patient?.full_name ?? "Paciente"}
+                  phone={cita.patient?.phone ?? null}
+                  orgName={orgName}
+                  disabled={ocupado}
+                />
               </div>
             </div>
           </li>

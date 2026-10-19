@@ -1,7 +1,7 @@
 import type { AriaAttributes, ReactNode } from "react";
 import Link from "next/link";
 import { formatRut } from "@/lib/rut";
-import { WhatsappButton } from "./whatsapp-button";
+import { WhatsappButton } from "@/components/dashboard/whatsapp-button";
 
 export interface ListPatient {
   id: string;

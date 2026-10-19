@@ -13,8 +13,10 @@ import {
   minutesSinceMidnight,
 } from "@/lib/dates";
 import { parseAppointmentRange } from "@/lib/range";
+import { whatsappPhone } from "@/lib/phone";
 import { useAgendaAcciones } from "./agenda-actions";
 import { StaffRescheduleModal } from "./staff-reschedule-modal";
+import { WhatsappIcon, WhatsappModal } from "@/components/dashboard/whatsapp-button";
 import type { StaffDoctor } from "./staff-booking-button";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -92,6 +94,7 @@ export function WeekView({
   timezone,
   doctorId,
   doctors,
+  orgName,
 }: {
   initial: DoctorAppointment[];
   weekFrom: string;
@@ -100,6 +103,8 @@ export function WeekView({
   timezone?: string;
   doctorId: string;
   doctors: StaffDoctor[];
+  /** Nombre de la clínica, para el mensaje de WhatsApp. */
+  orgName: string;
 }) {
   const {
     pendiente,
@@ -130,6 +135,9 @@ export function WeekView({
     cita: DoctorAppointment;
   } | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
+
+  /** Cita cuyo WhatsApp se está redactando. */
+  const [contacto, setContacto] = useState<DoctorAppointment | null>(null);
 
   useEffect(() => {
     if (!menu) return;
@@ -162,6 +170,12 @@ export function WeekView({
   const router = useRouter();
 
   async function ejecutar(appointmentId: string, action: string) {
+    if (action === "whatsapp") {
+      const cita = initial.find((c) => c.id === appointmentId);
+      if (cita) setContacto(cita);
+      setMenu(null);
+      return;
+    }
     if (action === "reschedule") {
       const cita = initial.find((c) => c.id === appointmentId);
       if (cita) setReagendando(cita);
@@ -435,22 +449,33 @@ export function WeekView({
 
             {accionesDe(menu.cita).map((accion) => {
               const ocupado = pendiente === menu.cita.id + accion.action;
+              const sinCelular =
+                accion.action === "whatsapp" &&
+                !whatsappPhone(menu.cita.patient?.phone ?? null);
               return (
                 <button
                   key={accion.action}
                   type="button"
                   role="menuitem"
-                  disabled={Boolean(pendiente)}
+                  disabled={Boolean(pendiente) || sinCelular}
+                  title={sinCelular ? "Sin celular registrado" : undefined}
                   onClick={() => ejecutar(menu.cita.id, accion.action)}
                   className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium transition-all duration-100 ease-out active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${
                     accion.tono === "primario"
                       ? "bg-brand-navy text-white hover:bg-brand-navy-800"
                       : accion.tono === "peligro"
                         ? "text-red-700 hover:bg-red-50"
-                        : "text-neutral-700 hover:bg-neutral-100"
+                        : accion.tono === "whatsapp"
+                          ? "text-emerald-700 hover:bg-emerald-50"
+                          : "text-neutral-700 hover:bg-neutral-100"
                   }`}
                 >
-                  {accion.etiqueta}
+                  <span className="inline-flex items-center gap-2">
+                    {accion.tono === "whatsapp" ? (
+                      <WhatsappIcon className="h-4 w-4" />
+                    ) : null}
+                    {accion.etiqueta}
+                  </span>
                   {ocupado ? <span className="text-xs opacity-80">…</span> : null}
                 </button>
               );
@@ -470,6 +495,19 @@ export function WeekView({
           />
         ) : null}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {contacto ? (
+          <WhatsappModal
+            key={contacto.id}
+            patientId={contacto.patient_id}
+            fullName={contacto.patient?.full_name ?? "Paciente"}
+            phone={contacto.patient?.phone ?? null}
+            orgName={orgName}
+            onClose={() => setContacto(null)}
+          />
+        ) : null}
+      </AnimatePresence>
     </motion.section>
   );
 }
@@ -478,11 +516,16 @@ export function WeekView({
 /* Helpers de UI                                                        */
 /* ------------------------------------------------------------------ */
 
-type Accion = { etiqueta: string; action: string; tono?: "primario" | "peligro" };
+type Accion = { etiqueta: string; action: string; tono?: "primario" | "peligro" | "whatsapp" };
 
 function accionesDe(cita: DoctorAppointment): Accion[] {
+  const whatsapp: Accion = {
+    etiqueta: "Enviar mensaje",
+    action: "whatsapp",
+    tono: "whatsapp",
+  };
   if (cita.status === "cancelled") {
-    return [{ etiqueta: "Reabrir", action: "reopen" }];
+    return [{ etiqueta: "Reabrir", action: "reopen" }, whatsapp];
   }
   const lista: Accion[] = [];
   if (cita.status === "pending") {
@@ -494,6 +537,7 @@ function accionesDe(cita: DoctorAppointment): Accion[] {
     lista.push({ etiqueta: "Reagendar", action: "reschedule" });
   }
   lista.push({ etiqueta: "Cancelar", action: "cancelled", tono: "peligro" });
+  lista.push(whatsapp);
   return lista;
 }
 

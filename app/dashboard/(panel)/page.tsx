@@ -252,6 +252,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           canManage={veTodoElEquipo}
           realtimeDoctorId={onlyDoctorId ?? session.id}
           doctorFilter={onlyDoctorId}
+          orgName={orgSettings.name}
         />
       ) : vista === "semana" ? (
         <WeekView
@@ -263,6 +264,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           timezone={tzClinica}
           doctorId={onlyDoctorId ?? session.id}
           doctors={bookingDoctors}
+          orgName={orgSettings.name}
         />
       ) : (
         <Agenda
@@ -272,6 +274,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           unreadCount={unreadCount}
           diasConCitas={diasConCitas}
           doctors={bookingDoctors}
+          orgName={orgSettings.name}
         />
       )}
 

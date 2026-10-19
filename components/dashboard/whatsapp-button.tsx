@@ -5,7 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Button, inputClasses } from "@/components/ui";
 import { formatPhonePartial, whatsappPhone } from "@/lib/phone";
 
-function WhatsappIcon({ className }: { className?: string }) {
+export function WhatsappIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
@@ -18,33 +18,46 @@ function primerNombre(fullName: string): string {
   return fullName.trim().split(/\s+/)[0] ?? "";
 }
 
+/**
+ * Botón ícono de WhatsApp. Reutilizado por la agenda (día, semana y mes) y el
+ * listado de pacientes. Abre `WhatsappModal` con el mensaje editable.
+ */
 export function WhatsappButton({
   patientId,
   fullName,
   phone,
   orgName,
+  compacto = false,
+  disabled = false,
 }: {
   patientId: string;
   fullName: string;
   phone: string | null;
   orgName: string;
+  /** Versión más baja para filas densas, como las acciones de la agenda. */
+  compacto?: boolean;
+  /** Bloquea el botón mientras la cita está en medio de otra acción. */
+  disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const numero = whatsappPhone(phone);
+  const bloqueado = !numero || disabled;
 
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        disabled={!numero}
+        disabled={bloqueado}
         aria-label={
           numero
             ? `Enviar WhatsApp a ${fullName}`
             : `Sin celular registrado para ${fullName}`
         }
         title={numero ? "Enviar WhatsApp" : "Sin celular registrado"}
-        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 transition-colors hover:bg-emerald-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:cursor-not-allowed disabled:border-neutral-200 disabled:bg-neutral-100 disabled:text-neutral-400"
+        className={`inline-flex shrink-0 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 transition-colors hover:bg-emerald-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:cursor-not-allowed disabled:border-neutral-200 disabled:bg-neutral-100 disabled:text-neutral-400 ${
+          compacto ? "h-8 w-8" : "h-9 w-9"
+        }`}
       >
         <WhatsappIcon className="h-4 w-4" />
       </button>
@@ -54,8 +67,7 @@ export function WhatsappButton({
           <WhatsappModal
             patientId={patientId}
             fullName={fullName}
-            numero={numero}
-            phoneLabel={formatPhonePartial(phone ?? "")}
+            phone={phone}
             orgName={orgName}
             onClose={() => setOpen(false)}
           />
@@ -65,26 +77,32 @@ export function WhatsappButton({
   );
 }
 
-function WhatsappModal({
+/**
+ * Modal de WhatsApp controlado. Se monta sólo mientras está abierto (así el
+ * mensaje arranca limpio en cada contacto); los menús de semana y mes lo usan
+ * directamente.
+ */
+export function WhatsappModal({
   patientId,
   fullName,
-  numero,
-  phoneLabel,
+  phone,
   orgName,
   onClose,
 }: {
   patientId: string;
   fullName: string;
-  numero: string;
-  phoneLabel: string;
+  phone: string | null;
   orgName: string;
   onClose: () => void;
 }) {
   const reduceMotion = useReducedMotion();
+  const numero = whatsappPhone(phone);
   const nombre = primerNombre(fullName);
   const [texto, setTexto] = useState(
     `Hola${nombre ? ` ${nombre}` : ""}, le escribimos de ${orgName}. ¿En qué podemos ayudarle?`,
   );
+
+  if (!numero) return null;
 
   function registrarContacto() {
     void fetch(`/api/dashboard/patients/${patientId}/contact`, {
@@ -121,7 +139,7 @@ function WhatsappModal({
       >
         <h2 className="text-lg font-semibold text-brand-navy">Enviar WhatsApp</h2>
         <p className="mt-1 text-sm text-neutral-600">
-          {fullName} · {phoneLabel}
+          {fullName} · {formatPhonePartial(phone ?? "")}
         </p>
 
         <label className="mt-4 block">

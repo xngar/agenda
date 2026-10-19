@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { WhatsappButton } from "@/app/dashboard/(panel)/pacientes/whatsapp-button";
+import { WhatsappButton } from "@/components/dashboard/whatsapp-button";
 
 let root: Root;
 let container: HTMLDivElement;

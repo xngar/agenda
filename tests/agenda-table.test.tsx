@@ -42,7 +42,14 @@ afterEach(() => {
 
 function renderTable(citas = CITAS, onAccion = vi.fn()) {
   act(() => {
-    root.render(<AgendaTable citas={citas} pendiente={null} onAccion={onAccion} />);
+    root.render(
+      <AgendaTable
+        citas={citas}
+        pendiente={null}
+        onAccion={onAccion}
+        orgName="Clínica Sonrisa"
+      />,
+    );
   });
   return onAccion;
 }
@@ -93,11 +100,49 @@ describe("AgendaTable", () => {
 
   it("deshabilita los botones de la cita en curso", () => {
     act(() => {
-      root.render(<AgendaTable citas={CITAS} pendiente="c1conf" onAccion={vi.fn()} />);
+      root.render(
+        <AgendaTable
+          citas={CITAS}
+          pendiente="c1conf"
+          onAccion={vi.fn()}
+          orgName="Clínica Sonrisa"
+        />,
+      );
     });
     const primeraFila = container.querySelectorAll("tbody tr")[0];
     const botones = primeraFila?.querySelectorAll("button") ?? [];
     expect(botones.length).toBeGreaterThan(0);
     for (const b of botones) expect((b as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("ofrece WhatsApp por cita y lo deshabilita sin celular", () => {
+    renderTable();
+    const botones = container.querySelectorAll(
+      'button[aria-label^="Enviar WhatsApp"], button[aria-label^="Sin celular"]',
+    );
+    expect(botones).toHaveLength(3);
+    for (const b of botones) expect((b as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("habilita WhatsApp cuando la cita tiene celular", () => {
+    const conCelular = [
+      cita({
+        id: "c9",
+        patient: { full_name: "Dora Paz", phone: "+56 9 1234 5678", email: "", rut: null },
+      }),
+    ];
+    act(() => {
+      root.render(
+        <AgendaTable
+          citas={conCelular}
+          pendiente={null}
+          onAccion={vi.fn()}
+          orgName="Clínica Sonrisa"
+        />,
+      );
+    });
+    const boton = container.querySelector('button[aria-label^="Enviar WhatsApp"]');
+    expect(boton).not.toBeNull();
+    expect((boton as HTMLButtonElement).disabled).toBe(false);
   });
 });
