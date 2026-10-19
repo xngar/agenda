@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { buttonClasses, inputClasses } from "@/components/ui";
+import { AsyncButton } from "@/components/motion/async-button";
 
 export function PerfilForm({
   initialName,
@@ -97,9 +98,14 @@ export function PerfilForm({
           />
         </div>
       ) : null}
-      <button type="submit" disabled={busy} className={buttonClasses("primary", "lg")}>
-        {busy ? "Guardando…" : "Guardar cambios"}
-      </button>
+      <AsyncButton
+        type="submit"
+        loading={busy}
+        pendingLabel="Guardando perfil"
+        className={buttonClasses("primary", "lg")}
+      >
+        Guardar cambios
+      </AsyncButton>
     </form>
   );
 }

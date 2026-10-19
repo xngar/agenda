@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { Button, inputClasses } from "@/components/ui";
+import { Button, buttonClasses, inputClasses } from "@/components/ui";
+import { Checkbox } from "@/components/ui/checkbox";
+import { AsyncButton } from "@/components/motion/async-button";
+import { Modal } from "@/components/motion/modal";
 
 const labelCls = "mb-1 block text-xs font-medium text-neutral-600";
 
@@ -112,12 +114,10 @@ export function ServiceForm({
       </div>
 
       <div className="flex items-center gap-2">
-        <input
+        <Checkbox
           id="servicio-activo"
           name="active"
-          type="checkbox"
           defaultChecked={edit ? edit.active : true}
-          className="size-4 rounded border-neutral-300 text-brand-navy focus:ring-brand-navy"
         />
         <label htmlFor="servicio-activo" className="text-sm text-neutral-700">
           Servicio activo (visible en el asistente de reserva)
@@ -130,9 +130,14 @@ export function ServiceForm({
             Cancelar
           </Button>
         ) : null}
-        <Button type="submit" disabled={enviando}>
-          {enviando ? "Guardando…" : edit ? "Guardar cambios" : "Agregar servicio"}
-        </Button>
+        <AsyncButton
+          type="submit"
+          loading={enviando}
+          pendingLabel="Guardando servicio"
+          className={buttonClasses("primary", "md")}
+        >
+          {edit ? "Guardar cambios" : "Agregar servicio"}
+        </AsyncButton>
       </div>
     </form>
   );
@@ -144,60 +149,17 @@ export function ServiceForm({
  * superficie y así el listado queda como protagonista de la página.
  */
 export function ServiceFormModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const reduceMotion = useReducedMotion();
-
-  useEffect(() => {
-    if (!open) return;
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose]);
-
   return (
-    <AnimatePresence>
-      {open ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: reduceMotion ? 0 : 0.16 }}
-          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-brand-navy-900/40 p-4 backdrop-blur-xs"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="dialog-servicio-titulo"
-          onClick={onClose}
-        >
-          <motion.div
-            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.94, y: 16 }}
-            animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
-            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 10 }}
-            transition={
-              reduceMotion
-                ? { duration: 0.12 }
-                : { type: "spring", stiffness: 450, damping: 32 }
-            }
-            className="my-auto w-full max-w-lg rounded-card border border-neutral-200/80 bg-white p-6 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 id="dialog-servicio-titulo" className="text-lg font-semibold text-brand-navy">
-              Nuevo servicio
-            </h2>
-            <p className="mt-1 text-sm text-neutral-600">
-              Aparecerá en el asistente de reserva. Los cambios sólo afectan a las reservas
-              nuevas, no a las citas ya agendadas.
-            </p>
-
-            <div className="mt-4">
-              <ServiceForm onCancel={onClose} bare />
-            </div>
-          </motion.div>
-        </motion.div>
-      ) : null}
-    </AnimatePresence>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Nuevo servicio"
+      description="Aparecerá en el asistente de reserva. Los cambios sólo afectan a las reservas nuevas, no a las citas ya agendadas."
+    >
+      <div className="mt-4">
+        <ServiceForm onCancel={onClose} bare />
+      </div>
+    </Modal>
   );
 }
 

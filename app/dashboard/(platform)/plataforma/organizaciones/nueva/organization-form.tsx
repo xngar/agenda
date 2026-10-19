@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, buttonClasses, inputClasses } from "@/components/ui";
+import { AsyncButton } from "@/components/motion/async-button";
 import { PasswordInput } from "@/components/password-input";
 import { formatSlugValue } from "@/lib/platform";
 import { formatPhonePartial, normalizePhone } from "@/lib/phone";
@@ -295,9 +296,14 @@ export default function OrganizationForm() {
       </Card>
 
       <div className="flex items-center gap-3">
-        <button type="submit" disabled={busy} className={buttonClasses("primary", "lg")}>
-          {busy ? "Creando…" : "Crear clínica"}
-        </button>
+        <AsyncButton
+          type="submit"
+          loading={busy}
+          pendingLabel="Creando clínica"
+          className={buttonClasses("primary", "lg")}
+        >
+          Crear clínica
+        </AsyncButton>
         <button
           type="button"
           disabled={busy}

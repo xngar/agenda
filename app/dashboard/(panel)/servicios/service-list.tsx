@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "cn";
 import { Button, buttonClasses, StatusBadge } from "@/components/ui";
+import { Modal } from "@/components/motion/modal";
 import { ServiceForm, type ServiceItem } from "./service-form";
 
 const dangerGhost = cn(
@@ -129,45 +130,35 @@ export function ServiceList({ initial }: { initial: ServiceItem[] }) {
         ) : null}
       </ul>
 
-      {porEliminar ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="dialog-eliminar-servicio-titulo"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        >
-          <div
-            className="absolute inset-0 bg-neutral-900/50"
-            onClick={() => {
-              if (!eliminando) setPorEliminar(null);
-            }}
-          />
-          <div className="relative w-full max-w-md rounded-card bg-white p-6 shadow-card">
-            <h2 id="dialog-eliminar-servicio-titulo" className="text-lg font-bold text-brand-navy">
-              ¿Eliminar {porEliminar.name}?
-            </h2>
-            <p className="mt-2 text-sm text-neutral-600">
-              Solo se pueden eliminar servicios sin citas asociadas. Si ya tiene citas
-              agendadas, desactívalo en vez de eliminarlo. Esta acción no se puede deshacer.
-            </p>
+      <Modal
+        open={porEliminar !== null}
+        onClose={() => setPorEliminar(null)}
+        title={porEliminar ? `¿Eliminar ${porEliminar.name}?` : "Eliminar servicio"}
+        titleClassName="text-lg font-bold text-brand-navy"
+        size="md"
+        panelClassName="border-transparent shadow-card"
+        busy={eliminando}
+      >
+        <p className="mt-2 text-sm text-neutral-600">
+          Solo se pueden eliminar servicios sin citas asociadas. Si ya tiene citas
+          agendadas, desactívalo en vez de eliminarlo. Esta acción no se puede deshacer.
+        </p>
 
-            <div className="mt-6 flex justify-end gap-3">
-              <Button variant="ghost" size="sm" disabled={eliminando} onClick={() => setPorEliminar(null)}>
-                Cancelar
-              </Button>
-              <Button
-                type="button"
-                variant="danger"
-                size="sm"
-                onClick={eliminar}
-                disabled={eliminando}
-              >
-                {eliminando ? "Eliminando…" : "Eliminar"}
-              </Button>
-            </div>
-          </div>
+        <div className="mt-6 flex justify-end gap-3">
+          <Button variant="ghost" size="sm" disabled={eliminando} onClick={() => setPorEliminar(null)}>
+            Cancelar
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            size="sm"
+            onClick={eliminar}
+            disabled={eliminando}
+          >
+            {eliminando ? "Eliminando…" : "Eliminar"}
+          </Button>
         </div>
-      ) : null}
+      </Modal>
     </div>
   );
 }

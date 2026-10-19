@@ -5,6 +5,7 @@ import { getDoctorSession } from "@/lib/auth";
 import { LogoutButton } from "../logout-button";
 import { NavLinks } from "../nav-links";
 import { PerfilSheetProvider, PerfilTrigger } from "./perfil/perfil-sheet-provider";
+import { RouteFade } from "@/components/motion/route-fade";
 
 export const metadata: Metadata = {
   title: "Panel del profesional",
@@ -114,7 +115,7 @@ export default async function PanelLayout({
           tabIndex={-1}
           className="mx-auto max-w-6xl scroll-mt-20 px-4 py-6 focus-visible:outline-none"
         >
-          {children}
+          <RouteFade>{children}</RouteFade>
         </main>
 
         {perfil}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { motion } from "motion/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -136,11 +137,25 @@ const soloSuperAdmin: NavItem[] = [
 ];
 
 function navButtonClasses(active: boolean): string {
-  return `inline-flex min-h-10 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-sm font-medium transition-colors ${
+  return `relative inline-flex min-h-10 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-sm font-medium transition-colors duration-micro ease-out-soft ${
     active
-      ? "bg-brand-navy text-white shadow-[0_1px_2px_rgba(11,60,122,0.3)]"
+      ? "text-white"
       : "text-neutral-700 hover:bg-neutral-100 hover:text-brand-navy"
   }`;
+}
+
+/**
+ * Fondo del ítem activo. Se dibuja como un elemento con `layoutId` para que
+ * se desplace suavemente de un ítem a otro en vez de aparecer de golpe.
+ */
+function IndicadorActivo() {
+  return (
+    <motion.span
+      layoutId="nav-indicador-activo"
+      className="absolute inset-0 -z-10 rounded-lg bg-brand-navy shadow-[0_1px_2px_rgba(11,60,122,0.3)]"
+      transition={{ type: "spring", stiffness: 500, damping: 35 }}
+    />
+  );
 }
 
 function mobileButtonClasses(active: boolean): string {
@@ -202,33 +217,41 @@ export function NavLinks({
     >
       {isSuperAdmin ? (
         <ul className="no-scrollbar mx-auto -my-1 hidden min-w-0 items-center gap-0.5 overflow-x-auto py-1 lg:flex">
-          {soloSuperAdmin.map((item) => (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                aria-current={esActivo(pathname, item.href) ? "page" : undefined}
-                className={navButtonClasses(esActivo(pathname, item.href))}
-              >
-                {item.icon}
-                {item.label}
-              </Link>
-            </li>
-          ))}
+          {soloSuperAdmin.map((item) => {
+            const active = esActivo(pathname, item.href);
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={navButtonClasses(active)}
+                >
+                  {active ? <IndicadorActivo /> : null}
+                  {item.icon}
+                  {item.label}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       ) : (
         <ul className="no-scrollbar mx-auto -my-1 hidden min-w-0 items-center gap-0.5 overflow-x-auto py-1 lg:flex">
-          {principal.map((item) => (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                aria-current={esActivo(pathname, item.href) ? "page" : undefined}
-                className={navButtonClasses(esActivo(pathname, item.href))}
-              >
-                {item.icon}
-                {item.label}
-              </Link>
-            </li>
-          ))}
+          {principal.map((item) => {
+            const active = esActivo(pathname, item.href);
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={navButtonClasses(active)}
+                >
+                  {active ? <IndicadorActivo /> : null}
+                  {item.icon}
+                  {item.label}
+                </Link>
+              </li>
+            );
+          })}
 
           <li>
             <DropdownMenu>
@@ -236,11 +259,12 @@ export function NavLinks({
                 aria-haspopup="menu"
                 className={`${navButtonClasses(grupoActivo)} group cursor-pointer`}
               >
+                {grupoActivo ? <IndicadorActivo /> : null}
                 <DisponibilidadIcon />
                 Disponibilidad
                 <ChevronDown
                   aria-hidden="true"
-                  className="h-3.5 w-3.5 opacity-70 transition-transform group-data-[state=open]:rotate-180"
+                  className="h-3.5 w-3.5 opacity-70 transition-transform duration-micro ease-out-soft group-data-[state=open]:rotate-180"
                 />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
@@ -263,18 +287,22 @@ export function NavLinks({
             <li aria-hidden="true" className="mx-1 h-5 w-px bg-neutral-200" />
           ) : null}
 
-          {enlacesFinales.map((item) => (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                aria-current={esActivo(pathname, item.href) ? "page" : undefined}
-                className={navButtonClasses(esActivo(pathname, item.href))}
-              >
-                {item.icon}
-                {item.label}
-              </Link>
-            </li>
-          ))}
+          {enlacesFinales.map((item) => {
+            const active = esActivo(pathname, item.href);
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={navButtonClasses(active)}
+                >
+                  {active ? <IndicadorActivo /> : null}
+                  {item.icon}
+                  {item.label}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       )}
 

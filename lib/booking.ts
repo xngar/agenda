@@ -148,7 +148,7 @@ async function loadCatalog(org: { id: string } & Record<string, unknown>): Promi
   };
 }
 
-/** Organizaci�n activa por slug, para el branding del sitio p�blico. */
+/** Organización activa por slug, para el branding del sitio público. */
 export async function getPublicOrganization(orgSlug: string): Promise<ClinicSettings | null> {
   const { data, error } = await supabaseAdmin()
     .from("organizations")

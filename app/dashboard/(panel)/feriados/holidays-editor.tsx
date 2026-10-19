@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button, ErrorNotice, InfoNotice, inputClasses } from "@/components/ui";
+import { ErrorNotice, InfoNotice, buttonClasses, inputClasses } from "@/components/ui";
+import { AsyncButton } from "@/components/motion/async-button";
 
 export interface Holiday {
   date: string;
@@ -128,9 +129,14 @@ export function HolidaysEditor({ initial }: { initial: Holiday[] }) {
         </div>
 
         <div className="mt-4">
-          <Button onClick={crear} disabled={guardando}>
-            {guardando ? "Guardando…" : "Agregar feriado"}
-          </Button>
+          <AsyncButton
+            onClick={crear}
+            loading={guardando}
+            pendingLabel="Guardando feriado"
+            className={buttonClasses("primary", "md")}
+          >
+            Agregar feriado
+          </AsyncButton>
         </div>
       </section>
 

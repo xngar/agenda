@@ -94,7 +94,7 @@ export function DayNav({
           type="button"
           onClick={() => irA(today)}
           disabled={pending}
-          className="inline-flex min-h-11 items-center rounded-xl border border-brand-navy bg-white px-3 text-sm font-semibold text-brand-navy transition-all duration-150 ease-out hover:bg-brand-navy hover:text-white hover:shadow-xs active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+          className="inline-flex min-h-11 items-center rounded-xl border border-brand-navy bg-white px-3 text-sm font-semibold text-brand-navy transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft hover:bg-brand-navy hover:text-white hover:shadow-xs active:scale-95 disabled:pointer-events-none disabled:opacity-50"
         >
           Hoy
         </button>
@@ -108,7 +108,7 @@ export function DayNav({
               type="button"
               onClick={() => irA(r.day)}
               disabled={pending}
-              className="inline-flex min-h-9 items-center rounded-full border border-neutral-300 bg-white px-3 text-xs font-medium transition-all duration-150 ease-out hover:border-brand-navy hover:text-brand-navy hover:shadow-xs active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+              className="inline-flex min-h-9 items-center rounded-full border border-neutral-300 bg-white px-3 text-xs font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft hover:border-brand-navy hover:text-brand-navy hover:shadow-xs active:scale-95 disabled:pointer-events-none disabled:opacity-50"
             >
               {r.pendientes > 0
                 ? `${r.day.slice(8)}/${r.day.slice(5, 7)} · ${r.pendientes} por confirmar`

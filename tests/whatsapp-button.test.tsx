@@ -52,11 +52,12 @@ describe("WhatsappButton", () => {
 
     act(() => boton.click());
 
-    const textarea = container.querySelector("textarea");
+    // El modal se monta en `document.body` (portal), fuera de `container`.
+    const textarea = document.body.querySelector("textarea");
     if (!textarea) throw new Error("sin textarea del mensaje");
     expect(textarea.value).toContain("Clínica Sonrisa");
 
-    const enlace = container.querySelector('a[href^="https://wa.me/"]');
+    const enlace = document.body.querySelector('a[href^="https://wa.me/"]');
     if (!enlace) throw new Error("sin enlace a WhatsApp");
     const href = enlace.getAttribute("href") ?? "";
     expect(href.startsWith("https://wa.me/56912345678?text=")).toBe(true);

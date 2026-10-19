@@ -31,11 +31,14 @@ export function useAgendaAcciones({
   const [pendiente, setPendiente] = useState<string | null>(null);
   const [reagendando, setReagendando] = useState<DoctorAppointment | null>(null);
   const [nuevas, setNuevas] = useState(0);
+  const [recientes, setRecientes] = useState<string[]>([]);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
       if (refreshTimer.current) clearTimeout(refreshTimer.current);
+      if (highlightTimer.current) clearTimeout(highlightTimer.current);
     };
   }, []);
 
@@ -62,6 +65,7 @@ export function useAgendaAcciones({
 
   async function cambiar(appointmentId: string, action: string) {
     setPendiente(appointmentId + action);
+    marcarReciente(appointmentId);
 
     try {
       const response = await fetch("/api/dashboard/appointments", {
@@ -85,6 +89,20 @@ export function useAgendaAcciones({
     } finally {
       setPendiente(null);
     }
+  }
+
+  /**
+   * Marca una cita como recién tocada para que su fila se resalte al
+   * volver con los datos del servidor. El resaltado dura un par de segundos:
+   * suficiente para verlo, sin quedar ahí esperando atención.
+   */
+  function marcarReciente(appointmentId: string) {
+    setRecientes((prev) => (prev.includes(appointmentId) ? prev : [...prev, appointmentId]));
+
+    if (highlightTimer.current) clearTimeout(highlightTimer.current);
+    highlightTimer.current = setTimeout(() => {
+      setRecientes((prev) => prev.filter((id) => id !== appointmentId));
+    }, 2000);
   }
 
   const paraReagendar = useCallback(
@@ -113,6 +131,7 @@ export function useAgendaAcciones({
     refrescarAhora,
     connected,
     realtimeError,
+    recientes,
   };
 }
 

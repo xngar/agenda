@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { DentalChartEntry, DentalFace, DentalState } from "@/lib/ficha/types";
 import { aggregateToothState } from "@/lib/ficha/dental";
-import { Card, CardHeader, Button, ErrorNotice, Spinner, modalClasses } from "./panels-shared";
+import { Card, CardHeader, Button, ErrorNotice, Spinner } from "./panels-shared";
+import { Modal } from "@/components/motion/modal";
 
 const STATES: { value: DentalState; label: string }[] = [
   { value: "sana", label: "Sana" },
@@ -234,9 +235,16 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
         </div>
       </Card>
 
-      {selected ? (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-neutral-900/40 p-4" onClick={() => setSelected(null)}>
-          <div className={modalClasses} onClick={(e) => e.stopPropagation()}>
+      <Modal
+        open={selected !== null}
+        onClose={() => setSelected(null)}
+        ariaLabel={selected ? `Pieza ${selected}` : "Pieza dental"}
+        size="2xl"
+        panelClassName="p-0 border-neutral-200 shadow-card"
+        busy={guardando}
+      >
+        {selected !== null ? (
+          <>
             <CardHeader title={`Pieza ${selected}`} description="Se muestran los valores guardados. Cambia sólo las caras a registrar; se guarda únicamente lo que difiere." />
             <form onSubmit={guardar} className="space-y-3 px-5 py-5">
               {error ? <ErrorNotice message={error} /> : null}
@@ -278,9 +286,9 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
                 <Button variant="ghost" onClick={() => setSelected(null)} disabled={guardando}>Cancelar</Button>
               </div>
             </form>
-          </div>
-        </div>
-      ) : null}
+          </>
+        ) : null}
+      </Modal>
     </div>
   );
 }

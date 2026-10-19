@@ -1,7 +1,11 @@
+"use client";
+
 import type { AriaAttributes, ReactNode } from "react";
 import Link from "next/link";
+import { ChevronsUpDown, ChevronUp } from "lucide-react";
 import { formatRut } from "@/lib/rut";
 import { WhatsappButton } from "@/components/dashboard/whatsapp-button";
+import { AnimatedNumber } from "@/components/motion/animated-number";
 
 export interface ListPatient {
   id: string;
@@ -70,6 +74,13 @@ function statusPill(status?: string | null): ReactNode {
   );
 }
 
+/**
+ * Listado de pacientes del panel.
+ *
+ * Es un client component para poder animar la entrada de las filas y la
+ * rotación del ícono de ordenamiento. Los datos siguen llegando desde el
+ * servidor: este componente solo los pinta.
+ */
 export function PatientsTable({
   patients,
   total,
@@ -88,7 +99,7 @@ export function PatientsTable({
   return (
     <div className="space-y-3">
       <p className="text-sm text-neutral-600" data-testid="patients-count">
-        {total === 1 ? "1 paciente" : `${total} pacientes`}
+        <AnimatedNumber value={total} /> {total === 1 ? "paciente" : "pacientes"}
       </p>
 
       <div className="hidden overflow-x-auto rounded-card border border-neutral-200 bg-white md:block">
@@ -116,13 +127,23 @@ export function PatientsTable({
                     {key ? (
                       <Link
                         href={sortHref(params, key)}
-                        className={`inline-flex items-center gap-1 transition-colors hover:text-brand-navy ${
+                        className={`inline-flex items-center gap-1 transition-colors duration-micro ease-out-soft hover:text-brand-navy ${
                           activa ? "text-brand-navy" : ""
                         }`}
                       >
                         {col.label}
-                        <span aria-hidden className="text-[10px]">
-                          {activa ? (params.dir === "asc" ? "▲" : "▼") : "▵"}
+                        <span
+                          aria-hidden
+                          className="anim-sort-icon inline-flex"
+                          style={
+                            activa && params.dir === "desc" ? { transform: "rotate(180deg)" } : undefined
+                          }
+                        >
+                          {activa ? (
+                            <ChevronUp className="h-3 w-3" />
+                          ) : (
+                            <ChevronsUpDown className="h-3 w-3 opacity-50" />
+                          )}
                         </span>
                       </Link>
                     ) : (
@@ -137,12 +158,16 @@ export function PatientsTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-100">
-            {patients.map((p) => (
-              <tr key={p.id} className="transition-colors hover:bg-brand-sky-50">
+            {patients.map((p, indice) => (
+              <tr
+                key={p.id}
+                className="anim-row-in transition-colors duration-micro ease-out-soft hover:bg-brand-sky-50"
+                style={{ animationDelay: `${Math.min(indice, 12) * 35}ms` }}
+              >
                 <td className="px-4 py-3">
                   <Link
                     href={`/dashboard/pacientes/${p.id}`}
-                    className="font-medium text-neutral-900 transition-colors hover:text-brand-navy hover:underline"
+                    className="font-medium text-neutral-900 transition-colors duration-micro ease-out-soft hover:text-brand-navy hover:underline"
                   >
                     {p.full_name}
                   </Link>
@@ -182,7 +207,7 @@ export function PatientsTable({
                       href={`/dashboard/pacientes/${p.id}`}
                       aria-label={`Abrir ficha de ${p.full_name}`}
                       title="Abrir ficha"
-                      className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-success-600 px-2.5 text-sm font-medium text-white transition-colors hover:bg-success-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success-700"
+                      className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-success-600 px-2.5 text-sm font-medium text-white transition-[color,background-color,box-shadow] duration-micro ease-out-soft hover:bg-success-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success-700"
                     >
                       Ver ficha
                       <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
@@ -197,14 +222,21 @@ export function PatientsTable({
         </table>
       </div>
 
-      <ul className="space-y-2 md:hidden" data-testid="patients-cards">
-        {patients.map((p) => (
-          <li key={p.id} className="rounded-card border border-neutral-200 bg-white p-4">
+      <ul
+        className="space-y-2 md:hidden"
+        data-testid="patients-cards"
+      >
+        {patients.map((p, indice) => (
+          <li
+            key={p.id}
+            className="anim-row-in rounded-card border border-neutral-200 bg-white p-4"
+            style={{ animationDelay: `${Math.min(indice, 12) * 35}ms` }}
+          >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <Link
                   href={`/dashboard/pacientes/${p.id}`}
-                  className="font-medium text-neutral-900 transition-colors hover:text-brand-navy hover:underline"
+                  className="font-medium text-neutral-900 transition-colors duration-micro ease-out-soft hover:text-brand-navy hover:underline"
                 >
                   {p.full_name}
                 </Link>
@@ -247,7 +279,7 @@ export function PatientsTable({
               <Link
                 href={`/dashboard/pacientes/${p.id}`}
                 aria-label={`Abrir ficha de ${p.full_name}`}
-                className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-success-600 px-2.5 text-sm font-medium text-white transition-colors hover:bg-success-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success-700"
+                className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-success-600 px-2.5 text-sm font-medium text-white transition-[color,background-color,box-shadow] duration-micro ease-out-soft hover:bg-success-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success-700"
               >
                 Ver ficha
                 <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
@@ -258,7 +290,6 @@ export function PatientsTable({
           </li>
         ))}
       </ul>
-
       {total > 0 ? (
         <nav
           aria-label="Paginación de pacientes"
@@ -273,26 +304,26 @@ export function PatientsTable({
               <Link
                 href={listHref(params, page - 1)}
                 rel="prev"
-                className="rounded-lg border border-brand-navy-200 px-3 py-1.5 text-sm font-medium text-brand-navy-700 transition-colors hover:bg-brand-sky-50"
+                className="rounded-lg border border-brand-navy-200 px-3 py-1.5 text-sm font-medium text-brand-navy-700 transition-[color,background-color,border-color] duration-micro ease-out-soft hover:bg-brand-sky-50"
               >
-                ‹ Anterior
+                ← Anterior
               </Link>
             ) : (
               <span className="cursor-not-allowed rounded-lg border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-400">
-                ‹ Anterior
+                ← Anterior
               </span>
             )}
             {page < totalPages ? (
               <Link
                 href={listHref(params, page + 1)}
                 rel="next"
-                className="rounded-lg border border-brand-navy-200 px-3 py-1.5 text-sm font-medium text-brand-navy-700 transition-colors hover:bg-brand-sky-50"
+                className="rounded-lg border border-brand-navy-200 px-3 py-1.5 text-sm font-medium text-brand-navy-700 transition-[color,background-color,border-color] duration-micro ease-out-soft hover:bg-brand-sky-50"
               >
-                Siguiente ›
+                Siguiente →
               </Link>
             ) : (
               <span className="cursor-not-allowed rounded-lg border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-400">
-                Siguiente ›
+                Siguiente →
               </span>
             )}
           </div>

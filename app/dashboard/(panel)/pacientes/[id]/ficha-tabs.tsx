@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "motion/react";
 import type { OrganizationType, Patient, PatientMedicalBackground } from "@/lib/ficha/types";
 import { Button, ErrorNotice, buttonClasses } from "@/components/ui";
+import { Modal } from "@/components/motion/modal";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { ResumenPanel } from "./resumen-panel";
 import { AntecedentesPanel } from "./antecedentes-panel";
@@ -165,24 +167,32 @@ export function FichaTabs({
         }
       />
 
-      <nav aria-label="Secciones de la ficha" className="flex flex-wrap gap-1 border-b border-neutral-200">
+      <nav aria-label="Secciones de la ficha" className="relative flex flex-wrap gap-1 border-b border-neutral-200">
         {visible.map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => setActive(tab.id)}
             aria-current={active === tab.id ? "page" : undefined}
-            className={`rounded-t-lg border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
+            className={`relative rounded-t-lg px-3 py-2 text-sm font-medium transition-colors duration-micro ease-out-soft ${
               active === tab.id
-                ? "border-brand-navy text-brand-navy"
-                : "border-transparent text-neutral-600 hover:bg-neutral-100"
+                ? "text-brand-navy"
+                : "text-neutral-600 hover:bg-neutral-100"
             }`}
           >
+            {active === tab.id ? (
+              <motion.span
+                layoutId="ficha-tab-indicator"
+                className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-brand-navy"
+                transition={{ type: "spring", stiffness: 500, damping: 35 }}
+              />
+            ) : null}
             {tab.label}
           </button>
         ))}
       </nav>
 
+      <div key={active} className="anim-view-fade">
       {active === "resumen" ? (
         <ResumenPanel patient={patient} orgType={orgType} canEdit={canEdit} />
       ) : active === "antecedentes" ? (
@@ -209,6 +219,7 @@ export function FichaTabs({
       ) : active === "auditoria" ? (
         <AuditoriaPanel patientId={patient.id} isAdmin={isAdmin} puedeExportar={canEdit} />
       ) : null}
+      </div>
 
       <PatientFormModal
         open={editando}
@@ -217,50 +228,40 @@ export function FichaTabs({
         onSaved={() => setEditando(false)}
       />
 
-      {confirmandoEliminar ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="dialog-eliminar-paciente-titulo"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        >
-          <div
-            className="absolute inset-0 bg-neutral-900/50"
-            onClick={() => {
-              if (!eliminando) setConfirmandoEliminar(false);
-            }}
-          />
-          <div className="relative w-full max-w-md rounded-card bg-white p-6 shadow-card">
-            <h2 id="dialog-eliminar-paciente-titulo" className="text-lg font-bold text-brand-navy">
-              ¿Eliminar {patient.full_name}?
-            </h2>
-            <p className="mt-2 text-sm text-neutral-600">
-              Se borrará la ficha del paciente y todo su historial clínico. Solo se pueden eliminar
-              pacientes que nunca agendaron una cita. Esta acción no se puede deshacer.
-            </p>
+      <Modal
+        open={confirmandoEliminar}
+        onClose={() => setConfirmandoEliminar(false)}
+        title={`¿Eliminar ${patient.full_name}?`}
+        titleClassName="text-lg font-bold text-brand-navy"
+        size="md"
+        panelClassName="border-transparent shadow-card"
+        busy={eliminando}
+      >
+        <p className="mt-2 text-sm text-neutral-600">
+          Se borrará la ficha del paciente y todo su historial clínico. Solo se pueden eliminar
+          pacientes que nunca agendaron una cita. Esta acción no se puede deshacer.
+        </p>
 
-            {errorEliminar ? (
-              <div className="mt-4">
-                <ErrorNotice message={errorEliminar} />
-              </div>
-            ) : null}
-
-            <div className="mt-6 flex justify-end gap-3">
-              <Button variant="ghost" size="sm" disabled={eliminando} onClick={() => setConfirmandoEliminar(false)}>
-                Cancelar
-              </Button>
-              <button
-                type="button"
-                onClick={eliminarPaciente}
-                disabled={eliminando}
-                className={buttonClasses("danger", "sm")}
-              >
-                {eliminando ? "Eliminando…" : "Eliminar"}
-              </button>
-            </div>
+        {errorEliminar ? (
+          <div className="mt-4">
+            <ErrorNotice message={errorEliminar} />
           </div>
+        ) : null}
+
+        <div className="mt-6 flex justify-end gap-3">
+          <Button variant="ghost" size="sm" disabled={eliminando} onClick={() => setConfirmandoEliminar(false)}>
+            Cancelar
+          </Button>
+          <button
+            type="button"
+            onClick={eliminarPaciente}
+            disabled={eliminando}
+            className={buttonClasses("danger", "sm")}
+          >
+            {eliminando ? "Eliminando…" : "Eliminar"}
+          </button>
         </div>
-      ) : null}
+      </Modal>
     </div>
   );
 }

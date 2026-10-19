@@ -373,7 +373,7 @@ export function ResumenPanel({
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <Card>
+      <Card className="anim-row-in" style={{ animationDelay: "0ms" }}>
         <CardHeader
           title="Identificación"
           action={canEdit ? <Button size="sm" variant="secondary" onClick={() => setEditando(true)}>Editar</Button> : undefined}
@@ -391,7 +391,7 @@ export function ResumenPanel({
         </dl>
       </Card>
 
-      <Card>
+      <Card className="anim-row-in" style={{ animationDelay: "40ms" }}>
         <CardHeader title="Previsión y contacto" />
         <dl className="grid gap-4 px-5 py-4 sm:grid-cols-2">
           <Campo etiqueta="Previsión" valor={PREVISION.find((p) => p.value === patient.prevision_type)?.label} />
@@ -401,7 +401,7 @@ export function ResumenPanel({
         </dl>
       </Card>
 
-      <Card>
+      <Card className="anim-row-in" style={{ animationDelay: "80ms" }}>
         <CardHeader title="Emergencia y apoderado" />
         <dl className="grid gap-4 px-5 py-4 sm:grid-cols-2">
           <Campo etiqueta="Contacto emergencia" valor={patient.emergency_name ? `${patient.emergency_name} (${patient.emergency_relation ?? ""})` : null} />
@@ -412,7 +412,7 @@ export function ResumenPanel({
         </dl>
       </Card>
 
-      <Card>
+      <Card className="anim-row-in" style={{ animationDelay: "120ms" }}>
         <CardHeader title="Registro" />
         <dl className="grid gap-4 px-5 py-4 sm:grid-cols-2">
           <Campo etiqueta="Paciente desde" valor={patient.admitted_at?.slice(0, 10)} />
@@ -422,7 +422,7 @@ export function ResumenPanel({
         </dl>
       </Card>
 
-      <Card>
+      <Card className="anim-row-in" style={{ animationDelay: "160ms" }}>
         <CardHeader
           title={`Perfil ${ficha.label.toLowerCase()}`}
           description="Antecedentes propios de esta especialidad"

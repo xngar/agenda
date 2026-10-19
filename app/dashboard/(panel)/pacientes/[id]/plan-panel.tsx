@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { DentalPayment, DentalPaymentMethod, DentalTreatmentCatalogItem, DentalTreatmentPlanItem, TreatmentPlanStatus } from "@/lib/ficha/types";
 import { Card, CardHeader, Button, ErrorNotice, Field, Spinner, inputClasses, buttonClasses } from "@/components/ui";
+import { Modal } from "@/components/motion/modal";
 import { formatMiles, parseMiles } from "@/lib/clp";
 
 interface PlanItem extends DentalTreatmentPlanItem {
@@ -650,44 +651,34 @@ export function PlanPanel({
         </Card>
       ) : null}
 
-      {porEliminarCat ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="dialog-eliminar-catalogo-titulo"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        >
-          <div
-            className="absolute inset-0 bg-neutral-900/50"
-            onClick={() => {
-              if (!eliminandoCat) setPorEliminarCat(null);
-            }}
-          />
-          <div className="relative w-full max-w-md rounded-card bg-white p-6 shadow-card">
-            <h2 id="dialog-eliminar-catalogo-titulo" className="text-lg font-bold text-brand-navy">
-              ¿Eliminar {porEliminarCat.name}?
-            </h2>
-            <p className="mt-2 text-sm text-neutral-600">
-              Se quitará del catálogo de la organización. Los tratamientos del plan que lo usen
-              se conservan. Esta acción no se puede deshacer.
-            </p>
+      <Modal
+        open={porEliminarCat !== null}
+        onClose={() => setPorEliminarCat(null)}
+        title={porEliminarCat ? `¿Eliminar ${porEliminarCat.name}?` : "Eliminar tratamiento"}
+        titleClassName="text-lg font-bold text-brand-navy"
+        size="md"
+        panelClassName="border-transparent shadow-card"
+        busy={eliminandoCat}
+      >
+        <p className="mt-2 text-sm text-neutral-600">
+          Se quitará del catálogo de la organización. Los tratamientos del plan que lo usen
+          se conservan. Esta acción no se puede deshacer.
+        </p>
 
-            <div className="mt-6 flex justify-end gap-3">
-              <Button variant="ghost" size="sm" disabled={eliminandoCat} onClick={() => setPorEliminarCat(null)}>
-                Cancelar
-              </Button>
-              <button
-                type="button"
-                onClick={eliminarCatalogo}
-                disabled={eliminandoCat}
-                className={buttonClasses("danger", "sm")}
-              >
-                {eliminandoCat ? "Eliminando…" : "Eliminar"}
-              </button>
-            </div>
-          </div>
+        <div className="mt-6 flex justify-end gap-3">
+          <Button variant="ghost" size="sm" disabled={eliminandoCat} onClick={() => setPorEliminarCat(null)}>
+            Cancelar
+          </Button>
+          <button
+            type="button"
+            onClick={eliminarCatalogo}
+            disabled={eliminandoCat}
+            className={buttonClasses("danger", "sm")}
+          >
+            {eliminandoCat ? "Eliminando…" : "Eliminar"}
+          </button>
         </div>
-      ) : null}
+      </Modal>
     </div>
   );
 }

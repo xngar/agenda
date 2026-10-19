@@ -31,6 +31,7 @@ import {
 import Link from "next/link";
 import { ErrorNotice } from "@/components/ui";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { AnimatedNumber } from "@/components/motion/animated-number";
 
 export const dynamic = "force-dynamic";
 
@@ -198,7 +199,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         }
         meta={
           <span className="inline-flex items-center rounded-full border border-neutral-200 bg-white px-2.5 py-0.5 text-xs font-medium tabular-nums text-neutral-600">
-            {totalCitas} cita{totalCitas === 1 ? "" : "s"}
+            <AnimatedNumber value={totalCitas} /> cita{totalCitas === 1 ? "" : "s"}
             {totalCitas > 0 ? ` ${ventana}` : ""}
           </span>
         }

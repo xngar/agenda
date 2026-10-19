@@ -10,7 +10,7 @@ import { StaffRescheduleModal } from "./staff-reschedule-modal";
 import type { StaffDoctor } from "./staff-booking-button";
 import { motion, AnimatePresence } from "motion/react";
 import { RefreshCw } from "lucide-react";
-
+import { DUR, EASE } from "@/lib/motion";
 interface Props {
   initial: DoctorAppointment[];
   dayKey: string;
@@ -56,6 +56,7 @@ export function Agenda({
     refrescarAhora,
     connected,
     realtimeError,
+    recientes,
   } = useAgendaAcciones({ doctorId, doctors });
 
   const conteos = useMemo(() => {
@@ -89,7 +90,7 @@ export function Agenda({
     <motion.section
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.22, ease: "easeOut" }}
+      transition={{ duration: DUR.element, ease: EASE.out }}
       className="space-y-3"
     >
       <div className="flex flex-wrap items-center gap-2 rounded-card border border-neutral-200 bg-white p-2 shadow-card">
@@ -146,7 +147,7 @@ export function Agenda({
         <button
           type="button"
           onClick={refrescarAhora}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-sky-400/60 bg-brand-sky-50 px-4 py-2.5 text-sm font-semibold text-brand-navy transition-colors hover:bg-brand-sky-100"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-sky-400/60 bg-brand-sky-50 px-4 py-2.5 text-sm font-semibold text-brand-navy transition-[color,background-color,border-color] duration-micro ease-out-soft hover:bg-brand-sky-100"
         >
           <RefreshCw aria-hidden className="h-4 w-4" />
           Hay cambios nuevos en la agenda · actualizar
@@ -195,22 +196,32 @@ export function Agenda({
         )
       ) : (
         <>
-          <div className="hidden md:block">
-            <AgendaTable
+          {/*
+            La tabla y las tarjetas se vuelven a montar al cambiar de filtro
+            o de búsqueda: así la entrada escalonada se repite y el usuario
+            ve que la lista cambió, en vez de un salto seco entre dos
+            conjuntos de filas. El fade va en CSS para que ocurra también
+            sin JavaScript.
+          */}
+          <div key={`${filtro}-${busqueda.trim()}`} className="anim-view-fade">
+            <div className="hidden md:block">
+              <AgendaTable
+                citas={visibles}
+                pendiente={pendiente}
+                onAccion={accionar}
+                orgName={orgName}
+                recientes={recientes}
+              />
+            </div>
+
+            <AgendaCards
               citas={visibles}
               pendiente={pendiente}
-              onAccion={accionar}
+              onCambiar={cambiar}
+              onReagendar={setReagendando}
               orgName={orgName}
             />
           </div>
-
-          <AgendaCards
-            citas={visibles}
-            pendiente={pendiente}
-            onCambiar={cambiar}
-            onReagendar={setReagendando}
-            orgName={orgName}
-          />
         </>
       )}
 

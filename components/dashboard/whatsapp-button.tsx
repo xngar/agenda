@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence } from "motion/react";
 import { Button, inputClasses } from "@/components/ui";
+import { Modal } from "@/components/motion/modal";
 import { formatPhonePartial, whatsappPhone } from "@/lib/phone";
 
 export function WhatsappIcon({ className }: { className?: string }) {
@@ -95,7 +96,6 @@ export function WhatsappModal({
   orgName: string;
   onClose: () => void;
 }) {
-  const reduceMotion = useReducedMotion();
   const numero = whatsappPhone(phone);
   const nombre = primerNombre(fullName);
   const [texto, setTexto] = useState(
@@ -114,69 +114,45 @@ export function WhatsappModal({
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: reduceMotion ? 0 : 0.16 }}
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-brand-navy-900/40 p-4 backdrop-blur-xs"
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Enviar WhatsApp a ${fullName}`}
-      onClick={onClose}
+    <Modal
+      onClose={onClose}
+      title="Enviar WhatsApp"
+      description={`${fullName} · ${formatPhonePartial(phone ?? "")}`}
     >
-      <motion.div
-        initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.94, y: 16 }}
-        animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
-        exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 10 }}
-        transition={
-          reduceMotion
-            ? { duration: 0.12 }
-            : { type: "spring", stiffness: 450, damping: 32 }
-        }
-        className="my-auto w-full max-w-lg rounded-card border border-neutral-200/80 bg-white p-6 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="text-lg font-semibold text-brand-navy">Enviar WhatsApp</h2>
-        <p className="mt-1 text-sm text-neutral-600">
-          {fullName} · {formatPhonePartial(phone ?? "")}
-        </p>
+      <label className="mt-4 block">
+        <span className="mb-1 block text-xs font-medium text-neutral-600">Mensaje</span>
+        <textarea
+          className={`${inputClasses} min-h-28 resize-y`}
+          value={texto}
+          maxLength={1000}
+          autoFocus
+          onChange={(e) => setTexto(e.target.value)}
+        />
+      </label>
 
-        <label className="mt-4 block">
-          <span className="mb-1 block text-xs font-medium text-neutral-600">Mensaje</span>
-          <textarea
-            className={`${inputClasses} min-h-28 resize-y`}
-            value={texto}
-            maxLength={1000}
-            autoFocus
-            onChange={(e) => setTexto(e.target.value)}
-          />
-        </label>
+      <p className="mt-2 text-xs text-warning-700">
+        No compartas diagnósticos, exámenes ni datos clínicos por WhatsApp.
+      </p>
+      <p className="mt-1 text-xs text-neutral-500">
+        Se abrirá WhatsApp con el mensaje listo. Si es tu primera vez en este navegador,
+        te pedirá escanear el QR.
+      </p>
 
-        <p className="mt-2 text-xs text-warning-700">
-          No compartas diagnósticos, exámenes ni datos clínicos por WhatsApp.
-        </p>
-        <p className="mt-1 text-xs text-neutral-500">
-          Se abrirá WhatsApp con el mensaje listo. Si es tu primera vez en este navegador,
-          te pedirá escanear el QR.
-        </p>
-
-        <div className="mt-5 flex items-center justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onClose}>
-            Cancelar
-          </Button>
-          <a
-            href={`https://wa.me/${numero}?text=${encodeURIComponent(texto)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={registrarContacto}
-            className="inline-flex min-h-9 items-center justify-center gap-2 rounded-lg bg-success-600 px-3 text-sm font-semibold text-white transition-colors hover:bg-success-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success-700"
-          >
-            <WhatsappIcon className="h-4 w-4" />
-            Abrir WhatsApp
-          </a>
-        </div>
-      </motion.div>
-    </motion.div>
+      <div className="mt-5 flex items-center justify-end gap-2">
+        <Button type="button" variant="ghost" onClick={onClose}>
+          Cancelar
+        </Button>
+        <a
+          href={`https://wa.me/${numero}?text=${encodeURIComponent(texto)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={registrarContacto}
+          className="inline-flex min-h-9 items-center justify-center gap-2 rounded-lg bg-success-600 px-3 text-sm font-semibold text-white transition-colors hover:bg-success-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success-700"
+        >
+          <WhatsappIcon className="h-4 w-4" />
+          Abrir WhatsApp
+        </a>
+      </div>
+    </Modal>
   );
 }

@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button, ErrorNotice, Field, Spinner, inputClasses } from "@/components/ui";
+import { Button, ErrorNotice, Field, Spinner, buttonClasses, inputClasses } from "@/components/ui";
+import { AsyncButton } from "@/components/motion/async-button";
 import { formatTime, todayKey } from "@/lib/dates";
 import type { StaffDoctor } from "./staff-booking-button";
-import { motion, useReducedMotion } from "motion/react";
+import { Modal } from "@/components/motion/modal";
 
 export interface ReschedulableAppointment {
   id: string;
@@ -45,7 +46,6 @@ export function StaffRescheduleModal({
   const [slotStart, setSlotStart] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
-  const reduceMotion = useReducedMotion();
 
   const cargarSlots = useCallback(async (limpiarError = true) => {
     if (!date) return;
@@ -76,15 +76,6 @@ export function StaffRescheduleModal({
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch de slots al cambiar día/profesional, setState tras await
     cargarSlots();
   }, [cargarSlots]);
-
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
 
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
@@ -121,107 +112,88 @@ export function StaffRescheduleModal({
   const doctor = doctors.find((d) => d.id === doctorId);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: reduceMotion ? 0 : 0.16 }}
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-brand-navy-900/40 p-4 backdrop-blur-xs"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Reprogramar cita"
-      onClick={onClose}
+    <Modal
+      onClose={onClose}
+      title="Reprogramar cita"
+      description={`${appointment.patientName} · ${appointment.serviceName} · con ${doctor?.full_name ?? appointment.doctorName}`}
     >
-      <motion.div
-        initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.94, y: 16 }}
-        animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
-        exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 10 }}
-        transition={
-          reduceMotion
-            ? { duration: 0.12 }
-            : { type: "spring", stiffness: 450, damping: 32 }
-        }
-        className="w-full max-w-lg rounded-card border border-neutral-200/80 bg-white p-6 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="text-lg font-semibold text-brand-navy">Reprogramar cita</h2>
-        <p className="mt-1 text-sm text-neutral-600">
-          {appointment.patientName} · {appointment.serviceName} · con{" "}
-          {doctor?.full_name ?? appointment.doctorName}
-        </p>
+      <form onSubmit={guardar} className="mt-4 space-y-4">
+        {error ? <ErrorNotice message={error} /> : null}
 
-        <form onSubmit={guardar} className="mt-4 space-y-4">
-          {error ? <ErrorNotice message={error} /> : null}
-
-          {doctors.length > 1 ? (
-            <Field label="Profesional" htmlFor="reagendar-doctor" required={false}>
-              <select
-                id="reagendar-doctor"
-                className={inputClasses}
-                value={doctorId}
-                onChange={(e) => setDoctorId(e.target.value)}
-              >
-                {doctors.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.full_name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-          ) : null}
-
-          <Field label="Nuevo día" htmlFor="reagendar-fecha" required={false}>
-            <input
-              id="reagendar-fecha"
-              type="date"
+        {doctors.length > 1 ? (
+          <Field label="Profesional" htmlFor="reagendar-doctor" required={false}>
+            <select
+              id="reagendar-doctor"
               className={inputClasses}
-              value={date}
-              min={todayKey()}
-              onChange={(e) => setDate(e.target.value)}
-            />
+              value={doctorId}
+              onChange={(e) => setDoctorId(e.target.value)}
+            >
+              {doctors.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.full_name}
+                </option>
+              ))}
+            </select>
           </Field>
+        ) : null}
 
-          <div>
-            <span className={label}>Nueva hora</span>
-            {!date ? (
-              <p className="text-sm text-neutral-500">Elige el nuevo día.</p>
-            ) : cargando ? (
-              <Spinner label="Cargando horas…" />
-            ) : slots.length === 0 ? (
-              <p className="text-sm text-neutral-500">
-                Sin horas libres ese día. Prueba con otro día o profesional.
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-2" role="group" aria-label="Horas disponibles">
-                {slots.map((s) => (
-                  <button
-                    key={s.slot_start}
-                    type="button"
-                    aria-pressed={slotStart === s.slot_start}
-                    onClick={() => setSlotStart(s.slot_start)}
-                    className={`inline-flex min-h-10 items-center justify-center rounded-lg border px-3 text-sm font-semibold tabular-nums transition-all duration-150 ease-out active:scale-95 cursor-pointer ${
-                      slotStart === s.slot_start
-                        ? "border-brand-navy bg-brand-navy text-white shadow-xs scale-[1.03]"
-                        : "border-neutral-300 bg-white text-neutral-700 hover:border-brand-navy hover:text-brand-navy hover:shadow-2xs"
-                    }`}
-                  >
-                    {formatTime(s.slot_start)}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+        <Field label="Nuevo día" htmlFor="reagendar-fecha" required={false}>
+          <input
+            id="reagendar-fecha"
+            type="date"
+            className={inputClasses}
+            value={date}
+            min={todayKey()}
+            onChange={(e) => setDate(e.target.value)}
+          />
+        </Field>
 
-          <div className="flex items-center justify-end gap-2 pt-1">
-            <Button type="button" variant="ghost" onClick={onClose} disabled={guardando}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={!slotStart || guardando}>
-              {guardando ? "Moviendo…" : "Mover cita"}
-            </Button>
-          </div>
-        </form>
-      </motion.div>
-    </motion.div>
+        <div>
+          <span className={label}>Nueva hora</span>
+          {!date ? (
+            <p className="text-sm text-neutral-500">Elige el nuevo día.</p>
+          ) : cargando ? (
+            <Spinner label="Cargando horas…" />
+          ) : slots.length === 0 ? (
+            <p className="text-sm text-neutral-500">
+              Sin horas libres ese día. Prueba con otro día o profesional.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Horas disponibles">
+              {slots.map((s) => (
+                <button
+                  key={s.slot_start}
+                  type="button"
+                  aria-pressed={slotStart === s.slot_start}
+                  onClick={() => setSlotStart(s.slot_start)}
+                  className={`inline-flex min-h-10 items-center justify-center rounded-lg border px-3 text-sm font-semibold tabular-nums transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft active:scale-95 cursor-pointer ${
+                    slotStart === s.slot_start
+                      ? "border-brand-navy bg-brand-navy text-white shadow-xs scale-[1.03]"
+                      : "border-neutral-300 bg-white text-neutral-700 hover:border-brand-navy hover:text-brand-navy hover:shadow-2xs"
+                  }`}
+                >
+                  {formatTime(s.slot_start)}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center justify-end gap-2 pt-1">
+          <Button type="button" variant="ghost" onClick={onClose} disabled={guardando}>
+            Cancelar
+          </Button>
+          <AsyncButton
+            type="submit"
+            loading={guardando}
+            disabled={!slotStart}
+            pendingLabel="Moviendo la cita"
+            className={buttonClasses("primary", "md")}
+          >
+            Mover cita
+          </AsyncButton>
+        </div>
+      </form>
+    </Modal>
   );
 }

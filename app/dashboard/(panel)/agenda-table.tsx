@@ -47,7 +47,7 @@ export function Accion({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-lg border font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+      className={`rounded-lg border font-medium transition-[color,background-color,border-color,box-shadow] duration-micro ease-out-soft disabled:cursor-not-allowed disabled:opacity-50 ${
         compacto ? "px-2.5 py-1 text-[13px]" : "px-3 py-1.5 text-sm"
       } ${
         destacado
@@ -69,17 +69,24 @@ export function Accion({
  * citas ya filtradas y delega las acciones en `onAccion`, para que la
  * tarjeta móvil y la tabla compartan la misma lógica de estado que vive
  * en `agenda.tsx` (fuente de verdad: el servidor vía `router.refresh()`).
+ *
+ * Las filas entran con un escalonado corto (35 ms) y solo las primeras
+ * visibles: una tabla de 60 citas no debe tardar dos segundos en aparecer.
+ * Las filas recién tocadas se resaltan y el resaltado se apaga solo.
  */
 export function AgendaTable({
   citas,
   pendiente,
   onAccion,
   orgName,
+  recientes = [],
 }: {
   citas: DoctorAppointment[];
   pendiente: string | null;
   onAccion: (appointmentId: string, action: string) => void;
   orgName: string;
+  /** Ids de las citas recién modificadas: se resaltan al instante. */
+  recientes?: string[];
 }) {
   return (
     <div className="overflow-x-auto rounded-card border border-neutral-200 bg-white">
@@ -120,15 +127,19 @@ export function AgendaTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-neutral-100">
-          {citas.map((cita) => {
+          {citas.map((cita, indice) => {
             const { start, end } = parseAppointmentRange(cita.during);
             const cancelada = cita.status === "cancelled";
             const ocupado = pendiente?.startsWith(cita.id) ?? false;
+            const recien = recientes.includes(cita.id);
 
             return (
               <tr
                 key={cita.id}
-                className={`transition-colors hover:bg-brand-sky-50/60 ${cancelada ? "opacity-70" : ""}`}
+                className={`anim-row-in transition-colors duration-micro ease-out-soft hover:bg-brand-sky-50/60 ${
+                  cancelada ? "opacity-70" : ""
+                } ${recien ? "row-highlight" : ""}`}
+                style={{ animationDelay: `${Math.min(indice, 12) * 35}ms` }}
               >
                 <td className="whitespace-nowrap px-4 py-3">
                   <span className="flex items-center gap-2">

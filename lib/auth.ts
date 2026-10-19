@@ -18,7 +18,7 @@ full_name: string;
   isSuperAdmin: boolean;
 }
 
-/** La relaci�n `organizations` puede venir como objeto o como arreglo. */
+/** La relación `organizations` puede venir como objeto o como arreglo. */
 function orgSlugOf(relation: unknown): string {
   if (Array.isArray(relation)) return (relation[0]?.slug as string | undefined) ?? "";
   return ((relation as { slug?: string } | null)?.slug as string | undefined) ?? "";

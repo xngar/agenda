@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/popover";
 import { Button as ShadcnButton } from "@/components/ui/button";
 import { Button, Card, ErrorNotice, InfoNotice, buttonClasses, inputClasses } from "@/components/ui";
+import { Modal } from "@/components/motion/modal";
 
 export interface OrganizationRow {
   id: string;
@@ -339,8 +340,13 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200">
-              {visibles.map((org) => (
-                <tr key={org.id} data-org-id={org.id} className="align-top">
+              {visibles.map((org, indice) => (
+                <tr
+                  key={org.id}
+                  data-org-id={org.id}
+                  className="anim-row-in align-top"
+                  style={{ animationDelay: `${Math.min(indice, 12) * 35}ms` }}
+                >
                   <td className="px-4 py-3">
                     <span className="block font-semibold text-neutral-800">{org.name}</span>
                     <span className="block text-xs text-neutral-500">/{org.slug}</span>
@@ -406,11 +412,12 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
 
       {visibles.length > 0 ? (
         <ul className="space-y-2 md:hidden">
-          {visibles.map((org) => (
+          {visibles.map((org, indice) => (
             <li
               key={org.id}
               data-org-id={org.id}
-              className="rounded-card border border-neutral-200 bg-white p-4 shadow-card"
+              className="anim-row-in rounded-card border border-neutral-200 bg-white p-4 shadow-card"
+              style={{ animationDelay: `${Math.min(indice, 12) * 35}ms` }}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -496,27 +503,96 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
       </p>
 
       {/* ── Confirmación de borrado ─────────────────────────────────── */}
-      {confirmar ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="dialog-eliminar-titulo"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        >
-          <div
-            className="absolute inset-0 bg-neutral-900/50"
-            onClick={() => {
-              if (!eliminando) setConfirmar(null);
-            }}
-          />
-          <div className="relative w-full max-w-md rounded-card bg-white p-6 shadow-card">
-            <h2 id="dialog-eliminar-titulo" className="text-lg font-bold text-brand-navy">
-              ¿Eliminar {confirmar.name}?
-            </h2>
+      <Modal
+        open={confirmar !== null}
+        onClose={() => setConfirmar(null)}
+        title={confirmar ? `¿Eliminar ${confirmar.name}?` : "Eliminar organización"}
+        titleClassName="text-lg font-bold text-brand-navy"
+        size="md"
+        panelClassName="border-transparent shadow-card"
+        busy={eliminando}
+      >
+        <p className="mt-2 text-sm text-neutral-600">
+          Se borrarán sus profesionales, servicios, horario y cuentas de acceso, junto con la
+          organización. Esta acción no se puede deshacer.
+        </p>
+
+        {error ? <div className="mt-4"><ErrorNotice message={error} /></div> : null}
+
+        <div className="mt-6 flex justify-end gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={eliminando}
+            onClick={() => setConfirmar(null)}
+          >
+            Cancelar
+          </Button>
+          <button
+            type="button"
+            onClick={confirmarEliminacion}
+            disabled={eliminando}
+            className={buttonClasses("danger", "sm")}
+          >
+            {eliminando ? "Eliminando…" : "Eliminar"}
+          </button>
+        </div>
+      </Modal>
+
+      {/* ── Restablecer contraseña ──────────────────────────────────── */}
+      <Modal
+        open={Boolean(resetear?.admin)}
+        onClose={() => {
+          if (restableciendo) return;
+          setResetear(null);
+          setResetOk(null);
+          setNuevaPassword("");
+        }}
+        title={resetOk ? "Contraseña restablecida" : `Nueva contraseña · ${resetear?.name ?? ""}`}
+        titleClassName="text-lg font-bold text-brand-navy"
+        size="md"
+        panelClassName="border-transparent shadow-card"
+        busy={restableciendo}
+      >
+        {resetOk ? (
+          <>
+            <div className="mt-3">
+              <InfoNotice>
+                La contraseña de <span className="font-semibold">{resetOk.name}</span> ya fue
+                actualizada. Compártela con la clínica para que entre al panel.
+              </InfoNotice>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <Button
+                size="sm"
+                onClick={() => {
+                  setResetear(null);
+                  setResetOk(null);
+                }}
+              >
+                Listo
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
             <p className="mt-2 text-sm text-neutral-600">
-              Se borrarán sus profesionales, servicios, horario y cuentas de acceso, junto con la
-              organización. Esta acción no se puede deshacer.
+              Se la asignarán a <span className="font-medium text-neutral-800">{resetear?.admin?.name}</span>{" "}
+              ({resetear?.admin?.email}). Luego deberás compartírsela; no se envía por correo.
             </p>
+
+            <label className="mt-4 flex flex-col gap-1.5 text-sm">
+              <span className="font-medium text-neutral-800">Contraseña temporal</span>
+              <input
+                type="password"
+                value={nuevaPassword}
+                minLength={8}
+                autoFocus
+                onChange={(e) => setNuevaPassword(e.target.value)}
+                className={inputClasses}
+                placeholder="Mínimo 8 caracteres"
+              />
+            </label>
 
             {error ? <div className="mt-4"><ErrorNotice message={error} /></div> : null}
 
@@ -524,117 +600,26 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
               <Button
                 variant="ghost"
                 size="sm"
-                disabled={eliminando}
-                onClick={() => setConfirmar(null)}
+                disabled={restableciendo}
+                onClick={() => {
+                  setResetear(null);
+                  setNuevaPassword("");
+                }}
               >
                 Cancelar
               </Button>
               <button
                 type="button"
-                onClick={confirmarEliminacion}
-                disabled={eliminando}
-                className={buttonClasses("danger", "sm")}
+                onClick={confirmarReset}
+                disabled={restableciendo || nuevaPassword.length < 8}
+                className={buttonClasses("primary", "sm")}
               >
-                {eliminando ? "Eliminando…" : "Eliminar"}
+                {restableciendo ? "Restableciendo…" : "Restablecer"}
               </button>
             </div>
-          </div>
-        </div>
-      ) : null}
-
-      {/* ── Restablecer contraseña ──────────────────────────────────── */}
-      {resetear?.admin ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="dialog-password-titulo"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        >
-          <div
-            className="absolute inset-0 bg-neutral-900/50"
-            onClick={() => {
-              if (!restableciendo) {
-                setResetear(null);
-                setResetOk(null);
-                setNuevaPassword("");
-              }
-            }}
-          />
-          <div className="relative w-full max-w-md rounded-card bg-white p-6 shadow-card">
-            {resetOk ? (
-              <>
-                <h2 id="dialog-password-titulo" className="text-lg font-bold text-brand-navy">
-                  Contraseña restablecida
-                </h2>
-                <div className="mt-3">
-                  <InfoNotice>
-                    La contraseña de <span className="font-semibold">{resetOk.name}</span> ya fue
-                    actualizada. Compártela con la clínica para que entre al panel.
-                  </InfoNotice>
-                </div>
-                <div className="mt-6 flex justify-end">
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setResetear(null);
-                      setResetOk(null);
-                    }}
-                  >
-                    Listo
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <h2 id="dialog-password-titulo" className="text-lg font-bold text-brand-navy">
-                  Nueva contraseña · {resetear.name}
-                </h2>
-                <p className="mt-2 text-sm text-neutral-600">
-                  Se la asignarán a <span className="font-medium text-neutral-800">{resetear.admin.name}</span>{" "}
-                  ({resetear.admin.email}). Luego deberás compartírsela; no se envía por correo.
-                </p>
-
-                <label className="mt-4 flex flex-col gap-1.5 text-sm">
-                  <span className="font-medium text-neutral-800">Contraseña temporal</span>
-                  <input
-                    type="password"
-                    value={nuevaPassword}
-                    minLength={8}
-                    autoFocus
-                    onChange={(e) => setNuevaPassword(e.target.value)}
-                    className={inputClasses}
-                    placeholder="Mínimo 8 caracteres"
-                  />
-                </label>
-
-                {error ? <div className="mt-4"><ErrorNotice message={error} /></div> : null}
-
-                <div className="mt-6 flex justify-end gap-3">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={restableciendo}
-                    onClick={() => {
-                      setResetear(null);
-                      setNuevaPassword("");
-                    }}
-                  >
-                    Cancelar
-                  </Button>
-                  <button
-                    type="button"
-                    onClick={confirmarReset}
-                    disabled={restableciendo || nuevaPassword.length < 8}
-                    className={buttonClasses("primary", "sm")}
-                  >
-                    {restableciendo ? "Restableciendo…" : "Restablecer"}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      ) : null}
+          </>
+        )}
+      </Modal>
     </div>
   );
 }

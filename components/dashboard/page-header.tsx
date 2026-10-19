@@ -21,7 +21,7 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+    <header className="anim-fade-up flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
       <div className="min-w-0">
         {eyebrow ? (
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-navy-600">

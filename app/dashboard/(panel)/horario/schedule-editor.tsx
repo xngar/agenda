@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button, ErrorNotice, InfoNotice, inputClasses } from "@/components/ui";
+import { Button, ErrorNotice, InfoNotice, buttonClasses, inputClasses } from "@/components/ui";
+import { AsyncButton } from "@/components/motion/async-button";
 import {
   availabilityOverlaps,
   availabilityOverlapMessage,
@@ -331,9 +332,14 @@ export function ScheduleEditor({
       </InfoNotice>
 
       <div className="flex flex-wrap gap-2">
-        <Button onClick={() => guardar(false)} disabled={guardando}>
-          {guardando ? "Guardando…" : "Guardar horario"}
-        </Button>
+        <AsyncButton
+          onClick={() => guardar(false)}
+          loading={guardando}
+          pendingLabel="Guardando horario"
+          className={buttonClasses("primary", "md")}
+        >
+          Guardar horario
+        </AsyncButton>
         <Button variant="secondary" onClick={resetear} disabled={guardando}>
           Descartar cambios
         </Button>

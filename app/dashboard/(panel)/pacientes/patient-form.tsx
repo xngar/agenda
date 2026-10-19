@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button, inputClasses } from "@/components/ui";
+import { Button, buttonClasses, inputClasses } from "@/components/ui";
+import { AsyncButton } from "@/components/motion/async-button";
+import { Modal } from "@/components/motion/modal";
 import { formatRutPartial, normalizeRut } from "@/lib/rut";
 import { formatPhonePartial, normalizePhone } from "@/lib/phone";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 interface PatientDraft {
   id?: string;
@@ -38,7 +39,6 @@ export function PatientFormModal({
   const [sex, setSex] = useState(initial?.sex ?? "");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const reduceMotion = useReducedMotion();
 
   /* eslint-disable react-hooks/set-state-in-effect -- resincroniza el formulario al abrir con datos frescos */
   useEffect(() => {
@@ -113,41 +113,17 @@ export function PatientFormModal({
   const label = "mb-1 block text-xs font-medium text-neutral-600";
 
   return (
-    <AnimatePresence>
-      {open ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: reduceMotion ? 0 : 0.16 }}
-          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-brand-navy-900/40 p-4 backdrop-blur-xs"
-          role="dialog"
-          aria-modal="true"
-          aria-label={editing ? "Editar paciente" : "Nuevo paciente"}
-          onClick={onClose}
-        >
-          <motion.div
-            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.94, y: 16 }}
-            animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
-            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 10 }}
-            transition={
-              reduceMotion
-                ? { duration: 0.12 }
-                : { type: "spring", stiffness: 450, damping: 32 }
-            }
-            className="my-auto w-full max-w-lg rounded-card border border-neutral-200/80 bg-white p-6 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="text-lg font-semibold text-brand-navy">
-              {editing ? "Editar paciente" : "Nuevo paciente"}
-            </h2>
-            <p className="mt-1 text-sm text-neutral-600">
-              {editing
-                ? "Se guardará en tu lista de pacientes."
-                : "El paciente quedará asociado a tu cuenta; el resto del equipo podrá verlo."}
-            </p>
-
-            <form onSubmit={guardar} className="mt-4 space-y-3">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={editing ? "Editar paciente" : "Nuevo paciente"}
+      description={
+        editing
+          ? "Se guardará en tu lista de pacientes."
+          : "El paciente quedará asociado a tu cuenta; el resto del equipo podrá verlo."
+      }
+    >
+      <form onSubmit={guardar} className="mt-4 space-y-3">
               <label className="block">
                 <span className={label}>Nombre completo</span>
                 <input
@@ -172,71 +148,73 @@ export function PatientFormModal({
                     inputMode="text"
                     onChange={handleRutChange}
                     onBlur={handleRutBlur}
-                  />
-                </label>
-                <label className="block">
-                  <span className={label}>Teléfono</span>
-                  <input
-                    className={inputClasses}
-                    value={phone}
-                    placeholder="+56 9 1234 5678"
-                    inputMode="tel"
-                    onChange={(e) => setPhone(formatPhonePartial(e.target.value))}
-                  />
-                  <span className="mt-1 block text-xs text-neutral-500">
-                    Escribe sólo el número: el +56 ya está puesto.
-                  </span>
-                </label>
-              </div>
+            />
+          </label>
+          <label className="block">
+            <span className={label}>Teléfono</span>
+            <input
+              className={inputClasses}
+              value={phone}
+              placeholder="+56 9 1234 5678"
+              inputMode="tel"
+              onChange={(e) => setPhone(formatPhonePartial(e.target.value))}
+            />
+            <span className="mt-1 block text-xs text-neutral-500">
+              Escribe sólo el número: el +56 ya está puesto.
+            </span>
+          </label>
+        </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <label className="block">
-                  <span className={label}>Correo</span>
-                  <input
-                    className={inputClasses}
-                    type="email"
-                    value={email}
-                    placeholder="paciente@correo.cl"
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </label>
-                <label className="block">
-                  <span className={label}>Fecha de nacimiento</span>
-                  <input
-                    className={inputClasses}
-                    type="date"
-                    value={birthDate}
-                    onChange={(e) => setBirthDate(e.target.value)}
-                  />
-                </label>
-              </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <label className="block">
+            <span className={label}>Correo</span>
+            <input
+              className={inputClasses}
+              type="email"
+              value={email}
+              placeholder="paciente@correo.cl"
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </label>
+          <label className="block">
+            <span className={label}>Fecha de nacimiento</span>
+            <input
+              className={inputClasses}
+              type="date"
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
+            />
+          </label>
+        </div>
 
-              <label className="block">
-                <span className={label}>Sexo</span>
-                <select className={inputClasses} value={sex} onChange={(e) => setSex(e.target.value)}>
-                  <option value="">Sin especificar</option>
-                  <option value="female">Mujer</option>
-                  <option value="male">Hombre</option>
-                  <option value="other">Otro</option>
-                  <option value="undisclosed">Prefiere no decir</option>
-                </select>
-              </label>
+        <label className="block">
+          <span className={label}>Sexo</span>
+          <select className={inputClasses} value={sex} onChange={(e) => setSex(e.target.value)}>
+            <option value="">Sin especificar</option>
+            <option value="female">Mujer</option>
+            <option value="male">Hombre</option>
+            <option value="other">Otro</option>
+            <option value="undisclosed">Prefiere no decir</option>
+          </select>
+        </label>
 
-              {error ? <p className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger-700">{error}</p> : null}
+        {error ? <p className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger-700">{error}</p> : null}
 
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={saving}>
-                  {saving ? "Guardando…" : editing ? "Guardar cambios" : "Crear paciente"}
-                </Button>
-              </div>
-            </form>
-          </motion.div>
-        </motion.div>
-      ) : null}
-    </AnimatePresence>
+        <div className="flex items-center justify-end gap-2 pt-2">
+          <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>
+            Cancelar
+          </Button>
+          <AsyncButton
+            type="submit"
+            loading={saving}
+            pendingLabel="Guardando paciente"
+            className={buttonClasses("primary", "md")}
+          >
+            {editing ? "Guardar cambios" : "Crear paciente"}
+          </AsyncButton>
+        </div>
+      </form>
+    </Modal>
   );
 }
 

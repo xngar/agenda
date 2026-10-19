@@ -15,6 +15,7 @@ import {
   Spinner,
   inputClasses,
 } from "@/components/ui";
+import { Modal } from "@/components/motion/modal";
 import { SpecialtyForm, SpecialtyView, type SpecialtyValues } from "./specialty-section";
 
 interface EncounterRow extends Encounter {
@@ -505,100 +506,100 @@ const SIGNOS_VITALES = [
         </ul>
       </Card>
 
-      {dialogo ? (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-neutral-900/40 p-4" onClick={() => setDialogo(null)}>
-          <div
-            className="w-full max-w-2xl rounded-card border border-neutral-200 bg-white shadow-card"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <CardHeader
-              title={dialogo === "nueva" ? "Nueva atención" : "Editar borrador"}
-              description="Registra la atención. Mientras sea borrador puedes editarla; al firmarla queda inmutable."
-            />
-            <form onSubmit={guardar} className="space-y-4 px-5 py-5">
-              {error ? <ErrorNotice message={error} /> : null}
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Fecha de atención" htmlFor="started_at">
-                  <input id="started_at" type="date" className={inputClasses} value={form.started_at} onChange={(e) => set("started_at", e.target.value)} />
-                </Field>
-                <Field label="Tipo de atención" htmlFor="care_type" required={false}>
-                  <select id="care_type" className={inputClasses} value={form.care_type} onChange={(e) => set("care_type", e.target.value)}>
-                    <option value="">—</option>
-                    {CARE_TYPES.map((c) => (
-                      <option key={c.value} value={c.value}>{c.label}</option>
-                    ))}
-                  </select>
-                </Field>
-              </div>
-              <Field label="Motivo" htmlFor="motivo" required={false}>
-                <textarea id="motivo" rows={2} className={inputClasses} value={form.motivo} onChange={(e) => set("motivo", e.target.value)} />
-              </Field>
-              <Field label="Evolución" htmlFor="evolucion" required={false}>
-                <textarea id="evolucion" rows={4} className={inputClasses} value={form.evolucion} onChange={(e) => set("evolucion", e.target.value)} />
-              </Field>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Diagnóstico" htmlFor="diagnostico" required={false}>
-                  <textarea id="diagnostico" rows={3} className={inputClasses} value={form.diagnostico} onChange={(e) => set("diagnostico", e.target.value)} />
-                </Field>
-                <Field label="Indicaciones" htmlFor="indicaciones" required={false}>
-                  <textarea id="indicaciones" rows={3} className={inputClasses} value={form.indicaciones} onChange={(e) => set("indicaciones", e.target.value)} />
-                </Field>
-              </div>
-              <Field label="Próxima cita" htmlFor="proxima" required={false}>
-                <input id="proxima" type="date" className={inputClasses} value={form.proxima_cita_at} onChange={(e) => set("proxima_cita_at", e.target.value)} />
-              </Field>
-              <SpecialtyForm
-                sections={ficha.encounterFields}
-                value={especialidad}
-                onChange={(key, next) => setEspecialidad((v) => ({ ...v, [key]: next }))}
-                idPrefix="encuentro"
-              />
-              {esMedica ? (
-                <fieldset>
-                  <legend className="mb-3 text-sm font-semibold text-brand-navy">
-                    Signos vitales
-                  </legend>
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    {SIGNOS_VITALES.map(({ key, label }) => (
-                      <Field key={key} label={label} htmlFor={`vital-${key}`} required={false}>
-                        <input
-                          id={`vital-${key}`}
-                          type="number"
-                          step="any"
-                          min={0}
-                          className={inputClasses}
-                          value={vitalesTxt[key] ?? ""}
-                          onChange={(e) => setVitalesTxt((v) => ({ ...v, [key]: e.target.value }))}
-                        />
-                      </Field>
-                    ))}
-                  </div>
-                </fieldset>
-              ) : null}
-              {esPsicologica && (dialogo === "nueva" || "privateNotes" in especialidad) ? (
-                <Field
-                  label="Notas privadas (solo tratante)"
-                  htmlFor="notas-privadas"
-                  required={false}
-                  hint="Nunca se comparten con otros profesionales ni aparecen en el export o el PDF."
-                >
-                  <textarea
-                    id="notas-privadas"
-                    rows={4}
-                    className={inputClasses}
-                    value={typeof especialidad.privateNotes === "string" ? especialidad.privateNotes : ""}
-                    onChange={(e) => setEspecialidad((v) => ({ ...v, privateNotes: e.target.value }))}
-                  />
-                </Field>
-              ) : null}
-              <div className="flex flex-wrap gap-3">
-                <Button type="submit" disabled={guardando}>{guardando ? "Guardando…" : dialogosGuardar(dialogo)}</Button>
-                <Button variant="ghost" onClick={() => setDialogo(null)} disabled={guardando}>Cancelar</Button>
-              </div>
-            </form>
+      <Modal
+        open={dialogo !== null}
+        onClose={() => setDialogo(null)}
+        ariaLabel={dialogo === "nueva" ? "Nueva atención" : "Editar borrador"}
+        size="2xl"
+        panelClassName="p-0 border-neutral-200 shadow-card"
+        busy={guardando}
+      >
+        <CardHeader
+          title={dialogo === "nueva" ? "Nueva atención" : "Editar borrador"}
+          description="Registra la atención. Mientras sea borrador puedes editarla; al firmarla queda inmutable."
+        />
+        <form onSubmit={guardar} className="space-y-4 px-5 py-5">
+          {error ? <ErrorNotice message={error} /> : null}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Fecha de atención" htmlFor="started_at">
+              <input id="started_at" type="date" className={inputClasses} value={form.started_at} onChange={(e) => set("started_at", e.target.value)} />
+            </Field>
+            <Field label="Tipo de atención" htmlFor="care_type" required={false}>
+              <select id="care_type" className={inputClasses} value={form.care_type} onChange={(e) => set("care_type", e.target.value)}>
+                <option value="">—</option>
+                {CARE_TYPES.map((c) => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
+            </Field>
           </div>
-        </div>
-      ) : null}
+          <Field label="Motivo" htmlFor="motivo" required={false}>
+            <textarea id="motivo" rows={2} className={inputClasses} value={form.motivo} onChange={(e) => set("motivo", e.target.value)} />
+          </Field>
+          <Field label="Evolución" htmlFor="evolucion" required={false}>
+            <textarea id="evolucion" rows={4} className={inputClasses} value={form.evolucion} onChange={(e) => set("evolucion", e.target.value)} />
+          </Field>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Diagnóstico" htmlFor="diagnostico" required={false}>
+              <textarea id="diagnostico" rows={3} className={inputClasses} value={form.diagnostico} onChange={(e) => set("diagnostico", e.target.value)} />
+            </Field>
+            <Field label="Indicaciones" htmlFor="indicaciones" required={false}>
+              <textarea id="indicaciones" rows={3} className={inputClasses} value={form.indicaciones} onChange={(e) => set("indicaciones", e.target.value)} />
+            </Field>
+          </div>
+          <Field label="Próxima cita" htmlFor="proxima" required={false}>
+            <input id="proxima" type="date" className={inputClasses} value={form.proxima_cita_at} onChange={(e) => set("proxima_cita_at", e.target.value)} />
+          </Field>
+          <SpecialtyForm
+            sections={ficha.encounterFields}
+            value={especialidad}
+            onChange={(key, next) => setEspecialidad((v) => ({ ...v, [key]: next }))}
+            idPrefix="encuentro"
+          />
+          {esMedica ? (
+            <fieldset>
+              <legend className="mb-3 text-sm font-semibold text-brand-navy">
+                Signos vitales
+              </legend>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {SIGNOS_VITALES.map(({ key, label }) => (
+                  <Field key={key} label={label} htmlFor={`vital-${key}`} required={false}>
+                    <input
+                      id={`vital-${key}`}
+                      type="number"
+                      step="any"
+                      min={0}
+                      className={inputClasses}
+                      value={vitalesTxt[key] ?? ""}
+                      onChange={(e) => setVitalesTxt((v) => ({ ...v, [key]: e.target.value }))}
+                    />
+                  </Field>
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
+          {esPsicologica && (dialogo === "nueva" || "privateNotes" in especialidad) ? (
+            <Field
+              label="Notas privadas (solo tratante)"
+              htmlFor="notas-privadas"
+              required={false}
+              hint="Nunca se comparten con otros profesionales ni aparecen en el export o el PDF."
+            >
+              <textarea
+                id="notas-privadas"
+                rows={4}
+                className={inputClasses}
+                value={typeof especialidad.privateNotes === "string" ? especialidad.privateNotes : ""}
+                onChange={(e) => setEspecialidad((v) => ({ ...v, privateNotes: e.target.value }))}
+              />
+            </Field>
+          ) : null}
+          <div className="flex flex-wrap gap-3">
+            <Button type="submit" disabled={guardando}>{guardando ? "Guardando…" : dialogo ? dialogosGuardar(dialogo) : "Guardar atención"}</Button>
+            <Button variant="ghost" onClick={() => setDialogo(null)} disabled={guardando}>Cancelar</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 

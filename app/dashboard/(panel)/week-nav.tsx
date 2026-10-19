@@ -73,7 +73,7 @@ export function WeekNav({ dayKey, today }: { dayKey: string; today: string }) {
           type="button"
           onClick={() => irA(today)}
           disabled={pending}
-          className="inline-flex min-h-11 items-center rounded-xl border border-brand-navy bg-white px-3 text-sm font-semibold text-brand-navy transition-all duration-150 ease-out hover:bg-brand-navy hover:text-white hover:shadow-xs active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+          className="inline-flex min-h-11 items-center rounded-xl border border-brand-navy bg-white px-3 text-sm font-semibold text-brand-navy transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft hover:bg-brand-navy hover:text-white hover:shadow-xs active:scale-95 disabled:pointer-events-none disabled:opacity-50"
         >
           Hoy
         </button>

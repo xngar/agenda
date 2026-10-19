@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button, ErrorNotice, InfoNotice, inputClasses } from "@/components/ui";
+import { Button, ErrorNotice, InfoNotice, buttonClasses, inputClasses } from "@/components/ui";
+import { AsyncButton } from "@/components/motion/async-button";
 import { addDaysToKey, dateKey, isValidDayKey, zonedInstant } from "@/lib/dates";
 
 export interface BlockedRange {
@@ -247,9 +248,14 @@ export function TimeOffEditor({
         ) : null}
 
         <div className="mt-4">
-          <Button onClick={() => crear(false)} disabled={guardando}>
-            {guardando ? "Guardando…" : "Bloquear"}
-          </Button>
+          <AsyncButton
+            onClick={() => crear(false)}
+            loading={guardando}
+            pendingLabel="Guardando bloqueo"
+            className={buttonClasses("primary", "md")}
+          >
+            Bloquear
+          </AsyncButton>
         </div>
       </section>
 

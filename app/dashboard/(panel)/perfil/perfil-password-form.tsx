@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { buttonClasses } from "@/components/ui";
+import { AsyncButton } from "@/components/motion/async-button";
 import { PasswordInput } from "@/components/password-input";
 
 export function PerfilPasswordForm({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {
@@ -111,9 +112,14 @@ export function PerfilPasswordForm({ onDirtyChange }: { onDirtyChange?: (dirty: 
           onChange={setConfirmacion}
         />
       </div>
-      <button type="submit" disabled={busy} className={buttonClasses("primary", "lg")}>
-        {busy ? "Guardando…" : "Cambiar contraseña"}
-      </button>
+      <AsyncButton
+        type="submit"
+        loading={busy}
+        pendingLabel="Cambiando contraseña"
+        className={buttonClasses("primary", "lg")}
+      >
+        Cambiar contraseña
+      </AsyncButton>
     </form>
   );
 }

@@ -3,11 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button, ErrorNotice, inputClasses } from "@/components/ui";
+import { Button, ErrorNotice, buttonClasses, inputClasses } from "@/components/ui";
+import { AsyncButton } from "@/components/motion/async-button";
 import { formatTime, todayKey } from "@/lib/dates";
 import { formatRutPartial, isValidRut } from "@/lib/rut";
 import { formatPhonePartial } from "@/lib/phone";
-import { motion, AnimatePresence, useReducedMotion } from "motion/react";
+import { AnimatePresence } from "motion/react";
+import { Modal } from "@/components/motion/modal";
 
 export interface StaffService {
   id: string;
@@ -103,7 +105,6 @@ function StaffBookingModal({
 
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
-  const reduceMotion = useReducedMotion();
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -222,223 +223,206 @@ function StaffBookingModal({
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: reduceMotion ? 0 : 0.16 }}
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-brand-navy-900/40 p-4 backdrop-blur-xs"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Nueva reserva"
-      onClick={onClose}
+    <Modal
+      onClose={onClose}
+      title="Nueva reserva"
+      description="La cita queda confirmada de inmediato y se avisa por correo al paciente."
+      size="2xl"
     >
-      <motion.div
-        initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.94, y: 16 }}
-        animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
-        exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 10 }}
-        transition={
-          reduceMotion
-            ? { duration: 0.12 }
-            : { type: "spring", stiffness: 450, damping: 32 }
-        }
-        className="w-full max-w-2xl rounded-card border border-neutral-200/80 bg-white p-6 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="text-lg font-semibold text-brand-navy">Nueva reserva</h2>
-        <p className="mt-1 text-sm text-neutral-600">
-          La cita queda confirmada de inmediato y se avisa por correo al paciente.
-        </p>
+      <form onSubmit={guardar} className="mt-4 space-y-5">
+        {error ? <ErrorNotice message={error} /> : null}
 
-        <form onSubmit={guardar} className="mt-4 space-y-5">
-          {error ? <ErrorNotice message={error} /> : null}
+        <fieldset>
+          <legend className="mb-2 text-sm font-semibold text-brand-navy">Paciente</legend>
+          {elegido ? (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-brand-sky-50 px-3 py-2">
+              <p className="text-sm font-medium text-brand-navy-900">
+                {elegido.full_name}
+                {elegido.rut ? ` · ${formatRutPartial(elegido.rut)}` : ""}
+              </p>
+              <button
+                type="button"
+                onClick={soltar}
+                className="text-sm font-medium text-brand-navy-700 underline-offset-2 hover:underline"
+              >
+                Cambiar
+              </button>
+            </div>
+          ) : (
+            <div className="relative">
+              <label className="block">
+                <span className={label}>Buscar paciente registrado</span>
+                <input
+                  className={inputClasses}
+                  value={busqueda}
+                  placeholder="Nombre, RUT o correo… (o completa los datos abajo)"
+                  autoComplete="off"
+                  onChange={(e) => setBusqueda(e.target.value)}
+                />
+              </label>
+              {puedeBuscarPaciente ? (
+                <ul className="absolute inset-x-0 top-full z-10 mt-1 max-h-48 overflow-y-auto rounded-xl border border-neutral-200 bg-white shadow-card">
+                  {buscando ? (
+                    <li className="px-3 py-2 text-sm text-neutral-500">Buscando…</li>
+                  ) : (
+                    hits.map((p) => (
+                      <li key={p.id}>
+                        <button
+                          type="button"
+                          onClick={() => elegir(p)}
+                          className="block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-brand-sky-50"
+                        >
+                          <span className="font-medium text-neutral-900">{p.full_name}</span>
+                          <span className="block text-xs text-neutral-500">
+                            {[p.rut ? formatRutPartial(p.rut) : null, p.email].filter(Boolean).join(" · ")}
+                          </span>
+                        </button>
+                      </li>
+                    ))
+                  )}
+                </ul>
+              ) : null}
+            </div>
+          )}
 
-          <fieldset>
-            <legend className="mb-2 text-sm font-semibold text-brand-navy">Paciente</legend>
-            {elegido ? (
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-brand-sky-50 px-3 py-2">
-                <p className="text-sm font-medium text-brand-navy-900">
-                  {elegido.full_name}
-                  {elegido.rut ? ` · ${formatRutPartial(elegido.rut)}` : ""}
-                </p>
-                <button
-                  type="button"
-                  onClick={soltar}
-                  className="text-sm font-medium text-brand-navy-700 underline-offset-2 hover:underline"
-                >
-                  Cambiar
-                </button>
-              </div>
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className="block">
+              <span className={label}>Nombre completo</span>
+              <input
+                className={inputClasses}
+                required
+                minLength={2}
+                maxLength={120}
+                value={fullName}
+                placeholder="P. ej. Carla Muñoz"
+                onChange={(e) => setFullName(e.target.value)}
+              />
+            </label>
+            <label className="block">
+              <span className={label}>RUT</span>
+              <input
+                className={inputClasses}
+                value={rut}
+                placeholder="12.345.678-9"
+                maxLength={16}
+                onChange={(e) => setRut(formatRutPartial(e.target.value))}
+                onBlur={() => setRut((v) => formatRutPartial(v))}
+              />
+            </label>
+            <label className="block">
+              <span className={label}>Teléfono</span>
+              <input
+                className={inputClasses}
+                value={phone}
+                placeholder="+56 9 1234 5678"
+                inputMode="tel"
+                onChange={(e) => setPhone(formatPhonePartial(e.target.value))}
+              />
+            </label>
+            <label className="block">
+              <span className={label}>Correo</span>
+              <input
+                className={inputClasses}
+                type="email"
+                required
+                value={email}
+                placeholder="paciente@correo.cl"
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend className="mb-2 text-sm font-semibold text-brand-navy">Hora</legend>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <label className="block">
+              <span className={label}>Servicio</span>
+              <select
+                className={inputClasses}
+                value={serviceId}
+                onChange={(e) => setServiceId(e.target.value)}
+              >
+                {services.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className={label}>Profesional</span>
+              <select
+                className={inputClasses}
+                value={doctorId}
+                onChange={(e) => setDoctorId(e.target.value)}
+              >
+                {doctors.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.full_name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className={label}>Día</span>
+              <input
+                type="date"
+                className={inputClasses}
+                value={date}
+                min={todayKey()}
+                onChange={(e) => setDate(e.target.value)}
+              />
+            </label>
+          </div>
+
+          <div className="mt-3">
+            <span className={label}>Horas disponibles{servicio ? ` · ${servicio.name}` : ""}</span>
+            {!puedeElegirHora ? (
+              <p className="text-sm text-neutral-500">Elige servicio, profesional y día.</p>
+            ) : cargandoSlots ? (
+              <p className="text-sm text-neutral-500">Cargando horas…</p>
+            ) : slots.length === 0 ? (
+              <p className="text-sm text-neutral-500">
+                Sin horas libres ese día. Prueba con otro día o profesional.
+              </p>
             ) : (
-              <div className="relative">
-                <label className="block">
-                  <span className={label}>Buscar paciente registrado</span>
-                  <input
-                    className={inputClasses}
-                    value={busqueda}
-                    placeholder="Nombre, RUT o correo… (o completa los datos abajo)"
-                    autoComplete="off"
-                    onChange={(e) => setBusqueda(e.target.value)}
-                  />
-                </label>
-                {puedeBuscarPaciente ? (
-                  <ul className="absolute inset-x-0 top-full z-10 mt-1 max-h-48 overflow-y-auto rounded-xl border border-neutral-200 bg-white shadow-card">
-                    {buscando ? (
-                      <li className="px-3 py-2 text-sm text-neutral-500">Buscando…</li>
-                    ) : (
-                      hits.map((p) => (
-                        <li key={p.id}>
-                          <button
-                            type="button"
-                            onClick={() => elegir(p)}
-                            className="block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-brand-sky-50"
-                          >
-                            <span className="font-medium text-neutral-900">{p.full_name}</span>
-                            <span className="block text-xs text-neutral-500">
-                              {[p.rut ? formatRutPartial(p.rut) : null, p.email].filter(Boolean).join(" · ")}
-                            </span>
-                          </button>
-                        </li>
-                      ))
-                    )}
-                  </ul>
-                ) : null}
+              <div className="flex flex-wrap gap-2" role="group" aria-label="Horas disponibles">
+                {slots.map((s) => (
+                  <button
+                    key={s.slot_start}
+                    type="button"
+                    aria-pressed={slotStart === s.slot_start}
+                    onClick={() => setSlotStart(s.slot_start)}
+                    className={`rounded-lg border px-3 py-1.5 text-sm font-semibold tabular-nums transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft active:scale-95 cursor-pointer ${
+                      slotStart === s.slot_start
+                        ? "border-brand-navy bg-brand-navy text-white shadow-xs scale-[1.03]"
+                        : "border-neutral-300 bg-white text-neutral-700 hover:border-brand-navy hover:text-brand-navy hover:shadow-2xs"
+                    }`}
+                  >
+                    {formatTime(s.slot_start)}
+                  </button>
+                ))}
               </div>
             )}
-
-            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <label className="block">
-                <span className={label}>Nombre completo</span>
-                <input
-                  className={inputClasses}
-                  required
-                  minLength={2}
-                  maxLength={120}
-                  value={fullName}
-                  placeholder="P. ej. Carla Muñoz"
-                  onChange={(e) => setFullName(e.target.value)}
-                />
-              </label>
-              <label className="block">
-                <span className={label}>RUT</span>
-                <input
-                  className={inputClasses}
-                  value={rut}
-                  placeholder="12.345.678-9"
-                  maxLength={16}
-                  onChange={(e) => setRut(formatRutPartial(e.target.value))}
-                  onBlur={() => setRut((v) => formatRutPartial(v))}
-                />
-              </label>
-              <label className="block">
-                <span className={label}>Teléfono</span>
-                <input
-                  className={inputClasses}
-                  value={phone}
-                  placeholder="+56 9 1234 5678"
-                  inputMode="tel"
-                  onChange={(e) => setPhone(formatPhonePartial(e.target.value))}
-                />
-              </label>
-              <label className="block">
-                <span className={label}>Correo</span>
-                <input
-                  className={inputClasses}
-                  type="email"
-                  required
-                  value={email}
-                  placeholder="paciente@correo.cl"
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </label>
-            </div>
-          </fieldset>
-
-          <fieldset>
-            <legend className="mb-2 text-sm font-semibold text-brand-navy">Hora</legend>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <label className="block">
-                <span className={label}>Servicio</span>
-                <select
-                  className={inputClasses}
-                  value={serviceId}
-                  onChange={(e) => setServiceId(e.target.value)}
-                >
-                  {services.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block">
-                <span className={label}>Profesional</span>
-                <select
-                  className={inputClasses}
-                  value={doctorId}
-                  onChange={(e) => setDoctorId(e.target.value)}
-                >
-                  {doctors.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.full_name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block">
-                <span className={label}>Día</span>
-                <input
-                  type="date"
-                  className={inputClasses}
-                  value={date}
-                  min={todayKey()}
-                  onChange={(e) => setDate(e.target.value)}
-                />
-              </label>
-            </div>
-
-            <div className="mt-3">
-              <span className={label}>Horas disponibles{servicio ? ` · ${servicio.name}` : ""}</span>
-              {!puedeElegirHora ? (
-                <p className="text-sm text-neutral-500">Elige servicio, profesional y día.</p>
-              ) : cargandoSlots ? (
-                <p className="text-sm text-neutral-500">Cargando horas…</p>
-              ) : slots.length === 0 ? (
-                <p className="text-sm text-neutral-500">
-                  Sin horas libres ese día. Prueba con otro día o profesional.
-                </p>
-              ) : (
-                <div className="flex flex-wrap gap-2" role="group" aria-label="Horas disponibles">
-                  {slots.map((s) => (
-                    <button
-                      key={s.slot_start}
-                      type="button"
-                      aria-pressed={slotStart === s.slot_start}
-                      onClick={() => setSlotStart(s.slot_start)}
-                      className={`rounded-lg border px-3 py-1.5 text-sm font-semibold tabular-nums transition-all duration-150 ease-out active:scale-95 cursor-pointer ${
-                        slotStart === s.slot_start
-                          ? "border-brand-navy bg-brand-navy text-white shadow-xs scale-[1.03]"
-                          : "border-neutral-300 bg-white text-neutral-700 hover:border-brand-navy hover:text-brand-navy hover:shadow-2xs"
-                      }`}
-                    >
-                      {formatTime(s.slot_start)}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </fieldset>
-
-          <div className="flex items-center justify-end gap-2 pt-1">
-            <Button type="button" variant="ghost" onClick={onClose} disabled={guardando}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={!puedeGuardar}>
-              {guardando ? "Reservando…" : "Crear reserva"}
-            </Button>
           </div>
-        </form>
-      </motion.div>
-    </motion.div>
+        </fieldset>
+
+        <div className="flex items-center justify-end gap-2 pt-1">
+          <Button type="button" variant="ghost" onClick={onClose} disabled={guardando}>
+            Cancelar
+          </Button>
+          <AsyncButton
+            type="submit"
+            loading={guardando}
+            disabled={!puedeGuardar}
+            pendingLabel="Creando la reserva"
+            className={buttonClasses("primary", "md")}
+          >
+            Crear reserva
+          </AsyncButton>
+        </div>
+      </form>
+    </Modal>
   );
 }

@@ -19,6 +19,7 @@ import { WhatsappIcon, WhatsappModal } from "@/components/dashboard/whatsapp-but
 import { useRealtimeNotifications } from "../use-realtime";
 import { motion, AnimatePresence } from "motion/react";
 import { RefreshCw } from "lucide-react";
+import { DUR, EASE } from "@/lib/motion";
 
 interface Props {
   initial: DoctorAppointment[];
@@ -221,7 +222,7 @@ export function MonthView({
     <motion.section
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.22, ease: "easeOut" }}
+      transition={{ duration: DUR.element, ease: EASE.out }}
       aria-label="Calendario mensual"
       className="space-y-3"
     >
@@ -371,7 +372,7 @@ export function MonthView({
                       onContextMenu={(e) => {
                         if (canAct) abrirMenu(e, cita);
                       }}
-                      className={`w-full truncate rounded-lg border border-neutral-200 border-l-[3px] px-1.5 py-1 text-left text-[11px] leading-tight transition-all duration-150 ease-out hover:-translate-y-0.5 hover:shadow-card active:scale-[0.98] cursor-pointer ${CHIP_TONO[cita.status]}`}
+                      className={`w-full truncate rounded-lg border border-neutral-200 border-l-[3px] px-1.5 py-1 text-left text-[11px] leading-tight transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft hover:-translate-y-0.5 hover:shadow-card active:scale-[0.98] cursor-pointer ${CHIP_TONO[cita.status]}`}
                     >
                       <span className="font-semibold tabular-nums">{formatTime(start)}</span>{" "}
                       <span className="font-medium">{nombre}</span>

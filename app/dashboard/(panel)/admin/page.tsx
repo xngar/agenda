@@ -6,6 +6,7 @@ import { AddMemberButton } from "./add-member-form";
 import { TeamList } from "./team-list";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { BackLink } from "@/components/dashboard/back-link";
+import { AnimatedNumber } from "@/components/motion/animated-number";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +51,7 @@ export default async function AdminPage() {
         meta={
           <span className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-2.5 py-0.5 text-xs font-medium text-neutral-600">
             Cupo de profesionales:
-            <span className="font-semibold tabular-nums text-neutral-800">{used}</span>
+            <AnimatedNumber value={used} className="font-semibold tabular-nums text-neutral-800" />
             <span className="tabular-nums">de {limit === null ? "∞" : limit}</span>
             {limit !== null && used >= limit ? (
               <span className="text-warning-700">· Cupo alcanzado</span>

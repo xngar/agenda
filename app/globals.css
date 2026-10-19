@@ -32,6 +32,59 @@
   --neutral-500: #64748b;
   --neutral-600: #475569;
   --neutral-800: #1e293b;
+
+  /* ============================================================================
+     Tokens de animación
+     ----------------------------------------------------------------------------
+     Fuente de verdad de duraciones, easings y distancias. Las mismas reglas
+     están en `lib/motion.ts` para `motion/react`: son el mismo sistema.
+
+     Cambiar un valor aquí cambia el comportamiento de todo el panel.
+     ========================================================================== */
+
+  /* Duraciones */
+  --motion-duration-micro: 150ms; /* hover, focus, press, indicador */
+  --motion-duration-element: 240ms; /* modal, menú, fila, panel */
+  --motion-duration-section: 320ms; /* entrada de sección o página */
+  --motion-duration-view: 200ms; /* cambio de vista o de ruta */
+  --motion-duration-count: 400ms; /* conteo animado de un número */
+
+  /* Easings */
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* entradas */
+  --motion-ease-in: cubic-bezier(0.4, 0, 1, 1); /* salidas */
+  --motion-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1); /* cambios de estado */
+
+  /* Distancias */
+  --motion-distance-sm: 8px;
+  --motion-distance-md: 10px;
+  --motion-distance-lg: 12px;
+
+  /* Separación entre elementos de una entrada escalonada */
+  --motion-stagger: 35ms;
+}
+
+@theme inline {
+  /* Utilities Tailwind de easing derivadas de los tokens de arriba:
+     `ease-out-soft`, `ease-in-soft`, `ease-in-out-soft`. */
+  --ease-out-soft: var(--motion-ease-out);
+  --ease-in-soft: var(--motion-ease-in);
+  --ease-in-out-soft: var(--motion-ease-in-out);
+}
+
+/* Utilities Tailwind de duración. Tailwind v4 no tiene namespace
+   `--duration-*`, así que se declaran a mano contra los tokens CSS:
+   `duration-micro`, `duration-element`, `duration-section`, `duration-view`. */
+@utility duration-micro {
+  transition-duration: var(--motion-duration-micro);
+}
+@utility duration-element {
+  transition-duration: var(--motion-duration-element);
+}
+@utility duration-section {
+  transition-duration: var(--motion-duration-section);
+}
+@utility duration-view {
+  transition-duration: var(--motion-duration-view);
 }
 
 @theme inline {
@@ -177,7 +230,7 @@
 }
 
 .anim-month-cell {
-  animation: month-cell-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation: month-cell-in var(--motion-duration-section) var(--motion-ease-out) backwards;
 }
 
 /* Menús contextuales y dropdowns */
@@ -193,7 +246,7 @@
 }
 
 .anim-menu {
-  animation: menu-in 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: menu-in var(--motion-duration-micro) var(--motion-ease-out);
   transform-origin: top left;
   will-change: transform, opacity;
 }
@@ -213,21 +266,24 @@
 }
 
 .anim-modal-in {
-  animation: modal-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: modal-in var(--motion-duration-element) var(--motion-ease-out) backwards;
   will-change: transform, opacity;
 }
 
 /* Microinteracciones táctiles rápidas */
 .tap-press {
-  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease-out;
+  transition: transform var(--motion-duration-micro) var(--motion-ease-out),
+    box-shadow var(--motion-duration-micro) var(--motion-ease-out);
   will-change: transform;
 }
 .tap-press:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
 }
 
 .interactive-chip {
-  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease-out, filter 0.15s ease-out;
+  transition: transform var(--motion-duration-micro) var(--motion-ease-out),
+    box-shadow var(--motion-duration-micro) var(--motion-ease-out),
+    filter var(--motion-duration-micro) var(--motion-ease-out);
   will-change: transform;
 }
 .interactive-chip:hover {
@@ -250,7 +306,113 @@
 }
 
 .anim-label {
-  animation: label-in 0.25s ease-out;
+  animation: label-in var(--motion-duration-element) var(--motion-ease-out);
+}
+
+/* ----------------------------------------------------------------------------
+   Utilidades nuevas del sistema de motion.
+   Todas usan los tokens de arriba y solo animan `transform` / `opacity`.
+   ---------------------------------------------------------------------------- */
+
+/* Shimmer para skeletons: un barrido de luz suave sobre el bloque gris.
+   Se anima `background-position` (no `transform`) porque el bloque es un
+   rectángulo opaco: moverlo no daría la sensación de "carga en curso". */
+@keyframes shimmer-sweep {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, white 55%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: shimmer-sweep 1.6s var(--motion-ease-in-out) infinite;
+}
+
+/* Fade breve al cambiar de vista o de ruta. */
+@keyframes view-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* `backwards` y no `both`: con `both` el navegador conserva el efecto de la
+   animación (y su contexto de apilamiento) al terminar, y cualquier overlay
+   posicionado dentro de esta vista queda atrapado bajo el header sticky. */
+.anim-view-fade {
+  animation: view-fade-in var(--motion-duration-view) var(--motion-ease-out) backwards;
+}
+
+/* Entrada estándar: fade + desplazamiento vertical corto. */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-distance-md));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.anim-fade-up {
+  animation: fade-up var(--motion-duration-section) var(--motion-ease-out) backwards;
+}
+
+/* Entrada de una fila de tabla. Va en CSS y no en `motion/react` a
+   propósito: así la fila aparece aunque el JavaScript no cargue o falle, y
+   el bloque `prefers-reduced-motion` de abajo la desactiva sin código
+   extra. El escalonado se aplica con `animation-delay` por índice. */
+.anim-row-in {
+  animation: fade-up var(--motion-duration-element) var(--motion-ease-out) backwards;
+}
+
+/* Resaltado temporal de una fila nueva o editada: el fondo se apaga solo.
+   Se anima `background-color` (no hay alternativa en CSS puro sin capas
+   extra) y termina en `transparent`, así que no queda residuo visual. */
+@keyframes row-highlight-fade {
+  from {
+    background-color: color-mix(in srgb, var(--brand-sky) 45%, transparent);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+.row-highlight {
+  animation: row-highlight-fade 1.6s var(--motion-ease-out) forwards;
+}
+
+/* Icono de ordenamiento: gira al cambiar de columna o de dirección. */
+.anim-sort-icon {
+  transition: transform var(--motion-duration-micro) var(--motion-ease-out);
+}
+
+/* ----------------------------------------------------------------------------
+   Toasts (sonner).
+   Sonner inyecta su propia hoja de estilos en runtime, así que una clase
+   pasada por props no alcanza: se sobreescribe la transición con los tokens
+   de motion, que es lo que define su duración y easing reales.
+   -------------------------------------------------------------------------- */
+[data-sonner-toast] {
+  transition-duration: var(--motion-duration-element);
+  transition-timing-function: var(--motion-ease-out);
+}
+
+[data-sonner-toast][data-swipe-out="true"] {
+  transition-duration: var(--motion-duration-view);
 }
 
 @media (prefers-reduced-motion: reduce) {
