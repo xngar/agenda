@@ -7,7 +7,7 @@ import { Button, ErrorNotice, inputClasses } from "@/components/ui";
 import { formatTime, todayKey } from "@/lib/dates";
 import { formatRutPartial, isValidRut } from "@/lib/rut";
 import { formatPhonePartial } from "@/lib/phone";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 
 export interface StaffService {
   id: string;
@@ -103,6 +103,7 @@ function StaffBookingModal({
 
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const reduceMotion = useReducedMotion();
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -225,18 +226,22 @@ function StaffBookingModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.16 }}
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-brand-navy-950/50 p-4 backdrop-blur-sm"
+      transition={{ duration: reduceMotion ? 0 : 0.16 }}
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-brand-navy-900/40 p-4 backdrop-blur-xs"
       role="dialog"
       aria-modal="true"
       aria-label="Nueva reserva"
       onClick={onClose}
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.94, y: 16 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 10 }}
-        transition={{ type: "spring", stiffness: 450, damping: 32 }}
+        initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.94, y: 16 }}
+        animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+        exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 10 }}
+        transition={
+          reduceMotion
+            ? { duration: 0.12 }
+            : { type: "spring", stiffness: 450, damping: 32 }
+        }
         className="w-full max-w-2xl rounded-2xl border border-neutral-200/80 bg-white p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
