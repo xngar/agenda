@@ -11,6 +11,7 @@ import { auditQuerySchema } from "@/lib/ficha/schemas";
 import {
   AUDIT_ACCIONES,
   AUDIT_ENTIDADES,
+  AUDIT_TABLAS_PACIENTE,
   detalleAuditoria,
   redactAuditSummary,
 } from "@/lib/ficha/audit-view";
@@ -18,21 +19,17 @@ import {
 const enc = (s: string): string =>
   `"${s.replace(/"/g, '""')}"`;
 
-/** Tablas de ficha que cuelgan de un paciente (para el filtro patient_id). */
-const TABLAS_PACIENTE = [
-  "encounters",
-  "encounter_versions",
-  "attachments",
-  "consents",
-  "prescriptions",
-  "dental_chart_entries",
-  "dental_treatment_plan_items",
-  "dental_payments",
-  "periodontal_records",
-  "patient_medical_background",
-];
+/** Filas por lote al exportar: evita el tope de `max-rows` de PostgREST. */
+const LOTE_EXPORT = 1000;
 
 type Fila = Record<string, unknown>;
+
+interface Filtros {
+  patientId?: string;
+  entity?: string;
+  entityId?: string;
+  action?: string;
+}
 
 export async function GET(request: Request) {
   const ctx = await fichaContext();
@@ -44,7 +41,9 @@ export async function GET(request: Request) {
     entity: searchParams.get("entity") ?? undefined,
     entity_id: searchParams.get("entity_id") ?? undefined,
     patient_id: searchParams.get("patient_id") ?? undefined,
+    action: searchParams.get("action") ?? undefined,
     limit: searchParams.get("limit") ?? 50,
+    offset: searchParams.get("offset") ?? undefined,
   });
   if (!body.success) return bodyError(body.error);
 
@@ -75,27 +74,26 @@ export async function GET(request: Request) {
     return forbidden("Sólo el administrador ve la auditoría");
   }
 
+  const filtros: Filtros = {
+    patientId: body.data.patient_id,
+    entity: body.data.entity,
+    entityId: body.data.entity_id,
+    action: body.data.action,
+  };
+
   let rows: Fila[];
-  if (body.data.patient_id) {
-    try {
-      rows = await eventosDePaciente(ctx, body.data.patient_id as string, body.data.limit);
-    } catch (error) {
-      return dbError(error as { message?: string; code?: string });
+  let total: number;
+  try {
+    if (download) {
+      rows = await traerTodo(ctx, filtros);
+      total = rows.length;
+    } else {
+      const pagina = await traerPagina(ctx, filtros, body.data.offset, body.data.limit);
+      rows = pagina.rows;
+      total = pagina.total;
     }
-  } else {
-    let query = ctx.supabase
-      .from("audit_log")
-      .select("*")
-      .eq("org_id", ctx.session.orgId)
-      .order("created_at", { ascending: false })
-      .limit(body.data.limit);
-
-    if (body.data.entity) query = query.eq("entity", body.data.entity);
-    if (body.data.entity_id) query = query.eq("entity_id", body.data.entity_id);
-
-    const { data, error } = await query;
-    if (error) return dbError(error);
-    rows = (data ?? []) as unknown as Fila[];
+  } catch (error) {
+    return dbError(error as { message?: string; code?: string });
   }
 
   const entries = await conAutores(ctx, rows);
@@ -119,7 +117,9 @@ export async function GET(request: Request) {
     const headers = ["fecha", "autor", "accion", "entidad", "detalle"];
     const filas = entries.map((e) =>
       [
-        new Date(String(e.created_at)).toLocaleString("es-CL"),
+        new Date(String(e.created_at)).toLocaleString("es-CL", {
+          timeZone: "America/Santiago",
+        }),
         String(e.actor_name ?? "—"),
         AUDIT_ACCIONES[String(e.action)] ?? String(e.action),
         AUDIT_ENTIDADES[String(e.entity)] ?? String(e.entity),
@@ -153,7 +153,7 @@ export async function GET(request: Request) {
     );
   }
 
-  return NextResponse.json({ entries });
+  return NextResponse.json({ entries, total });
 }
 
 /** "Mauricio Auditoría" -> "mauricio-auditoria" para el nombre de archivo. */
@@ -168,21 +168,81 @@ function slugNombre(nombre: string): string {
   return slug || "paciente";
 }
 
+/** Página pedida por la vista (limit + offset) con el total de coincidencias. */
+async function traerPagina(
+  ctx: FichaContext,
+  filtros: Filtros,
+  offset: number,
+  limit: number,
+): Promise<{ rows: Fila[]; total: number }> {
+  const condiciones = filtros.patientId
+    ? await condicionesPaciente(ctx, filtros.patientId)
+    : null;
+
+  const { data, error, count } = await consultaAuditoria(ctx, filtros, condiciones, true)
+    .range(offset, offset + limit - 1);
+
+  if (error) throw error;
+  return { rows: (data ?? []) as unknown as Fila[], total: count ?? 0 };
+}
+
+/**
+ * Exportación completa. PostgREST recorta cada respuesta a `max-rows`, así que
+ * se pagina en lotes hasta agotar las coincidencias: el export no lleva tope.
+ */
+async function traerTodo(ctx: FichaContext, filtros: Filtros): Promise<Fila[]> {
+  const condiciones = filtros.patientId
+    ? await condicionesPaciente(ctx, filtros.patientId)
+    : null;
+
+  const rows: Fila[] = [];
+  for (let desde = 0; ; desde += LOTE_EXPORT) {
+    const { data, error } = await consultaAuditoria(ctx, filtros, condiciones).range(
+      desde,
+      desde + LOTE_EXPORT - 1,
+    );
+    if (error) throw error;
+    const lote = (data ?? []) as unknown as Fila[];
+    rows.push(...lote);
+    if (lote.length < LOTE_EXPORT) break;
+  }
+  return rows;
+}
+
+function consultaAuditoria(
+  ctx: FichaContext,
+  filtros: Filtros,
+  condiciones: string[] | null,
+  contar = false,
+) {
+  let query = ctx.supabase
+    .from("audit_log")
+    .select("*", contar ? { count: "exact" } : {})
+    .eq("org_id", ctx.session.orgId);
+
+  if (condiciones) query = query.or(condiciones.join(","));
+  if (filtros.entity) query = query.eq("entity", filtros.entity);
+  // En modo paciente el entity_id es el de cada tabla, no el del paciente.
+  if (filtros.entityId && !condiciones) query = query.eq("entity_id", filtros.entityId);
+  if (filtros.action) query = query.eq("action", filtros.action);
+
+  return query
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false });
+}
+
 /**
  * Eventos de un paciente en todas sus entidades. El `entity_id` de cada
  * fila es el id de SU propia tabla (no el del paciente), así que se
  * resuelven los ids por tabla y se traen juntos.
  */
-async function eventosDePaciente(
+async function condicionesPaciente(
   ctx: FichaContext,
   patientId: string,
-  limit: number,
-): Promise<Fila[]> {
-  const condiciones = [
-    `and(entity.eq.patients,entity_id.eq.${patientId})`,
-  ];
+): Promise<string[]> {
+  const condiciones = [`and(entity.eq.patients,entity_id.eq.${patientId})`];
 
-  for (const tabla of TABLAS_PACIENTE) {
+  for (const tabla of AUDIT_TABLAS_PACIENTE) {
     const { data, error } = await ctx.supabase
       .from(tabla)
       .select("id")
@@ -196,16 +256,7 @@ async function eventosDePaciente(
     }
   }
 
-  const { data, error } = await ctx.supabase
-    .from("audit_log")
-    .select("*")
-    .eq("org_id", ctx.session.orgId)
-    .or(condiciones.join(","))
-    .order("created_at", { ascending: false })
-    .limit(limit);
-
-  if (error) throw error;
-  return (data ?? []) as unknown as Fila[];
+  return condiciones;
 }
 
 function partir<T>(arr: T[], tamano: number): T[][] {
@@ -221,12 +272,12 @@ async function conAutores(
 ): Promise<(Fila & { actor_name: string | null; detalle: string })[]> {
   const ids = [...new Set(rows.map((r) => r.actor_id).filter((v) => typeof v === "string"))] as string[];
   const nombres = new Map<string, string>();
-  if (ids.length > 0) {
+  for (const lote of partir(ids, 200)) {
     const { data } = await ctx.supabase
       .from("doctors")
       .select("id,full_name")
       .eq("org_id", ctx.session.orgId)
-      .in("id", ids);
+      .in("id", lote);
     for (const d of (data ?? []) as { id: string; full_name: string }[]) {
       nombres.set(d.id, d.full_name);
     }

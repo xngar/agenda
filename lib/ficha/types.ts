@@ -65,7 +65,7 @@ export type TreatmentPlanStatus =
   | "realizado"
   | "rechazado";
 
-export type AuditAction = "insert" | "update" | "delete" | "sign" | "export" | "view";
+export type AuditAction = "insert" | "update" | "delete" | "sign" | "export" | "view" | "contact";
 
 export interface SpecialtyProfile {
   [key: string]: unknown;

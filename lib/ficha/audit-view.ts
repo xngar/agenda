@@ -24,6 +24,30 @@ export const AUDIT_ENTIDADES: Record<string, string> = {
   appointments: "Cita",
 };
 
+/**
+ * Tablas de ficha que cuelgan de un paciente. Su `entity_id` en audit_log es
+ * el id de la propia fila, no el del paciente, así que la auditoría por
+ * paciente resuelve esos ids para armarlos en el filtro.
+ */
+export const AUDIT_TABLAS_PACIENTE = [
+  "encounters",
+  "encounter_versions",
+  "attachments",
+  "consents",
+  "prescriptions",
+  "dental_chart_entries",
+  "dental_treatment_plan_items",
+  "dental_payments",
+  "periodontal_records",
+  "patient_medical_background",
+] as const;
+
+/** Entidades que puede mostrar la auditoría de un paciente. */
+export const AUDIT_ENTIDADES_PACIENTE: readonly string[] = [
+  "patients",
+  ...AUDIT_TABLAS_PACIENTE,
+];
+
 function texto(valor: unknown, max = 120): string {
   if (valor === undefined || valor === null) return "";
   const s = String(valor).trim().replace(/\s+/g, " ");

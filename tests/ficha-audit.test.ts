@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { detalleAuditoria, redactAuditSummary } from "@/lib/ficha/audit-view";
+import { auditQuerySchema } from "@/lib/ficha/schemas";
 
 describe("detalleAuditoria", () => {
   it("describe un movimiento de cita con la hora de origen y la de destino", () => {
@@ -93,6 +94,40 @@ describe("detalleAuditoria", () => {
 
   it("sin datos devuelve vacío en vez de JSON crudo", () => {
     expect(detalleAuditoria({ action: "update", entity: "otro", summary: {} })).toBe("");
+  });
+
+  it("describe el contacto con el paciente", () => {
+    expect(
+      detalleAuditoria({ action: "contact", entity: "patients", summary: { channel: "whatsapp" } }),
+    ).toBe("Inició contacto por WhatsApp");
+    expect(detalleAuditoria({ action: "contact", entity: "patients", summary: {} })).toBe(
+      "Inició contacto con el paciente",
+    );
+  });
+});
+
+describe("auditQuerySchema", () => {
+  it("usa offset 0 y limit 50 por defecto", () => {
+    const salida = auditQuerySchema.parse({});
+    expect(salida.offset).toBe(0);
+    expect(salida.limit).toBe(50);
+  });
+
+  it("convierte offset y limit desde texto", () => {
+    const salida = auditQuerySchema.parse({ offset: "20", limit: "20" });
+    expect(salida.offset).toBe(20);
+    expect(salida.limit).toBe(20);
+  });
+
+  it("rechaza offset negativo y limit fuera de rango", () => {
+    expect(auditQuerySchema.safeParse({ offset: "-1" }).success).toBe(false);
+    expect(auditQuerySchema.safeParse({ limit: "0" }).success).toBe(false);
+    expect(auditQuerySchema.safeParse({ limit: "201" }).success).toBe(false);
+  });
+
+  it("acepta sólo acciones conocidas", () => {
+    expect(auditQuerySchema.safeParse({ action: "contact" }).success).toBe(true);
+    expect(auditQuerySchema.safeParse({ action: "borrar-todo" }).success).toBe(false);
   });
 });
 
