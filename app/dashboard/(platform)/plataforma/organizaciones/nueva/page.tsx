@@ -1,23 +1,19 @@
-﻿import Link from "next/link";
-import { requireSuperAdmin } from "@/lib/auth";
+﻿import { requireSuperAdmin } from "@/lib/auth";
 import OrganizationForm from "./organization-form";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { BackLink } from "@/components/dashboard/back-link";
 
 export default async function NuevaOrganizacionPage() {
   await requireSuperAdmin();
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8">
-      <Link
-        href="/dashboard/plataforma/organizaciones"
-        className="text-sm text-brand-sky"
-      >
-        ← Organizaciones
-      </Link>
-      <h1 className="mt-2 text-2xl font-bold text-brand-navy">Crear clínica</h1>
-      <p className="mt-1 text-sm text-neutral-600">
-        Da de alta una clínica junto con su administrador inicial. La clínica arranca con
-        servicios y horario por defecto que luego se pueden ajustar.
-      </p>
+    <div className="mx-auto w-full max-w-3xl space-y-6">
+      <PageHeader
+        eyebrow="Plataforma"
+        title="Crear clínica"
+        description="Da de alta una clínica junto con su administrador inicial. La clínica arranca con servicios y horario por defecto que luego se pueden ajustar."
+      />
       <OrganizationForm />
+      <BackLink href="/dashboard/plataforma/organizaciones">Volver a organizaciones</BackLink>
     </div>
   );
 }

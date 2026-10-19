@@ -1,16 +1,12 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { Button, inputClasses } from "@/components/ui";
 
-const inputCls =
-  "w-full min-h-11 rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 focus:border-brand-navy focus:outline-none";
-const labelCls = "block text-sm font-medium text-neutral-700";
-const primaryBtn =
-  "inline-flex min-h-9 items-center rounded-xl bg-brand-navy px-4 text-sm font-semibold text-white hover:bg-brand-navy-700 disabled:cursor-not-allowed disabled:opacity-60";
-const ghostBtn =
-  "inline-flex min-h-9 items-center rounded-xl border border-neutral-300 px-4 text-sm font-medium text-neutral-700 hover:bg-neutral-100";
+const labelCls = "mb-1 block text-xs font-medium text-neutral-600";
 
 export interface ServiceItem {
   id: string;
@@ -21,10 +17,13 @@ export interface ServiceItem {
 
 export function ServiceForm({
   edit,
-  onCancel = () => {},
+  onCancel,
+  bare = false,
 }: {
   edit?: ServiceItem | null;
   onCancel?: () => void;
+  /** Dentro del modal no lleva tarjeta propia: el diálogo ya es la superficie. */
+  bare?: boolean;
 }) {
   const router = useRouter();
   const [enviando, setEnviando] = useState(false);
@@ -64,7 +63,7 @@ export function ServiceForm({
 
       toast.success(edit ? "Servicio actualizado" : "Servicio agregado");
       form.reset();
-      onCancel();
+      onCancel?.();
       router.refresh();
     } catch {
       toast.error("No pudimos conectarnos. Intenta de nuevo.");
@@ -74,7 +73,10 @@ export function ServiceForm({
   }
 
   return (
-    <form onSubmit={guardar} className="space-y-4 rounded-2xl border border-neutral-200 bg-white p-4">
+    <form
+      onSubmit={guardar}
+      className={bare ? "space-y-3" : "space-y-4 rounded-card border border-neutral-200 bg-white p-4"}
+    >
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="sm:col-span-2">
           <label className={labelCls} htmlFor="servicio-nombre">
@@ -87,7 +89,7 @@ export function ServiceForm({
             minLength={2}
             maxLength={80}
             defaultValue={edit?.name ?? ""}
-            className={`${inputCls} mt-1`}
+            className={inputClasses}
           />
         </div>
 
@@ -104,7 +106,7 @@ export function ServiceForm({
             min={5}
             max={480}
             defaultValue={edit?.duration_min ?? 30}
-            className={`${inputCls} mt-1`}
+            className={inputClasses}
           />
         </div>
       </div>
@@ -122,14 +124,91 @@ export function ServiceForm({
         </label>
       </div>
 
-      <div className="flex flex-wrap justify-end gap-2">
-        <button type="button" className={ghostBtn} onClick={onCancel} disabled={enviando}>
-          Cancelar
-        </button>
-        <button type="submit" className={primaryBtn} disabled={enviando}>
-          {enviando ? "Guardando..." : edit ? "Guardar cambios" : "Agregar servicio"}
-        </button>
+      <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+        {onCancel ? (
+          <Button type="button" variant="ghost" onClick={onCancel} disabled={enviando}>
+            Cancelar
+          </Button>
+        ) : null}
+        <Button type="submit" disabled={enviando}>
+          {enviando ? "Guardando…" : edit ? "Guardar cambios" : "Agregar servicio"}
+        </Button>
       </div>
     </form>
   );
 }
+
+/**
+ * Alta de servicio en modal. El formulario es el mismo que se usa para
+ * editar (`ServiceForm`), sólo que sin tarjeta: el diálogo ya es la
+ * superficie y así el listado queda como protagonista de la página.
+ */
+export function ServiceFormModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (!open) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
+
+  return (
+    <AnimatePresence>
+      {open ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: reduceMotion ? 0 : 0.16 }}
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-brand-navy-900/40 p-4 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="dialog-servicio-titulo"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.94, y: 16 }}
+            animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 10 }}
+            transition={
+              reduceMotion
+                ? { duration: 0.12 }
+                : { type: "spring", stiffness: 450, damping: 32 }
+            }
+            className="my-auto w-full max-w-lg rounded-card border border-neutral-200/80 bg-white p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="dialog-servicio-titulo" className="text-lg font-semibold text-brand-navy">
+              Nuevo servicio
+            </h2>
+            <p className="mt-1 text-sm text-neutral-600">
+              Aparecerá en el asistente de reserva. Los cambios sólo afectan a las reservas
+              nuevas, no a las citas ya agendadas.
+            </p>
+
+            <div className="mt-4">
+              <ServiceForm onCancel={onClose} bare />
+            </div>
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
+  );
+}
+
+export function NewServiceButton() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>Nuevo servicio</Button>
+      <ServiceFormModal open={open} onClose={() => setOpen(false)} />
+    </>
+  );
+}
+

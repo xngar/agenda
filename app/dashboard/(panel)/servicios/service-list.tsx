@@ -3,11 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { cn } from "cn";
 import { Button, buttonClasses, StatusBadge } from "@/components/ui";
 import { ServiceForm, type ServiceItem } from "./service-form";
 
-const ghostBtn =
-  "inline-flex min-h-9 items-center rounded-xl border border-neutral-300 px-3 text-sm font-medium text-neutral-700 hover:bg-neutral-100";
+const dangerGhost = cn(
+  buttonClasses("ghost", "sm"),
+  "border-danger-200 text-danger-700 hover:bg-danger-50",
+);
 
 export function ServiceList({ initial }: { initial: ServiceItem[] }) {
   const router = useRouter();
@@ -80,7 +83,7 @@ export function ServiceList({ initial }: { initial: ServiceItem[] }) {
           return (
             <li
               key={s.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white p-4"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-neutral-200 bg-white p-4"
             >
               <div className="min-w-0">
                 <p className="font-semibold text-neutral-900">{s.name}</p>
@@ -89,25 +92,27 @@ export function ServiceList({ initial }: { initial: ServiceItem[] }) {
 
               <div className="flex flex-wrap items-center justify-end gap-2">
                 <StatusBadge status={s.active ? "confirmed" : "cancelled"} />
-                <button
+                <Button
                   type="button"
-                  className={ghostBtn}
+                  variant="ghost"
+                  size="sm"
                   onClick={() => toggle(s.id, !s.active)}
                   disabled={ocupado}
                 >
-                  {ocupado ? "Actualizando..." : s.active ? "Desactivar" : "Activar"}
-                </button>
-                <button
+                  {ocupado ? "Actualizando…" : s.active ? "Desactivar" : "Activar"}
+                </Button>
+                <Button
                   type="button"
-                  className={ghostBtn}
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setEditando(s)}
                   disabled={ocupado}
                 >
                   Editar
-                </button>
+                </Button>
                 <button
                   type="button"
-                  className="inline-flex min-h-9 items-center rounded-xl border border-red-300 px-3 text-sm font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  className={dangerGhost}
                   onClick={() => setPorEliminar(s)}
                   disabled={ocupado}
                 >
@@ -118,7 +123,7 @@ export function ServiceList({ initial }: { initial: ServiceItem[] }) {
           );
         })}
         {initial.length === 0 ? (
-          <li className="rounded-2xl border border-dashed border-neutral-300 bg-white p-4 text-sm text-neutral-600">
+          <li className="rounded-card border border-dashed border-neutral-300 bg-white p-4 text-sm text-neutral-600">
             Aún no hay servicios. Agrega uno para que aparezca en el asistente de reserva.
           </li>
         ) : null}
@@ -137,7 +142,7 @@ export function ServiceList({ initial }: { initial: ServiceItem[] }) {
               if (!eliminando) setPorEliminar(null);
             }}
           />
-          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-card">
+          <div className="relative w-full max-w-md rounded-card bg-white p-6 shadow-card">
             <h2 id="dialog-eliminar-servicio-titulo" className="text-lg font-bold text-brand-navy">
               ¿Eliminar {porEliminar.name}?
             </h2>
@@ -150,14 +155,15 @@ export function ServiceList({ initial }: { initial: ServiceItem[] }) {
               <Button variant="ghost" size="sm" disabled={eliminando} onClick={() => setPorEliminar(null)}>
                 Cancelar
               </Button>
-              <button
+              <Button
                 type="button"
+                variant="danger"
+                size="sm"
                 onClick={eliminar}
                 disabled={eliminando}
-                className={buttonClasses("danger", "sm")}
               >
                 {eliminando ? "Eliminando…" : "Eliminar"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

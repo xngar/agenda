@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getDoctorSession, getOrgSettings, isClinical } from "@/lib/auth";
 import { Card } from "@/components/ui";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { PatientsSearch } from "./patients-search";
 import { NewPatientButton } from "./patient-form";
 import { PatientsList, type PatientSort } from "./patients-list";
@@ -32,18 +33,17 @@ export default async function PacientesPage({
   const dir: "asc" | "desc" = params.dir === "desc" ? "desc" : "asc";
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-brand-navy">Pacientes</h1>
-          <p className="text-sm text-neutral-600">
-            {clinical
-              ? "Fichas clínicas de tu organización. Registra los tuyos y edita los que te pertenecen."
-              : "Datos de contacto de tu organización (agenda y atención)."}
-          </p>
-        </div>
-        {clinical ? <NewPatientButton /> : null}
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Clínica"
+        title="Pacientes"
+        description={
+          clinical
+            ? "Fichas clínicas de tu organización. Registra los tuyos y edita los que te pertenecen."
+            : "Datos de contacto de tu organización (agenda y atención)."
+        }
+        actions={clinical ? <NewPatientButton /> : undefined}
+      />
 
       <Card className="px-4 py-3">
         <PatientsSearch initialQ={q} initialStatus={status} />

@@ -58,12 +58,12 @@ export function PerfilForm({
         Este nombre es el que ve el equipo en el panel y los pacientes al reservar.
       </p>
       {error ? (
-        <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p role="alert" className="rounded-lg bg-danger-50 px-4 py-3 text-sm text-danger-700">
           {error}
         </p>
       ) : null}
       {ok ? (
-        <p role="status" className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        <p role="status" className="rounded-lg bg-success-50 px-4 py-3 text-sm text-success-700">
           {ok}
         </p>
       ) : null}

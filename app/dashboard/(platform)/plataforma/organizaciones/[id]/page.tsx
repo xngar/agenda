@@ -1,9 +1,10 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireSuperAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { RESERVED_SLUGS } from "@/lib/platform";
 import { OrganizationEditForm } from "./organization-edit-form";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { BackLink } from "@/components/dashboard/back-link";
 
 export default async function PlataformaOrganizacionEditarPage({
   params,
@@ -37,38 +38,32 @@ export default async function PlataformaOrganizacionEditarPage({
   const tieneDatosEspecialidad = (conPerfil ?? 0) + (conEncuentro ?? 0) > 0;
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-8">
-      <Link
-        href="/dashboard/plataforma/organizaciones"
-        className="text-sm font-medium text-brand-sky hover:underline"
-      >
-        ← Organizaciones
-      </Link>
-      <h1 className="mt-2 text-2xl font-bold text-brand-navy">Editar organización</h1>
-      <p className="mt-1 text-sm text-neutral-600">
-        Los cambios de nombre e identificador se reflejan en la página pública y en el panel la
-        próxima vez que entren.
-      </p>
+    <div className="mx-auto w-full max-w-4xl space-y-6">
+      <PageHeader
+        eyebrow="Plataforma"
+        title="Editar organización"
+        description="Los cambios de nombre e identificador se reflejan en la página pública y en el panel la próxima vez que entren."
+      />
 
-      <div className="mt-6">
-        <OrganizationEditForm
-          id={org.id}
-          slugReserved={RESERVED_SLUGS.has(org.slug)}
-          tieneDatosEspecialidad={tieneDatosEspecialidad}
-          initial={{
-            name: org.name ?? "",
-            slug: org.slug ?? "",
-            timezone: org.timezone ?? "America/Santiago",
-            type: (org.type as "dental" | "medical" | "psychological" | undefined) ?? "dental",
-            phone: org.phone ?? "",
-            address: org.address ?? "",
-            supportEmail: org.support_email ?? "",
-            consentText: org.consent_text ?? "",
-            active: org.active,
-            professionalLimit: org.professional_limit ?? 2,
-          }}
-        />
-      </div>
+      <OrganizationEditForm
+        id={org.id}
+        slugReserved={RESERVED_SLUGS.has(org.slug)}
+        tieneDatosEspecialidad={tieneDatosEspecialidad}
+        initial={{
+          name: org.name ?? "",
+          slug: org.slug ?? "",
+          timezone: org.timezone ?? "America/Santiago",
+          type: (org.type as "dental" | "medical" | "psychological" | undefined) ?? "dental",
+          phone: org.phone ?? "",
+          address: org.address ?? "",
+          supportEmail: org.support_email ?? "",
+          consentText: org.consent_text ?? "",
+          active: org.active,
+          professionalLimit: org.professional_limit ?? 2,
+        }}
+      />
+
+      <BackLink href="/dashboard/plataforma/organizaciones">Volver a organizaciones</BackLink>
     </div>
   );
 }

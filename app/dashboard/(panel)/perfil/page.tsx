@@ -1,9 +1,10 @@
 import "server-only";
 
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireDoctor } from "@/lib/auth";
 import { PerfilSheetRoute } from "./perfil-sheet-route";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { BackLink } from "@/components/dashboard/back-link";
 
 export const dynamic = "force-dynamic";
 
@@ -16,20 +17,14 @@ export default async function PerfilPage() {
   if (session.isSuperAdmin) redirect("/dashboard/plataforma/organizaciones");
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-5">
+    <div className="mx-auto w-full max-w-2xl space-y-6">
       <PerfilSheetRoute />
-      <div>
-        <h1 className="text-2xl font-semibold text-brand-navy">Mi perfil</h1>
-        <p className="text-sm text-neutral-600">
-          Estos datos identifican tu cuenta dentro de la clínica.
-        </p>
-      </div>
-      <Link
-        href="/dashboard"
-        className="text-sm font-medium text-brand-navy-700 underline underline-offset-4 hover:text-brand-navy"
-      >
-        Volver a la agenda
-      </Link>
+      <PageHeader
+        eyebrow="Cuenta"
+        title="Mi perfil"
+        description="Estos datos identifican tu cuenta dentro de la clínica."
+      />
+      <BackLink />
     </div>
   );
 }

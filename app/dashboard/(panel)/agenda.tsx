@@ -9,6 +9,7 @@ import { useAgendaAcciones } from "./agenda-actions";
 import { StaffRescheduleModal } from "./staff-reschedule-modal";
 import type { StaffDoctor } from "./staff-booking-button";
 import { motion, AnimatePresence } from "motion/react";
+import { RefreshCw } from "lucide-react";
 
 interface Props {
   initial: DoctorAppointment[];
@@ -91,48 +92,50 @@ export function Agenda({
       transition={{ duration: 0.22, ease: "easeOut" }}
       className="space-y-3"
     >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex gap-1" role="group" aria-label="Filtrar citas">
-            {(["todas", "activas", "canceladas"] as const).map((valor) => (
-              <button
-                key={valor}
-                type="button"
-                aria-pressed={filtro === valor}
-                onClick={() => setFiltro(valor)}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium capitalize transition-colors ${
-                  filtro === valor
-                    ? "bg-brand-navy text-white"
-                    : "bg-white text-neutral-700 hover:bg-neutral-100"
-                }`}
-              >
-                {valor}{" "}
-                <span className="tabular-nums opacity-80">({conteos[valor]})</span>
-              </button>
-            ))}
-          </div>
-
-          <div>
-            <label htmlFor="agenda-busqueda" className="sr-only">
-              Buscar por nombre de paciente
-            </label>
-            <input
-              id="agenda-busqueda"
-              type="search"
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              placeholder="Buscar por nombre…"
-              autoComplete="off"
-              className="min-h-9 rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-sm text-neutral-800 placeholder:text-neutral-500 focus:border-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-sky"
-            />
-          </div>
+      <div className="flex flex-wrap items-center gap-2 rounded-card border border-neutral-200 bg-white p-2 shadow-card">
+        <div
+          className="inline-flex items-center gap-1 rounded-xl bg-neutral-100 p-1"
+          role="group"
+          aria-label="Filtrar citas"
+        >
+          {(["todas", "activas", "canceladas"] as const).map((valor) => (
+            <button
+              key={valor}
+              type="button"
+              aria-pressed={filtro === valor}
+              onClick={() => setFiltro(valor)}
+              className={`inline-flex min-h-9 items-center rounded-lg px-3 text-sm font-medium capitalize transition-colors ${
+                filtro === valor
+                  ? "bg-brand-navy text-white shadow-2xs"
+                  : "text-neutral-600 hover:bg-white hover:text-brand-navy"
+              }`}
+            >
+              {valor}{" "}
+              <span className="tabular-nums opacity-80">({conteos[valor]})</span>
+            </button>
+          ))}
         </div>
 
-        <p className="flex items-center gap-2 text-xs text-neutral-500">
+        <div className="min-w-0 flex-1 sm:max-w-xs">
+          <label htmlFor="agenda-busqueda" className="sr-only">
+            Buscar por nombre de paciente
+          </label>
+          <input
+            id="agenda-busqueda"
+            type="search"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            placeholder="Buscar por nombre…"
+            autoComplete="off"
+            className="min-h-9 w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm text-neutral-800 transition-colors placeholder:text-neutral-500 hover:border-neutral-300 focus:border-brand-navy focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-sky/25"
+          />
+        </div>
+
+        <p className="flex items-center gap-2 px-1 text-xs text-neutral-500">
           <span
             aria-hidden
             className={`inline-block size-2 rounded-full ${
-              connected ? "bg-emerald-500" : realtimeError ? "bg-red-500" : "bg-neutral-300"
+              connected ? "bg-success-600" : realtimeError ? "bg-danger-600" : "bg-neutral-300"
             }`}
           />
           {connected ? "En vivo" : realtimeError ? "Sin conexión en vivo" : "Conectando…"}
@@ -143,8 +146,9 @@ export function Agenda({
         <button
           type="button"
           onClick={refrescarAhora}
-          className="w-full rounded-xl border border-brand-sky bg-brand-sky-50 px-4 py-2.5 text-sm font-medium text-brand-navy"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-sky-400/60 bg-brand-sky-50 px-4 py-2.5 text-sm font-semibold text-brand-navy transition-colors hover:bg-brand-sky-100"
         >
+          <RefreshCw aria-hidden className="h-4 w-4" />
           Hay cambios nuevos en la agenda · actualizar
         </button>
       ) : null}

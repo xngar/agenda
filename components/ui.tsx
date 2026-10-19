@@ -33,7 +33,7 @@ export function buttonClasses(
     "inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-150 ease-out",
     "active:scale-[0.97] cursor-pointer select-none",
     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy",
-    "disabled:opacity-55 disabled:cursor-not-allowed disabled:active:scale-100",
+    "disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:translate-y-0",
     VARIANTS[variant],
     SIZES[size],
     className,
@@ -134,7 +134,7 @@ export function Field({
       </label>
       {children}
       {error ? (
-        <p id={`${htmlFor}-error`} className="text-sm font-medium text-brand-navy-900">
+        <p id={`${htmlFor}-error`} role="alert" className="text-sm font-medium text-danger-700">
           {error}
         </p>
       ) : hint ? (
@@ -149,7 +149,8 @@ export function Field({
 export const inputClasses =
   "w-full min-h-11 rounded-xl border border-neutral-300 bg-white px-3 py-2 text-base text-neutral-800 transition-all duration-150 ease-out " +
   "placeholder:text-neutral-500 hover:border-neutral-400 focus:border-brand-navy focus:outline-none focus:ring-4 focus:ring-brand-sky/25 " +
-  "disabled:bg-neutral-100 disabled:text-neutral-500 aria-[invalid=true]:border-brand-navy-900";
+  "disabled:bg-neutral-100 disabled:text-neutral-500 " +
+  "aria-[invalid=true]:border-danger-600 aria-[invalid=true]:focus:border-danger-600 aria-[invalid=true]:focus:ring-danger-100";
 
 export const inputErrorClasses = inputClasses;
 
@@ -217,7 +218,7 @@ export function EmptyState({
 }
 
 export function ErrorNotice({
-  title = "Algo salió mal",
+  title,
   message,
   action,
 }: {
@@ -228,11 +229,23 @@ export function ErrorNotice({
   return (
     <div
       role="alert"
-      className="flex flex-col gap-2 rounded-card border border-brand-navy-700/25 bg-brand-navy-50 px-4 py-3"
+      className="flex items-start gap-3 rounded-card border border-danger-200 bg-danger-50 px-4 py-3"
     >
-      <p className="text-sm font-semibold text-brand-navy">{title}</p>
-      <p className="text-sm text-neutral-800">{message}</p>
-      {action}
+      <span
+        aria-hidden="true"
+        className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-danger-100 text-danger-700"
+      >
+        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.2}>
+          <path d="M10.3 3.9 2.4 17.6A1.9 1.9 0 0 0 4 20.5h16a1.9 1.9 0 0 0 1.6-2.9L13.7 3.9a1.9 1.9 0 0 0-3.4 0Z" strokeLinejoin="round" />
+          <path d="M12 9v4" strokeLinecap="round" />
+          <circle cx="12" cy="16.6" r="0.7" fill="currentColor" stroke="none" />
+        </svg>
+      </span>
+      <div className="min-w-0 flex-1">
+        {title ? <p className="text-sm font-semibold text-danger-700">{title}</p> : null}
+        <p className={`text-sm text-neutral-800 ${title ? "mt-0.5" : ""}`}>{message}</p>
+        {action ? <div className="mt-2">{action}</div> : null}
+      </div>
     </div>
   );
 }
@@ -260,15 +273,18 @@ export function StatusBadge({ status }: { status: string }) {
       label: "Cancelada",
       className: "bg-neutral-200 text-neutral-600 line-through decoration-neutral-500",
     },
-    completed: { label: "Atendida", className: "bg-neutral-100 text-neutral-800" },
-    no_show: { label: "No asistió", className: "bg-brand-navy-100 text-brand-navy-900" },
+    completed: { label: "Atendida", className: "bg-neutral-100 text-neutral-800 border border-neutral-200" },
+    no_show: {
+      label: "No asistió",
+      className: "bg-danger-50 text-danger-700 border border-danger-200",
+    },
   };
 
   const entry = map[status] ?? { label: status, className: "bg-neutral-100 text-neutral-800" };
 
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${entry.className}`}
+      className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${entry.className}`}
     >
       {entry.label}
     </span>

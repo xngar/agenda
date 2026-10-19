@@ -29,6 +29,8 @@ import {
   type StaffService,
 } from "./staff-booking-button";
 import Link from "next/link";
+import { ErrorNotice } from "@/components/ui";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -182,50 +184,52 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const ventana = verMes ? "este mes" : vista === "semana" ? "esta semana" : "este día";
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-navy-600">
-            {verMes ? "Calendario" : "Agenda"}
-          </p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-brand-navy">
-            {verMes ? (
-              <time dateTime={mesKey}>{monthLabel(mesKey)}</time>
-            ) : vista === "semana" ? (
-              <time dateTime={week.from}>{weekLabel(week.from, week.to)}</time>
-            ) : (
-              <time dateTime={dayKey}>{dayLabel(dayKey)}</time>
-            )}
-          </h1>
-          <p className="mt-1.5">
-            <span className="inline-flex items-center rounded-full border border-neutral-200 bg-white px-2.5 py-0.5 text-xs font-medium tabular-nums text-neutral-600">
-              {totalCitas} cita{totalCitas === 1 ? "" : "s"}
-              {totalCitas > 0 ? ` ${ventana}` : ""}
-            </span>
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {bookingServices.length > 0 && bookingDoctors.length > 0 ? (
-            <StaffBookingButton
-              services={bookingServices}
-              doctors={bookingDoctors}
-              defaultDoctorId={onlyDoctorId ?? (veTodoElEquipo ? null : session.id)}
-              defaultDate={dayKey}
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow={verMes ? "Calendario" : "Agenda"}
+        title={
+          verMes ? (
+            <time dateTime={mesKey}>{monthLabel(mesKey)}</time>
+          ) : vista === "semana" ? (
+            <time dateTime={week.from}>{weekLabel(week.from, week.to)}</time>
+          ) : (
+            <time dateTime={dayKey}>{dayLabel(dayKey)}</time>
+          )
+        }
+        meta={
+          <span className="inline-flex items-center rounded-full border border-neutral-200 bg-white px-2.5 py-0.5 text-xs font-medium tabular-nums text-neutral-600">
+            {totalCitas} cita{totalCitas === 1 ? "" : "s"}
+            {totalCitas > 0 ? ` ${ventana}` : ""}
+          </span>
+        }
+        actions={
+          <>
+            {bookingServices.length > 0 && bookingDoctors.length > 0 ? (
+              <StaffBookingButton
+                services={bookingServices}
+                doctors={bookingDoctors}
+                defaultDoctorId={onlyDoctorId ?? (veTodoElEquipo ? null : session.id)}
+                defaultDate={dayKey}
+              />
+            ) : null}
+            <ViewToggle
+              vista={vista}
+              dayKey={dayKey}
+              weekFrom={week.from}
+              mesKey={mesKey}
+              doctor={onlyDoctorId}
             />
-          ) : null}
-          <ViewToggle
-            vista={vista}
-            dayKey={dayKey}
-            weekFrom={week.from}
-            mesKey={mesKey}
-            doctor={onlyDoctorId}
-          />
-          {veTodoElEquipo ? (
-            <DoctorPicker current={onlyDoctorId} canFilter={veTodoElEquipo} doctors={team} />
-          ) : null}
-        </div>
-      </div>
+            {veTodoElEquipo ? (
+              <DoctorPicker
+                current={onlyDoctorId}
+                canFilter={veTodoElEquipo}
+                doctors={team}
+                mostrarEtiqueta={false}
+              />
+            ) : null}
+          </>
+        }
+      />
 
       {verMes ? null : vista === "semana" ? (
         <WeekNav dayKey={dayKey} today={todayKey()} />
@@ -233,11 +237,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         <DayNav dayKey={dayKey} today={todayKey()} resumen={diasConCitas} />
       )}
 
-      {error ? (
-        <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-          No pudimos cargar la agenda: {error}
-        </p>
-      ) : null}
+      {error ? <ErrorNotice message={`No pudimos cargar la agenda: ${error}`} /> : null}
 
       {verMes ? (
         <MonthView

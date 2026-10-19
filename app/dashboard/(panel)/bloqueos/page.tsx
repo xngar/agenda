@@ -1,6 +1,5 @@
 import "server-only";
 
-import Link from "next/link";
 import { getOrgSettings, requireDoctor } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { dateKey, timeKey } from "@/lib/dates";
@@ -8,6 +7,8 @@ import { parseAppointmentRange } from "@/lib/range";
 import type { PublicDoctor } from "@/lib/types";
 import { DoctorPicker } from "../doctor-picker";
 import { TimeOffEditor, type BlockedRange } from "./time-off-editor";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { BackLink } from "@/components/dashboard/back-link";
 
 export const dynamic = "force-dynamic";
 
@@ -67,29 +68,31 @@ export default async function BloqueosPage({ searchParams }: PageProps) {
   const seleccionado = team.find((d) => d.id === doctorId);
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-brand-navy">Bloqueos de tiempo</h1>
-          <p className="text-sm text-neutral-600">
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Disponibilidad"
+        title="Bloqueos de tiempo"
+        description={
+          <>
             Rangos en los que{" "}
             <span className="font-medium text-neutral-800">
               {seleccionado?.full_name ?? session.full_name}
             </span>{" "}
             no atiende: el asistente deja de ofrecer esas horas.
-          </p>
-        </div>
-
-        {puedeGestionar ? (
-          <DoctorPicker
-            current={doctorId}
-            canFilter
-            doctors={team}
-            basePath="/dashboard/bloqueos"
-            allOption={false}
-          />
-        ) : null}
-      </div>
+          </>
+        }
+        actions={
+          puedeGestionar ? (
+            <DoctorPicker
+              current={doctorId}
+              canFilter
+              doctors={team}
+              basePath="/dashboard/bloqueos"
+              allOption={false}
+            />
+          ) : undefined
+        }
+      />
 
       <TimeOffEditor
         key={doctorId}
@@ -98,11 +101,7 @@ export default async function BloqueosPage({ searchParams }: PageProps) {
         timezone={settings.timezone}
       />
 
-      <p className="text-sm text-neutral-500">
-        <Link className="underline underline-offset-4 hover:text-brand-navy" href="/dashboard">
-          Volver a la agenda
-        </Link>
-      </p>
+      <BackLink />
     </div>
   );
 }

@@ -50,7 +50,7 @@ export function ViewToggle({
           key={op.id}
           href={op.href}
           aria-current={op.activo ? "page" : undefined}
-          className={`relative z-10 rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors duration-150 active:scale-95 select-none ${
+          className={`relative z-10 inline-flex min-h-9 items-center rounded-lg px-4 text-sm font-semibold transition-colors duration-150 active:scale-95 select-none ${
             op.activo ? "text-white" : "text-neutral-600 hover:text-brand-navy"
           }`}
         >

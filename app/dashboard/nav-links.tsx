@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -136,14 +136,16 @@ const soloSuperAdmin: NavItem[] = [
 ];
 
 function navButtonClasses(active: boolean): string {
-  return `inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-    active ? "bg-brand-navy text-white" : "text-neutral-700 hover:bg-neutral-100"
+  return `inline-flex min-h-10 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-sm font-medium transition-colors ${
+    active
+      ? "bg-brand-navy text-white shadow-[0_1px_2px_rgba(11,60,122,0.3)]"
+      : "text-neutral-700 hover:bg-neutral-100 hover:text-brand-navy"
   }`;
 }
 
 function mobileButtonClasses(active: boolean): string {
-  return `flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-    active ? "bg-brand-navy text-white" : "text-neutral-700 hover:bg-neutral-100"
+  return `flex min-h-11 items-center gap-2.5 rounded-xl px-3 text-sm font-medium transition-colors ${
+    active ? "bg-brand-navy text-white" : "text-neutral-800 hover:bg-neutral-100"
   }`;
 }
 
@@ -160,6 +162,24 @@ export function NavLinks({
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const menuPanelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    menuPanelRef.current?.querySelector<HTMLElement>("a, button")?.focus();
+
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
 
   // Horario, Bloqueos y Feriados definen cuándo se puede reservar y cuándo
   // no: viven juntos en el desplegable "Disponibilidad". Feriados es
@@ -168,14 +188,20 @@ export function NavLinks({
   const grupoActivo = disponibilidad.some((item) => esActivo(pathname, item.href));
   const enlacesFinales = isAdmin ? soloAdmin : [];
 
-  const mobileItems: NavItem[] = isSuperAdmin
+  const mobilePrincipal: NavItem[] = isSuperAdmin
     ? soloSuperAdmin
-    : [...principal, ...disponibilidad, ...enlacesFinales];
+    : [...principal, ...disponibilidad];
+  const mobileGroups: NavItem[][] = isSuperAdmin
+    ? [mobilePrincipal]
+    : [mobilePrincipal, enlacesFinales];
 
   return (
-    <nav aria-label="Secciones del panel">
+    <nav
+      aria-label="Secciones del panel"
+      className="relative z-30 flex min-w-0 flex-1 items-center justify-end"
+    >
       {isSuperAdmin ? (
-        <ul className="hidden items-center gap-1 md:flex">
+        <ul className="no-scrollbar mx-auto -my-1 hidden min-w-0 items-center gap-0.5 overflow-x-auto py-1 lg:flex">
           {soloSuperAdmin.map((item) => (
             <li key={item.href}>
               <Link
@@ -190,7 +216,7 @@ export function NavLinks({
           ))}
         </ul>
       ) : (
-        <ul className="hidden items-center gap-1 md:flex">
+        <ul className="no-scrollbar mx-auto -my-1 hidden min-w-0 items-center gap-0.5 overflow-x-auto py-1 lg:flex">
           {principal.map((item) => (
             <li key={item.href}>
               <Link
@@ -233,6 +259,10 @@ export function NavLinks({
             </DropdownMenu>
           </li>
 
+          {enlacesFinales.length > 0 ? (
+            <li aria-hidden="true" className="mx-1 h-5 w-px bg-neutral-200" />
+          ) : null}
+
           {enlacesFinales.map((item) => (
             <li key={item.href}>
               <Link
@@ -245,50 +275,73 @@ export function NavLinks({
               </Link>
             </li>
           ))}
-
-          <li>
-            <PerfilTrigger
-              className={navButtonClasses(esActivo(pathname, PERFIL_ACTIVO))}
-              title="Mi perfil"
-            >
-              <PerfilIcon />
-              Mi perfil
-            </PerfilTrigger>
-          </li>
         </ul>
       )}
 
       <button
+        ref={menuButtonRef}
         type="button"
         aria-label={open ? "Cerrar menú" : "Abrir menú"}
         aria-expanded={open}
+        aria-controls="menu-movil"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-neutral-300 bg-white text-neutral-700 transition-colors hover:bg-neutral-100 md:hidden"
+        className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-neutral-300 bg-white text-neutral-700 transition-colors hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy lg:hidden"
       >
-        {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        {open ? (
+          <X className="h-5 w-5" aria-hidden="true" />
+        ) : (
+          <Menu className="h-5 w-5" aria-hidden="true" />
+        )}
       </button>
 
       {open ? (
-        <div className="fixed inset-x-4 top-16 z-50 rounded-2xl border border-neutral-200 bg-white p-2 shadow-card md:hidden">
-          <ul className="flex flex-col gap-0.5">
-            {mobileItems.map((item) => {
-              const active = esActivo(pathname, item.href);
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    aria-current={active ? "page" : undefined}
-                    onClick={() => setOpen(false)}
-                    className={mobileButtonClasses(active)}
+        <>
+          <button
+            type="button"
+            aria-label="Cerrar menú"
+            onClick={() => setOpen(false)}
+            className="fixed inset-0 -z-10 cursor-default bg-brand-navy-900/25 lg:hidden"
+          />
+          <div
+            ref={menuPanelRef}
+            id="menu-movil"
+            style={{ transformOrigin: "top right" }}
+            className="anim-menu absolute right-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-card border border-neutral-200 bg-white p-2 shadow-lift lg:hidden"
+          >
+            <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+              Navegación
+            </p>
+            <ul className="flex flex-col gap-0.5">
+              {mobileGroups.map((grupo, indice) =>
+                grupo.length > 0 ? (
+                  <li
+                    key={indice}
+                    className={indice > 0 ? "mt-1 border-t border-neutral-200 pt-1" : undefined}
                   >
-                    {item.icon}
-                    {item.label}
-                  </Link>
-                </li>
-              );
-            })}
+                    <ul className="flex flex-col gap-0.5">
+                      {grupo.map((item) => {
+                        const active = esActivo(pathname, item.href);
+                        return (
+                          <li key={item.href}>
+                            <Link
+                              href={item.href}
+                              aria-current={active ? "page" : undefined}
+                              onClick={() => setOpen(false)}
+                              className={mobileButtonClasses(active)}
+                            >
+                              {item.icon}
+                              {item.label}
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </li>
+                ) : null,
+              )}
+            </ul>
             {!isSuperAdmin ? (
-              <li>
+              <div className="mt-1 border-t border-neutral-200 pt-1">
                 <PerfilTrigger
                   className={`${mobileButtonClasses(esActivo(pathname, PERFIL_ACTIVO))} w-full`}
                   title="Mi perfil"
@@ -297,10 +350,10 @@ export function NavLinks({
                   <PerfilIcon />
                   Mi perfil
                 </PerfilTrigger>
-              </li>
+              </div>
             ) : null}
-          </ul>
-        </div>
+          </div>
+        </>
       ) : null}
     </nav>
   );

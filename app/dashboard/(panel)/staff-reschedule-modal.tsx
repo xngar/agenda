@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button, ErrorNotice, Field, inputClasses } from "@/components/ui";
+import { Button, ErrorNotice, Field, Spinner, inputClasses } from "@/components/ui";
 import { formatTime, todayKey } from "@/lib/dates";
 import type { StaffDoctor } from "./staff-booking-button";
 import { motion, useReducedMotion } from "motion/react";
@@ -47,22 +47,26 @@ export function StaffRescheduleModal({
   const [guardando, setGuardando] = useState(false);
   const reduceMotion = useReducedMotion();
 
-  const cargarSlots = useCallback(async () => {
+  const cargarSlots = useCallback(async (limpiarError = true) => {
     if (!date) return;
     setCargando(true);
+    if (limpiarError) setError(null);
     const params = new URLSearchParams({ appointmentId: appointment.id, date });
     if (doctorId !== appointment.doctorId) params.set("doctorId", doctorId);
     try {
       const res = await fetch(`/api/dashboard/slots?${params.toString()}`);
-      const data = (await res.json()) as {
+      const data = (await res.json().catch(() => ({}))) as {
         slots?: { slot_start: string; slot_end: string }[];
         error?: string;
       };
       setSlots(data.slots ?? []);
       setSlotStart("");
-      if (data.error) setError(data.error);
+      if (!res.ok || data.error) {
+        setError(data.error ?? "No pudimos cargar las horas disponibles.");
+      }
     } catch {
       setSlots([]);
+      setError("No pudimos cargar las horas. Revisa tu conexión e intenta de nuevo.");
     } finally {
       setCargando(false);
     }
@@ -72,6 +76,15 @@ export function StaffRescheduleModal({
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch de slots al cambiar día/profesional, setState tras await
     cargarSlots();
   }, [cargarSlots]);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
 
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
@@ -91,7 +104,7 @@ export function StaffRescheduleModal({
       const data = (await res.json().catch(() => ({}))) as { error?: string; code?: string };
       if (!res.ok) {
         setError(data.error ?? "No se pudo reprogramar la cita");
-        if (data.code === "A0001" || data.code === "A0002") cargarSlots();
+        if (data.code === "A0001" || data.code === "A0002") cargarSlots(false);
         return;
       }
       toast.success(`Cita de ${appointment.patientName} reprogramada`);
@@ -128,7 +141,7 @@ export function StaffRescheduleModal({
             ? { duration: 0.12 }
             : { type: "spring", stiffness: 450, damping: 32 }
         }
-        className="w-full max-w-lg rounded-2xl border border-neutral-200/80 bg-white p-6 shadow-2xl"
+        className="w-full max-w-lg rounded-card border border-neutral-200/80 bg-white p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-semibold text-brand-navy">Reprogramar cita</h2>
@@ -173,7 +186,7 @@ export function StaffRescheduleModal({
             {!date ? (
               <p className="text-sm text-neutral-500">Elige el nuevo día.</p>
             ) : cargando ? (
-              <p className="text-sm text-neutral-500">Cargando horas…</p>
+              <Spinner label="Cargando horas…" />
             ) : slots.length === 0 ? (
               <p className="text-sm text-neutral-500">
                 Sin horas libres ese día. Prueba con otro día o profesional.
@@ -186,7 +199,7 @@ export function StaffRescheduleModal({
                     type="button"
                     aria-pressed={slotStart === s.slot_start}
                     onClick={() => setSlotStart(s.slot_start)}
-                    className={`rounded-lg border px-3 py-1.5 text-sm font-semibold tabular-nums transition-all duration-150 ease-out active:scale-95 cursor-pointer ${
+                    className={`inline-flex min-h-10 items-center justify-center rounded-lg border px-3 text-sm font-semibold tabular-nums transition-all duration-150 ease-out active:scale-95 cursor-pointer ${
                       slotStart === s.slot_start
                         ? "border-brand-navy bg-brand-navy text-white shadow-xs scale-[1.03]"
                         : "border-neutral-300 bg-white text-neutral-700 hover:border-brand-navy hover:text-brand-navy hover:shadow-2xs"

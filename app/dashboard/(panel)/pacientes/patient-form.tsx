@@ -135,7 +135,7 @@ export function PatientFormModal({
                 ? { duration: 0.12 }
                 : { type: "spring", stiffness: 450, damping: 32 }
             }
-            className="my-auto w-full max-w-lg rounded-2xl border border-neutral-200/80 bg-white p-6 shadow-2xl"
+            className="my-auto w-full max-w-lg rounded-card border border-neutral-200/80 bg-white p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-lg font-semibold text-brand-navy">
@@ -222,7 +222,7 @@ export function PatientFormModal({
                 </select>
               </label>
 
-              {error ? <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
+              {error ? <p className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger-700">{error}</p> : null}
 
               <div className="flex items-center justify-end gap-2 pt-2">
                 <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>

@@ -439,7 +439,7 @@ export function ResumenPanel({
         typeof (patient.specialty_profile as SpecialtyValues | null)?.treatmentAlerts === "string" &&
         ((patient.specialty_profile as SpecialtyValues).treatmentAlerts as string).trim() ? (
           <div className="px-5 pt-4" role="alert">
-            <p className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900">
+            <p className="rounded-xl border border-warning-200 bg-warning-50 px-3 py-2 text-sm font-medium text-warning-700">
               Alertas para el tratamiento:{" "}
               {((patient.specialty_profile as SpecialtyValues).treatmentAlerts as string).trim()}
             </p>

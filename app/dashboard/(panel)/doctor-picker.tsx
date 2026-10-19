@@ -35,6 +35,7 @@ export function DoctorPicker({
   doctors,
   basePath = "/dashboard",
   allOption = true,
+  mostrarEtiqueta = true,
 }: {
   current: string | null;
   canFilter: boolean;
@@ -47,6 +48,12 @@ export function DoctorPicker({
    * opción no aparece.
    */
   allOption?: boolean;
+  /**
+   * La agenda alinea este control con el conmutador Día/Semana/Mes, que no
+   * lleva etiqueta visible: ahí se oculta (queda sólo para lectores de
+   * pantalla) y en el horario o los bloqueos se muestra.
+   */
+  mostrarEtiqueta?: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -75,7 +82,10 @@ export function DoctorPicker({
 
   return (
     <div>
-      <p id="filtro-doctor-label" className="mb-1 block text-xs font-medium text-neutral-600">
+      <p
+        id="filtro-doctor-label"
+        className={mostrarEtiqueta ? "mb-1 block text-xs font-medium text-neutral-600" : "sr-only"}
+      >
         Profesional
       </p>
       <Popover open={abierto} onOpenChange={setAbierto}>
@@ -87,7 +97,7 @@ export function DoctorPicker({
             aria-expanded={abierto}
             aria-labelledby="filtro-doctor-label filtro-doctor-valor"
             disabled={pending}
-            className="w-full justify-between bg-white font-normal text-neutral-800 hover:bg-neutral-50 disabled:opacity-60 sm:w-56"
+            className="h-11 w-full justify-between rounded-xl border-neutral-200 bg-white font-normal text-neutral-800 hover:bg-neutral-50 disabled:opacity-60 sm:w-56"
           >
             <span id="filtro-doctor-valor" className="truncate">
               {actual?.label ?? "Elegir profesional…"}

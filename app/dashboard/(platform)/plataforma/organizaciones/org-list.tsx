@@ -509,7 +509,7 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
               if (!eliminando) setConfirmar(null);
             }}
           />
-          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-card">
+          <div className="relative w-full max-w-md rounded-card bg-white p-6 shadow-card">
             <h2 id="dialog-eliminar-titulo" className="text-lg font-bold text-brand-navy">
               ¿Eliminar {confirmar.name}?
             </h2>
@@ -560,7 +560,7 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
               }
             }}
           />
-          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-card">
+          <div className="relative w-full max-w-md rounded-card bg-white p-6 shadow-card">
             {resetOk ? (
               <>
                 <h2 id="dialog-password-titulo" className="text-lg font-bold text-brand-navy">

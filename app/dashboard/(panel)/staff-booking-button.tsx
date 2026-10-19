@@ -46,7 +46,7 @@ export function StaffBookingButton({
 
   return (
     <>
-      <Button size="sm" onClick={() => setOpen(true)}>
+      <Button size="md" onClick={() => setOpen(true)}>
         + Nueva reserva
       </Button>
       <AnimatePresence>
@@ -242,7 +242,7 @@ function StaffBookingModal({
             ? { duration: 0.12 }
             : { type: "spring", stiffness: 450, damping: 32 }
         }
-        className="w-full max-w-2xl rounded-2xl border border-neutral-200/80 bg-white p-6 shadow-2xl"
+        className="w-full max-w-2xl rounded-card border border-neutral-200/80 bg-white p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-semibold text-brand-navy">Nueva reserva</h2>

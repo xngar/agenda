@@ -22,13 +22,13 @@ const FECHA_HORA = new Intl.DateTimeFormat("es-CL", {
 });
 
 const ACCION_BADGE: Record<AuditAction, string> = {
-  insert: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  insert: "border-success-200 bg-success-50 text-success-700",
   update: "border-brand-sky-200 bg-brand-sky-50 text-brand-navy-700",
-  delete: "border-red-200 bg-red-50 text-red-700",
+  delete: "border-danger-200 bg-danger-50 text-danger-700",
   sign: "border-brand-navy-200 bg-brand-navy-50 text-brand-navy-800",
-  export: "border-amber-200 bg-amber-50 text-amber-700",
+  export: "border-warning-200 bg-warning-50 text-warning-700",
   view: "border-neutral-200 bg-neutral-100 text-neutral-600",
-  contact: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  contact: "border-success-200 bg-success-50 text-success-700",
 };
 
 interface AuditRow extends AuditEntry {

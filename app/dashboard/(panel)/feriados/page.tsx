@@ -1,9 +1,10 @@
 import "server-only";
 
-import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { HolidaysEditor } from "./holidays-editor";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { BackLink } from "@/components/dashboard/back-link";
 
 export const dynamic = "force-dynamic";
 
@@ -29,22 +30,16 @@ export default async function FeriadosPage() {
   }));
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold text-brand-navy">Feriados</h1>
-        <p className="text-sm text-neutral-600">
-          Días en los que la clínica no atiende: el asistente no ofrece horas a ningún
-          profesional.
-        </p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Disponibilidad"
+        title="Feriados"
+        description="Días en los que la clínica no atiende: el asistente no ofrece horas a ningún profesional."
+      />
 
       <HolidaysEditor initial={holidays} />
 
-      <p className="text-sm text-neutral-500">
-        <Link className="underline underline-offset-4 hover:text-brand-navy" href="/dashboard">
-          Volver a la agenda
-        </Link>
-      </p>
+      <BackLink />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 import { requireSuperAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { buttonClasses } from "@/components/ui";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { OrganizationList, type OrganizationRow } from "./org-list";
 
 function fechaCreacion(iso: string | null): string {
@@ -82,24 +83,25 @@ export default async function PlataformaOrganizacionesPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-brand-navy">Organizaciones</h1>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/dashboard/plataforma/seguridad"
-            className={buttonClasses("ghost", "sm")}
-          >
-            Seguridad
-          </Link>
-          <Link
-            href="/dashboard/plataforma/organizaciones/nueva"
-            className={buttonClasses("primary", "sm")}
-          >
-            Crear nueva
-          </Link>
-        </div>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Plataforma"
+        title="Organizaciones"
+        description="Clínicas registradas en Agenda Online."
+        actions={
+          <>
+            <Link href="/dashboard/plataforma/seguridad" className={buttonClasses("ghost", "sm")}>
+              Seguridad
+            </Link>
+            <Link
+              href="/dashboard/plataforma/organizaciones/nueva"
+              className={buttonClasses("primary", "sm")}
+            >
+              Crear nueva
+            </Link>
+          </>
+        }
+      />
 
       <OrganizationList organizations={rows} />
     </div>

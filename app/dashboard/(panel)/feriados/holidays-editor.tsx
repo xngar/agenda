@@ -107,7 +107,7 @@ export function HolidaysEditor({ initial }: { initial: Holiday[] }) {
     <div className="space-y-4">
       {error ? <ErrorNotice message={error} /> : null}
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-4" aria-label="Nuevo feriado">
+      <section className="rounded-card border border-neutral-200 bg-white p-4" aria-label="Nuevo feriado">
         <h2 className="font-semibold text-neutral-900">Agregar feriado</h2>
 
         <div className="mt-3 grid gap-3 md:grid-cols-3">
@@ -145,7 +145,7 @@ export function HolidaysEditor({ initial }: { initial: Holiday[] }) {
             {holidays.map((h) => (
               <li
                 key={h.date}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-neutral-200 bg-white px-4 py-3"
               >
                 <div>
                   <p className="font-medium text-neutral-900 capitalize">{diaLegible(h.date)}</p>

@@ -18,6 +18,7 @@ import { EmptyState, StatusBadge } from "@/components/ui";
 import { WhatsappIcon, WhatsappModal } from "@/components/dashboard/whatsapp-button";
 import { useRealtimeNotifications } from "../use-realtime";
 import { motion, AnimatePresence } from "motion/react";
+import { RefreshCw } from "lucide-react";
 
 interface Props {
   initial: DoctorAppointment[];
@@ -225,7 +226,7 @@ export function MonthView({
       className="space-y-3"
     >
       {/* Navegación del mes + estado en vivo */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center gap-2 rounded-card border border-neutral-200 bg-white p-2 shadow-card">
         <div className="flex items-center gap-1">
           <button
             type="button"
@@ -259,11 +260,11 @@ export function MonthView({
           </button>
         </div>
 
-        <p className="flex items-center gap-2 text-xs text-neutral-500">
+        <p className="ml-auto flex items-center gap-2 px-1 text-xs text-neutral-500">
           <span
             aria-hidden
             className={`inline-block size-2 rounded-full ${
-              connected ? "bg-emerald-500" : realtimeError ? "bg-red-500" : "bg-neutral-300"
+              connected ? "bg-success-600" : realtimeError ? "bg-danger-600" : "bg-neutral-300"
             }`}
           />
           {connected ? "En vivo" : realtimeError ? "Sin conexión en vivo" : "Conectando…"}
@@ -284,8 +285,9 @@ export function MonthView({
             setNuevas(0);
             router.refresh();
           }}
-          className="w-full rounded-xl border border-brand-sky bg-brand-sky-50 px-4 py-2.5 text-sm font-medium text-brand-navy"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-sky-400/60 bg-brand-sky-50 px-4 py-2.5 text-sm font-semibold text-brand-navy transition-colors hover:bg-brand-sky-100"
         >
+          <RefreshCw aria-hidden className="h-4 w-4" />
           Hay cambios nuevos en la agenda · actualizar
         </button>
       ) : null}
@@ -310,7 +312,7 @@ export function MonthView({
               <div
                 key={dia}
                 style={{ animationDelay: `${Math.min(i, 21) * 16}ms` }}
-                className={`anim-month-cell flex min-h-20 flex-col gap-1 rounded-2xl border p-1 transition-colors duration-150 sm:min-h-28 sm:p-1.5 ${
+                className={`anim-month-cell flex min-h-20 flex-col gap-1 rounded-card border p-1 transition-colors duration-150 sm:min-h-28 sm:p-1.5 ${
                   esHoy
                     ? "border-brand-sky bg-brand-sky-50"
                     : enMes
@@ -412,7 +414,7 @@ export function MonthView({
             role="menu"
             aria-label="Acciones de la cita"
             style={{ left: menu.x, top: menu.y }}
-            className="anim-menu fixed z-50 w-56 rounded-2xl border border-neutral-200 bg-white p-1.5 shadow-lift"
+            className="anim-menu fixed z-50 w-56 rounded-card border border-neutral-200 bg-white p-1.5 shadow-lift"
           >
             <p className="truncate px-2.5 py-2 text-xs font-semibold text-neutral-500">
               {formatTime(parseAppointmentRange(menu.cita.during).start)} ·{" "}
@@ -437,9 +439,9 @@ export function MonthView({
                     accion.tono === "primario"
                       ? "bg-brand-navy text-white hover:bg-brand-navy-800"
                       : accion.tono === "peligro"
-                        ? "text-red-700 hover:bg-red-50"
+                        ? "text-danger-700 hover:bg-danger-50"
                         : accion.tono === "whatsapp"
-                          ? "text-emerald-700 hover:bg-emerald-50"
+                          ? "text-success-700 hover:bg-success-50"
                           : "text-neutral-700 hover:bg-neutral-100"
                   }`}
                 >
@@ -492,7 +494,7 @@ const CHIP_TONO: Record<AppointmentStatus, string> = {
   cancelled:
     "border-l-neutral-300 bg-neutral-100 text-neutral-500 line-through decoration-neutral-400",
   completed: "border-l-brand-navy-300 bg-neutral-100 text-neutral-700",
-  no_show: "border-l-red-400 bg-red-50 text-red-700",
+  no_show: "border-l-danger-600 bg-danger-50 text-danger-700",
 };
 
 /** "lunes 5 de octubre", en la zona UTC de las claves de día. */

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { OrganizationType, Patient, PatientMedicalBackground } from "@/lib/ficha/types";
 import { Button, ErrorNotice, buttonClasses } from "@/components/ui";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { ResumenPanel } from "./resumen-panel";
 import { AntecedentesPanel } from "./antecedentes-panel";
 import { AtencionesPanel } from "./atenciones-panel";
@@ -44,6 +45,12 @@ function estadoLabel(status: string): string {
       return status;
   }
 }
+
+const ESTADO_TONO: Record<string, string> = {
+  active: "border-success-200 bg-success-50 text-success-700",
+  inactive: "border-neutral-200 bg-neutral-100 text-neutral-600",
+  abandoned: "border-warning-200 bg-warning-50 text-warning-700",
+};
 
 export function FichaTabs({
   patient,
@@ -98,15 +105,11 @@ export function FichaTabs({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-xl font-semibold text-brand-navy">{patient.full_name}</h1>
-            <span className="rounded-full bg-lime-100 px-2.5 py-0.5 text-xs font-semibold text-lime-800">
-              {estadoLabel(patient.patient_status)}
-            </span>
-          </div>
-          <p className="mt-1 text-sm text-neutral-600">
+      <PageHeader
+        eyebrow="Ficha clínica"
+        title={patient.full_name}
+        description={
+          <>
             {patient.rut ?? "Sin RUT"} · {patient.sex && patient.sex !== "undisclosed" ? `${patient.sex === "female" ? "Mujer" : patient.sex === "male" ? "Hombre" : "Otro"} · ` : ""}
             {patient.birth_date ? `Nacido/a ${patient.birth_date.slice(0, 10)}` : "Fecha de nacimiento no registrada"}
             {patient.doctors?.full_name ? (
@@ -115,22 +118,31 @@ export function FichaTabs({
                 · <span className="text-brand-navy-700">Paciente de {patient.doctors.full_name}</span>
               </>
             ) : null}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm">
+          </>
+        }
+        meta={
+          <span
+            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
+              ESTADO_TONO[patient.patient_status] ?? ESTADO_TONO.inactive
+            }`}
+          >
+            {estadoLabel(patient.patient_status)}
+          </span>
+        }
+        actions={
+          <>
             {canEdit ? (
               <button
                 type="button"
                 onClick={() => setEditando(true)}
-                className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:bg-brand-navy-50"
+                className={buttonClasses("ghost", "sm")}
                 title="Editar datos del paciente"
               >
                 Editar
               </button>
             ) : null}
             <a
-              className="inline-flex min-h-9 items-center rounded-xl bg-brand-navy px-3 text-sm font-semibold text-white hover:bg-brand-navy-700"
+              className={buttonClasses("primary", "sm")}
               href={`/api/ficha/patients/${patient.id}/pdf`}
               title="Descargar PDF de la ficha"
             >
@@ -149,9 +161,9 @@ export function FichaTabs({
                 Eliminar
               </button>
             ) : null}
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       <nav aria-label="Secciones de la ficha" className="flex flex-wrap gap-1 border-b border-neutral-200">
         {visible.map((tab) => (
@@ -218,7 +230,7 @@ export function FichaTabs({
               if (!eliminando) setConfirmandoEliminar(false);
             }}
           />
-          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-card">
+          <div className="relative w-full max-w-md rounded-card bg-white p-6 shadow-card">
             <h2 id="dialog-eliminar-paciente-titulo" className="text-lg font-bold text-brand-navy">
               ¿Eliminar {patient.full_name}?
             </h2>

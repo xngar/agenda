@@ -1,10 +1,11 @@
 import "server-only";
 
-import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
-import { AddMemberForm } from "./add-member-form";
+import { AddMemberButton } from "./add-member-form";
 import { TeamList } from "./team-list";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { BackLink } from "@/components/dashboard/back-link";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ export const dynamic = "force-dynamic";
  * quitarle el rol a alguien surte efecto en su próxima navegación sin
  * depender de que expire ningún cookie.
  *
- * El alta ocurre en `AddMemberForm` (POST /api/dashboard/doctors) y activar
+ * El alta ocurre en `AddMemberModal` (POST /api/dashboard/doctors) y activar
  * o desactivar en `TeamList` (PATCH de la misma ruta). Ambas rutas
  * comprueban la sesión otra vez y devuelven un mensaje legible; RLS lo
  * autoriza igual, pero el error sin traducir no le sirve de nada a quien
@@ -40,31 +41,27 @@ export default async function AdminPage() {
   const used = (doctors ?? []).filter((d) => d.role === "professional" && d.active).length;
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold text-brand-navy">Equipo</h1>
-        <p className="text-sm text-neutral-600">
-          Profesionales con acceso al panel. Un administrador puede agregar miembros y
-          activar o desactivar cuentas.
-        </p>
-        <p className="mt-1 text-sm text-neutral-600">
-          Cupo de profesionales: <span className="font-medium text-neutral-800">{used}</span> de{" "}
-          {limit === null ? "∞" : limit}
-          {limit !== null && used >= limit ? (
-            <span className="ml-2 text-amber-700">Cupo alcanzado</span>
-          ) : null}
-        </p>
-      </div>
-
-      <AddMemberForm />
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Configuración"
+        title="Equipo"
+        description="Profesionales con acceso al panel. Un administrador puede agregar miembros y activar o desactivar cuentas."
+        actions={<AddMemberButton />}
+        meta={
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-2.5 py-0.5 text-xs font-medium text-neutral-600">
+            Cupo de profesionales:
+            <span className="font-semibold tabular-nums text-neutral-800">{used}</span>
+            <span className="tabular-nums">de {limit === null ? "∞" : limit}</span>
+            {limit !== null && used >= limit ? (
+              <span className="text-warning-700">· Cupo alcanzado</span>
+            ) : null}
+          </span>
+        }
+      />
 
       <TeamList initial={doctors ?? []} selfId={session.id} />
 
-      <p className="text-sm text-neutral-500">
-        <Link className="underline underline-offset-4 hover:text-brand-navy" href="/dashboard">
-          Volver a la agenda
-        </Link>
-      </p>
+      <BackLink />
     </div>
   );
 }

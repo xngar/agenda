@@ -65,6 +65,27 @@
   --color-neutral-600: var(--neutral-600);
   --color-neutral-800: var(--neutral-800);
 
+  /* Estados semánticos: error, éxito y aviso. Reemplazan hex sueltos en los
+     componentes. Texto -700 sobre fondo -50/-100 mantiene contraste AA. */
+  --color-danger: #b91c1c;
+  --color-danger-50: #fef2f2;
+  --color-danger-100: #fee2e2;
+  --color-danger-200: #fecaca;
+  --color-danger-600: #dc2626;
+  --color-danger-700: #b91c1c;
+  --color-success: #047857;
+  --color-success-50: #ecfdf5;
+  --color-success-100: #d1fae5;
+  --color-success-200: #a7f3d0;
+  --color-success-600: #059669;
+  --color-success-700: #047857;
+  --color-warning: #b45309;
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-200: #fde68a;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+
   /* Landing tokens (aislados) */
   --color-lp-navy: var(--lp-navy);
   --color-lp-blue: var(--lp-blue);
@@ -112,6 +133,14 @@
 }
 
 @layer utilities {
+  /* Barra de navegación que puede desplazarse sin mostrar una barra visible. */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
   .skip-link {
     position: absolute;
     left: 0.5rem;

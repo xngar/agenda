@@ -15,7 +15,7 @@ export default function LoginPage() {
           Acceso para profesionales de la clínica.
         </p>
 
-        <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+        <div className="mt-6 rounded-card border border-neutral-200 bg-white p-6 shadow-sm">
           <LoginForm />
         </div>
       </div>

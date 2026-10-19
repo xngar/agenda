@@ -93,7 +93,7 @@ export function OrganizationEditForm({
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       {error ? (
-        <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p role="alert" className="rounded-lg bg-danger-50 px-4 py-3 text-sm text-danger-700">
           {error}
         </p>
       ) : null}
@@ -161,14 +161,14 @@ export function OrganizationEditForm({
           </label>
 
           {exigeConfirmacion ? (
-            <label className="flex items-start gap-2 rounded-xl border border-red-300 bg-red-50 p-3 text-sm sm:col-span-2">
+            <label className="flex items-start gap-2 rounded-xl border border-danger-200 bg-danger-50 p-3 text-sm sm:col-span-2">
               <input
                 type="checkbox"
                 checked={confirmaBorrado}
                 onChange={(e) => setConfirmaBorrado(e.target.checked)}
                 className="mt-0.5 h-4 w-4"
               />
-              <span className="text-red-800">
+              <span className="text-danger-700">
                 Entiendo que cambiar el tipo <strong>borrará los datos de especialidad</strong>{" "}
                 de todas las fichas de esta organización. Los pacientes, citas y atenciones se
                 conservan. Esta acción no se puede deshacer.

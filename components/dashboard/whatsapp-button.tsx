@@ -55,7 +55,7 @@ export function WhatsappButton({
             : `Sin celular registrado para ${fullName}`
         }
         title={numero ? "Enviar WhatsApp" : "Sin celular registrado"}
-        className={`inline-flex shrink-0 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 transition-colors hover:bg-emerald-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:cursor-not-allowed disabled:border-neutral-200 disabled:bg-neutral-100 disabled:text-neutral-400 ${
+        className={`inline-flex shrink-0 items-center justify-center rounded-lg border border-success-200 bg-success-50 text-success-700 transition-colors hover:bg-success-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success-700 disabled:cursor-not-allowed disabled:border-neutral-200 disabled:bg-neutral-100 disabled:text-neutral-400 ${
           compacto ? "h-8 w-8" : "h-9 w-9"
         }`}
       >
@@ -134,7 +134,7 @@ export function WhatsappModal({
             ? { duration: 0.12 }
             : { type: "spring", stiffness: 450, damping: 32 }
         }
-        className="my-auto w-full max-w-lg rounded-2xl border border-neutral-200/80 bg-white p-6 shadow-2xl"
+        className="my-auto w-full max-w-lg rounded-card border border-neutral-200/80 bg-white p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-semibold text-brand-navy">Enviar WhatsApp</h2>
@@ -153,7 +153,7 @@ export function WhatsappModal({
           />
         </label>
 
-        <p className="mt-2 text-xs text-amber-700">
+        <p className="mt-2 text-xs text-warning-700">
           No compartas diagnósticos, exámenes ni datos clínicos por WhatsApp.
         </p>
         <p className="mt-1 text-xs text-neutral-500">
@@ -170,7 +170,7 @@ export function WhatsappModal({
             target="_blank"
             rel="noopener noreferrer"
             onClick={registrarContacto}
-            className="inline-flex min-h-9 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+            className="inline-flex min-h-9 items-center justify-center gap-2 rounded-lg bg-success-600 px-3 text-sm font-semibold text-white transition-colors hover:bg-success-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success-700"
           >
             <WhatsappIcon className="h-4 w-4" />
             Abrir WhatsApp

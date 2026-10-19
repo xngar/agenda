@@ -186,7 +186,7 @@ export function TimeOffEditor({
     <div className="space-y-4">
       {error ? <ErrorNotice message={error} /> : null}
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-4" aria-label="Nuevo bloqueo">
+      <section className="rounded-card border border-neutral-200 bg-white p-4" aria-label="Nuevo bloqueo">
         <h2 className="font-semibold text-neutral-900">Bloquear un rango</h2>
 
         <div className="mt-3 grid gap-3 md:grid-cols-4">
@@ -219,16 +219,16 @@ export function TimeOffEditor({
         ) : null}
 
         {conflictos ? (
-          <div className="mt-3 rounded-card border border-amber-300 bg-amber-50 p-4">
-            <p className="font-semibold text-amber-900">
+          <div className="mt-3 rounded-card border border-warning-200 bg-warning-50 p-4">
+            <p className="font-semibold text-warning-700">
               {conflictos.length} cita{conflictos.length === 1 ? "" : "s"} quedaría
               {conflictos.length === 1 ? "" : "n"} dentro de ese rango
             </p>
-            <p className="mt-1 text-sm text-amber-800">
+            <p className="mt-1 text-sm text-warning-700">
               Bloquear no las cancela ni las mueve: siguen agendadas, pero esa hora deja de
               ofrecerse a reservas nuevas.
             </p>
-            <ul className="mt-3 max-h-40 overflow-y-auto text-sm text-amber-900">
+            <ul className="mt-3 max-h-40 overflow-y-auto text-sm text-warning-700">
               {conflictos.map((c) => (
                 <li key={c.id}>
                   {c.dia.split("-").reverse().join("/")} {c.hora}
@@ -266,7 +266,7 @@ export function TimeOffEditor({
             {blocks.map((b) => (
               <li
                 key={b.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-neutral-200 bg-white px-4 py-3"
               >
                 <div>
                   <p className="font-medium text-neutral-900">

@@ -65,7 +65,7 @@ describe("NavLinks", () => {
     });
 
     const links = enlaces();
-    expect(links).toHaveLength(3);
+    expect(links).toHaveLength(2);
     for (const a of links) {
       expect(a.querySelector("svg")).not.toBeNull();
       expect(a.textContent?.trim().length).toBeGreaterThan(0);
@@ -82,7 +82,7 @@ describe("NavLinks", () => {
       root.render(<NavLinks isAdmin={true} />);
     });
     const links = enlaces();
-    expect(links).toHaveLength(5);
+    expect(links).toHaveLength(4);
     expect(container.textContent).toContain("Servicios");
     expect(triggerDisponibilidad().textContent).toContain("Disponibilidad");
   });

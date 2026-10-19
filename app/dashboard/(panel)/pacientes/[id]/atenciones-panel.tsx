@@ -303,7 +303,7 @@ const SIGNOS_VITALES = [
       {error ? <ErrorNotice message={error} /> : null}
       {alertasTratamiento?.trim() ? (
         <div role="alert">
-          <p className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900">
+          <p className="rounded-xl border border-warning-200 bg-warning-50 px-3 py-2 text-sm font-medium text-warning-700">
             Alertas para el tratamiento: {alertasTratamiento.trim()}
           </p>
         </div>
@@ -333,7 +333,7 @@ const SIGNOS_VITALES = [
                   <div className="flex flex-wrap items-center gap-2">
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        e.status === "signed" ? "bg-lime-100 text-lime-800" : "bg-brand-sky-100 text-brand-navy-900"
+                        e.status === "signed" ? "bg-success-50 text-success-700" : "bg-brand-sky-100 text-brand-navy-900"
                       }`}
                     >
                       {e.status === "signed" ? "Firmada" : "Borrador"}
@@ -385,7 +385,7 @@ const SIGNOS_VITALES = [
                         <>
                           {datos.safetyConcerns === true ? (
                             <div className="sm:col-span-2" role="alert">
-                              <p className="rounded-xl border border-red-300 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800">
+                              <p className="rounded-xl border border-danger-200 bg-danger-50 px-3 py-2 text-sm font-semibold text-danger-700">
                                 Alerta: esta atención marca preocupaciones de seguridad. Revisa la
                                 evaluación de riesgo.
                               </p>

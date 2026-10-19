@@ -91,7 +91,7 @@ export function PatientsTable({
         {total === 1 ? "1 paciente" : `${total} pacientes`}
       </p>
 
-      <div className="hidden overflow-x-auto rounded-2xl border border-neutral-200 bg-white md:block">
+      <div className="hidden overflow-x-auto rounded-card border border-neutral-200 bg-white md:block">
         <table className="w-full min-w-[720px] text-sm" data-testid="patients-table">
           <caption className="sr-only">Pacientes de la organización</caption>
           <thead className="border-b border-neutral-200 bg-neutral-50">
@@ -182,7 +182,7 @@ export function PatientsTable({
                       href={`/dashboard/pacientes/${p.id}`}
                       aria-label={`Abrir ficha de ${p.full_name}`}
                       title="Abrir ficha"
-                      className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+                      className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-success-600 px-2.5 text-sm font-medium text-white transition-colors hover:bg-success-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success-700"
                     >
                       Ver ficha
                       <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
@@ -199,7 +199,7 @@ export function PatientsTable({
 
       <ul className="space-y-2 md:hidden" data-testid="patients-cards">
         {patients.map((p) => (
-          <li key={p.id} className="rounded-2xl border border-neutral-200 bg-white p-4">
+          <li key={p.id} className="rounded-card border border-neutral-200 bg-white p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <Link
@@ -247,7 +247,7 @@ export function PatientsTable({
               <Link
                 href={`/dashboard/pacientes/${p.id}`}
                 aria-label={`Abrir ficha de ${p.full_name}`}
-                className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+                className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-success-600 px-2.5 text-sm font-medium text-white transition-colors hover:bg-success-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success-700"
               >
                 Ver ficha
                 <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">

@@ -72,7 +72,7 @@ export function RotarPasswordForm() {
       />
       <form onSubmit={onSubmit} className="space-y-4 px-5 py-5">
         {error ? (
-          <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">
+          <p role="alert" className="rounded-lg bg-danger-50 px-4 py-3 text-sm text-danger-700">
             {error}
           </p>
         ) : null}

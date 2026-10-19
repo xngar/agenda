@@ -205,16 +205,16 @@ export function ScheduleEditor({
       {error ? <ErrorNotice message={error} /> : null}
 
       {conflictos ? (
-        <div className="rounded-card border border-amber-300 bg-amber-50 p-4">
-          <p className="font-semibold text-amber-900">
+        <div className="rounded-card border border-warning-200 bg-warning-50 p-4">
+          <p className="font-semibold text-warning-700">
             {conflictos.length} cita{conflictos.length === 1 ? "" : "s"} quedaría
             {conflictos.length === 1 ? "" : "n"} fuera del nuevo horario
           </p>
-          <p className="mt-1 text-sm text-amber-800">
+          <p className="mt-1 text-sm text-warning-700">
             Guardar no las cancela ni las mueve: siguen agendadas. Quedan fuera porque el nuevo
             horario no ofrece esa hora.
           </p>
-          <ul className="mt-3 max-h-40 overflow-y-auto text-sm text-amber-900">
+          <ul className="mt-3 max-h-40 overflow-y-auto text-sm text-warning-700">
             {conflictos.map((c) => (
               <li key={c.id}>
                 {c.dia.split("-").reverse().join("/")} {c.hora}
@@ -255,7 +255,7 @@ export function ScheduleEditor({
           return (
             <section
               key={d}
-              className="rounded-2xl border border-neutral-200 bg-white p-4"
+              className="rounded-card border border-neutral-200 bg-white p-4"
               aria-label={`Horario de ${nombre}`}
             >
               <div className="flex items-center justify-between gap-2">

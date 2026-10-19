@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import { addDaysToKey, weekRange } from "@/lib/dates";
@@ -30,19 +31,19 @@ export function WeekNav({ dayKey, today }: { dayKey: string; today: string }) {
   }
 
   return (
-    <div className="flex flex-wrap items-end gap-2">
-      <button
-        type="button"
-        onClick={() => irA(addDaysToKey(semana.from, -7))}
-        disabled={pending}
-        className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm transition-all duration-150 ease-out hover:border-brand-navy hover:text-brand-navy hover:shadow-xs active:scale-95 disabled:opacity-60 cursor-pointer"
-        aria-label="Semana anterior"
-      >
-        ←
-      </button>
+    <div className="flex flex-wrap items-center gap-2">
+      <div className="inline-flex items-center gap-1 rounded-xl border border-neutral-200 bg-white p-1 shadow-2xs">
+        <button
+          type="button"
+          onClick={() => irA(addDaysToKey(semana.from, -7))}
+          disabled={pending}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-brand-navy disabled:pointer-events-none disabled:opacity-50"
+          aria-label="Semana anterior"
+        >
+          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+        </button>
 
-      <div>
-        <label htmlFor="filtro-dia" className="mb-1 block text-xs font-medium text-neutral-600">
+        <label htmlFor="filtro-dia" className="sr-only">
           Semana del
         </label>
         <input
@@ -53,26 +54,26 @@ export function WeekNav({ dayKey, today }: { dayKey: string; today: string }) {
           onChange={(e) => {
             if (e.target.value) irA(e.target.value);
           }}
-          className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm transition-all duration-150 ease-out hover:border-brand-navy focus:border-brand-navy focus:ring-2 focus:ring-brand-sky/30 disabled:opacity-60"
+          className="h-9 rounded-lg border-0 bg-transparent px-2 text-sm text-neutral-800 transition-colors hover:text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-sky/40 disabled:opacity-50"
         />
-      </div>
 
-      <button
-        type="button"
-        onClick={() => irA(addDaysToKey(semana.from, 7))}
-        disabled={pending}
-        className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm transition-all duration-150 ease-out hover:border-brand-navy hover:text-brand-navy hover:shadow-xs active:scale-95 disabled:opacity-60 cursor-pointer"
-        aria-label="Semana siguiente"
-      >
-        →
-      </button>
+        <button
+          type="button"
+          onClick={() => irA(addDaysToKey(semana.from, 7))}
+          disabled={pending}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-brand-navy disabled:pointer-events-none disabled:opacity-50"
+          aria-label="Semana siguiente"
+        >
+          <ChevronRight className="h-4 w-4" aria-hidden="true" />
+        </button>
+      </div>
 
       {!esEstaSemana ? (
         <button
           type="button"
           onClick={() => irA(today)}
           disabled={pending}
-          className="rounded-lg border border-brand-navy bg-white px-3 py-2 text-sm font-semibold text-brand-navy transition-all duration-150 ease-out hover:bg-brand-navy hover:text-white hover:shadow-xs active:scale-95 disabled:opacity-60 cursor-pointer"
+          className="inline-flex min-h-11 items-center rounded-xl border border-brand-navy bg-white px-3 text-sm font-semibold text-brand-navy transition-all duration-150 ease-out hover:bg-brand-navy hover:text-white hover:shadow-xs active:scale-95 disabled:pointer-events-none disabled:opacity-50"
         >
           Hoy
         </button>

@@ -16,7 +16,7 @@ export const RIEL: Record<string, string> = {
   pending: "border-l-brand-sky-400 bg-brand-sky-50",
   cancelled: "border-l-neutral-300 bg-white",
   completed: "border-l-brand-navy-300 bg-white",
-  no_show: "border-l-red-400 bg-white",
+  no_show: "border-l-danger-600 bg-white",
 };
 
 const PUNTO: Record<string, string> = {
@@ -24,7 +24,7 @@ const PUNTO: Record<string, string> = {
   pending: "bg-brand-sky-400",
   cancelled: "bg-neutral-300",
   completed: "bg-brand-navy-300",
-  no_show: "bg-red-400",
+  no_show: "bg-danger-600",
 };
 
 export function Accion({
@@ -47,13 +47,13 @@ export function Accion({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-lg border font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+      className={`rounded-lg border font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
         compacto ? "px-2.5 py-1 text-[13px]" : "px-3 py-1.5 text-sm"
       } ${
         destacado
           ? "border-brand-navy bg-brand-navy text-white hover:bg-brand-navy/90"
           : tono === "peligro"
-            ? "border-red-300 text-red-700 hover:bg-red-50"
+            ? "border-danger-200 text-danger-700 hover:bg-danger-50"
             : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"
       }`}
     >
@@ -82,10 +82,10 @@ export function AgendaTable({
   orgName: string;
 }) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-neutral-200 bg-white">
+    <div className="overflow-x-auto rounded-card border border-neutral-200 bg-white">
       <table className="w-full min-w-[760px] text-sm" data-testid="agenda-table">
         <caption className="sr-only">Citas del día</caption>
-        <thead className="border-b border-neutral-200 bg-neutral-50">
+        <thead className="border-b border-neutral-200 bg-neutral-50/80">
           <tr>
             <th
               scope="col"
@@ -128,7 +128,7 @@ export function AgendaTable({
             return (
               <tr
                 key={cita.id}
-                className={`transition-colors hover:bg-brand-sky-50 ${cancelada ? "opacity-70" : ""}`}
+                className={`transition-colors hover:bg-brand-sky-50/60 ${cancelada ? "opacity-70" : ""}`}
               >
                 <td className="whitespace-nowrap px-4 py-3">
                   <span className="flex items-center gap-2">

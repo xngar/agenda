@@ -17,7 +17,7 @@ export function PatientsSkeleton() {
       <div aria-hidden="true" className="space-y-3">
         <Skeleton className="h-4 w-24" />
 
-        <div className="hidden overflow-x-auto rounded-2xl border border-neutral-200 bg-white md:block">
+        <div className="hidden overflow-x-auto rounded-card border border-neutral-200 bg-white md:block">
           <table className="w-full min-w-[720px] text-sm">
             <thead className="border-b border-neutral-200 bg-neutral-50">
               <tr>
@@ -45,7 +45,7 @@ export function PatientsSkeleton() {
 
         <ul className="space-y-2 md:hidden">
           {Array.from({ length: FILAS }, (_, i) => (
-            <li key={i} className="rounded-2xl border border-neutral-200 bg-white p-4">
+            <li key={i} className="rounded-card border border-neutral-200 bg-white p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 space-y-2">
                   <Skeleton className="h-4 w-40" />

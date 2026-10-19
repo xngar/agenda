@@ -21,7 +21,7 @@ const ESTADOS: { value: TreatmentPlanStatus; label: string }[] = [
 function estadoBadge(status: TreatmentPlanStatus) {
   const map: Record<TreatmentPlanStatus, string> = {
     pendiente: "bg-neutral-200 text-neutral-700",
-    aceptado: "bg-lime-100 text-lime-800",
+    aceptado: "bg-success-50 text-success-700",
     en_curso: "bg-brand-sky-100 text-brand-navy-900",
     realizado: "bg-brand-navy text-white",
     rechazado: "bg-neutral-200 text-neutral-600 line-through",
@@ -465,7 +465,7 @@ export function PlanPanel({
               </div>
               <div>
                 <dt className="text-xs font-medium uppercase tracking-wide text-neutral-500">Pagado</dt>
-                <dd className="mt-0.5 text-sm font-semibold tabular-nums text-lime-800">{fmt(totalPagado)}</dd>
+                <dd className="mt-0.5 text-sm font-semibold tabular-nums text-success-700">{fmt(totalPagado)}</dd>
               </div>
               <div>
                 <dt className="text-xs font-medium uppercase tracking-wide text-neutral-500">Saldo</dt>
@@ -634,7 +634,7 @@ export function PlanPanel({
                       <button
                         type="button"
                         onClick={() => setPorEliminarCat(c)}
-                        className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50"
+                        className="rounded-lg border border-danger-200 px-3 py-1.5 text-sm font-medium text-danger-700 hover:bg-danger-50"
                       >
                         Eliminar
                       </button>
@@ -663,7 +663,7 @@ export function PlanPanel({
               if (!eliminandoCat) setPorEliminarCat(null);
             }}
           />
-          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-card">
+          <div className="relative w-full max-w-md rounded-card bg-white p-6 shadow-card">
             <h2 id="dialog-eliminar-catalogo-titulo" className="text-lg font-bold text-brand-navy">
               ¿Eliminar {porEliminarCat.name}?
             </h2>

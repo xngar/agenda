@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { StatusBadge } from "@/components/ui";
+import { cn } from "cn";
+import { buttonClasses, StatusBadge } from "@/components/ui";
+
+const dangerGhost = cn(
+  buttonClasses("ghost", "sm"),
+  "border-danger-200 text-danger-700 hover:bg-danger-50",
+);
 
 export interface TeamMember {
   id: string;
@@ -68,7 +74,7 @@ export function TeamList({ initial, selfId }: { initial: TeamMember[]; selfId: s
           role="tab"
           aria-selected={tab === "activos"}
           onClick={() => setTab("activos")}
-          className={`flex-1 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+          className={`inline-flex min-h-9 flex-1 items-center justify-center rounded-lg px-3 text-sm font-medium transition-colors ${
             tab === "activos"
               ? "bg-white text-brand-navy shadow-sm"
               : "text-neutral-600 hover:text-neutral-900"
@@ -81,7 +87,7 @@ export function TeamList({ initial, selfId }: { initial: TeamMember[]; selfId: s
           role="tab"
           aria-selected={tab === "desactivados"}
           onClick={() => setTab("desactivados")}
-          className={`flex-1 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+          className={`inline-flex min-h-9 flex-1 items-center justify-center rounded-lg px-3 text-sm font-medium transition-colors ${
             tab === "desactivados"
               ? "bg-white text-brand-navy shadow-sm"
               : "text-neutral-600 hover:text-neutral-900"
@@ -93,7 +99,7 @@ export function TeamList({ initial, selfId }: { initial: TeamMember[]; selfId: s
 
       <ul className="space-y-2">
         {visibles.length === 0 ? (
-          <li className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-6 text-center text-sm text-neutral-500">
+          <li className="rounded-card border border-dashed border-neutral-300 bg-neutral-50 p-6 text-center text-sm text-neutral-500">
             {tab === "activos"
               ? "No hay profesionales activos."
               : "No hay profesionales desactivados."}
@@ -106,7 +112,7 @@ export function TeamList({ initial, selfId }: { initial: TeamMember[]; selfId: s
           return (
             <li
               key={d.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white p-4"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-neutral-200 bg-white p-4"
             >
               <div className="min-w-0">
                 <p className="font-semibold text-neutral-900">
@@ -147,11 +153,7 @@ export function TeamList({ initial, selfId }: { initial: TeamMember[]; selfId: s
                     type="button"
                     onClick={() => cambiar(d.id, !d.active)}
                     disabled={ocupado}
-                    className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                      d.active
-                        ? "border-red-300 text-red-700 hover:bg-red-50"
-                        : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"
-                    }`}
+                    className={d.active ? dangerGhost : buttonClasses("ghost", "sm")}
                   >
                     {d.active ? "Desactivar" : "Activar"}
                   </button>

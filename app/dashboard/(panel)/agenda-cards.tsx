@@ -39,7 +39,7 @@ export function AgendaCards({
           <li
             key={cita.id}
             style={{ animationDelay: `${Math.min(i, 8) * 24}ms` }}
-            className={`anim-month-cell flex gap-3 rounded-2xl border border-l-[4px] p-4 transition-shadow hover:shadow-card sm:gap-4 ${
+            className={`anim-month-cell flex gap-3 rounded-card border border-neutral-200 border-l-[4px] p-4 transition-shadow hover:shadow-card sm:gap-4 ${
               RIEL[cita.status] ?? "border-l-neutral-300 bg-white"
             } ${cancelada ? "opacity-70" : ""}`}
           >
