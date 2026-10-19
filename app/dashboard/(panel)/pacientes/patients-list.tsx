@@ -9,6 +9,7 @@ export type PatientSort = "full_name" | "rut" | "birth_date" | "patient_status";
 
 interface PatientsListProps {
   orgId: string;
+  orgName: string;
   clinical: boolean;
   q: string;
   status: string | null;
@@ -24,6 +25,7 @@ interface PatientsListProps {
  */
 export async function PatientsList({
   orgId,
+  orgName,
   clinical,
   q,
   status,
@@ -123,6 +125,7 @@ export async function PatientsList({
       page={page}
       totalPages={totalPages}
       params={{ q, status: status ?? "", sort, dir }}
+      orgName={orgName}
     />
   );
 }

@@ -7,6 +7,7 @@ export const AUDIT_ACCIONES: Record<string, string> = {
   sign: "Firma",
   export: "Exportación",
   view: "Lectura",
+  contact: "Contacto",
 };
 
 export const AUDIT_ENTIDADES: Record<string, string> = {
@@ -126,6 +127,11 @@ export function detalleAuditoria(entry: {
   }
 
   if (entity === "patients") {
+    if (action === "contact") {
+      return s.channel === "whatsapp"
+        ? "Inició contacto por WhatsApp"
+        : "Inició contacto con el paciente";
+    }
     if (action === "insert") return `Creó la ficha de ${texto(s.full_name, 60)}`;
     if (action === "delete") return "Eliminó la ficha";
     return "Actualizó los datos de la ficha";

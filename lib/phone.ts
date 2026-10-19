@@ -46,3 +46,16 @@ export function normalizePhone(input: string): string {
 export function isValidPhone(input: string): boolean {
   return /^\d{8,9}$/.test(localDigits(input));
 }
+
+/**
+ * Número listo para un enlace `wa.me` ("569XXXXXXXX") o `null` si no es un
+ * celular chileno. Los fijos y los números incompletos no tienen WhatsApp, así
+ * que el enlace no debe ofrecerse.
+ */
+export function whatsappPhone(input: string | null | undefined): string | null {
+  if (!input) return null;
+  let digits = input.replace(/\D/g, "");
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  const local = digits.startsWith("56") ? digits.slice(2) : digits;
+  return /^9\d{8}$/.test(local) ? `56${local}` : null;
+}

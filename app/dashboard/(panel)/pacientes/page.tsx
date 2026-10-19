@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { getDoctorSession, isClinical } from "@/lib/auth";
+import { getDoctorSession, getOrgSettings, isClinical } from "@/lib/auth";
 import { Card } from "@/components/ui";
 import { PatientsSearch } from "./patients-search";
 import { NewPatientButton } from "./patient-form";
@@ -17,6 +17,7 @@ export default async function PacientesPage({
   const session = await getDoctorSession();
   if (!session) redirect("/dashboard/login");
   const clinical = isClinical(session);
+  const org = await getOrgSettings(session.orgId);
 
   const params = await searchParams;
   const q = (params.q ?? "").trim();
@@ -51,6 +52,7 @@ export default async function PacientesPage({
       <Suspense fallback={<PatientsSkeleton />}>
         <PatientsList
           orgId={session.orgId}
+          orgName={org.name}
           clinical={clinical}
           q={q}
           status={status}

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { formatPhonePartial, isValidPhone, normalizePhone } from "@/lib/phone";
+import {
+  formatPhonePartial,
+  isValidPhone,
+  normalizePhone,
+  whatsappPhone,
+} from "@/lib/phone";
 
 /**
  * Regresiones del teléfono del flujo de reserva.
@@ -55,5 +60,23 @@ describe("isValidPhone", () => {
     expect(isValidPhone("")).toBe(false);
     expect(isValidPhone("+56 9")).toBe(false);
     expect(isValidPhone("1234567")).toBe(false);
+  });
+});
+
+describe("whatsappPhone", () => {
+  it("deja el formato que espera wa.me", () => {
+    expect(whatsappPhone("+56 9 1234 5678")).toBe("56912345678");
+    expect(whatsappPhone("+56912345678")).toBe("56912345678");
+    expect(whatsappPhone("912345678")).toBe("56912345678");
+    expect(whatsappPhone("0056912345678")).toBe("56912345678");
+  });
+
+  it("devuelve null para fijos, incompletos o vacíos", () => {
+    expect(whatsappPhone("+56 2 2345 6789")).toBeNull();
+    expect(whatsappPhone("22345678")).toBeNull();
+    expect(whatsappPhone("+56 9")).toBeNull();
+    expect(whatsappPhone("")).toBeNull();
+    expect(whatsappPhone(null)).toBeNull();
+    expect(whatsappPhone(undefined)).toBeNull();
   });
 });

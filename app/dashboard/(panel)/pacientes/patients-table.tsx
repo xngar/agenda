@@ -1,6 +1,7 @@
 import type { AriaAttributes, ReactNode } from "react";
 import Link from "next/link";
 import { formatRut } from "@/lib/rut";
+import { WhatsappButton } from "./whatsapp-button";
 
 export interface ListPatient {
   id: string;
@@ -75,12 +76,14 @@ export function PatientsTable({
   page,
   totalPages,
   params,
+  orgName,
 }: {
   patients: ListPatient[];
   total: number;
   page: number;
   totalPages: number;
   params: ListParams;
+  orgName: string;
 }) {
   return (
     <div className="space-y-3">
@@ -129,7 +132,7 @@ export function PatientsTable({
                 );
               })}
               <th scope="col" className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                Ficha paciente
+                Acciones
               </th>
             </tr>
           </thead>
@@ -167,18 +170,26 @@ export function PatientsTable({
                   )}
                 </td>
                 <td className="whitespace-nowrap px-4 py-3">{statusPill(p.patient_status)}</td>
-                <td className="px-4 py-3 text-right">
-                  <Link
-                    href={`/dashboard/pacientes/${p.id}`}
-                    aria-label={`Abrir ficha de ${p.full_name}`}
-                    title="Abrir ficha"
-                    className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
-                  >
-                    Ver ficha
-                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
-                      <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </Link>
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-end gap-2">
+                    <WhatsappButton
+                      patientId={p.id}
+                      fullName={p.full_name}
+                      phone={p.phone}
+                      orgName={orgName}
+                    />
+                    <Link
+                      href={`/dashboard/pacientes/${p.id}`}
+                      aria-label={`Abrir ficha de ${p.full_name}`}
+                      title="Abrir ficha"
+                      className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+                    >
+                      Ver ficha
+                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+                        <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </Link>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -226,16 +237,24 @@ export function PatientsTable({
               </div>
             </dl>
 
-            <Link
-              href={`/dashboard/pacientes/${p.id}`}
-              aria-label={`Abrir ficha de ${p.full_name}`}
-              className="mt-3 inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
-            >
-              Ver ficha
-              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
-                <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </Link>
+            <div className="mt-3 flex items-center gap-2">
+              <WhatsappButton
+                patientId={p.id}
+                fullName={p.full_name}
+                phone={p.phone}
+                orgName={orgName}
+              />
+              <Link
+                href={`/dashboard/pacientes/${p.id}`}
+                aria-label={`Abrir ficha de ${p.full_name}`}
+                className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+              >
+                Ver ficha
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+                  <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </Link>
+            </div>
           </li>
         ))}
       </ul>
