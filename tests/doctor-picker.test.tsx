@@ -104,4 +104,25 @@ describe("DoctorPicker (shadcn)", () => {
     });
     expect(container.querySelector("#filtro-doctor")).toBeNull();
   });
+
+  it("Todo el equipo navega con doctor=all", async () => {
+    act(() => {
+      root.render(
+        <DoctorPicker current={null} canFilter doctors={DOCTORES} />,
+      );
+    });
+    act(() => {
+      trigger().dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const todas = [...document.querySelectorAll('[role="option"]')].filter(
+      (el) => (el as HTMLElement).dataset.disabled !== "true" && el.textContent?.includes("Todo el equipo"),
+    );
+    expect(todas.length).toBeGreaterThan(0);
+
+    await act(async () => {
+      (todas[0] as HTMLElement).dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(push).toHaveBeenCalledWith("/dashboard?doctor=all");
+  });
 });

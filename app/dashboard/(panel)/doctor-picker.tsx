@@ -62,7 +62,9 @@ export function DoctorPicker({
 
   function irA(doctorId: string) {
     const params = new URLSearchParams(searchParams.toString());
-    if (doctorId === "all") params.delete("doctor");
+    // "all" se hace explícito en la URL: sin parámetro la agenda parte en la
+    // agenda propia del admin/profesional, no en la de todo el equipo.
+    if (doctorId === "all") params.set("doctor", "all");
     else params.set("doctor", doctorId);
 
     setAbierto(false);

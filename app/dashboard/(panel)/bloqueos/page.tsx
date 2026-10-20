@@ -9,6 +9,7 @@ import { DoctorPicker } from "../doctor-picker";
 import { TimeOffEditor, type BlockedRange } from "./time-off-editor";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { BackLink } from "@/components/dashboard/back-link";
+import { EmptyState } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -32,36 +33,44 @@ export default async function BloqueosPage({ searchParams }: PageProps) {
   const { doctor: doctorParam } = await searchParams;
 
   const puedeGestionar = session.isAdmin || session.role === "reception";
+  const esRecepcion = !session.isAdmin && session.role === "reception";
 
   const settings = await getOrgSettings(session.orgId);
   const supabase = await supabaseServer();
   const team = puedeGestionar ? await getTeam() : [];
 
-  // Recepción sin ?doctor=: primer profesional activo. Profesional común: lo suyo.
+  // Admin/profesional: lo propio por defecto (`?doctor=<id>` muestra a otro).
+  // La recepción no tiene bloqueos propios: debe elegir un profesional.
   const doctorId =
     puedeGestionar && doctorParam && doctorParam !== "all"
       ? doctorParam
-      : puedeGestionar
-        ? (team[0]?.id ?? session.id)
+      : esRecepcion
+        ? null
         : session.id;
 
-  const { data: bloques } = await supabase
-    .from("time_off")
-    .select("id, during, reason")
-    .eq("doctor_id", doctorId)
-    .order("during");
+  const bloquesRes = doctorId
+    ? await supabase
+        .from("time_off")
+        .select("id, during, reason")
+        .eq("doctor_id", doctorId)
+        .order("during")
+    : { data: [] };
 
-  const list: BlockedRange[] = (bloques ?? []).map((row) => {
-    const { start, end } = parseAppointmentRange(row.during as unknown as string);
+  const list: BlockedRange[] = ((bloquesRes.data ?? []) as {
+    id: string;
+    during: string;
+    reason: string | null;
+  }[]).map((row) => {
+    const { start, end } = parseAppointmentRange(row.during);
     const diaInicio = dateKey(start, settings.timezone);
     const diaFin = dateKey(end, settings.timezone);
     return {
-      id: row.id as string,
+      id: row.id,
       dia: diaInicio,
       desde: timeKey(start, settings.timezone),
       hasta: timeKey(end, settings.timezone),
       cruzaMedianoche: diaFin !== diaInicio,
-      motivos: row.reason as string | null,
+      motivos: row.reason,
     };
   });
 
@@ -76,7 +85,7 @@ export default async function BloqueosPage({ searchParams }: PageProps) {
           <>
             Rangos en los que{" "}
             <span className="font-medium text-neutral-800">
-              {seleccionado?.full_name ?? session.full_name}
+              {seleccionado?.full_name ?? (doctorId ? session.full_name : "el profesional que elijas")}
             </span>{" "}
             no atiende: el asistente deja de ofrecer esas horas.
           </>
@@ -94,12 +103,19 @@ export default async function BloqueosPage({ searchParams }: PageProps) {
         }
       />
 
-      <TimeOffEditor
-        key={doctorId}
-        doctorId={doctorId}
-        initial={list}
-        timezone={settings.timezone}
-      />
+      {doctorId ? (
+        <TimeOffEditor
+          key={doctorId}
+          doctorId={doctorId}
+          initial={list}
+          timezone={settings.timezone}
+        />
+      ) : (
+        <EmptyState
+          title="Elige un profesional"
+          description="Selecciona de quién quieres ver los bloqueos usando el selector superior."
+        />
+      )}
 
       <BackLink />
     </div>

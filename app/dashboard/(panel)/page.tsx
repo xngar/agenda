@@ -43,9 +43,10 @@ interface PageProps {
  * Agenda del panel.
  *
  * Tres vistas sobre la misma agenda: día (`?date=`), semana
- * (`?view=semana&date=<lunes>`) y mes (`?view=mes&month=`). El admin y la
- * recepción pueden ver la de todo el equipo con `?doctor=<id>`; cada
- * profesional ve siempre la suya. La consulta pasa por el cliente de sesión
+ * (`?view=semana&date=<lunes>`) y mes (`?view=mes&month=`). El admin y cada
+ * profesional parten con su propia agenda (`?doctor=all` muestra la de todo
+ * el equipo); la recepción parte en la vista de equipo. Cada profesional ve
+ * siempre lo suyo. La consulta pasa por el cliente de sesión
  * (anon + RLS), no por el service role: así la vista no depende de que el
  * filtro esté bien escrito en el código.
  */
@@ -56,12 +57,30 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const { date, doctor, view, month } = await searchParams;
   const dayKey = isValidDayKey(date) ? date : todayKey();
   /**
-   * Admin y recepción ven la agenda de todo el equipo: filtran por
+   * Admin y recepción pueden ver la agenda de todo el equipo: filtran por
    * profesional, cargan el selector y gestionan cualquier cita de la
    * organización (la recepción cubre al profesional que no está).
    */
   const veTodoElEquipo = session.isAdmin || session.role === "reception";
-  const onlyDoctorId = veTodoElEquipo && doctor && doctor !== "all" ? doctor : null;
+  const esRecepcion = session.role === "reception" && !session.isAdmin;
+
+  /**
+   * El admin y cada profesional parten viendo lo suyo; la recepción parte con
+   * todo el equipo. `?doctor=<id>` cambia a otro profesional y `?doctor=all`
+   * vuelve a la vista de equipo.
+   */
+  const filtroPorDefecto = esRecepcion ? null : session.id;
+  const onlyDoctorId =
+    !veTodoElEquipo
+      ? session.id
+      : doctor === "all"
+        ? null
+        : doctor && doctor !== "all"
+          ? doctor
+          : filtroPorDefecto;
+
+  /** Selección cruda (incluye "all") para que la navegación la conserve. */
+  const filtroDoctor = doctor === "all" ? "all" : onlyDoctorId;
   const vista: VistaAgenda = view === "mes" ? "mes" : view === "semana" ? "semana" : "dia";
   const verMes = vista === "mes";
   const mesKey = isValidMonthKey(month) ? month : dayKey.slice(0, 7);
@@ -207,7 +226,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               dayKey={dayKey}
               weekFrom={week.from}
               mesKey={mesKey}
-              doctor={onlyDoctorId}
+              doctor={filtroDoctor}
             />
             {veTodoElEquipo ? (
               <DoctorPicker
@@ -241,7 +260,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           currentUserId={session.id}
           canManage={veTodoElEquipo}
           realtimeDoctorId={onlyDoctorId ?? session.id}
-          doctorFilter={onlyDoctorId}
+          doctorFilter={filtroDoctor}
           orgName={orgSettings.name}
         />
       ) : vista === "semana" ? (
