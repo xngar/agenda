@@ -22,9 +22,13 @@ import type { StaffDoctor } from "./staff-booking-button";
  */
 export function useAgendaAcciones({
   doctorId,
+  orgId,
   doctors,
 }: {
-  doctorId: string;
+  /** Profesional que escucha; null en la vista de todo el equipo. */
+  doctorId: string | null;
+  /** Organización para escuchar por org cuando no hay filtro de doctor. */
+  orgId: string;
   doctors: StaffDoctor[];
 }) {
   const router = useRouter();
@@ -56,7 +60,7 @@ export function useAgendaAcciones({
   }, [router]);
 
   const { connected, error: realtimeError } = useRealtimeNotifications(
-    doctorId,
+    { doctorId, orgId },
     useCallback(() => {
       setNuevas((n) => n + 1);
       programarRefresco();

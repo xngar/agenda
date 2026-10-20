@@ -17,6 +17,7 @@ import { whatsappPhone } from "@/lib/phone";
 import { useAgendaAcciones } from "./agenda-actions";
 import { StaffRescheduleModal } from "./staff-reschedule-modal";
 import { WhatsappIcon, WhatsappModal } from "@/components/dashboard/whatsapp-button";
+import { resaltarCita } from "./resaltar-cita";
 import type { StaffDoctor } from "./staff-booking-button";
 import { motion, AnimatePresence } from "motion/react";
 import { RefreshCw } from "lucide-react";
@@ -95,6 +96,7 @@ export function WeekView({
   hoy,
   timezone,
   doctorId,
+  orgId,
   doctors,
   orgName,
 }: {
@@ -103,7 +105,10 @@ export function WeekView({
   weekTo: string;
   hoy: string;
   timezone?: string;
-  doctorId: string;
+  /** Profesional de la vista; null = todo el equipo (escucha por org). */
+  doctorId: string | null;
+  /** Organización, para el canal Realtime de la vista de equipo. */
+  orgId: string;
   doctors: StaffDoctor[];
   /** Nombre de la clínica, para el mensaje de WhatsApp. */
   orgName: string;
@@ -118,7 +123,7 @@ export function WeekView({
     refrescarAhora,
     connected,
     realtimeError,
-  } = useAgendaAcciones({ doctorId, doctors });
+  } = useAgendaAcciones({ doctorId, orgId, doctors });
 
   const porDia = useMemo(() => appointmentsByDay(initial, timezone), [initial, timezone]);
 
@@ -373,6 +378,7 @@ export function WeekView({
                     const chip = CHIP[cita.status] ?? CHIP.confirmed;
                     const nombre = cita.patient?.full_name ?? "Paciente";
                     const cancelada = cita.status === "cancelled";
+                    const resaltar = resaltarCita(cita);
 
                     return (
                       <button
@@ -387,9 +393,13 @@ export function WeekView({
                           marginLeft: 1,
                           marginRight: 1,
                         }}
-                        className={`overflow-hidden rounded-lg border border-transparent border-l-[3px] px-1.5 py-0.5 text-left transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft hover:-translate-y-0.5 hover:shadow-lift active:scale-[0.98] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky ${
-                          chip.bg
-                        } ${chip.border} ${chip.text} ${
+                        className={`overflow-hidden rounded-lg ${
+                          resaltar ? "border-2" : "border"
+                        } border-l-[3px] px-1.5 py-0.5 text-left transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft hover:-translate-y-0.5 hover:shadow-lift active:scale-[0.98] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky ${
+                          resaltar
+                            ? `${resaltar.borde} ${resaltar.fondo} ${resaltar.texto}`
+                            : `border-transparent ${chip.bg} ${chip.border} ${chip.text}`
+                        } ${
                           cancelada ? "opacity-60 line-through decoration-neutral-400" : ""
                         } ${pendiente?.startsWith(cita.id) ? "opacity-50" : ""}`}
                         title={`${formatTime(start)} – ${formatTime(end)} · ${nombre}${

@@ -14,6 +14,7 @@ function cita(partial: Partial<DoctorAppointment> & { id: string }): DoctorAppoi
     cancelled_by: null,
     cancel_reason: null,
     created_at: "2026-10-13T00:00:00+00:00",
+    rescheduled_at: null,
     patient: { full_name: "Paciente Base", phone: "+56911111111", email: "a@x.cl", rut: "11111111-1" },
     service: { name: "Limpieza", duration_min: 30 },
     ...partial,

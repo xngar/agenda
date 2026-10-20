@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/ui";
 import { WhatsappButton } from "@/components/dashboard/whatsapp-button";
 import type { DoctorAppointment } from "@/lib/types";
 import { Accion, RIEL } from "./agenda-table";
+import { resaltarCita } from "./resaltar-cita";
 import { reprogramable } from "./agenda-actions";
 
 /**
@@ -34,13 +35,18 @@ export function AgendaCards({
         const { start, end } = parseAppointmentRange(cita.during);
         const cancelada = cita.status === "cancelled";
         const ocupado = pendiente?.startsWith(cita.id) ?? false;
+        const resaltar = resaltarCita(cita);
 
         return (
           <li
             key={cita.id}
             style={{ animationDelay: `${Math.min(i, 8) * 24}ms` }}
-            className={`anim-month-cell flex gap-3 rounded-card border border-neutral-200 border-l-[4px] p-4 transition-shadow hover:shadow-card sm:gap-4 ${
-              RIEL[cita.status] ?? "border-l-neutral-300 bg-white"
+            className={`anim-month-cell flex gap-3 rounded-card ${
+              resaltar ? "border-2" : "border"
+            } border-l-[4px] p-4 transition-shadow hover:shadow-card sm:gap-4 ${
+              resaltar
+                ? `${resaltar.borde} ${resaltar.fondo}`
+                : `border-neutral-200 ${RIEL[cita.status] ?? "border-l-neutral-300 bg-white"}`
             } ${cancelada ? "opacity-70" : ""}`}
           >
             {/*

@@ -88,6 +88,7 @@ export interface DoctorAppointment {
   cancelled_by: "patient" | "doctor" | null;
   cancel_reason: string | null;
   created_at: string;
+  rescheduled_at: string | null;
   patient: { full_name: string; phone: string | null; email: string; rut: string | null } | null;
   service: { name: string; duration_min: number } | null;
 }

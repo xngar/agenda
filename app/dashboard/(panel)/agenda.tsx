@@ -14,7 +14,10 @@ import { DUR, EASE } from "@/lib/motion";
 interface Props {
   initial: DoctorAppointment[];
   dayKey: string;
-  doctorId: string;
+  /** Profesional de la vista; null = todo el equipo (escucha por org). */
+  doctorId: string | null;
+  /** Organización, para el canal Realtime de la vista de equipo. */
+  orgId: string;
   /** Días cercanos que sí tienen citas, para explicar un día vacío. */
   diasConCitas: { day: string; total: number; pendientes: number }[];
   /** Profesionales entre los que el rol puede elegir al reagendar. */
@@ -37,6 +40,7 @@ export function Agenda({
   initial,
   dayKey,
   doctorId,
+  orgId,
   diasConCitas,
   doctors,
   orgName,
@@ -55,7 +59,7 @@ export function Agenda({
     connected,
     realtimeError,
     recientes,
-  } = useAgendaAcciones({ doctorId, doctors });
+  } = useAgendaAcciones({ doctorId, orgId, doctors });
 
   const conteos = useMemo(() => {
     let activas = 0;

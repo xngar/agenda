@@ -259,7 +259,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           timezone={tzClinica}
           currentUserId={session.id}
           canManage={veTodoElEquipo}
-          realtimeDoctorId={onlyDoctorId ?? session.id}
+          realtimeDoctorId={onlyDoctorId}
+          orgId={session.orgId}
           doctorFilter={filtroDoctor}
           orgName={orgSettings.name}
         />
@@ -271,7 +272,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           weekTo={week.to}
           hoy={todayKey(tzClinica)}
           timezone={tzClinica}
-          doctorId={onlyDoctorId ?? session.id}
+          doctorId={onlyDoctorId}
+          orgId={session.orgId}
           doctors={bookingDoctors}
           orgName={orgSettings.name}
         />
@@ -279,7 +281,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         <Agenda
           initial={appointments}
           dayKey={dayKey}
-          doctorId={onlyDoctorId ?? session.id}
+          doctorId={onlyDoctorId}
+          orgId={session.orgId}
           diasConCitas={diasConCitas}
           doctors={bookingDoctors}
           orgName={orgSettings.name}

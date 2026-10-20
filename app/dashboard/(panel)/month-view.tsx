@@ -17,6 +17,7 @@ import { appointmentsByDay } from "@/lib/agenda";
 import { EmptyState, StatusBadge } from "@/components/ui";
 import { WhatsappIcon, WhatsappModal } from "@/components/dashboard/whatsapp-button";
 import { useRealtimeNotifications } from "../use-realtime";
+import { resaltarCita } from "./resaltar-cita";
 import { motion, AnimatePresence } from "motion/react";
 import { RefreshCw } from "lucide-react";
 import { DUR, EASE } from "@/lib/motion";
@@ -35,8 +36,10 @@ interface Props {
   currentUserId: string;
   /** Admin o recepción: pueden actuar sobre cualquier cita de la organización. */
   canManage: boolean;
-  /** Profesional cuyas notificaciones se escuchan (el filtro o el dueño). */
-  realtimeDoctorId: string;
+  /** Profesional cuyas notificaciones se escuchan; null = todo el equipo. */
+  realtimeDoctorId: string | null;
+  /** Organización, para el canal Realtime de la vista de equipo. */
+  orgId: string;
   /** `?doctor=` actual, para que la navegación no lo pierda. */
   doctorFilter: string | null;
   /** Nombre de la clínica, para el mensaje de WhatsApp. */
@@ -68,6 +71,7 @@ export function MonthView({
   currentUserId,
   canManage,
   realtimeDoctorId,
+  orgId,
   doctorFilter,
   orgName,
 }: Props) {
@@ -86,7 +90,7 @@ export function MonthView({
   }, []);
 
   const { connected, error: realtimeError } = useRealtimeNotifications(
-    realtimeDoctorId,
+    { doctorId: realtimeDoctorId, orgId },
     useCallback(() => {
       setNuevas((n) => n + 1);
       if (refreshTimer.current) clearTimeout(refreshTimer.current);
@@ -352,6 +356,7 @@ export function MonthView({
                 {visibles.map(({ cita, start, end }) => {
                   const nombre = cita.patient?.full_name ?? "Paciente";
                   const canAct = puedeActuar(cita);
+                  const resalte = resaltarCita(cita);
 
                   return (
                     <button
@@ -372,7 +377,13 @@ export function MonthView({
                       onContextMenu={(e) => {
                         if (canAct) abrirMenu(e, cita);
                       }}
-                      className={`w-full truncate rounded-lg border border-neutral-200 border-l-[3px] px-1.5 py-1 text-left text-[11px] leading-tight transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft hover:-translate-y-0.5 hover:shadow-card active:scale-[0.98] cursor-pointer ${CHIP_TONO[cita.status]}`}
+                      className={`w-full truncate rounded-lg ${
+                        resalte ? "border-2" : "border"
+                      } border-l-[3px] px-1.5 py-1 text-left text-[11px] leading-tight transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft hover:-translate-y-0.5 hover:shadow-card active:scale-[0.98] cursor-pointer ${
+                        resalte ? `${resalte.borde} ${resalte.fondo}` : "border-neutral-200"
+                      } ${resalte ? resalte.texto : CHIP_TONO[cita.status]} ${
+                        resalte && cita.status === "cancelled" ? "line-through" : ""
+                      }`}
                     >
                       <span className="font-semibold tabular-nums">{formatTime(start)}</span>{" "}
                       <span className="font-medium">{nombre}</span>
