@@ -18,6 +18,7 @@ export interface TeamMember {
   role: "professional" | "reception";
   is_admin: boolean;
   active: boolean;
+  email: string | null;
 }
 
 /**
@@ -123,6 +124,9 @@ export function TeamList({ initial, selfId }: { initial: TeamMember[]; selfId: s
                 </p>
                 <p className="text-sm text-neutral-600">
                   {d.specialty ?? "Sin especialidad"}
+                </p>
+                <p className="text-xs break-all text-neutral-500">
+                  {d.email ?? "—"}
                 </p>
               </div>
 

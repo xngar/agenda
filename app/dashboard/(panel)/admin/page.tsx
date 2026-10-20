@@ -2,6 +2,7 @@ import "server-only";
 
 import { requireAdmin } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { AddMemberButton } from "./add-member-form";
 import { TeamList } from "./team-list";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -41,6 +42,27 @@ export default async function AdminPage() {
   const limit = org?.professional_limit ?? null;
   const used = (doctors ?? []).filter((d) => d.role === "professional" && d.active).length;
 
+  // El email no está en `doctors`, vive en la cuenta de acceso (auth.users).
+  const emailPorId = new Map<string, string>();
+  for (let page = 1; page <= 5; page++) {
+    const { data, error } = await supabaseAdmin().auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) break;
+    for (const user of data.users) {
+      if (user.email) emailPorId.set(user.id, user.email);
+    }
+    if (data.users.length < 1000) break;
+  }
+
+  const team = (doctors ?? []).map((d) => ({
+    id: String(d.id),
+    full_name: String(d.full_name),
+    specialty: (d.specialty as string | null) ?? null,
+    role: d.role as "professional" | "reception",
+    is_admin: Boolean(d.is_admin),
+    active: Boolean(d.active),
+    email: emailPorId.get(String(d.id)) ?? null,
+  }));
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -60,7 +82,7 @@ export default async function AdminPage() {
         }
       />
 
-      <TeamList initial={doctors ?? []} selfId={session.id} />
+      <TeamList initial={team} selfId={session.id} />
 
       <BackLink />
     </div>
