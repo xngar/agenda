@@ -128,7 +128,7 @@ export function MonthView({
       ];
     }
     return [
-      { etiqueta: "Completar", action: "completed" },
+      { etiqueta: "Atendida", action: "completed" },
       { etiqueta: "No asistió", action: "no_show" },
       { etiqueta: "Cancelar", action: "cancelled", tono: "peligro" },
       whatsapp,

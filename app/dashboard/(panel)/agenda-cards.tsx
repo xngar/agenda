@@ -110,7 +110,7 @@ export function AgendaCards({
                       />
                     ) : null}
                     <Accion
-                      etiqueta="Completar"
+                      etiqueta="Atendida"
                       onClick={() => onCambiar(cita.id, "completed")}
                       disabled={ocupado}
                     />

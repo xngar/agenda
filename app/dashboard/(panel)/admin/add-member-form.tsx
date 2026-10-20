@@ -7,6 +7,7 @@ import { Button, buttonClasses, inputClasses } from "@/components/ui";
 import { AsyncButton } from "@/components/motion/async-button";
 import { Modal } from "@/components/motion/modal";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PasswordInput } from "@/components/password-input";
 
 const labelCls = "mb-1 block text-xs font-medium text-neutral-600";
 
@@ -25,10 +26,14 @@ export function AddMemberModal({ open, onClose }: { open: boolean; onClose: () =
   const router = useRouter();
   const [enviando, setEnviando] = useState(false);
   const [rol, setRol] = useState<"professional" | "reception">("professional");
+  const [clave, setClave] = useState("");
 
   /* eslint-disable react-hooks/set-state-in-effect -- resincroniza el formulario al abrir */
   useEffect(() => {
-    if (open) setRol("professional");
+    if (open) {
+      setRol("professional");
+      setClave("");
+    }
   }, [open]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -120,14 +125,14 @@ export function AddMemberModal({ open, onClose }: { open: boolean; onClose: () =
             <label className={labelCls} htmlFor="miembro-clave">
               Contraseña temporal
             </label>
-            <input
+            <PasswordInput
               id="miembro-clave"
               name="password"
-              type="password"
               required
               minLength={8}
               autoComplete="new-password"
-              className={inputClasses}
+              value={clave}
+              onChange={setClave}
             />
             <p className="mt-1 text-xs text-neutral-500">Mínimo 8 caracteres.</p>
           </div>

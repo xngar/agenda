@@ -212,7 +212,7 @@ export function AgendaTable({
                           />
                         ) : null}
                         <Accion
-                          etiqueta="Completar"
+                          etiqueta="Atendida"
                           onClick={() => onAccion(cita.id, "completed")}
                           disabled={ocupado}
                           compacto

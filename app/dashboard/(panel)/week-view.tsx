@@ -534,7 +534,7 @@ function accionesDe(cita: DoctorAppointment): Accion[] {
   if (cita.status === "pending") {
     lista.push({ etiqueta: "Confirmar", action: "confirmed", tono: "primario" });
   }
-  lista.push({ etiqueta: "Completar", action: "completed" });
+  lista.push({ etiqueta: "Atendida", action: "completed" });
   lista.push({ etiqueta: "No asistió", action: "no_show" });
   if (cita.status === "pending" || cita.status === "confirmed") {
     lista.push({ etiqueta: "Reagendar", action: "reschedule" });
