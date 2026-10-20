@@ -65,7 +65,7 @@ describe("NavLinks", () => {
     });
 
     const links = enlaces();
-    expect(links).toHaveLength(2);
+    expect(links).toHaveLength(3);
     for (const a of links) {
       expect(a.querySelector("svg")).not.toBeNull();
       expect(a.textContent?.trim().length).toBeGreaterThan(0);
@@ -73,6 +73,8 @@ describe("NavLinks", () => {
 
     const pacientes = links.find((a) => a.getAttribute("href") === "/dashboard/pacientes");
     expect(pacientes?.getAttribute("aria-current")).toBe("page");
+    const estadisticas = links.find((a) => a.getAttribute("href") === "/dashboard/estadisticas");
+    expect(estadisticas?.textContent).toContain("Estadísticas");
     const agenda = links.find((a) => a.getAttribute("href") === "/dashboard");
     expect(agenda?.getAttribute("aria-current")).toBeNull();
   });
@@ -82,7 +84,7 @@ describe("NavLinks", () => {
       root.render(<NavLinks isAdmin={true} />);
     });
     const links = enlaces();
-    expect(links).toHaveLength(4);
+    expect(links).toHaveLength(5);
     expect(container.textContent).toContain("Servicios");
     expect(triggerDisponibilidad().textContent).toContain("Disponibilidad");
   });
