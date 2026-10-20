@@ -43,6 +43,9 @@ function Campo({ etiqueta, valor }: { etiqueta: string; valor: React.ReactNode }
 
 interface FormState {
   full_name: string;
+  rut: string;
+  phone: string;
+  email: string;
   birth_date: string;
   sex: string;
   nationality: string;
@@ -68,6 +71,9 @@ interface FormState {
 function formFrom(p: Patient): FormState {
   return {
     full_name: p.full_name ?? "",
+    rut: formatRutPartial(p.rut ?? ""),
+    phone: formatPhonePartial(p.phone ?? ""),
+    email: p.email ?? "",
     birth_date: p.birth_date?.slice(0, 10) ?? "",
     sex: p.sex ?? "",
     nationality: p.nationality ?? "",
@@ -134,6 +140,9 @@ export function ResumenPanel({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           full_name: empty(form.full_name) ?? undefined,
+          rut: empty(normalizeRut(form.rut)),
+          phone: empty(normalizePhone(form.phone)),
+          email: empty(form.email),
           birth_date: empty(form.birth_date) ?? undefined,
           sex: empty(form.sex) ?? undefined,
           nationality: empty(form.nationality) ?? undefined,
@@ -212,6 +221,45 @@ export function ResumenPanel({
                   maxLength={120}
                   value={form.full_name}
                   onChange={(e) => set("full_name", e.target.value)}
+                />
+              </Field>
+              <Field label="RUT" htmlFor="rut" required={false}>
+                <input
+                  id="rut"
+                  className={inputClasses}
+                  value={form.rut}
+                  placeholder="12.345.678-9"
+                  maxLength={16}
+                  inputMode="text"
+                  onChange={(e) => {
+                    const { value, selectionStart } = e.target;
+                    const atEnd = selectionStart === null || selectionStart === value.length;
+                    set("rut", atEnd ? formatRutPartial(value) : value);
+                  }}
+                  onBlur={() => setForm((f) => ({ ...f, rut: formatRutPartial(f.rut) }))}
+                />
+              </Field>
+              <Field label="Teléfono" htmlFor="phone" required={false}>
+                <input
+                  id="phone"
+                  className={inputClasses}
+                  value={form.phone}
+                  placeholder="+56 9 1234 5678"
+                  inputMode="tel"
+                  onChange={(e) => set("phone", formatPhonePartial(e.target.value))}
+                />
+                <span className="mt-1 block text-xs text-neutral-500">
+                  Escribe sólo el número: el +56 ya está puesto.
+                </span>
+              </Field>
+              <Field label="Correo" htmlFor="email" required={false}>
+                <input
+                  id="email"
+                  className={inputClasses}
+                  type="email"
+                  value={form.email}
+                  placeholder="paciente@correo.cl"
+                  onChange={(e) => set("email", e.target.value)}
                 />
               </Field>
               <Field label="Fecha de nacimiento" htmlFor="birth_date" required={false}>

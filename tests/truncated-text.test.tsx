@@ -67,6 +67,31 @@ describe("TruncatedText", () => {
     expect(span.getAttribute("tabindex")).toBe("0");
   });
 
+  it("muestra el texto acortado y el original en el tooltip", () => {
+    vi.useFakeTimers();
+    medir(100, 200);
+    const completo = "informe_radiografia_panoramica_2026_version_final.pdf";
+    const visible = "informe_radiografia…final.pdf";
+
+    act(() => {
+      root.render(<TruncatedText text={visible} fullText={completo} className="max-w-52" />);
+    });
+    const span = container.querySelector("span") as HTMLSpanElement;
+
+    expect(span.textContent).toBe(visible);
+    expect(span.getAttribute("tabindex")).toBe("0");
+
+    act(() => {
+      span.focus();
+    });
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+
+    const contenido = document.querySelector('[data-slot="tooltip-content"]');
+    expect(contenido?.textContent).toBe(completo);
+  });
+
   it("abre el tooltip con el texto completo al enfocar", () => {
     vi.useFakeTimers();
     medir(300, 200);

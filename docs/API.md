@@ -220,6 +220,7 @@ Actualizar/eliminar paciente (según permisos clínicos + RLS).
 
 ### Attachments
 - `GET /api/ficha/attachments/[id]/url` - URL para adjunto
+- `DELETE /api/ficha/attachments/[id]` - eliminar adjunto (admin o médico dueño del paciente); borra el objeto del bucket y la fila queda auditada
 
 ### Audit
 - `GET /api/ficha/audit` - logs auditoría (lectura restringida según permisos; tabla `audit_log` con acciones insert/update/delete/sign/export/view)

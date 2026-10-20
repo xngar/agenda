@@ -215,7 +215,7 @@ export function FichaTabs({
       ) : active === "recetas" ? (
         <RecetasPanel patientId={patient.id} />
       ) : active === "adjuntos" ? (
-        <AdjuntosPanel patientId={patient.id} orgId={orgId} />
+        <AdjuntosPanel patientId={patient.id} orgId={orgId} puedeEliminar={canEdit} />
       ) : active === "auditoria" ? (
         <AuditoriaPanel patientId={patient.id} isAdmin={isAdmin} puedeExportar={canEdit} />
       ) : null}
