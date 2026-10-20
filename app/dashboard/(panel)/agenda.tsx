@@ -15,7 +15,6 @@ interface Props {
   initial: DoctorAppointment[];
   dayKey: string;
   doctorId: string;
-  unreadCount: number;
   /** Días cercanos que sí tienen citas, para explicar un día vacío. */
   diasConCitas: { day: string; total: number; pendientes: number }[];
   /** Profesionales entre los que el rol puede elegir al reagendar. */
@@ -38,7 +37,6 @@ export function Agenda({
   initial,
   dayKey,
   doctorId,
-  unreadCount,
   diasConCitas,
   doctors,
   orgName,
@@ -143,7 +141,7 @@ export function Agenda({
         </p>
       </div>
 
-      {nuevas > 0 || unreadCount > 0 ? (
+      {nuevas > 0 ? (
         <button
           type="button"
           onClick={refrescarAhora}

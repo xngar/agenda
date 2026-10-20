@@ -108,14 +108,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           p_doctor: onlyDoctorId,
         });
 
-  const unreadPromise = verMes
-    ? Promise.resolve({ data: [] as unknown[] })
-    : supabase
-        .from("notifications")
-        .select("id")
-        .eq("doctor_id", session.id)
-        .is("read_at", null);
-
   const teamPromise = veTodoElEquipo ? getActiveDoctors() : Promise.resolve([]);
 
   const servicesPromise = supabase
@@ -137,7 +129,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     orgSettings,
     appointmentsRes,
     resumenRes,
-    unreadRes,
     team,
     serviceRowsRes,
     meDoctorRes,
@@ -145,7 +136,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     getOrgSettings(session.orgId),
     appointmentsPromise,
     resumenPromise,
-    unreadPromise,
     teamPromise,
     servicesPromise,
     meDoctorPromise,
@@ -161,7 +151,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     pendientes: number;
   }[]).map((r) => ({ ...r, day: r.day.slice(0, 10) }));
 
-  const unreadCount = (unreadRes.data ?? []).length;
   const bookingServices = (serviceRowsRes.data ?? []) as StaffService[];
 
   let bookingDoctors: StaffDoctor[] = team.map((d) => ({ id: d.id, full_name: d.full_name }));
@@ -272,7 +261,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           initial={appointments}
           dayKey={dayKey}
           doctorId={onlyDoctorId ?? session.id}
-          unreadCount={unreadCount}
           diasConCitas={diasConCitas}
           doctors={bookingDoctors}
           orgName={orgSettings.name}
