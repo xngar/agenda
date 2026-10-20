@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
+import { Download, Trash2 } from "lucide-react";
 import type { OrganizationType, Patient, PatientMedicalBackground } from "@/lib/ficha/types";
 import { Button, ErrorNotice, buttonClasses } from "@/components/ui";
 import { Modal } from "@/components/motion/modal";
@@ -15,7 +16,6 @@ import { PlanPanel } from "./plan-panel";
 import { RecetasPanel } from "./recetas-panel";
 import { AdjuntosPanel } from "./adjuntos-panel";
 import { AuditoriaPanel } from "./auditoria-panel";
-import { PatientFormModal } from "../patient-form";
 
 const TABS_CLINICA_COMMON = [
   { id: "resumen", label: "Resumen" },
@@ -75,7 +75,6 @@ export function FichaTabs({
   const tabs = orgType === "dental" ? TABS_DENTAL : TABS_CLINICA_COMMON;
   const router = useRouter();
   const [active, setActive] = useState(tabs[0].id);
-  const [editando, setEditando] = useState(false);
   const [confirmandoEliminar, setConfirmandoEliminar] = useState(false);
   const [eliminando, setEliminando] = useState(false);
   const [errorEliminar, setErrorEliminar] = useState<string | null>(null);
@@ -133,36 +132,14 @@ export function FichaTabs({
         }
         actions={
           <>
-            {canEdit ? (
-              <button
-                type="button"
-                onClick={() => setEditando(true)}
-                className={buttonClasses("ghost", "sm")}
-                title="Editar datos del paciente"
-              >
-                Editar
-              </button>
-            ) : null}
             <a
-              className={buttonClasses("primary", "sm")}
+              className={buttonClasses("ghost", "sm")}
               href={`/api/ficha/patients/${patient.id}/pdf`}
-              title="Descargar PDF de la ficha"
+              title="Descargar ficha en PDF"
             >
-              PDF
+              <Download className="size-4" aria-hidden />
+              Exportar ficha
             </a>
-            {canEdit ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setErrorEliminar(null);
-                  setConfirmandoEliminar(true);
-                }}
-                className={buttonClasses("danger", "sm")}
-                title="Eliminar paciente"
-              >
-                Eliminar
-              </button>
-            ) : null}
           </>
         }
       />
@@ -221,12 +198,35 @@ export function FichaTabs({
       ) : null}
       </div>
 
-      <PatientFormModal
-        open={editando}
-        initial={{ id: patient.id, full_name: patient.full_name, rut: patient.rut, phone: patient.phone, email: patient.email, birth_date: patient.birth_date, sex: patient.sex }}
-        onClose={() => setEditando(false)}
-        onSaved={() => setEditando(false)}
-      />
+      {active === "resumen" && canEdit ? (
+        <section
+          aria-labelledby="zona-peligrosa-paciente"
+          className="rounded-card border border-red-200 bg-red-50/40 px-5 py-4"
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 id="zona-peligrosa-paciente" className="text-sm font-semibold text-red-800">
+                Zona peligrosa
+              </h2>
+              <p className="mt-1 text-sm text-neutral-600">
+                Elimina la ficha del paciente y todo su historial clínico. Solo se pueden eliminar
+                pacientes que nunca agendaron una cita. Esta acción no se puede deshacer.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setErrorEliminar(null);
+                setConfirmandoEliminar(true);
+              }}
+              className={buttonClasses("danger", "sm", "shrink-0")}
+            >
+              <Trash2 className="size-4" aria-hidden />
+              Eliminar paciente
+            </button>
+          </div>
+        </section>
+      ) : null}
 
       <Modal
         open={confirmandoEliminar}
@@ -258,7 +258,7 @@ export function FichaTabs({
             disabled={eliminando}
             className={buttonClasses("danger", "sm")}
           >
-            {eliminando ? "Eliminando…" : "Eliminar"}
+            {eliminando ? "Eliminando…" : "Eliminar paciente"}
           </button>
         </div>
       </Modal>

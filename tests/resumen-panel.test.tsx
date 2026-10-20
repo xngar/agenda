@@ -97,7 +97,7 @@ function render() {
 async function abrirEdicion() {
   render();
   const editar = [...container.querySelectorAll("button")].find(
-    (b) => b.textContent === "Editar",
+    (b) => b.textContent === "Editar identificación",
   );
   act(() => {
     editar?.click();

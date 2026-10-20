@@ -207,7 +207,7 @@ export function ResumenPanel({
   if (editando) {
     return (
       <Card>
-        <CardHeader title="Editar ficha" description="Datos de identificación, contacto y previsión" />
+        <CardHeader title="Editar datos del paciente" description="Identificación, contacto y previsión" />
         <form onSubmit={guardar} className="space-y-6 px-5 py-5">
           <fieldset>
             <legend className="mb-3 text-sm font-semibold text-brand-navy">Datos personales</legend>
@@ -424,7 +424,7 @@ export function ResumenPanel({
       <Card className="anim-row-in" style={{ animationDelay: "0ms" }}>
         <CardHeader
           title="Identificación"
-          action={canEdit ? <Button size="sm" variant="secondary" onClick={() => setEditando(true)}>Editar</Button> : undefined}
+          action={canEdit ? <Button size="sm" variant="secondary" onClick={() => setEditando(true)}>Editar identificación</Button> : undefined}
         />
         <dl className="grid gap-4 px-5 py-4 sm:grid-cols-2">
           <Campo etiqueta="Nombre completo" valor={patient.full_name} />
@@ -477,7 +477,7 @@ export function ResumenPanel({
           action={
             canEdit && !editandoPerfil ? (
               <Button size="sm" variant="secondary" onClick={() => setEditandoPerfil(true)}>
-                Editar
+                Editar perfil
               </Button>
             ) : undefined
           }
