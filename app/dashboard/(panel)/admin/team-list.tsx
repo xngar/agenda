@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "cn";
 import { buttonClasses, StatusBadge } from "@/components/ui";
+import { EditEmailButton } from "./edit-email-form";
 
 const dangerGhost = cn(
   buttonClasses("ghost", "sm"),
@@ -144,6 +145,8 @@ export function TeamList({ initial, selfId }: { initial: TeamMember[]; selfId: s
                 ) : null}
 
                 <StatusBadge status={d.active ? "confirmed" : "cancelled"} />
+
+                <EditEmailButton doctorId={d.id} initialEmail={d.email} />
 
                 {/*
                   El propio usuario no se desactiva desde aquí: el login
