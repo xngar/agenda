@@ -124,6 +124,32 @@ describe("AgendaTable", () => {
     for (const b of botones) expect((b as HTMLButtonElement).disabled).toBe(true);
   });
 
+  it("separa teléfono y correo y conserva el correo completo", () => {
+    const correo = "eva.ruiz.con.correo.muy.largo@clinica.cl";
+    const conContacto = [
+      cita({
+        id: "c20",
+        patient: { full_name: "Eva Ruiz", phone: "+56 9 8765 4321", email: correo, rut: null },
+      }),
+    ];
+    act(() => {
+      root.render(
+        <AgendaTable
+          citas={conContacto}
+          pendiente={null}
+          onAccion={vi.fn()}
+          orgName="Clínica Sonrisa"
+        />,
+      );
+    });
+
+    const fila = container.querySelectorAll("tbody tr")[0];
+    const contacto = fila?.querySelectorAll("td")[2];
+    expect(contacto?.textContent).not.toContain("·");
+    expect(contacto?.textContent).toContain("+56 9 8765 4321");
+    expect(contacto?.textContent).toContain(correo);
+  });
+
   it("habilita WhatsApp cuando la cita tiene celular", () => {
     const conCelular = [
       cita({

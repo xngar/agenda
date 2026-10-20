@@ -64,11 +64,19 @@ export function AgendaCards({
                   {cita.service?.name ? (
                     <p className="mt-0.5 truncate text-sm text-neutral-600">{cita.service.name}</p>
                   ) : null}
-                  <p className="mt-0.5 truncate text-xs text-neutral-600">
-                    {[cita.patient?.rut, cita.patient?.phone, cita.patient?.email]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
+                  {cita.patient?.rut || cita.patient?.phone ? (
+                    <p className="mt-0.5 truncate text-xs text-neutral-600">
+                      {[cita.patient.rut, cita.patient.phone].filter(Boolean).join(" · ")}
+                    </p>
+                  ) : null}
+                  {cita.patient?.email ? (
+                    <p className="mt-0.5 break-all text-xs text-neutral-600">
+                      {cita.patient.email}
+                    </p>
+                  ) : null}
+                  {!cita.patient?.rut && !cita.patient?.phone && !cita.patient?.email ? (
+                    <p className="mt-0.5 text-xs text-neutral-600">—</p>
+                  ) : null}
                 </div>
 
                 <StatusBadge status={cita.status} />

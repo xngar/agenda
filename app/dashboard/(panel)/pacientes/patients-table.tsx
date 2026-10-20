@@ -4,6 +4,7 @@ import type { AriaAttributes, ReactNode } from "react";
 import Link from "next/link";
 import { ChevronsUpDown, ChevronUp } from "lucide-react";
 import { formatRut } from "@/lib/rut";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { WhatsappButton } from "@/components/dashboard/whatsapp-button";
 import { AnimatedNumber } from "@/components/motion/animated-number";
 
@@ -179,10 +180,16 @@ export function PatientsTable({
                   {p.rut ? (formatRut(p.rut) ?? p.rut) : "—"}
                 </td>
                 <td className="whitespace-nowrap px-4 py-3">
-                  <p className="text-neutral-800">{p.phone ?? p.email ?? "—"}</p>
-                  {p.phone && p.email ? (
-                    <p className="max-w-52 truncate text-xs text-neutral-500">{p.email}</p>
+                  {p.phone ? (
+                    <TruncatedText text={p.phone} className="max-w-52 text-neutral-800" />
                   ) : null}
+                  {p.email ? (
+                    <TruncatedText
+                      text={p.email}
+                      className={`max-w-52 ${p.phone ? "text-xs text-neutral-500" : "text-neutral-800"}`}
+                    />
+                  ) : null}
+                  {!p.phone && !p.email ? <p className="text-neutral-800">—</p> : null}
                 </td>
                 <td className="whitespace-nowrap px-4 py-3 text-neutral-700">
                   {p.birth_date ? (
@@ -256,9 +263,14 @@ export function PatientsTable({
               </div>
               <div className="flex gap-2">
                 <dt className="w-24 shrink-0 text-neutral-500">Contacto</dt>
-                <dd className="min-w-0 truncate text-neutral-800">
-                  {p.phone ?? p.email ?? "—"}
-                  {p.phone && p.email ? ` · ${p.email}` : ""}
+                <dd className="min-w-0 space-y-0.5 text-neutral-800">
+                  {p.phone ? <span className="block">{p.phone}</span> : null}
+                  {p.email ? (
+                    <span className={`block break-all ${p.phone ? "text-neutral-600" : ""}`}>
+                      {p.email}
+                    </span>
+                  ) : null}
+                  {!p.phone && !p.email ? "—" : null}
                 </dd>
               </div>
               <div className="flex gap-2">

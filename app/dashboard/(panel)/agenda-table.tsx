@@ -3,6 +3,7 @@
 import type { DoctorAppointment } from "@/lib/types";
 import { formatTime } from "@/lib/dates";
 import { StatusBadge } from "@/components/ui";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { WhatsappButton } from "@/components/dashboard/whatsapp-button";
 import { parseAppointmentRange } from "@/lib/range";
 
@@ -168,11 +169,19 @@ export function AgendaTable({
                   ) : null}
                 </td>
                 <td className="px-4 py-3">
-                  <p className="text-neutral-800">{cita.service?.name ?? "—"}</p>
-                  <p className="mt-0.5 max-w-56 truncate text-xs text-neutral-500">
-                    {[cita.patient?.phone, cita.patient?.email].filter(Boolean).join(" · ") ||
-                      "—"}
-                  </p>
+                  <p className="max-w-56 text-neutral-800">{cita.service?.name ?? "—"}</p>
+                  {cita.patient?.phone || cita.patient?.email ? (
+                    <div className="mt-0.5 space-y-0.5 text-xs text-neutral-500">
+                      {cita.patient?.phone ? (
+                        <TruncatedText text={cita.patient.phone} className="max-w-56" />
+                      ) : null}
+                      {cita.patient?.email ? (
+                        <TruncatedText text={cita.patient.email} className="max-w-56" />
+                      ) : null}
+                    </div>
+                  ) : (
+                    <p className="mt-0.5 text-xs text-neutral-500">—</p>
+                  )}
                 </td>
                 <td className="whitespace-nowrap px-4 py-3">
                   <StatusBadge status={cita.status} />
