@@ -133,7 +133,7 @@ export function FichaTabs({
         actions={
           <>
             <a
-              className={buttonClasses("ghost", "sm")}
+              className={buttonClasses("primary", "sm")}
               href={`/api/ficha/patients/${patient.id}/pdf`}
               title="Descargar ficha en PDF"
             >
@@ -153,14 +153,14 @@ export function FichaTabs({
             aria-current={active === tab.id ? "page" : undefined}
             className={`relative rounded-t-lg px-3 py-2 text-sm font-medium transition-colors duration-micro ease-out-soft ${
               active === tab.id
-                ? "text-brand-navy"
-                : "text-neutral-600 hover:bg-neutral-100"
+                ? "text-action-primary"
+                : "text-neutral-600 hover:bg-action-primary/5 hover:text-action-primary"
             }`}
           >
             {active === tab.id ? (
               <motion.span
                 layoutId="ficha-tab-indicator"
-                className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-brand-navy"
+                className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-action-primary"
                 transition={{ type: "spring", stiffness: 500, damping: 35 }}
               />
             ) : null}

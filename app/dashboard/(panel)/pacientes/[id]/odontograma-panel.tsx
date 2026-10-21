@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { DentalChartEntry, DentalFace, DentalState } from "@/lib/ficha/types";
 import { aggregateToothState } from "@/lib/ficha/dental";
-import { Card, CardHeader, Button, ErrorNotice, Spinner } from "./panels-shared";
+import { Card, FichaCardHeader, Button, ErrorNotice, Spinner } from "./panels-shared";
 import { Modal } from "@/components/motion/modal";
 
 const STATES: { value: DentalState; label: string }[] = [
@@ -86,7 +86,7 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
   if (chart === null) {
     return (
       <Card>
-        <CardHeader title="Odontograma" />
+        <FichaCardHeader title="Odontograma" />
         <div className="px-5 py-8">
           <Spinner label="Cargando odontograma…" />
         </div>
@@ -211,7 +211,7 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
       {error ? <ErrorNotice message={error} /> : null}
 
       <Card>
-        <CardHeader
+        <FichaCardHeader
           title="Odontograma"
           description="Haz clic en una pieza para registrar el estado de cada cara."
         />
@@ -245,7 +245,7 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
       >
         {selected !== null ? (
           <>
-            <CardHeader title={`Pieza ${selected}`} description="Se muestran los valores guardados. Cambia sólo las caras a registrar; se guarda únicamente lo que difiere." />
+            <FichaCardHeader title={`Pieza ${selected}`} description="Se muestran los valores guardados. Cambia sólo las caras a registrar; se guarda únicamente lo que difiere." />
             <form onSubmit={guardar} className="space-y-3 px-5 py-5">
               {error ? <ErrorNotice message={error} /> : null}
               <div className="grid gap-3 sm:grid-cols-2">

@@ -8,7 +8,6 @@ import { calcularIMC, etiquetaIMC } from "@/lib/ficha/medical";
 import { interpretarGAD7, interpretarPHQ9 } from "@/lib/ficha/psychological";
 import {
   Card,
-  CardHeader,
   Button,
   ErrorNotice,
   Field,
@@ -16,6 +15,7 @@ import {
   inputClasses,
 } from "@/components/ui";
 import { Modal } from "@/components/motion/modal";
+import { FichaCardHeader } from "./panels-shared";
 import { SpecialtyForm, SpecialtyView, type SpecialtyValues } from "./specialty-section";
 
 interface EncounterRow extends Encounter {
@@ -291,7 +291,7 @@ const SIGNOS_VITALES = [
   if (encounters === null) {
     return (
       <Card>
-        <CardHeader title="Atenciones" />
+        <FichaCardHeader title="Atenciones" />
         <div className="px-5 py-8">
           <Spinner label="Cargando atenciones…" />
         </div>
@@ -311,7 +311,7 @@ const SIGNOS_VITALES = [
       ) : null}
 
       <Card>
-        <CardHeader
+        <FichaCardHeader
           title="Atenciones"
           description="Los borradores se pueden editar; al firmar la atención queda inmutable."
           action={<Button size="sm" variant="secondary" onClick={abrirNueva}>Nueva atención</Button>}
@@ -514,7 +514,7 @@ const SIGNOS_VITALES = [
         panelClassName="p-0 border-neutral-200 shadow-card"
         busy={guardando}
       >
-        <CardHeader
+        <FichaCardHeader
           title={dialogo === "nueva" ? "Nueva atención" : "Editar borrador"}
           description="Registra la atención. Mientras sea borrador puedes editarla; al firmarla queda inmutable."
         />
@@ -558,7 +558,7 @@ const SIGNOS_VITALES = [
           />
           {esMedica ? (
             <fieldset>
-              <legend className="mb-3 text-sm font-semibold text-brand-navy">
+              <legend className="mb-3 text-sm font-semibold text-action-primary">
                 Signos vitales
               </legend>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

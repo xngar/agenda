@@ -28,7 +28,7 @@ export function PageHeader({
             {eyebrow}
           </p>
         ) : null}
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-brand-navy sm:text-3xl">
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-action-primary sm:text-3xl">
           {title}
         </h1>
         {description ? (

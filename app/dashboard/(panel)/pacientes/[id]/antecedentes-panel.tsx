@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { PatientMedicalBackground } from "@/lib/ficha/types";
-import { Card, CardHeader, Button, Field, inputClasses } from "@/components/ui";
+import { Card, Button, Field, inputClasses } from "@/components/ui";
+import { FichaCardHeader } from "./panels-shared";
 
 interface FormState {
   motivo_consulta: string;
@@ -116,7 +117,7 @@ export function AntecedentesPanel({
       ) : null}
 
       <Card>
-        <CardHeader title="Antecedentes clínicos" description="Información general previa a la atención" />
+        <FichaCardHeader title="Antecedentes clínicos" description="Información general previa a la atención" />
         <form onSubmit={guardar} className="space-y-5 px-5 py-5">
           <Field label="Motivo de consulta o derivación" htmlFor="motivo" required={false}>
             <textarea id="motivo" rows={3} className={inputClasses} value={form.motivo_consulta} onChange={(e) => set("motivo_consulta", e.target.value)} />

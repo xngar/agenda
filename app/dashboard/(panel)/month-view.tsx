@@ -243,7 +243,7 @@ export function MonthView({
           </button>
           <h2
             key={mesKey}
-            className="anim-label min-w-40 px-2 text-center text-lg font-semibold text-brand-navy"
+            className="anim-label min-w-40 px-2 text-center text-lg font-semibold text-action-primary"
           >
             {monthLabel(mesKey)}
           </h2>
@@ -497,15 +497,15 @@ const DIAS_SEMANA = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
 
 /**
  * Chip por estado. Misma historia de color que `StatusBadge`
- * (components/ui.tsx): navy = confirmada, celeste = por confirmar,
- * gris atenuada = cancelada.
+ * (components/ui.tsx): navy = confirmada, celeste = por confirmar o
+ * atendida, gris atenuada = cancelada, rojo = no asistió.
  */
 const CHIP_TONO: Record<AppointmentStatus, string> = {
   confirmed: "border-l-brand-navy bg-brand-navy-50 text-brand-navy-900",
   pending: "border-l-brand-sky-400 bg-brand-sky-50 text-brand-navy",
   cancelled:
     "border-l-neutral-300 bg-neutral-100 text-neutral-500 line-through decoration-neutral-400",
-  completed: "border-l-brand-navy-300 bg-neutral-100 text-neutral-700",
+  completed: "border-l-brand-sky-600 bg-brand-sky-50 text-brand-navy-900",
   no_show: "border-l-danger-600 bg-danger-50 text-danger-700",
 };
 

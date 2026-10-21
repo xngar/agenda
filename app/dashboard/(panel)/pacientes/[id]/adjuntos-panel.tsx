@@ -4,8 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Attachment, AttachmentKind } from "@/lib/ficha/types";
 import { supabaseBrowser } from "@/lib/supabase/browser";
-import { Card, CardHeader, Button, ErrorNotice, Field, Spinner, inputClasses } from "@/components/ui";
+import { Card, Button, ErrorNotice, Field, Spinner, inputClasses } from "@/components/ui";
 import { Modal } from "@/components/motion/modal";
+import { FichaCardHeader } from "./panels-shared";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 const KINDS: { value: AttachmentKind; label: string }[] = [
@@ -166,7 +167,7 @@ export function AdjuntosPanel({
   if (attachments === null) {
     return (
       <Card>
-        <CardHeader title="Adjuntos" />
+        <FichaCardHeader title="Adjuntos" />
         <div className="px-5 py-8">
           <Spinner label="Cargando adjuntos…" />
         </div>
@@ -179,7 +180,7 @@ export function AdjuntosPanel({
       {error ? <ErrorNotice message={error} /> : null}
 
       <Card>
-        <CardHeader title="Subir adjunto" description="Radiografías, fotografías o documentos complementarios." />
+        <FichaCardHeader title="Subir adjunto" description="Radiografías, fotografías o documentos complementarios." />
         <form onSubmit={subir} className="space-y-4 px-5 py-5">
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Archivo" htmlFor="file">
@@ -209,7 +210,7 @@ export function AdjuntosPanel({
       </Card>
 
       <Card>
-        <CardHeader title="Adjuntos registrados" />
+        <FichaCardHeader title="Adjuntos registrados" />
         <ul className="divide-y divide-neutral-100">
           {attachments.length === 0 ? (
             <li className="px-5 py-8 text-sm text-neutral-500">Sin adjuntos registrados.</li>

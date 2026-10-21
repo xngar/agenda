@@ -61,10 +61,10 @@ const CHIP: Record<AppointmentStatus, { bg: string; border: string; text: string
     badge: "bg-neutral-300 text-neutral-700",
   },
   completed: {
-    bg: "bg-neutral-50",
-    border: "border-l-brand-navy-300",
-    text: "text-neutral-600",
-    badge: "bg-brand-navy-300 text-white",
+    bg: "bg-brand-sky-50",
+    border: "border-l-brand-sky-600",
+    text: "text-brand-navy-900",
+    badge: "bg-brand-sky-600 text-white",
   },
   no_show: {
     bg: "bg-danger-50",

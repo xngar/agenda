@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { DentalPayment, DentalPaymentMethod, DentalTreatmentCatalogItem, DentalTreatmentPlanItem, TreatmentPlanStatus } from "@/lib/ficha/types";
-import { Card, CardHeader, Button, ErrorNotice, Field, Spinner, inputClasses, buttonClasses } from "@/components/ui";
+import { Card, Button, ErrorNotice, Field, Spinner, inputClasses, buttonClasses } from "@/components/ui";
 import { Modal } from "@/components/motion/modal";
+import { FichaCardHeader } from "./panels-shared";
 import { formatMiles, parseMiles } from "@/lib/clp";
 
 interface PlanItem extends DentalTreatmentPlanItem {
@@ -316,7 +317,7 @@ export function PlanPanel({
   if (items === null) {
     return (
       <Card>
-        <CardHeader title="Plan de tratamiento" />
+        <FichaCardHeader title="Plan de tratamiento" />
         <div className="px-5 py-8">
           <Spinner label="Cargando plan…" />
         </div>
@@ -329,7 +330,7 @@ export function PlanPanel({
       {error ? <ErrorNotice message={error} /> : null}
 
       <Card>
-        <CardHeader
+        <FichaCardHeader
           title="Plan de tratamiento"
           description="Propuesta de tratamientos con valor, aceptación y avance."
           action={<Button size="sm" variant="secondary" onClick={() => setNuevo(!nuevo)}>{nuevo ? "Cancelar" : "Agregar tratamiento"}</Button>}
@@ -449,7 +450,7 @@ export function PlanPanel({
       </Card>
 
       <Card>
-        <CardHeader
+        <FichaCardHeader
           title="Pagos y abonos"
           description="Dinero recibido del paciente contra el plan."
           action={<Button size="sm" variant="secondary" onClick={() => setNuevoPago(!nuevoPago)}>{nuevoPago ? "Cancelar" : "Registrar pago"}</Button>}
@@ -554,7 +555,7 @@ export function PlanPanel({
 
       {isAdmin ? (
         <Card>
-          <CardHeader
+          <FichaCardHeader
             title="Catálogo de tratamientos"
             description="Tratamientos ofrecidos por la organización, con valor por defecto."
             action={<Button size="sm" variant="ghost" onClick={() => setAdminCat(!adminCat)}>{adminCat ? "Cerrar" : "Agregar"}</Button>}

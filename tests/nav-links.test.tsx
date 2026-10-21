@@ -32,14 +32,14 @@ function etiquetas(): string[] {
 }
 
 describe("SidebarNav", () => {
-  it("sin admin ve Agenda, Pacientes, Horario y Bloqueos, y el activo se marca", () => {
+  it("sin admin ve Agenda, Pacientes, Mi Horario y Bloqueos, y el activo se marca", () => {
     act(() => {
       root.render(<SidebarNav isAdmin={false} />);
     });
 
     const links = enlaces();
     expect(links).toHaveLength(4);
-    expect(etiquetas()).toEqual(["Agenda", "Pacientes", "Horario", "Bloqueos"]);
+    expect(etiquetas()).toEqual(["Agenda", "Pacientes", "Mi Horario", "Bloqueos"]);
 
     for (const a of links) {
       expect(a.querySelector("svg")).not.toBeNull();
@@ -48,6 +48,7 @@ describe("SidebarNav", () => {
 
     const pacientes = links.find((a) => a.getAttribute("href") === "/dashboard/pacientes");
     expect(pacientes?.getAttribute("aria-current")).toBe("page");
+    expect(pacientes?.className).toContain("text-action-primary");
     const agenda = links.find((a) => a.getAttribute("href") === "/dashboard");
     expect(agenda?.getAttribute("aria-current")).toBeNull();
   });
@@ -61,7 +62,7 @@ describe("SidebarNav", () => {
     expect(etiquetas()).toEqual([
       "Agenda",
       "Pacientes",
-      "Horario",
+      "Mi Horario",
       "Bloqueos",
       "Feriados",
       "Equipo",
@@ -81,7 +82,7 @@ describe("SidebarNav", () => {
     });
 
     const labels = etiquetas();
-    expect(labels).toContain("Horario");
+    expect(labels).toContain("Mi Horario");
     expect(labels).toContain("Bloqueos");
     expect(labels).not.toContain("Feriados");
     expect(labels).not.toContain("Equipo");

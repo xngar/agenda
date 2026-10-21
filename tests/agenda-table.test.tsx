@@ -172,4 +172,30 @@ describe("AgendaTable", () => {
     expect(boton).not.toBeNull();
     expect((boton as HTMLButtonElement).disabled).toBe(false);
   });
+
+  it("muestra una cita no asistida en rojo aunque tenga una reagenda previa", () => {
+    renderTable([
+      cita({
+        id: "c30",
+        status: "no_show",
+        rescheduled_at: "2026-10-20T12:00:00+00:00",
+      }),
+    ]);
+    const fila = container.querySelector("tbody tr");
+    expect(fila?.className).toContain("bg-danger-100");
+    expect(fila?.className).not.toContain("bg-success-100");
+  });
+
+  it("muestra una cita atendida en celeste aunque tenga una reagenda previa", () => {
+    renderTable([
+      cita({
+        id: "c31",
+        status: "completed",
+        rescheduled_at: "2026-10-20T12:00:00+00:00",
+      }),
+    ]);
+    const fila = container.querySelector("tbody tr");
+    expect(fila?.className).toContain("bg-brand-sky-100");
+    expect(fila?.className).not.toContain("bg-success-100");
+  });
 });

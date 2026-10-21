@@ -7,7 +7,8 @@ import {
   AUDIT_ENTIDADES,
   AUDIT_ENTIDADES_PACIENTE,
 } from "@/lib/ficha/audit-view";
-import { Card, CardHeader, ErrorNotice, Spinner, inputClasses } from "@/components/ui";
+import { Card, ErrorNotice, Spinner, inputClasses } from "@/components/ui";
+import { FichaCardHeader } from "./panels-shared";
 
 const PAGE_SIZE = 20;
 
@@ -107,7 +108,7 @@ export function AuditoriaPanel({
   if (entries === null) {
     return (
       <Card>
-        <CardHeader title="Auditoría" />
+        <FichaCardHeader title="Auditoría" />
         <div className="px-5 py-8">
           {error ? <ErrorNotice message={error} /> : <Spinner label="Cargando auditoría…" />}
         </div>
@@ -132,7 +133,7 @@ export function AuditoriaPanel({
     <div className="space-y-4">
       {error ? <ErrorNotice message={error} /> : null}
       <Card>
-        <CardHeader
+        <FichaCardHeader
           title="Historial de auditoría"
           description="Quién hizo qué y cuándo sobre esta ficha: creaciones, ediciones, firmas y exportaciones."
           action={

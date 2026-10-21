@@ -69,7 +69,7 @@ export function SpecialtyForm({
     <>
       {sections.map((section) => (
         <fieldset key={section.id}>
-          <legend className="mb-3 text-sm font-semibold text-brand-navy">{section.label}</legend>
+          <legend className="mb-3 text-sm font-semibold text-action-primary">{section.label}</legend>
           <div className="grid gap-3 md:grid-cols-2">
             {section.fields.map((field) => (
               <div key={field.key} className={field.kind === "textarea" ? "md:col-span-2" : undefined}>

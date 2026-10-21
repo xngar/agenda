@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Prescription } from "@/lib/ficha/types";
-import { Card, CardHeader, Button, ErrorNotice, Field, Spinner, inputClasses } from "@/components/ui";
+import { Card, Button, ErrorNotice, Field, Spinner, inputClasses } from "@/components/ui";
+import { FichaCardHeader } from "./panels-shared";
 
 export function RecetasPanel({ patientId }: { patientId: string }) {
   const [recetas, setRecetas] = useState<Prescription[] | null>(null);
@@ -67,7 +68,7 @@ export function RecetasPanel({ patientId }: { patientId: string }) {
   if (recetas === null) {
     return (
       <Card>
-        <CardHeader title="Recetas" />
+        <FichaCardHeader title="Recetas" />
         <div className="px-5 py-8">
           <Spinner label="Cargando recetas…" />
         </div>
@@ -80,7 +81,7 @@ export function RecetasPanel({ patientId }: { patientId: string }) {
       {error ? <ErrorNotice message={error} /> : null}
 
       <Card>
-        <CardHeader
+        <FichaCardHeader
           title="Recetas"
           description="Indicaciones de medicamentos entregadas durante la atención."
           action={<Button size="sm" variant="secondary" onClick={() => setNueva(!nueva)}>{nueva ? "Cancelar" : "Nueva receta"}</Button>}

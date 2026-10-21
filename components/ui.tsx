@@ -87,15 +87,17 @@ export function CardHeader({
   title,
   description,
   action,
+  titleClassName = "text-brand-navy",
 }: {
   title: ReactNode;
   description?: ReactNode;
   action?: ReactNode;
+  titleClassName?: string;
 }) {
   return (
     <div className="flex flex-wrap items-start justify-between gap-3 border-b border-neutral-200 px-5 py-4">
       <div className="min-w-0">
-        <h2 className="text-base font-semibold text-brand-navy">{title}</h2>
+        <h2 className={`text-base font-semibold ${titleClassName}`}>{title}</h2>
         {description ? (
           <p className="mt-1 text-sm text-neutral-600">{description}</p>
         ) : null}
@@ -277,7 +279,7 @@ export function StatusBadge({ status }: { status: string }) {
       label: "Cancelada",
       className: "bg-neutral-200 text-neutral-600 line-through decoration-neutral-500",
     },
-    completed: { label: "Atendida", className: "bg-neutral-100 text-neutral-800 border border-neutral-200" },
+    completed: { label: "Atendida", className: "bg-brand-sky text-brand-navy-900 border border-brand-sky-600/40" },
     no_show: {
       label: "No asistió",
       className: "bg-danger-50 text-danger-700 border border-danger-200",

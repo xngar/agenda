@@ -10,14 +10,15 @@ import { resaltarCita } from "./resaltar-cita";
 
 /**
  * Riel y fondo por estado. Misma historia de color que `CHIP_TONO` en
- * month-view (navy = confirmada, celeste = por confirmar, gris = cancelada)
- * para que día y mes se lean como la misma agenda.
+ * month-view (navy = confirmada, celeste = por confirmar o atendida,
+ * gris = cancelada, rojo = no asistió) para que día y mes se lean como la
+ * misma agenda.
  */
 export const RIEL: Record<string, string> = {
   confirmed: "border-l-brand-navy bg-white",
   pending: "border-l-brand-sky-400 bg-brand-sky-50",
   cancelled: "border-l-neutral-300 bg-white",
-  completed: "border-l-brand-navy-300 bg-white",
+  completed: "border-l-brand-sky-600 bg-brand-sky-50",
   no_show: "border-l-danger-600 bg-white",
 };
 
@@ -25,7 +26,7 @@ const PUNTO: Record<string, string> = {
   confirmed: "bg-brand-navy",
   pending: "bg-brand-sky-400",
   cancelled: "bg-neutral-300",
-  completed: "bg-brand-navy-300",
+  completed: "bg-brand-sky-600",
   no_show: "bg-danger-600",
 };
 
@@ -92,14 +93,18 @@ export function AgendaTable({
 }) {
   return (
     <div>
-      <div className="mb-2 flex items-center justify-end gap-4 text-xs text-neutral-600">
+      <div className="mb-2 flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-xs text-neutral-600">
         <span className="flex items-center gap-1.5">
           <span aria-hidden className="inline-block size-3 rounded-full bg-success-600" />
           Reagendada
         </span>
         <span className="flex items-center gap-1.5">
+          <span aria-hidden className="inline-block size-3 rounded-full bg-brand-sky-600" />
+          Atendida
+        </span>
+        <span className="flex items-center gap-1.5">
           <span aria-hidden className="inline-block size-3 rounded-full bg-danger-600" />
-          Cancelada
+          Cancelada / No asistió
         </span>
       </div>
       <div className="overflow-x-auto rounded-card border border-neutral-200 bg-white">

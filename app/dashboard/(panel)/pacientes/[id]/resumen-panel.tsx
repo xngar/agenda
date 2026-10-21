@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { OrganizationType, Patient } from "@/lib/ficha/types";
 import { fichaFor, ORG_TYPE_LABEL } from "@/lib/ficha/definitions";
-import { Card, CardHeader, Button, Field, inputClasses } from "@/components/ui";
+import { Card, Button, Field, inputClasses } from "@/components/ui";
+import { FichaCardHeader } from "./panels-shared";
 import { formatRut, formatRutPartial, normalizeRut } from "@/lib/rut";
 import { formatPhonePartial, normalizePhone } from "@/lib/phone";
 import { SpecialtyForm, SpecialtyView, type SpecialtyValues } from "./specialty-section";
@@ -207,10 +208,10 @@ export function ResumenPanel({
   if (editando) {
     return (
       <Card>
-        <CardHeader title="Editar datos del paciente" description="Identificación, contacto y previsión" />
+        <FichaCardHeader title="Editar datos del paciente" description="Identificación, contacto y previsión" />
         <form onSubmit={guardar} className="space-y-6 px-5 py-5">
           <fieldset>
-            <legend className="mb-3 text-sm font-semibold text-brand-navy">Datos personales</legend>
+            <legend className="mb-3 text-sm font-semibold text-action-primary">Datos personales</legend>
             <div className="grid gap-3 md:grid-cols-2">
               <Field label="Nombre completo" htmlFor="full_name" required>
                 <input
@@ -291,7 +292,7 @@ export function ResumenPanel({
           </fieldset>
 
           <fieldset>
-            <legend className="mb-3 text-sm font-semibold text-brand-navy">Dirección y previsión</legend>
+            <legend className="mb-3 text-sm font-semibold text-action-primary">Dirección y previsión</legend>
             <div className="grid gap-3 md:grid-cols-2">
               <Field label="Dirección" htmlFor="address" required={false}>
                 <input id="address" className={inputClasses} value={form.address} onChange={(e) => set("address", e.target.value)} />
@@ -331,7 +332,7 @@ export function ResumenPanel({
           </fieldset>
 
           <fieldset>
-            <legend className="mb-3 text-sm font-semibold text-brand-navy">Contacto de emergencia</legend>
+            <legend className="mb-3 text-sm font-semibold text-action-primary">Contacto de emergencia</legend>
             <div className="grid gap-3 md:grid-cols-3">
               <Field label="Nombre" htmlFor="emergency_name" required={false}>
                 <input id="emergency_name" className={inputClasses} value={form.emergency_name} onChange={(e) => set("emergency_name", e.target.value)} />
@@ -356,7 +357,7 @@ export function ResumenPanel({
           </fieldset>
 
           <fieldset>
-            <legend className="mb-3 text-sm font-semibold text-brand-navy">Apoderado o tutor</legend>
+            <legend className="mb-3 text-sm font-semibold text-action-primary">Apoderado o tutor</legend>
             <div className="grid gap-3 md:grid-cols-2">
               <Field label="Nombre" htmlFor="tutor_name" required={false}>
                 <input id="tutor_name" className={inputClasses} value={form.tutor_name} onChange={(e) => set("tutor_name", e.target.value)} />
@@ -397,7 +398,7 @@ export function ResumenPanel({
           </fieldset>
 
           <fieldset>
-            <legend className="mb-3 text-sm font-semibold text-brand-navy">Registro</legend>
+            <legend className="mb-3 text-sm font-semibold text-action-primary">Registro</legend>
             <Field label="Cómo llegó" htmlFor="referral_source" required={false}>
               <input
                 id="referral_source"
@@ -422,7 +423,7 @@ export function ResumenPanel({
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Card className="anim-row-in" style={{ animationDelay: "0ms" }}>
-        <CardHeader
+        <FichaCardHeader
           title="Identificación"
           action={canEdit ? <Button size="sm" variant="secondary" onClick={() => setEditando(true)}>Editar identificación</Button> : undefined}
         />
@@ -440,7 +441,7 @@ export function ResumenPanel({
       </Card>
 
       <Card className="anim-row-in" style={{ animationDelay: "40ms" }}>
-        <CardHeader title="Previsión y contacto" />
+        <FichaCardHeader title="Previsión y contacto" />
         <dl className="grid gap-4 px-5 py-4 sm:grid-cols-2">
           <Campo etiqueta="Previsión" valor={PREVISION.find((p) => p.value === patient.prevision_type)?.label} />
           <Campo etiqueta="Tramo Fonasa" valor={patient.fonasa_tramo} />
@@ -450,7 +451,7 @@ export function ResumenPanel({
       </Card>
 
       <Card className="anim-row-in" style={{ animationDelay: "80ms" }}>
-        <CardHeader title="Emergencia y apoderado" />
+        <FichaCardHeader title="Emergencia y apoderado" />
         <dl className="grid gap-4 px-5 py-4 sm:grid-cols-2">
           <Campo etiqueta="Contacto emergencia" valor={patient.emergency_name ? `${patient.emergency_name} (${patient.emergency_relation ?? ""})` : null} />
           <Campo etiqueta="Teléfono emergencia" valor={patient.emergency_phone ? formatPhonePartial(patient.emergency_phone) : null} />
@@ -461,7 +462,7 @@ export function ResumenPanel({
       </Card>
 
       <Card className="anim-row-in" style={{ animationDelay: "120ms" }}>
-        <CardHeader title="Registro" />
+        <FichaCardHeader title="Registro" />
         <dl className="grid gap-4 px-5 py-4 sm:grid-cols-2">
           <Campo etiqueta="Paciente desde" valor={patient.admitted_at?.slice(0, 10)} />
           <Campo etiqueta="Cómo llegó" valor={patient.referral_source} />
@@ -471,7 +472,7 @@ export function ResumenPanel({
       </Card>
 
       <Card className="anim-row-in" style={{ animationDelay: "160ms" }}>
-        <CardHeader
+        <FichaCardHeader
           title={`Perfil ${ficha.label.toLowerCase()}`}
           description="Antecedentes propios de esta especialidad"
           action={
