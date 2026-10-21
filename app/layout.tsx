@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Figtree } from "next/font/google";
 import "./globals.css";
 import { AppToaster } from "@/components/toaster";
 
-const inter = Inter({
-  variable: "--font-inter",
+const figtree = Figtree({
+  variable: "--font-figtree",
   subsets: ["latin"],
   display: "swap",
 });
@@ -37,7 +37,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es-CL" className={`${inter.variable} h-full antialiased`}>
+    <html lang="es-CL" className={`${figtree.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <a href="#contenido" className="skip-link">
           Saltar al contenido

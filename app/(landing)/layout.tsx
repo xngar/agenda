@@ -1,13 +1,5 @@
-import "./globals.css";
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import { siteConfig } from "@/lib/site-config";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -44,7 +36,7 @@ export default function LandingRootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div data-landing="true" className={`flex min-h-screen flex-col ${inter.variable}`}>
+    <div data-landing="true" className="flex min-h-screen flex-col">
       {children}
     </div>
   );
