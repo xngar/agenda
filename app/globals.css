@@ -146,6 +146,16 @@
   --color-lp-sky-200: var(--lp-sky-200);
   --color-lp-yellow: var(--lp-yellow);
 
+  /* Panel privado */
+  --color-panel-bg: var(--panel-bg);
+  --color-panel-line: var(--panel-line);
+  --color-panel-active: var(--panel-active-bg);
+  --color-panel-hover: var(--panel-hover-bg);
+  --color-panel-ink: var(--panel-ink);
+  --color-panel-muted: var(--panel-muted);
+  --shadow-panel: var(--panel-shadow-card);
+  --radius-control: var(--panel-radius-control);
+
   /* Sombras derivadas de navy: nunca negro puro */
   --shadow-card: 0 1px 2px color-mix(in srgb, var(--brand-navy) 8%, transparent),
     0 8px 24px -12px color-mix(in srgb, var(--brand-navy) 22%, transparent);
@@ -209,6 +219,39 @@
   .skip-link:focus {
     top: 0.5rem;
   }
+}
+
+/* ============================================================================
+   Panel privado
+   ----------------------------------------------------------------------------
+   Tokens del shell autenticado. Viven scopeados para no alterar la landing ni
+   el sitio público. Las tarjetas blancas del panel comparten radio y el shell
+   usa sombras suaves, sin tocar los controles internos.
+   ========================================================================== */
+.panel-shell,
+.panel-sheet {
+  --panel-bg: #f3f8fe;
+  --panel-line: #e4edf9;
+  --panel-active-bg: #e8f2fe;
+  --panel-hover-bg: #f5f9ff;
+  --panel-ink: var(--brand-navy);
+  --panel-muted: var(--neutral-500);
+  --panel-radius-card: 1.25rem;
+  --panel-radius-control: 0.75rem;
+  --panel-shadow-card: 0 1px 2px color-mix(in srgb, var(--brand-navy) 5%, transparent),
+    0 16px 36px -24px color-mix(in srgb, var(--brand-navy) 22%, transparent);
+  --panel-shadow-lift: 0 2px 4px color-mix(in srgb, var(--brand-navy) 8%, transparent),
+    0 24px 48px -24px color-mix(in srgb, var(--brand-navy) 28%, transparent);
+}
+
+.panel-shell {
+  min-height: 100dvh;
+  background-color: var(--panel-bg);
+  color: var(--neutral-800);
+}
+
+.panel-shell .rounded-card.bg-white {
+  border-radius: var(--panel-radius-card);
 }
 
 /* ----------------------------------------------------------------------------

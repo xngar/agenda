@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { NavLinks } from "@/app/dashboard/nav-links";
+import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard/pacientes",
@@ -12,16 +12,7 @@ let root: Root;
 let container: HTMLDivElement;
 
 beforeEach(() => {
-  if (typeof Element.prototype.scrollIntoView !== "function") {
-    Element.prototype.scrollIntoView = () => {};
-  }
-  if (typeof globalThis.ResizeObserver === "undefined") {
-    globalThis.ResizeObserver = class {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    } as unknown as typeof ResizeObserver;
-  }
+  (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -30,38 +21,34 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   container.remove();
-  document.querySelectorAll("[data-radix-portal]").forEach((el) => el.remove());
 });
 
 function enlaces(): HTMLAnchorElement[] {
   return [...container.querySelectorAll("nav a")] as HTMLAnchorElement[];
 }
 
-function triggerDisponibilidad(): HTMLButtonElement {
-  const botones = [...container.querySelectorAll("nav button")];
-  const trigger = botones.find((b) => b.textContent?.includes("Disponibilidad"));
-  if (!trigger) throw new Error("sin botón Disponibilidad");
-  return trigger as HTMLButtonElement;
+function botonDisponibilidad(): HTMLButtonElement {
+  const boton = container.querySelector("nav button");
+  if (!boton) throw new Error("sin botón Disponibilidad");
+  return boton as HTMLButtonElement;
 }
 
-function abrirMenu() {
-  const trigger = triggerDisponibilidad();
+function abrirDisponibilidad() {
   act(() => {
-    // Radix abre el dropdown en pointerdown, no en click.
-    trigger.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+    botonDisponibilidad().click();
   });
 }
 
-function itemsMenu(): string[] {
-  return [...document.querySelectorAll('[role="menuitem"]')].map(
+function etiquetasSubmenu(): string[] {
+  return [...container.querySelectorAll("nav ul ul a")].map(
     (el) => el.textContent?.trim() ?? "",
   );
 }
 
-describe("NavLinks", () => {
+describe("SidebarNav", () => {
   it("cada enlace lleva icono y texto, y el activo se marca", () => {
     act(() => {
-      root.render(<NavLinks isAdmin={false} />);
+      root.render(<SidebarNav isAdmin={false} />);
     });
 
     const links = enlaces();
@@ -79,27 +66,40 @@ describe("NavLinks", () => {
 
   it("el admin ve Equipo y Servicios con icono", () => {
     act(() => {
-      root.render(<NavLinks isAdmin={true} />);
+      root.render(<SidebarNav isAdmin={true} />);
     });
+
     const links = enlaces();
     expect(links).toHaveLength(4);
     expect(container.textContent).toContain("Servicios");
-    expect(triggerDisponibilidad().textContent).toContain("Disponibilidad");
+    expect(botonDisponibilidad().textContent).toContain("Disponibilidad");
   });
 
-  it("el dropdown muestra Horario y Bloqueos al equipo sin admin", () => {
+  it("el submenú muestra Horario y Bloqueos al equipo sin admin", () => {
     act(() => {
-      root.render(<NavLinks isAdmin={false} />);
+      root.render(<SidebarNav isAdmin={false} />);
     });
-    abrirMenu();
-    expect(itemsMenu()).toEqual(["Horario", "Bloqueos"]);
+
+    expect(botonDisponibilidad().getAttribute("aria-expanded")).toBe("false");
+    abrirDisponibilidad();
+    expect(botonDisponibilidad().getAttribute("aria-expanded")).toBe("true");
+    expect(etiquetasSubmenu()).toEqual(["Horario", "Bloqueos"]);
   });
 
-  it("el dropdown suma Feriados para el admin", () => {
+  it("el submenú suma Feriados para el admin", () => {
     act(() => {
-      root.render(<NavLinks isAdmin={true} />);
+      root.render(<SidebarNav isAdmin={true} />);
     });
-    abrirMenu();
-    expect(itemsMenu()).toEqual(["Horario", "Bloqueos", "Feriados"]);
+
+    abrirDisponibilidad();
+    expect(etiquetasSubmenu()).toEqual(["Horario", "Bloqueos", "Feriados"]);
+  });
+
+  it("el super admin sólo ve Organizaciones", () => {
+    act(() => {
+      root.render(<SidebarNav isAdmin={false} isSuperAdmin={true} />);
+    });
+
+    expect(enlaces().map((a) => a.textContent?.trim())).toEqual(["Organizaciones"]);
   });
 });
