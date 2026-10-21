@@ -186,7 +186,7 @@ export function AdjuntosPanel({
               <input
                 id="file"
                 type="file"
-                className={`${inputClasses} file:mr-3 file:rounded-lg file:border-0 file:bg-brand-sky-100 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-brand-navy`}
+                className={`${inputClasses} file:mr-3 file:rounded-lg file:border-0 file:bg-action-primary file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-action-primary-foreground hover:file:bg-action-primary-hover`}
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               />
             </Field>
@@ -249,7 +249,7 @@ export function AdjuntosPanel({
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     <a
-                      className="inline-flex min-h-9 items-center whitespace-nowrap rounded-xl border border-brand-navy-200 px-3 text-sm font-semibold text-brand-navy hover:bg-brand-navy-50"
+                      className="inline-flex min-h-9 items-center whitespace-nowrap rounded-xl border border-brand-navy-200 px-3 text-sm font-semibold text-brand-navy hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary"
                       href={`/api/ficha/attachments/${a.id}/url`}
                       target="_blank"
                       rel="noreferrer"

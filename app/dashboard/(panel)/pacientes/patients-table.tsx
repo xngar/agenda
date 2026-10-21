@@ -162,7 +162,7 @@ export function PatientsTable({
             {patients.map((p, indice) => (
               <tr
                 key={p.id}
-                className="anim-row-in transition-colors duration-micro ease-out-soft hover:bg-brand-sky-50"
+                className="anim-row-in transition-colors duration-micro ease-out-soft hover:bg-action-primary/5"
                 style={{ animationDelay: `${Math.min(indice, 12) * 35}ms` }}
               >
                 <td className="px-4 py-3">
@@ -316,7 +316,7 @@ export function PatientsTable({
               <Link
                 href={listHref(params, page - 1)}
                 rel="prev"
-                className="rounded-lg border border-brand-navy-200 px-3 py-1.5 text-sm font-medium text-brand-navy-700 transition-[color,background-color,border-color] duration-micro ease-out-soft hover:bg-brand-sky-50"
+                className="rounded-lg border border-brand-navy-200 px-3 py-1.5 text-sm font-medium text-brand-navy-700 transition-[color,background-color,border-color] duration-micro ease-out-soft hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary"
               >
                 ← Anterior
               </Link>
@@ -329,7 +329,7 @@ export function PatientsTable({
               <Link
                 href={listHref(params, page + 1)}
                 rel="next"
-                className="rounded-lg border border-brand-navy-200 px-3 py-1.5 text-sm font-medium text-brand-navy-700 transition-[color,background-color,border-color] duration-micro ease-out-soft hover:bg-brand-sky-50"
+                className="rounded-lg border border-brand-navy-200 px-3 py-1.5 text-sm font-medium text-brand-navy-700 transition-[color,background-color,border-color] duration-micro ease-out-soft hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary"
               >
                 Siguiente →
               </Link>

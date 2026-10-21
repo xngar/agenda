@@ -237,7 +237,7 @@ export function MonthView({
             type="button"
             onClick={() => irAMes(addMonthsToKey(mesKey, -1))}
             aria-label="Mes anterior"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-600 transition-colors hover:border-brand-navy-300 hover:text-brand-navy"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-600 transition-colors hover:border-action-primary/30 hover:bg-action-primary/5 hover:text-action-primary"
           >
             <ChevronLeft />
           </button>
@@ -251,7 +251,7 @@ export function MonthView({
             type="button"
             onClick={() => irAMes(addMonthsToKey(mesKey, 1))}
             aria-label="Mes siguiente"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-600 transition-colors hover:border-brand-navy-300 hover:text-brand-navy"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-600 transition-colors hover:border-action-primary/30 hover:bg-action-primary/5 hover:text-action-primary"
           >
             <ChevronRight />
           </button>
@@ -259,7 +259,7 @@ export function MonthView({
             type="button"
             onClick={() => irAMes(hoy.slice(0, 7))}
             disabled={mesKey === hoy.slice(0, 7)}
-            className="ml-1 rounded-xl border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:border-brand-navy-300 hover:text-brand-navy disabled:cursor-not-allowed disabled:opacity-50"
+            className="ml-1 rounded-xl border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:border-action-primary/30 hover:bg-action-primary/5 hover:text-action-primary disabled:cursor-not-allowed disabled:opacity-50"
           >
             Hoy
           </button>
@@ -290,7 +290,7 @@ export function MonthView({
             setNuevas(0);
             router.refresh();
           }}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-sky-400/60 bg-brand-sky-50 px-4 py-2.5 text-sm font-semibold text-brand-navy transition-colors hover:bg-brand-sky-100"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-action-primary/20 bg-action-primary/10 px-4 py-2.5 text-sm font-semibold text-action-primary transition-colors hover:border-action-primary/30 hover:bg-action-primary/15"
         >
           <RefreshCw aria-hidden className="h-4 w-4" />
           Hay cambios nuevos en la agenda · actualizar
@@ -319,9 +319,9 @@ export function MonthView({
                 style={{ animationDelay: `${Math.min(i, 21) * 16}ms` }}
                 className={`anim-month-cell flex min-h-20 flex-col gap-1 rounded-card border p-1 transition-colors duration-150 sm:min-h-28 sm:p-1.5 ${
                   esHoy
-                    ? "border-brand-sky bg-brand-sky-50"
+                    ? "border-action-primary/30 bg-action-primary/5"
                     : enMes
-                      ? "border-neutral-200 bg-white hover:border-brand-navy-300"
+                      ? "border-neutral-200 bg-white hover:border-action-primary/30"
                       : "border-neutral-200/70 bg-neutral-50/70"
                 }`}
               >
@@ -332,9 +332,9 @@ export function MonthView({
                     aria-label={`Ver la agenda del ${diaLabel(dia)}`}
                     className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold tabular-nums transition-colors ${
                       esHoy
-                        ? "bg-brand-navy text-white hover:bg-brand-navy-800"
+                        ? "bg-action-primary text-action-primary-foreground hover:bg-action-primary-hover"
                         : enMes
-                          ? "text-neutral-600 hover:bg-brand-navy-100"
+                          ? "text-neutral-600 hover:bg-action-primary/10"
                           : "text-neutral-400 hover:bg-neutral-200"
                     }`}
                   >
@@ -395,7 +395,7 @@ export function MonthView({
                   <button
                     type="button"
                     onClick={() => irAlDia(dia)}
-                    className="w-full rounded-lg px-1.5 py-0.5 text-left text-[11px] font-semibold text-brand-navy transition-colors hover:bg-brand-navy-50"
+                    className="w-full rounded-lg px-1.5 py-0.5 text-left text-[11px] font-semibold text-brand-navy transition-colors hover:bg-action-primary/5"
                   >
                     +{resto} más
                   </button>
@@ -449,7 +449,7 @@ export function MonthView({
                   onClick={() => ejecutar(menu.cita.id, accion.action)}
                   className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                     accion.tono === "primario"
-                      ? "bg-brand-navy text-white hover:bg-brand-navy-800"
+                      ? "bg-action-primary text-action-primary-foreground hover:bg-action-primary-hover"
                       : accion.tono === "peligro"
                         ? "text-danger-700 hover:bg-danger-50"
                         : accion.tono === "whatsapp"

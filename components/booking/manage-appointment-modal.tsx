@@ -138,9 +138,9 @@ export default function ManageAppointmentModal({
 
   const triggerClasses =
     variant === "link"
-      ? "inline-flex items-center gap-1.5 text-sm font-semibold text-brand-navy hover:underline focus-visible:outline-2 focus-visible:outline-brand-navy rounded-md py-1"
+      ? "inline-flex items-center gap-1.5 text-sm font-semibold text-brand-navy hover:underline focus-visible:outline-2 focus-visible:outline-action-primary rounded-md py-1"
       : variant === "nav"
-      ? "inline-flex items-center gap-1.5 rounded-lg border border-brand-navy-300 bg-brand-navy-50 px-3 py-2 text-sm font-medium text-brand-navy transition-colors hover:bg-brand-navy-100"
+      ? "inline-flex items-center gap-1.5 rounded-lg border border-action-primary/20 bg-action-primary/10 px-3 py-2 text-sm font-medium text-action-primary transition-colors hover:border-action-primary/30 hover:bg-action-primary/15"
       : buttonClasses(variant, size, className);
 
   return (

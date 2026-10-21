@@ -372,8 +372,8 @@ export default function BookingWizard(props: BookingWizardProps) {
                     <label
                       className={`flex cursor-pointer items-center justify-between gap-4 rounded-xl border px-4 py-3.5 transition-colors ${
                         serviceId === option.id
-                          ? "border-brand-navy bg-brand-navy-50"
-                          : "border-neutral-300 hover:border-brand-navy-300 hover:bg-brand-navy-50/40"
+                          ? "border-action-primary bg-action-primary/5"
+                          : "border-neutral-300 hover:border-action-primary/30 hover:bg-action-primary/5"
                       }`}
                     >
                       <span className="flex min-w-0 items-center gap-3">
@@ -383,7 +383,7 @@ export default function BookingWizard(props: BookingWizardProps) {
                           value={option.id}
                           checked={serviceId === option.id}
                           onChange={() => selectService(option.id)}
-                          className="h-4 w-4 shrink-0 accent-[#0B3C7A]"
+                          className="h-4 w-4 shrink-0 accent-action-primary"
                         />
                         <span className="min-w-0">
                           <span className="block font-semibold text-neutral-800">{option.name}</span>
@@ -429,8 +429,8 @@ export default function BookingWizard(props: BookingWizardProps) {
                   <label
                     className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3.5 ${
                       doctorId === null
-                        ? "border-brand-navy bg-brand-navy-50"
-                        : "border-neutral-300 hover:border-brand-navy-300"
+                        ? "border-action-primary bg-action-primary/5"
+                        : "border-neutral-300 hover:border-action-primary/30"
                     }`}
                   >
                     <input
@@ -438,7 +438,7 @@ export default function BookingWizard(props: BookingWizardProps) {
                       name="profesional"
                       checked={doctorId === null}
                       onChange={() => selectDoctor(null)}
-                      className="h-4 w-4 shrink-0 accent-[#0B3C7A]"
+                      className="h-4 w-4 shrink-0 accent-action-primary"
                     />
                     <span>
                       <span className="block font-semibold text-neutral-800">
@@ -455,8 +455,8 @@ export default function BookingWizard(props: BookingWizardProps) {
                     <label
                       className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3.5 ${
                         doctorId === doc.id
-                          ? "border-brand-navy bg-brand-navy-50"
-                          : "border-neutral-300 hover:border-brand-navy-300"
+                          ? "border-action-primary bg-action-primary/5"
+                          : "border-neutral-300 hover:border-action-primary/30"
                       }`}
                     >
                       <input
@@ -464,7 +464,7 @@ export default function BookingWizard(props: BookingWizardProps) {
                         name="profesional"
                         checked={doctorId === doc.id}
                         onChange={() => selectDoctor(doc.id)}
-                        className="h-4 w-4 shrink-0 accent-[#0B3C7A]"
+                        className="h-4 w-4 shrink-0 accent-action-primary"
                       />
                       <span>
                         <span className="block font-semibold text-neutral-800">{doc.full_name}</span>
@@ -638,7 +638,7 @@ export default function BookingWizard(props: BookingWizardProps) {
                     aria-invalid={Boolean(fieldErrors.consent)}
                     aria-describedby="consent-text"
                     onChange={(e) => setForm((f) => ({ ...f, consent: e.target.checked }))}
-                    className="mt-1 h-4 w-4 shrink-0 accent-[#0B3C7A]"
+                    className="mt-1 h-4 w-4 shrink-0 accent-action-primary"
                   />
                   <label htmlFor="consent" className="text-sm text-neutral-700">
                     {props.consentText ?? CONSENT_TEXT}
@@ -765,9 +765,9 @@ function StepIndicator({
                   aria-hidden="true"
                   className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                     state === "actual"
-                      ? "bg-brand-navy text-white"
+                      ? "bg-action-primary text-action-primary-foreground"
                       : state === "hecho"
-                        ? "bg-brand-sky text-brand-navy-900"
+                        ? "bg-action-primary/15 text-action-primary"
                         : "bg-neutral-200 text-neutral-600"
                   }`}
                 >
@@ -785,7 +785,7 @@ function StepIndicator({
                 <span
                   aria-hidden="true"
                   className={`hidden h-px w-4 sm:block ${
-                    step < current ? "bg-brand-sky" : "bg-neutral-200"
+                    step < current ? "bg-action-primary/30" : "bg-neutral-200"
                   }`}
                 />
               ) : null}
@@ -875,8 +875,8 @@ function SlotGrid({
               onClick={() => onSelect(start, single ? doctorIds[0] : null)}
               className={`min-h-11 rounded-xl border text-sm font-semibold transition-colors ${
                 isSelected
-                  ? "border-brand-navy bg-brand-navy text-white"
-                  : "border-neutral-300 bg-white text-brand-navy hover:border-brand-navy hover:bg-brand-navy-50"
+                  ? "border-action-primary bg-action-primary text-action-primary-foreground"
+                  : "border-neutral-300 bg-white text-brand-navy hover:border-action-primary hover:bg-action-primary/5"
               }`}
             >
               {time}

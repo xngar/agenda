@@ -57,7 +57,7 @@ export function ViewToggle({
           {op.activo && (
             <motion.div
               layoutId="view-toggle-indicator"
-              className="absolute inset-0 -z-10 rounded-lg bg-brand-navy shadow-card"
+              className="absolute inset-0 -z-10 rounded-lg bg-action-primary shadow-card"
               transition={{ type: "spring", stiffness: 500, damping: 35 }}
             />
           )}

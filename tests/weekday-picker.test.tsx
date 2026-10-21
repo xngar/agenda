@@ -115,15 +115,15 @@ describe("WeekdayPicker", () => {
     expect(container.textContent).toContain("septiembre – octubre");
   });
 
-  it("el día seleccionado lleva fondo azul sin clases de fondo en conflicto", () => {
+  it("el día seleccionado lleva fondo de acción sin clases de fondo en conflicto", () => {
     renderPicker("2026-10-08");
 
     const idx = indexOfCell("jueves, 8");
     const boton = gridChildren()[idx] as HTMLButtonElement;
     expect(boton.getAttribute("aria-pressed")).toBe("true");
-    expect(boton.className).toContain("bg-brand-navy");
-    expect(boton.className).toContain("text-white");
+    expect(boton.className).toContain("bg-action-primary");
+    expect(boton.className).toContain("text-action-primary-foreground");
     expect(boton.className).not.toContain("bg-white");
-    expect(boton.className).not.toContain("bg-brand-sky-50");
+    expect(boton.className).not.toContain("bg-action-primary/5");
   });
 });

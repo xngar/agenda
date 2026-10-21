@@ -53,7 +53,7 @@ export function Accion({
         compacto ? "px-2.5 py-1 text-[13px]" : "px-3 py-1.5 text-sm"
       } ${
         destacado
-          ? "border-brand-navy bg-brand-navy text-white hover:bg-brand-navy/90"
+          ? "border-action-primary bg-action-primary text-action-primary-foreground hover:bg-action-primary-hover"
           : tono === "peligro"
             ? "border-danger-200 text-danger-700 hover:bg-danger-50"
             : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"
@@ -151,7 +151,7 @@ export function AgendaTable({
                 <tr
                   key={cita.id}
                   className={`anim-row-in transition-colors duration-micro ease-out-soft ${
-                    resaltar ? resaltar.fondo : "hover:bg-brand-sky-50/60"
+                    resaltar ? resaltar.fondo : "hover:bg-action-primary/5"
                   } ${
                     cancelada ? "opacity-70" : ""
                   } ${recien ? "row-highlight" : ""}`}

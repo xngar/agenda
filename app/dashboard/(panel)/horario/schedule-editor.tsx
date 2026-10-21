@@ -316,7 +316,7 @@ export function ScheduleEditor({
                 <button
                   type="button"
                   onClick={() => agregar(d)}
-                  className="rounded-lg border border-dashed border-neutral-300 px-3 py-2 text-sm text-neutral-600 hover:border-brand-navy hover:text-brand-navy"
+                  className="rounded-lg border border-dashed border-neutral-300 px-3 py-2 text-sm text-neutral-600 hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary"
                 >
                   + Franja
                 </button>

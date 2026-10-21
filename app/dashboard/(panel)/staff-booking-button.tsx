@@ -270,7 +270,7 @@ function StaffBookingModal({
                         <button
                           type="button"
                           onClick={() => elegir(p)}
-                          className="block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-brand-sky-50"
+                          className="block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-action-primary/5"
                         >
                           <span className="font-medium text-neutral-900">{p.full_name}</span>
                           <span className="block text-xs text-neutral-500">
@@ -396,8 +396,8 @@ function StaffBookingModal({
                     onClick={() => setSlotStart(s.slot_start)}
                     className={`rounded-lg border px-3 py-1.5 text-sm font-semibold tabular-nums transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft active:scale-95 cursor-pointer ${
                       slotStart === s.slot_start
-                        ? "border-brand-navy bg-brand-navy text-white shadow-xs scale-[1.03]"
-                        : "border-neutral-300 bg-white text-neutral-700 hover:border-brand-navy hover:text-brand-navy hover:shadow-2xs"
+                        ? "border-action-primary bg-action-primary text-action-primary-foreground shadow-xs scale-[1.03]"
+                        : "border-neutral-300 bg-white text-neutral-700 hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary hover:shadow-2xs"
                     }`}
                   >
                     {formatTime(s.slot_start)}

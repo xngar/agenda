@@ -258,7 +258,7 @@ export function WeekView({
         <button
           type="button"
           onClick={refrescarAhora}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-sky-400/60 bg-brand-sky-50 px-4 py-2.5 text-sm font-semibold text-brand-navy transition-colors hover:bg-brand-sky-100"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-action-primary/20 bg-action-primary/10 px-4 py-2.5 text-sm font-semibold text-action-primary transition-colors hover:border-action-primary/30 hover:bg-action-primary/15"
         >
           <RefreshCw aria-hidden className="h-4 w-4" />
           Hay cambios nuevos en la agenda · actualizar
@@ -314,8 +314,8 @@ export function WeekView({
                   type="button"
                   onClick={() => irAlDia(dia)}
                   title={`Ver agenda de ${cabeceraDia(dia)}`}
-                  className={`flex h-14 w-full flex-col items-center justify-center gap-0.5 border-b border-neutral-200 transition-colors hover:bg-brand-sky-50 ${
-                    esHoy ? "bg-brand-sky-50" : "bg-neutral-50"
+                  className={`flex h-14 w-full flex-col items-center justify-center gap-0.5 border-b border-neutral-200 transition-colors hover:bg-action-primary/5 ${
+                    esHoy ? "bg-action-primary/5" : "bg-neutral-50"
                   }`}
                 >
                   <span
@@ -327,7 +327,7 @@ export function WeekView({
                   </span>
                   <span
                     className={`flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold tabular-nums ${
-                      esHoy ? "bg-brand-navy text-white" : "text-neutral-700"
+                      esHoy ? "bg-action-primary text-action-primary-foreground" : "text-neutral-700"
                     }`}
                   >
                     {Number(dia.slice(8))}
@@ -475,7 +475,7 @@ export function WeekView({
                   onClick={() => ejecutar(menu.cita.id, accion.action)}
                   className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${
                     accion.tono === "primario"
-                      ? "bg-brand-navy text-white hover:bg-brand-navy-800"
+                      ? "bg-action-primary text-action-primary-foreground hover:bg-action-primary-hover"
                       : accion.tono === "peligro"
                         ? "text-danger-700 hover:bg-danger-50"
                         : accion.tono === "whatsapp"

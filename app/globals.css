@@ -4,18 +4,22 @@
 /* ============================================================================
    Tokens de marca
    ----------------------------------------------------------------------------
-   Los DOS colores base viven aquí y en ningún otro lado. Todo lo demás
-   (tintes, sombras, bordes) se deriva con color-mix() para que cambiar la
-   paleta sea editar estas dos líneas.
+   Los colores base de marca viven aquí y en ningún otro lado. Todo lo demás
+   (tintes, sombras, bordes) se deriva con color-mix(). El color de acción de
+   los botones se controla solo con --action-primary.
 
    Contraste verificado (WCAG AA):
      texto blanco sobre --brand-navy  -> 10.8:1  (AAA)
      --brand-navy sobre --brand-sky  ->  5.8:1  (AA para texto normal)
+     texto blanco sobre --action-primary -> 8.9:1 (AAA)
    Nunca se pone texto blanco sobre celeste.
    ========================================================================== */
 :root {
   --brand-sky: #7cc7f0;
   --brand-navy: #0b3c7a;
+  --action-primary: #832161;
+  --action-primary-foreground: #ffffff;
+  --action-primary-line: color-mix(in oklab, var(--action-primary) 28%, white);
 
   /* Tokens aislados para landing */
   --lp-navy: #0B2A5B;
@@ -108,6 +112,17 @@
   --color-brand-sky-200: color-mix(in oklab, var(--brand-sky) 55%, white);
   --color-brand-sky-100: color-mix(in oklab, var(--brand-sky) 35%, white);
   --color-brand-sky-50: color-mix(in oklab, var(--brand-sky) 18%, white);
+
+  /* Color de acción: solo controles, nunca textos ni superficies de marca */
+  --color-action-primary: var(--action-primary);
+  --color-action-primary-foreground: var(--action-primary-foreground);
+  --color-action-primary-hover: color-mix(in oklab, var(--action-primary) 88%, black);
+  --color-action-primary-active: color-mix(in oklab, var(--action-primary) 78%, black);
+  --color-action-primary-line: var(--action-primary-line);
+  --shadow-action: 0 1px 3px color-mix(in srgb, var(--action-primary) 28%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 0.22);
+  --shadow-action-hover: 0 4px 16px color-mix(in srgb, var(--action-primary) 35%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 0.3);
 
   /* Neutros */
   --color-neutral-50: var(--neutral-50);
@@ -232,8 +247,8 @@
 .panel-sheet {
   --panel-bg: #f3f8fe;
   --panel-line: #e4edf9;
-  --panel-active-bg: #e8f2fe;
-  --panel-hover-bg: #f5f9ff;
+  --panel-active-bg: color-mix(in oklab, var(--action-primary) 8%, white);
+  --panel-hover-bg: color-mix(in oklab, var(--action-primary) 5%, white);
   --panel-ink: var(--brand-navy);
   --panel-muted: var(--neutral-500);
   --panel-radius-card: 1.25rem;

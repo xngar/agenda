@@ -112,10 +112,10 @@ function esActivo(pathname: string, href: string): boolean {
 
 function navButtonClasses(active: boolean): string {
   const tone = active
-    ? "bg-panel-active text-brand-navy shadow-[inset_0_0_0_1px_var(--panel-line)]"
+    ? "bg-panel-active text-brand-navy shadow-[inset_0_0_0_1px_var(--action-primary-line)]"
     : "text-panel-muted hover:bg-panel-hover hover:text-panel-ink";
 
-  return `flex min-h-11 w-full items-center gap-3 rounded-control px-3 text-sm font-medium transition-colors duration-micro ease-out-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy ${tone}`;
+  return `flex min-h-11 w-full items-center gap-3 rounded-control px-3 text-sm font-medium transition-colors duration-micro ease-out-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary ${tone}`;
 }
 
 function NavItems({

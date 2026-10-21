@@ -139,7 +139,7 @@ export function AuditoriaPanel({
             exporta ? (
               <div className="flex flex-wrap gap-2">
                 <a
-                  className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:bg-brand-navy-50"
+                  className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary"
                   href={`/api/ficha/patients/${patientId}/export`}
                   download
                   title="Descargar los datos de la ficha en JSON"
@@ -147,7 +147,7 @@ export function AuditoriaPanel({
                   Ficha (JSON)
                 </a>
                 <a
-                  className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:bg-brand-navy-50"
+                  className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary"
                   href={hrefExport("json")}
                   download
                   title="Descargar todo el historial de cambios en JSON"
@@ -155,7 +155,7 @@ export function AuditoriaPanel({
                   Historial (JSON)
                 </a>
                 <a
-                  className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:bg-brand-navy-50"
+                  className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary"
                   href={hrefExport("csv")}
                   download
                   title="Descargar todo el historial de cambios en CSV"
@@ -250,7 +250,7 @@ export function AuditoriaPanel({
                 </thead>
                 <tbody className="divide-y divide-neutral-100">
                   {entries.map((e) => (
-                    <tr key={e.id} className="align-top transition-colors hover:bg-brand-sky-50/60">
+                    <tr key={e.id} className="align-top transition-colors hover:bg-action-primary/5">
                       <td className="whitespace-nowrap px-5 py-3 text-neutral-600">
                         {FECHA_HORA.format(new Date(String(e.created_at)))}
                       </td>
@@ -318,7 +318,7 @@ export function AuditoriaPanel({
               type="button"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1 || cargando}
-              className="rounded-lg border border-brand-navy-200 px-3 py-1.5 text-sm font-medium text-brand-navy-700 transition-colors hover:bg-brand-sky-50 disabled:cursor-not-allowed disabled:border-neutral-200 disabled:text-neutral-400"
+              className="rounded-lg border border-brand-navy-200 px-3 py-1.5 text-sm font-medium text-brand-navy-700 transition-colors hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary disabled:cursor-not-allowed disabled:border-neutral-200 disabled:text-neutral-400"
             >
               ‹ Anterior
             </button>
@@ -329,7 +329,7 @@ export function AuditoriaPanel({
               type="button"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages || cargando}
-              className="rounded-lg border border-brand-navy-200 px-3 py-1.5 text-sm font-medium text-brand-navy-700 transition-colors hover:bg-brand-sky-50 disabled:cursor-not-allowed disabled:border-neutral-200 disabled:text-neutral-400"
+              className="rounded-lg border border-brand-navy-200 px-3 py-1.5 text-sm font-medium text-brand-navy-700 transition-colors hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary disabled:cursor-not-allowed disabled:border-neutral-200 disabled:text-neutral-400"
             >
               Siguiente ›
             </button>

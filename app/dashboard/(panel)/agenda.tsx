@@ -109,7 +109,7 @@ export function Agenda({
               onClick={() => setFiltro(valor)}
               className={`inline-flex min-h-9 items-center rounded-lg px-3 text-sm font-medium capitalize transition-colors ${
                 filtro === valor
-                  ? "bg-brand-navy text-white shadow-2xs"
+                  ? "bg-action-primary text-action-primary-foreground shadow-2xs hover:bg-action-primary-hover"
                   : "text-neutral-600 hover:bg-white hover:text-brand-navy"
               }`}
             >
@@ -149,7 +149,7 @@ export function Agenda({
         <button
           type="button"
           onClick={refrescarAhora}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-sky-400/60 bg-brand-sky-50 px-4 py-2.5 text-sm font-semibold text-brand-navy transition-[color,background-color,border-color] duration-micro ease-out-soft hover:bg-brand-sky-100"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-action-primary/20 bg-action-primary/10 px-4 py-2.5 text-sm font-semibold text-action-primary transition-[color,background-color,border-color] duration-micro ease-out-soft hover:border-action-primary/30 hover:bg-action-primary/15"
         >
           <RefreshCw aria-hidden className="h-4 w-4" />
           Hay cambios nuevos en la agenda · actualizar

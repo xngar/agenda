@@ -63,7 +63,7 @@ export default async function PanelLayout({
         profileTrigger={
           <PerfilTrigger
             title="Mi perfil"
-            className="group flex w-full flex-col items-center gap-2 rounded-[var(--panel-radius-card)] bg-white px-4 py-5 text-center transition-colors duration-micro ease-out-soft hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy"
+            className="group flex w-full flex-col items-center gap-2 rounded-[var(--panel-radius-card)] bg-white px-4 py-5 text-center transition-colors duration-micro ease-out-soft hover:bg-action-primary/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
           >
             <span
               aria-hidden="true"

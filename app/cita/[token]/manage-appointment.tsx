@@ -296,8 +296,8 @@ export default function ManageAppointment({
                       }}
                       className={`min-h-11 rounded-xl border text-sm font-semibold transition-colors ${
                         newSlot === start
-                          ? "border-brand-navy bg-brand-navy text-white"
-                          : "border-neutral-300 bg-white text-brand-navy hover:border-brand-navy hover:bg-brand-navy-50"
+                          ? "border-action-primary bg-action-primary text-action-primary-foreground"
+                          : "border-neutral-300 bg-white text-brand-navy hover:border-action-primary hover:bg-action-primary/5"
                       }`}
                     >
                       {new Intl.DateTimeFormat("es-CL", {

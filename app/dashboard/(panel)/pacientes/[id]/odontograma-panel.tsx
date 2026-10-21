@@ -183,7 +183,7 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
         <div className="flex min-w-max justify-center gap-0.5 sm:gap-1" aria-label={`Dientes ${grupo[0]}–${grupo[grupo.length - 1]}`}>
           {arr.map((t) => {
             const c = estadoPieza(t);
-            const className = c ? COLORS[c] : "bg-neutral-100 text-neutral-500 hover:bg-brand-sky-100";
+            const className = c ? COLORS[c] : "bg-neutral-100 text-neutral-500 hover:bg-action-primary/10";
             return (
               <button
                 key={t}

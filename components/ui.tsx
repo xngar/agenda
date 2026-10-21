@@ -9,11 +9,11 @@ type ButtonSize = "sm" | "md" | "lg";
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    "bg-gradient-to-b from-brand-navy to-brand-navy-900 text-white shadow-[0_1px_3px_rgba(11,60,122,0.25),inset_0_1px_0_rgba(255,255,255,0.22)] hover:from-brand-navy-700 hover:to-brand-navy-800 hover:shadow-[0_4px_16px_rgba(11,60,122,0.35),inset_0_1px_0_rgba(255,255,255,0.3)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] border border-brand-navy-900/40 disabled:bg-neutral-300 disabled:from-neutral-300 disabled:to-neutral-300 disabled:border-transparent disabled:hover:translate-y-0 disabled:hover:shadow-none",
+    "bg-gradient-to-b from-action-primary to-action-primary-active text-action-primary-foreground shadow-action hover:from-action-primary-hover hover:to-action-primary-active hover:shadow-action-hover hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] border border-action-primary-active/40 disabled:bg-neutral-300 disabled:from-neutral-300 disabled:to-neutral-300 disabled:border-transparent disabled:hover:translate-y-0 disabled:hover:shadow-none",
   secondary:
-    "bg-gradient-to-b from-brand-sky-100 to-brand-sky text-brand-navy-900 shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.6)] hover:from-brand-sky-50 hover:to-brand-sky-200 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] border border-brand-sky-600/30 disabled:hover:translate-y-0 disabled:hover:shadow-none",
+    "bg-action-primary text-action-primary-foreground shadow-action hover:bg-action-primary-hover hover:shadow-action-hover hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] border border-action-primary-active/30 disabled:bg-neutral-300 disabled:text-neutral-500 disabled:border-transparent disabled:hover:translate-y-0 disabled:hover:shadow-none",
   ghost:
-    "bg-white/90 hover:bg-neutral-100/90 text-brand-navy border border-neutral-200/90 shadow-2xs hover:shadow-xs active:scale-[0.97]",
+    "bg-white/90 hover:bg-action-primary/5 text-brand-navy border border-neutral-200/90 shadow-2xs hover:shadow-xs active:scale-[0.97]",
   danger:
     "bg-gradient-to-b from-red-600 to-red-700 text-white shadow-[0_1px_3px_rgba(185,28,28,0.25),inset_0_1px_0_rgba(255,255,255,0.2)] hover:from-red-500 hover:to-red-600 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] border border-red-800/40 disabled:hover:translate-y-0 disabled:hover:shadow-none",
 };
@@ -32,7 +32,7 @@ export function buttonClasses(
   return [
     "inline-flex items-center justify-center rounded-xl font-semibold transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-micro ease-out-soft",
     "active:scale-[0.97] cursor-pointer select-none",
-    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy",
+    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary",
     "disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:translate-y-0",
     VARIANTS[variant],
     SIZES[size],

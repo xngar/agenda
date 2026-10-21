@@ -23,7 +23,7 @@ function Logo({
       href="/dashboard"
       aria-label="Ir a la agenda"
       onClick={onClick}
-      className="flex min-w-0 items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy"
+      className="flex min-w-0 items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
     >
       <span
         aria-hidden="true"
@@ -145,7 +145,7 @@ export function PanelShell({
               aria-expanded={menuAbierto}
               aria-controls="menu-panel-movil"
               onClick={() => setMenuAbierto(true)}
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-panel-line bg-white text-panel-ink transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-panel-line bg-white text-panel-ink transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
             >
               <Menu className="h-5 w-5" aria-hidden="true" />
             </button>
@@ -184,7 +184,7 @@ export function PanelShell({
               aria-label="Cerrar menú"
               title="Cerrar menú"
               onClick={() => setMenuAbierto(false)}
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-panel-muted transition-colors hover:bg-panel-hover hover:text-panel-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-panel-muted transition-colors hover:bg-panel-hover hover:text-panel-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
             >
               <X className="h-5 w-5" aria-hidden="true" />
             </button>
