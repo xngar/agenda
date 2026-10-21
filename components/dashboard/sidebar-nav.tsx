@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useId, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 function CalendarioIcon() {
   return (
@@ -80,16 +79,6 @@ function OrganizacionesIcon() {
   );
 }
 
-function DisponibilidadIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
-      <rect x="3" y="5" width="18" height="16" rx="3" />
-      <path d="M8 3v4M16 3v4M3 10h18" />
-      <path d="M12 13.5v2.2l1.5.9" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 interface NavItem {
   href: string;
   label: string;
@@ -121,22 +110,43 @@ function esActivo(pathname: string, href: string): boolean {
   return href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
 }
 
-function navButtonClasses(active: boolean, groupActive = false): string {
+function navButtonClasses(active: boolean): string {
   const tone = active
     ? "bg-panel-active text-brand-navy shadow-[inset_0_0_0_1px_var(--panel-line)]"
-    : groupActive
-      ? "text-panel-ink hover:bg-panel-hover"
-      : "text-panel-muted hover:bg-panel-hover hover:text-panel-ink";
+    : "text-panel-muted hover:bg-panel-hover hover:text-panel-ink";
 
-  return `group flex min-h-11 w-full items-center gap-3 rounded-control px-3 text-sm font-medium transition-colors duration-micro ease-out-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy ${tone}`;
+  return `flex min-h-11 w-full items-center gap-3 rounded-control px-3 text-sm font-medium transition-colors duration-micro ease-out-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy ${tone}`;
 }
 
-function subnavButtonClasses(active: boolean): string {
-  return `flex min-h-9 w-full items-center gap-2.5 rounded-control px-2.5 text-[13px] font-medium transition-colors duration-micro ease-out-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy ${
-    active
-      ? "bg-panel-active text-brand-navy"
-      : "text-panel-muted hover:bg-panel-hover hover:text-panel-ink"
-  }`;
+function NavItems({
+  items,
+  pathname,
+  onNavigate,
+}: {
+  items: NavItem[];
+  pathname: string;
+  onNavigate?: () => void;
+}) {
+  return (
+    <>
+      {items.map((item) => {
+        const active = esActivo(pathname, item.href);
+        return (
+          <li key={item.href}>
+            <Link
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+              onClick={onNavigate}
+              className={navButtonClasses(active)}
+            >
+              {item.icon}
+              {item.label}
+            </Link>
+          </li>
+        );
+      })}
+    </>
+  );
 }
 
 export function SidebarNav({
@@ -151,33 +161,14 @@ export function SidebarNav({
   className?: string;
 }) {
   const pathname = usePathname();
-  const grupoId = useId();
   const disponibilidad = isAdmin ? [...disponibilidadBase, feriadosItem] : disponibilidadBase;
-  const grupoActivo = disponibilidad.some((item) => esActivo(pathname, item.href));
-  const [grupoAbiertoManual, setGrupoAbiertoManual] = useState<boolean | null>(null);
-  const grupoAbierto = grupoAbiertoManual ?? grupoActivo;
-  const enlacesFinales = isAdmin ? soloAdmin : [];
+  const enlacesAdmin = isAdmin ? soloAdmin : [];
 
   if (isSuperAdmin) {
     return (
       <nav aria-label="Secciones del panel" className={className}>
         <ul className="space-y-1">
-          {soloSuperAdmin.map((item) => {
-            const active = esActivo(pathname, item.href);
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  onClick={onNavigate}
-                  className={navButtonClasses(active)}
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              </li>
-            );
-          })}
+          <NavItems items={soloSuperAdmin} pathname={pathname} onNavigate={onNavigate} />
         </ul>
       </nav>
     );
@@ -186,83 +177,14 @@ export function SidebarNav({
   return (
     <nav aria-label="Secciones del panel" className={className}>
       <ul className="space-y-1">
-        {principal.map((item) => {
-          const active = esActivo(pathname, item.href);
-          return (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                aria-current={active ? "page" : undefined}
-                onClick={onNavigate}
-                className={navButtonClasses(active)}
-              >
-                {item.icon}
-                {item.label}
-              </Link>
-            </li>
-          );
-        })}
+        <NavItems items={principal} pathname={pathname} onNavigate={onNavigate} />
+        <NavItems items={disponibilidad} pathname={pathname} onNavigate={onNavigate} />
 
-        <li>
-          <button
-            type="button"
-            aria-expanded={grupoAbierto}
-            aria-controls={grupoId}
-            onClick={() => setGrupoAbiertoManual(!grupoAbierto)}
-            className={navButtonClasses(false, grupoActivo)}
-          >
-            <DisponibilidadIcon />
-            <span className="min-w-0 flex-1 truncate text-left">Disponibilidad</span>
-            <ChevronDown
-              aria-hidden="true"
-              className={`h-4 w-4 shrink-0 transition-transform duration-micro ease-out-soft ${
-                grupoAbierto ? "rotate-180" : ""
-              }`}
-            />
-          </button>
-
-          {grupoAbierto ? (
-            <ul id={grupoId} className="ml-5 mt-1 space-y-1 border-l border-panel-line pl-3">
-              {disponibilidad.map((item) => {
-                const active = esActivo(pathname, item.href);
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      aria-current={active ? "page" : undefined}
-                      onClick={onNavigate}
-                      className={subnavButtonClasses(active)}
-                    >
-                      {item.icon}
-                      {item.label}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : null}
-        </li>
-
-        {enlacesFinales.length > 0 ? (
+        {enlacesAdmin.length > 0 ? (
           <li aria-hidden="true" className="my-3 h-px bg-panel-line" />
         ) : null}
 
-        {enlacesFinales.map((item) => {
-          const active = esActivo(pathname, item.href);
-          return (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                aria-current={active ? "page" : undefined}
-                onClick={onNavigate}
-                className={navButtonClasses(active)}
-              >
-                {item.icon}
-                {item.label}
-              </Link>
-            </li>
-          );
-        })}
+        <NavItems items={enlacesAdmin} pathname={pathname} onNavigate={onNavigate} />
       </ul>
     </nav>
   );
