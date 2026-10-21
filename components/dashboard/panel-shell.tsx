@@ -11,7 +11,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
-function Logo({ onClick }: { onClick?: () => void }) {
+function Logo({
+  onClick,
+  compact = false,
+}: {
+  onClick?: () => void;
+  compact?: boolean;
+}) {
   return (
     <Link
       href="/dashboard"
@@ -21,18 +27,75 @@ function Logo({ onClick }: { onClick?: () => void }) {
     >
       <span
         aria-hidden="true"
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-gradient-to-b from-brand-navy to-brand-navy-900 text-white shadow-panel"
+        className={`flex shrink-0 items-center justify-center rounded-control bg-gradient-to-b from-brand-navy to-brand-navy-900 text-white shadow-panel ${
+          compact ? "h-9 w-9" : "h-10 w-10"
+        }`}
       >
-        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.9}>
+        <svg
+          viewBox="0 0 24 24"
+          className={compact ? "h-[18px] w-[18px]" : "h-5 w-5"}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.9}
+        >
           <rect x="3" y="5" width="18" height="16" rx="3" />
           <path d="M8 3v4M16 3v4M3 10h18" />
         </svg>
       </span>
       <span className="min-w-0 leading-tight">
-        <span className="block truncate text-base font-semibold text-panel-ink">Agenda</span>
-        <span className="block truncate text-[11px] font-medium tracking-wide text-panel-muted">Panel</span>
+        <span
+          className={`block truncate font-semibold text-panel-ink ${
+            compact ? "text-sm" : "text-base"
+          }`}
+        >
+          Agenda
+        </span>
+        {compact ? null : (
+          <span className="block truncate text-[11px] font-medium tracking-wide text-panel-muted">
+            Panel
+          </span>
+        )}
       </span>
     </Link>
+  );
+}
+
+function SidebarSections({
+  isAdmin,
+  isSuperAdmin,
+  profileTrigger,
+  logout,
+  onNavigate,
+  onAccountAction,
+}: {
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
+  profileTrigger: ReactNode;
+  logout: ReactNode;
+  onNavigate?: () => void;
+  onAccountAction?: () => void;
+}) {
+  return (
+    <>
+      <div className="shrink-0 px-3 pb-4 pt-1" onClick={onAccountAction}>
+        {profileTrigger}
+      </div>
+
+      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-3 pb-4">
+        <SidebarNav
+          isAdmin={isAdmin}
+          isSuperAdmin={isSuperAdmin}
+          onNavigate={onNavigate}
+        />
+      </div>
+
+      <div
+        className="shrink-0 border-t border-panel-line p-3"
+        onClick={onAccountAction}
+      >
+        {logout}
+      </div>
+    </>
   );
 }
 
@@ -62,14 +125,17 @@ export function PanelShell({
         <div className="flex h-[72px] shrink-0 items-center px-5">
           <Logo />
         </div>
-        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-3 pb-6">
-          <SidebarNav isAdmin={isAdmin} isSuperAdmin={isSuperAdmin} />
-        </div>
+        <SidebarSections
+          isAdmin={isAdmin}
+          isSuperAdmin={isSuperAdmin}
+          profileTrigger={profileTrigger}
+          logout={logout}
+        />
       </aside>
 
       <div className="xl:pl-[264px]">
-        <header className="sticky top-0 z-30 border-b border-panel-line bg-panel-bg">
-          <div className="mx-auto flex h-[72px] max-w-6xl items-center gap-2 px-4 xl:px-8">
+        <header className="sticky top-0 z-30 border-b border-panel-line bg-panel-bg xl:hidden">
+          <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4">
             <button
               ref={menuButtonRef}
               type="button"
@@ -79,32 +145,12 @@ export function PanelShell({
               aria-expanded={menuAbierto}
               aria-controls="menu-panel-movil"
               onClick={() => setMenuAbierto(true)}
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-panel-line bg-white text-panel-ink transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy xl:hidden"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-panel-line bg-white text-panel-ink transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy"
             >
               <Menu className="h-5 w-5" aria-hidden="true" />
             </button>
 
-            <Link
-              href="/dashboard"
-              aria-label="Ir a la agenda"
-              className="flex min-w-0 items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy xl:hidden"
-            >
-              <span
-                aria-hidden="true"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-gradient-to-b from-brand-navy to-brand-navy-900 text-white shadow-panel"
-              >
-                <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth={1.9}>
-                  <rect x="3" y="5" width="18" height="16" rx="3" />
-                  <path d="M8 3v4M16 3v4M3 10h18" />
-                </svg>
-              </span>
-              <span className="hidden truncate text-sm font-semibold text-panel-ink sm:inline">Agenda</span>
-            </Link>
-
-            <div className="ml-auto flex shrink-0 items-center gap-2">
-              {profileTrigger}
-              {logout}
-            </div>
+            <Logo compact />
           </div>
         </header>
 
@@ -144,13 +190,14 @@ export function PanelShell({
             </button>
           </div>
 
-          <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-3 py-4">
-            <SidebarNav
-              isAdmin={isAdmin}
-              isSuperAdmin={isSuperAdmin}
-              onNavigate={() => setMenuAbierto(false)}
-            />
-          </div>
+          <SidebarSections
+            isAdmin={isAdmin}
+            isSuperAdmin={isSuperAdmin}
+            profileTrigger={profileTrigger}
+            logout={logout}
+            onNavigate={() => setMenuAbierto(false)}
+            onAccountAction={() => setMenuAbierto(false)}
+          />
         </SheetContent>
       </Sheet>
     </div>

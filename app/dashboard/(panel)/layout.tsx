@@ -45,14 +45,16 @@ export default async function PanelLayout({
   // El super admin no opera ninguna clínica: vive en el área de plataforma.
   if (session.isSuperAdmin) redirect("/dashboard/plataforma/organizaciones");
 
+  const roleLabel =
+    session.role === "reception" ? "Recepción" : session.isAdmin ? "Administrador" : "Profesional";
+
   return (
     <PerfilSheetProvider
       profile={{
         fullName: session.full_name,
         specialty: session.specialty,
         role: session.role,
-        roleLabel:
-          session.role === "reception" ? "Recepción" : session.isAdmin ? "Administrador" : "Profesional",
+        roleLabel,
       }}
     >
       <PanelShell
@@ -61,27 +63,23 @@ export default async function PanelLayout({
         profileTrigger={
           <PerfilTrigger
             title="Mi perfil"
-            className="group flex items-center gap-2 rounded-full border border-panel-line bg-white py-1 pl-1 pr-1 shadow-panel transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy sm:pr-3"
+            className="group flex w-full flex-col items-center gap-2 rounded-[var(--panel-radius-card)] bg-white px-4 py-5 text-center transition-colors duration-micro ease-out-soft hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy"
           >
             <span
               aria-hidden="true"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-navy-100 text-xs font-bold text-brand-navy"
+              className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white text-lg font-bold text-brand-navy shadow-sm ring-1 ring-brand-sky-200"
             >
               {inicialesDe(session.full_name) || "?"}
             </span>
-            <span className="hidden min-w-0 text-left leading-tight sm:block">
-              <span className="block max-w-36 truncate text-sm font-medium text-panel-ink group-hover:text-brand-navy">
-                {session.full_name}
-              </span>
-              {session.specialty ? (
-                <span className="block max-w-36 truncate text-xs text-panel-muted">
-                  {session.specialty}
-                </span>
-              ) : null}
+            <span className="block w-full truncate text-sm font-semibold leading-5 text-panel-ink">
+              {session.full_name}
+            </span>
+            <span className="inline-flex items-center rounded-full bg-brand-sky px-2.5 py-0.5 text-[11px] font-semibold leading-4 text-brand-navy">
+              {roleLabel}
             </span>
           </PerfilTrigger>
         }
-        logout={<LogoutButton />}
+        logout={<LogoutButton variant="sidebar" />}
       >
         <RouteFade>{children}</RouteFade>
       </PanelShell>
