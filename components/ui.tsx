@@ -4,8 +4,14 @@ import type { CSSProperties, ReactNode } from "react";
 /* Botones                                                              */
 /* ------------------------------------------------------------------ */
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "flat";
 type ButtonSize = "sm" | "md" | "lg";
+type ButtonShape = "default" | "pill";
+
+const SHAPES: Record<ButtonShape, string> = {
+  default: "rounded-xl",
+  pill: "rounded-full",
+};
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary:
@@ -16,6 +22,8 @@ const VARIANTS: Record<ButtonVariant, string> = {
     "bg-white/90 hover:bg-action-primary/5 text-brand-navy border border-neutral-200/90 shadow-2xs hover:shadow-xs active:scale-[0.97]",
   danger:
     "bg-gradient-to-b from-red-600 to-red-700 text-white shadow-[0_1px_3px_rgba(185,28,28,0.25),inset_0_1px_0_rgba(255,255,255,0.2)] hover:from-red-500 hover:to-red-600 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] border border-red-800/40 disabled:hover:translate-y-0 disabled:hover:shadow-none",
+  flat:
+    "bg-action-primary text-action-primary-foreground shadow-none hover:shadow-none disabled:bg-neutral-300 disabled:text-neutral-500",
 };
 
 const SIZES: Record<ButtonSize, string> = {
@@ -28,14 +36,16 @@ export function buttonClasses(
   variant: ButtonVariant = "primary",
   size: ButtonSize = "md",
   className = "",
+  shape: ButtonShape = "default",
 ): string {
   return [
-    "inline-flex items-center justify-center rounded-xl font-semibold transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-micro ease-out-soft",
+    "inline-flex items-center justify-center font-semibold transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-micro ease-out-soft",
     "active:scale-[0.97] cursor-pointer select-none",
     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary",
     "disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:translate-y-0",
     VARIANTS[variant],
     SIZES[size],
+    SHAPES[shape],
     className,
   ]
     .filter(Boolean)
@@ -45,15 +55,17 @@ export function buttonClasses(
 export function Button({
   variant = "primary",
   size = "md",
+  shape = "default",
   className = "",
   type = "button",
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  shape?: ButtonShape;
 }) {
   return (
-    <button type={type} className={buttonClasses(variant, size, className)} {...props} />
+    <button type={type} className={buttonClasses(variant, size, className, shape)} {...props} />
   );
 }
 

@@ -1,11 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Figtree } from "next/font/google";
+import { Figtree, Poppins } from "next/font/google";
 import "./globals.css";
 import { AppToaster } from "@/components/toaster";
 
 const figtree = Figtree({
   variable: "--font-figtree",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const poppins = Poppins({
+  variable: "--font-poppins-family",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
   display: "swap",
 });
 
@@ -37,7 +44,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es-CL" className={`${figtree.variable} h-full antialiased`}>
+    <html lang="es-CL" className={`${figtree.variable} ${poppins.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <a href="#contenido" className="skip-link">
           Saltar al contenido
