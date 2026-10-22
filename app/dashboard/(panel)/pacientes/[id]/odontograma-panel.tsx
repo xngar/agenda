@@ -57,6 +57,66 @@ function toothFaces(tooth: number): DentalFace[] {
   return tooth >= 11 && tooth <= 48 ? [...base, "occlusal"] : [...base, "incisal"];
 }
 
+function ToothIcon({ tooth }: { tooth: number }) {
+  const position = tooth % 10;
+
+  if (position >= 6) {
+    return (
+      <svg aria-hidden="true" focusable="false" viewBox="0 0 24 30" className="h-6 w-5 shrink-0">
+        <path
+          d="M4 3.5c1.6-1.2 3.3-.6 4.4.1 1.1-.7 2.8-1.3 4.3-.2 1.4-1 3.2-.8 4.5.2 1.8 1.4 2.4 4.5 1.7 7.2-.4 1.5-1.3 2.3-2.2 3.1-.9.8-1.5 1.7-1.6 3l-.5 8.2c-.1 1.4-1.9 1.6-2.4.2l-1.6-4.4-1.7 4.4c-.5 1.3-2.2 1-2.3-.4l-.3-8.2c-.1-1.3-.8-2.2-1.7-3-1-.8-1.9-1.7-2.3-3.2-.7-2.7 0-5.6 1.7-7Z"
+          fill="white"
+          stroke="currentColor"
+          strokeWidth="1.3"
+          strokeLinejoin="round"
+        />
+        <path d="M8.4 4.1c-.3 2 .1 3.6 1.2 4.8m6-4.8c.2 2-.2 3.5-1.2 4.7" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (position >= 4) {
+    return (
+      <svg aria-hidden="true" focusable="false" viewBox="0 0 24 30" className="h-6 w-5 shrink-0">
+        <path
+          d="M7.4 3.1c1.4-.8 2.9-.4 4.1.4 1.4-.8 3-.8 4.3 0 2.2 1.3 2.5 4.2 1.6 6.6-.6 1.6-1.6 2.4-2.7 3.3-.8.7-1.2 1.6-1.3 2.8l-.4 8.8c-.1 1.3-1.8 1.5-2.3.3l-.8-2.2-.7 2.2c-.5 1.3-2.2 1.1-2.3-.3l-.5-8.8c-.1-1.2-.6-2.1-1.4-2.8-1.1-.9-2.1-1.8-2.7-3.4-.8-2.5-.4-5.5 1.8-6.9 1-.6 2.2-.6 3.3 0Z"
+          fill="white"
+          stroke="currentColor"
+          strokeWidth="1.3"
+          strokeLinejoin="round"
+        />
+        <path d="M8.2 4.1c-.2 1.8.2 3.4 1.2 4.8m6.1-4.7c.2 1.8-.2 3.4-1.2 4.7" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (position === 3) {
+    return (
+      <svg aria-hidden="true" focusable="false" viewBox="0 0 24 30" className="h-6 w-5 shrink-0">
+        <path
+          d="M6.2 3.3c1.8-.8 3.7.1 5.8 1.2 2.1-1.1 4-2 5.8-1.2 2.2.9 2.2 4.2 1.1 6.5-.7 1.5-1.7 2.1-3 2.7-1.4.7-2.3 1.6-2.7 3.2l-1.1 8.9c-.2 1.5-2 1.5-2.2 0l-1.1-8.9c-.4-1.6-1.3-2.5-2.7-3.2-1.3-.6-2.3-1.2-3-2.7-1.1-2.3-1.1-5.6 1.1-6.5Z"
+          fill="white"
+          stroke="currentColor"
+          strokeWidth="1.3"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 30" className="h-6 w-5 shrink-0">
+      <path
+        d="M8.2 3c1.3-.7 2.6-.3 3.8.4 1.2-.7 2.5-1.1 3.8-.4 2.1 1.2 2.2 4.3 1.2 6.7-.5 1.4-1.2 2.1-2.2 2.8-.9.8-1.3 1.7-1.4 3l-.3 9c-.1 1.4-1.7 1.5-2.2.2l-.9-2.6-.9 2.6c-.5 1.3-2.1 1.2-2.2-.2l-.3-9c-.1-1.3-.5-2.2-1.4-3-1-.7-1.7-1.4-2.2-2.8-1-2.4-.9-5.5 1.2-6.7 1.3-.7 2.6-.3 3.8.4Z"
+        fill="white"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function OdontogramaPanel({ patientId }: { patientId: string }) {
   const [chart, setChart] = useState<DentalChartEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -194,9 +254,10 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
                   <button
                     type="button"
                     onClick={() => abrir(t)}
-                    className={`flex h-8 w-8 items-center justify-center rounded-lg text-[11px] font-bold transition-colors sm:h-9 sm:w-9 sm:text-xs ${className}`}
+                    className={`flex h-12 w-9 flex-col items-center justify-center gap-0.5 rounded-lg text-[11px] font-bold transition-colors sm:w-10 sm:text-xs ${className}`}
                     aria-label={`Pieza ${t}: ${desglosePieza(t)}`}
                   >
+                    <ToothIcon tooth={t} />
                     {t}
                   </button>
                 </TooltipTrigger>
