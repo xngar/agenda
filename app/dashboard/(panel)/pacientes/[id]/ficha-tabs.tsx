@@ -18,7 +18,7 @@ import { AdjuntosPanel } from "./adjuntos-panel";
 import { AuditoriaPanel } from "./auditoria-panel";
 
 const TABS_CLINICA_COMMON = [
-  { id: "resumen", label: "Resumen" },
+  { id: "resumen", label: "Datos del paciente" },
   { id: "antecedentes", label: "Antecedentes" },
   { id: "atenciones", label: "Atenciones" },
   { id: "recetas", label: "Recetas" },
@@ -26,7 +26,7 @@ const TABS_CLINICA_COMMON = [
 ];
 
 const TABS_DENTAL = [
-  { id: "resumen", label: "Resumen" },
+  { id: "resumen", label: "Datos del paciente" },
   { id: "antecedentes", label: "Antecedentes" },
   { id: "atenciones", label: "Atenciones" },
   { id: "odontograma", label: "Odontograma" },

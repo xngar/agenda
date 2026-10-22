@@ -250,10 +250,8 @@ export function AdjuntosPanel({
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     <a
-                      className="inline-flex min-h-9 items-center whitespace-nowrap rounded-xl border border-brand-navy-200 px-3 text-sm font-semibold text-brand-navy hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary"
+                      className="inline-flex min-h-9 items-center whitespace-nowrap rounded-full border border-brand-navy-200 px-3 text-sm font-semibold text-brand-navy hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary"
                       href={`/api/ficha/attachments/${a.id}/url`}
-                      target="_blank"
-                      rel="noreferrer"
                     >
                       Descargar
                     </a>

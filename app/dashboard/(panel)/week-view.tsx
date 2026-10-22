@@ -22,6 +22,7 @@ import type { StaffDoctor } from "./staff-booking-button";
 import { motion, AnimatePresence } from "motion/react";
 import { RefreshCw } from "lucide-react";
 import { DUR, EASE } from "@/lib/motion";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 /* ------------------------------------------------------------------ */
 /* Constantes de layout                                                 */
@@ -381,49 +382,59 @@ export function WeekView({
                     const resaltar = resaltarCita(cita);
 
                     return (
-                      <button
-                        key={cita.id}
-                        type="button"
-                        style={{
-                          position: "absolute",
-                          top,
-                          height,
-                          left: `${leftPct}%`,
-                          width: `calc(${widthPct}% - 2px)`,
-                          marginLeft: 1,
-                          marginRight: 1,
-                        }}
-                        className={`overflow-hidden rounded-lg ${
-                          resaltar ? "border-2" : "border"
-                        } border-l-[3px] px-1.5 py-0.5 text-left transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft hover:-translate-y-0.5 hover:shadow-lift active:scale-[0.98] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky ${
-                          resaltar
-                            ? `${resaltar.borde} ${resaltar.fondo} ${resaltar.texto}`
-                            : `border-transparent ${chip.bg} ${chip.border} ${chip.text}`
-                        } ${
-                          cancelada ? "opacity-60 line-through decoration-neutral-400" : ""
-                        } ${pendiente?.startsWith(cita.id) ? "opacity-50" : ""}`}
-                        title={`${formatTime(start)} – ${formatTime(end)} · ${nombre}${
-                          cita.service ? ` · ${cita.service.name}` : ""
-                        } · ${STATUS_LABEL[cita.status]}`}
-                        aria-label={`${formatTime(start)} ${nombre}, ${STATUS_LABEL[cita.status]}. Ver acciones`}
-                        aria-haspopup="menu"
-                        onClick={(e) => abrirMenu(e, cita)}
-                        onContextMenu={(e) => abrirMenu(e, cita)}
-                      >
-                        <span className="block truncate text-[11px] font-bold tabular-nums leading-tight">
-                          {formatTime(start)}
-                        </span>
-                        {height >= 30 ? (
-                          <span className="block truncate text-[11px] font-medium leading-tight">
-                            {nombre}
-                          </span>
-                        ) : null}
-                        {height >= 48 && cita.service ? (
-                          <span className="block truncate text-[10px] leading-tight opacity-80">
-                            {cita.service.name}
-                          </span>
-                        ) : null}
-                      </button>
+                      <Tooltip key={cita.id}>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            style={{
+                              position: "absolute",
+                              top,
+                              height,
+                              left: `${leftPct}%`,
+                              width: `calc(${widthPct}% - 2px)`,
+                              marginLeft: 1,
+                              marginRight: 1,
+                            }}
+                            className={`overflow-hidden rounded-lg ${
+                              resaltar ? "border-2" : "border"
+                            } border-l-[3px] px-1.5 py-0.5 text-left transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft hover:-translate-y-0.5 hover:shadow-lift active:scale-[0.98] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky ${
+                              resaltar
+                                ? `${resaltar.borde} ${resaltar.fondo} ${resaltar.texto}`
+                                : `border-transparent ${chip.bg} ${chip.border} ${chip.text}`
+                            } ${
+                              cancelada ? "opacity-60 line-through decoration-neutral-400" : ""
+                            } ${pendiente?.startsWith(cita.id) ? "opacity-50" : ""}`}
+                            aria-label={`${formatTime(start)} ${nombre}, ${STATUS_LABEL[cita.status]}. Ver acciones`}
+                            aria-haspopup="menu"
+                            onClick={(e) => abrirMenu(e, cita)}
+                            onContextMenu={(e) => abrirMenu(e, cita)}
+                          >
+                            <span className="block truncate text-[11px] font-bold tabular-nums leading-tight">
+                              {formatTime(start)}
+                            </span>
+                            {height >= 30 ? (
+                              <span className="block truncate text-[11px] font-medium leading-tight">
+                                {nombre}
+                              </span>
+                            ) : null}
+                            {height >= 48 && cita.service ? (
+                              <span className="block truncate text-[10px] leading-tight opacity-80">
+                                {cita.service.name}
+                              </span>
+                            ) : null}
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-sm space-y-1 rounded-lg px-3 py-2 text-left text-sm">
+                          <p className="font-semibold">{nombre}</p>
+                          <p className="font-normal">
+                            {cabeceraDia(dia)} · {formatTime(start)}–{formatTime(end)}
+                          </p>
+                          {cita.service ? (
+                            <p className="font-normal">{cita.service.name}</p>
+                          ) : null}
+                          <p className="font-normal">{STATUS_LABEL[cita.status]}</p>
+                        </TooltipContent>
+                      </Tooltip>
                     );
                   })}
                 </div>

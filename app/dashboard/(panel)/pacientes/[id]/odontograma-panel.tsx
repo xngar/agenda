@@ -6,6 +6,7 @@ import type { DentalChartEntry, DentalFace, DentalState } from "@/lib/ficha/type
 import { aggregateToothState } from "@/lib/ficha/dental";
 import { Card, FichaCardHeader, Button, ErrorNotice, Spinner } from "./panels-shared";
 import { Modal } from "@/components/motion/modal";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const STATES: { value: DentalState; label: string }[] = [
   { value: "sana", label: "Sana" },
@@ -182,18 +183,28 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
       <div className="overflow-x-auto pb-1">
         <div className="flex min-w-max justify-center gap-0.5 sm:gap-1" aria-label={`Dientes ${grupo[0]}–${grupo[grupo.length - 1]}`}>
           {arr.map((t) => {
-            const c = estadoPieza(t);
+            const estados = toothFaces(t).map((face) => estadoDe(t, face));
+            const c =
+              estadoPieza(t) ??
+              (estados.some((estado) => estado === "sana") ? "sana" : undefined);
             const className = c ? COLORS[c] : "bg-neutral-100 text-neutral-500 hover:bg-action-primary/10";
             return (
-              <button
-                key={t}
-                type="button"
-                onClick={() => abrir(t)}
-                className={`flex h-8 w-8 items-center justify-center rounded-lg text-[11px] font-bold transition-colors sm:h-9 sm:w-9 sm:text-xs ${className}`}
-                title={`Pieza ${t}: ${desglosePieza(t)}`}
-              >
-                {t}
-              </button>
+              <Tooltip key={t}>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => abrir(t)}
+                    className={`flex h-8 w-8 items-center justify-center rounded-lg text-[11px] font-bold transition-colors sm:h-9 sm:w-9 sm:text-xs ${className}`}
+                    aria-label={`Pieza ${t}: ${desglosePieza(t)}`}
+                  >
+                    {t}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-sm space-y-1 rounded-lg px-3 py-2 text-left text-sm">
+                  <p className="font-semibold">Pieza {t}</p>
+                  <p className="font-normal">{desglosePieza(t)}</p>
+                </TooltipContent>
+              </Tooltip>
             );
           })}
         </div>

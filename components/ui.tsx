@@ -214,11 +214,13 @@ export function EmptyState({
   description,
   action,
   icon = "calendario",
+  titleClassName = "text-brand-navy",
 }: {
   title: string;
   description?: string;
   action?: ReactNode;
   icon?: "calendario" | "diente" | "correo";
+  titleClassName?: string;
 }) {
   return (
     <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
@@ -228,7 +230,7 @@ export function EmptyState({
       >
         {icon === "correo" ? <CorreoIcon /> : icon === "diente" ? <DienteIcon /> : <CalendarioIcon />}
       </span>
-      <p className="text-base font-semibold text-brand-navy">{title}</p>
+      <p className={`text-base font-semibold ${titleClassName}`}>{title}</p>
       {description ? <p className="max-w-sm text-sm text-neutral-600">{description}</p> : null}
       {action}
     </div>

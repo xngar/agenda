@@ -63,18 +63,18 @@ export default async function PanelLayout({
         profileTrigger={
           <PerfilTrigger
             title="Mi perfil"
-            className="group flex w-full flex-col items-center gap-2 rounded-[var(--panel-radius-card)] bg-action-primary px-4 py-5 text-center shadow-action transition-colors duration-micro ease-out-soft hover:bg-action-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy"
+            className="group flex w-full flex-col items-center gap-2 rounded-[var(--panel-radius-card)] bg-white px-4 py-5 text-center transition-colors duration-element ease-in-out-soft hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy"
           >
             <span
               aria-hidden="true"
-              className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white text-lg font-bold text-action-primary shadow-sm ring-1 ring-white/30"
+              className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-navy-50 text-lg font-bold text-brand-navy"
             >
               {inicialesDe(session.full_name) || "?"}
             </span>
-            <span className="block w-full truncate text-sm font-semibold leading-5 text-white">
+            <span className="block w-full truncate text-sm font-semibold leading-5 text-neutral-800">
               {session.full_name}
             </span>
-            <span className="inline-flex items-center rounded-full bg-white/15 px-2.5 py-0.5 text-[11px] font-semibold leading-4 text-white ring-1 ring-white/25">
+            <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-0.5 text-[11px] font-semibold leading-4 text-neutral-600">
               {roleLabel}
             </span>
           </PerfilTrigger>

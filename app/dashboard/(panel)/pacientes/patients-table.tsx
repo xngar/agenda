@@ -214,7 +214,7 @@ export function PatientsTable({
                       href={`/dashboard/pacientes/${p.id}`}
                       aria-label={`Abrir ficha de ${p.full_name}`}
                       title="Abrir ficha"
-                      className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-success-600 px-2.5 text-sm font-medium text-white transition-[color,background-color,box-shadow] duration-micro ease-out-soft hover:bg-success-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success-700"
+                      className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full bg-[#fdb833] px-2.5 text-sm font-semibold text-brand-navy transition-colors duration-element ease-in-out-soft hover:bg-[#ffd16b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy"
                     >
                       Ver ficha
                       <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
@@ -291,7 +291,7 @@ export function PatientsTable({
               <Link
                 href={`/dashboard/pacientes/${p.id}`}
                 aria-label={`Abrir ficha de ${p.full_name}`}
-                className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-success-600 px-2.5 text-sm font-medium text-white transition-[color,background-color,box-shadow] duration-micro ease-out-soft hover:bg-success-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success-700"
+                className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full bg-[#fdb833] px-2.5 text-sm font-semibold text-brand-navy transition-colors duration-element ease-in-out-soft hover:bg-[#ffd16b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy"
               >
                 Ver ficha
                 <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">

@@ -27,9 +27,9 @@ export async function GET(_request: Request, { params }: Params) {
 
   const { data: signed, error: signedError } = await ctx.supabase.storage
     .from("ficha-adjuntos")
-    .createSignedUrl(data.storage_path, 300);
+    .createSignedUrl(data.storage_path, 300, { download: data.file_name });
 
   if (signedError || !signed) return dbError(signedError ?? { message: "No se pudo firmar la URL" });
 
-  return NextResponse.json({ url: signed.signedUrl, file_name: data.file_name });
+  return NextResponse.redirect(signed.signedUrl);
 }

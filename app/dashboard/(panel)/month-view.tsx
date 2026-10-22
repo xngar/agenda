@@ -21,6 +21,7 @@ import { resaltarCita } from "./resaltar-cita";
 import { motion, AnimatePresence } from "motion/react";
 import { RefreshCw } from "lucide-react";
 import { DUR, EASE } from "@/lib/motion";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Props {
   initial: DoctorAppointment[];
@@ -359,35 +360,46 @@ export function MonthView({
                   const resalte = resaltarCita(cita);
 
                   return (
-                    <button
-                      key={cita.id}
-                      data-cita
-                      type="button"
-                      title={`${formatTime(start)} – ${formatTime(end)} · ${nombre} · ${
-                        cita.service?.name ? `${cita.service.name} · ` : ""
-                      }${STATUS_LABEL[cita.status]}`}
-                      aria-label={`${formatTime(start)} ${nombre}, ${STATUS_LABEL[cita.status]}. ${
-                        canAct ? "Ver acciones de la cita" : "Ver día"
-                      }`}
-                      aria-haspopup={canAct ? "menu" : undefined}
-                      onClick={(e) => {
-                        if (canAct) abrirMenu(e, cita);
-                        else irAlDia(dia);
-                      }}
-                      onContextMenu={(e) => {
-                        if (canAct) abrirMenu(e, cita);
-                      }}
-                      className={`w-full truncate rounded-lg ${
-                        resalte ? "border-2" : "border"
-                      } border-l-[3px] px-1.5 py-1 text-left text-[11px] leading-tight transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft hover:-translate-y-0.5 hover:shadow-card active:scale-[0.98] cursor-pointer ${
-                        resalte ? `${resalte.borde} ${resalte.fondo}` : "border-neutral-200"
-                      } ${resalte ? resalte.texto : CHIP_TONO[cita.status]} ${
-                        resalte && cita.status === "cancelled" ? "line-through" : ""
-                      }`}
-                    >
-                      <span className="font-semibold tabular-nums">{formatTime(start)}</span>{" "}
-                      <span className="font-medium">{nombre}</span>
-                    </button>
+                    <Tooltip key={cita.id}>
+                      <TooltipTrigger asChild>
+                        <button
+                          data-cita
+                          type="button"
+                          aria-label={`${formatTime(start)} ${nombre}, ${STATUS_LABEL[cita.status]}. ${
+                            canAct ? "Ver acciones de la cita" : "Ver día"
+                          }`}
+                          aria-haspopup={canAct ? "menu" : undefined}
+                          onClick={(e) => {
+                            if (canAct) abrirMenu(e, cita);
+                            else irAlDia(dia);
+                          }}
+                          onContextMenu={(e) => {
+                            if (canAct) abrirMenu(e, cita);
+                          }}
+                          className={`w-full truncate rounded-lg ${
+                            resalte ? "border-2" : "border"
+                          } border-l-[3px] px-1.5 py-1 text-left text-[11px] leading-tight transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft hover:-translate-y-0.5 hover:shadow-card active:scale-[0.98] cursor-pointer ${
+                            resalte ? `${resalte.borde} ${resalte.fondo}` : "border-neutral-200"
+                          } ${resalte ? resalte.texto : CHIP_TONO[cita.status]} ${
+                            resalte && cita.status === "cancelled" ? "line-through" : ""
+                          }`}
+                        >
+                          <span className="font-semibold tabular-nums">{formatTime(start)}</span>{" "}
+                          <span className="font-medium">{nombre}</span>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-sm space-y-1 rounded-lg px-3 py-2 text-left text-sm">
+                        <p className="font-semibold">{nombre}</p>
+                        <p className="font-normal">{diaLabel(dia)}</p>
+                        <p className="font-normal">
+                          {formatTime(start)}–{formatTime(end)}
+                        </p>
+                        {cita.service?.name ? (
+                          <p className="font-normal">{cita.service.name}</p>
+                        ) : null}
+                        <p className="font-normal">{STATUS_LABEL[cita.status]}</p>
+                      </TooltipContent>
+                    </Tooltip>
                   );
                 })}
 

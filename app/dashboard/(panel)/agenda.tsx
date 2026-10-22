@@ -191,10 +191,15 @@ export function Agenda({
           */
           <EmptyState
             title="Sin citas para este día"
+            titleClassName="text-action-primary"
             description={`No hay horas reservadas el ${new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${dayKey}T12:00:00Z`))}. Hay citas en los próximos días: usa las fechas de arriba para verlas.`}
           />
         ) : (
-          <EmptyState title="Sin citas para este día" description="No hay horas reservadas que mostrar." />
+          <EmptyState
+            title="Sin citas para este día"
+            titleClassName="text-action-primary"
+            description="No hay horas reservadas que mostrar."
+          />
         )
       ) : (
         <>

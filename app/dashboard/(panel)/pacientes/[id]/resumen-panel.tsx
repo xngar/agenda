@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import type { OrganizationType, Patient } from "@/lib/ficha/types";
 import { fichaFor, ORG_TYPE_LABEL } from "@/lib/ficha/definitions";
 import { Card, Button, Field, inputClasses } from "@/components/ui";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { FichaCardHeader } from "./panels-shared";
 import { formatRut, formatRutPartial, normalizeRut } from "@/lib/rut";
 import { formatPhonePartial, normalizePhone } from "@/lib/phone";
@@ -35,9 +36,9 @@ const PREVISION = [
 
 function Campo({ etiqueta, valor }: { etiqueta: string; valor: React.ReactNode }) {
   return (
-    <div>
+    <div className="min-w-0">
       <dt className="text-xs font-medium uppercase tracking-wide text-neutral-500">{etiqueta}</dt>
-      <dd className="mt-0.5 text-sm text-neutral-900">{valor || "—"}</dd>
+      <dd className="mt-0.5 min-w-0 text-sm text-neutral-900">{valor || "—"}</dd>
     </div>
   );
 }
@@ -431,7 +432,14 @@ export function ResumenPanel({
           <Campo etiqueta="Nombre completo" valor={patient.full_name} />
           <Campo etiqueta="RUT" valor={patient.rut} />
           <Campo etiqueta="Teléfono" valor={patient.phone} />
-          <Campo etiqueta="Correo" valor={patient.email} />
+          <Campo
+            etiqueta="Correo"
+            valor={
+              patient.email ? (
+                <TruncatedText text={patient.email} className="w-full max-w-full" />
+              ) : null
+            }
+          />
           <Campo etiqueta="Fecha de nacimiento" valor={patient.birth_date?.slice(0, 10)} />
           <Campo etiqueta="Sexo" valor={SEXOS.find((s) => s.value === patient.sex)?.label} />
           <Campo etiqueta="Nacionalidad" valor={patient.nationality} />
