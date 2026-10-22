@@ -48,7 +48,7 @@ export function StaffBookingButton({
 
   return (
     <>
-      <Button size="md" onClick={() => setOpen(true)}>
+      <Button variant="flat" size="md" shape="pill" onClick={() => setOpen(true)}>
         + Nueva reserva
       </Button>
       <AnimatePresence>

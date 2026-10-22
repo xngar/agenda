@@ -18,8 +18,8 @@ export function LogoutButton({
 
   const className =
     variant === "sidebar"
-      ? "flex min-h-11 w-full items-center gap-3 rounded-control px-3 text-sm font-medium text-panel-muted transition-colors duration-micro ease-out-soft hover:bg-danger-50 hover:text-danger-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
-      : "inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-neutral-300 bg-white text-neutral-600 transition-colors hover:border-danger-200 hover:bg-danger-50 hover:text-danger-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary";
+        ? "flex min-h-11 w-full items-center gap-3 rounded-full px-3 text-sm font-medium text-panel-muted transition-colors duration-element ease-in-out-soft hover:bg-danger-50 hover:text-danger-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+        : "inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-600 transition-colors duration-element ease-in-out-soft hover:border-danger-200 hover:bg-danger-50 hover:text-danger-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary";
 
   return (
     <button

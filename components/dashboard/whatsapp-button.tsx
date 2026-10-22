@@ -56,7 +56,7 @@ export function WhatsappButton({
             : `Sin celular registrado para ${fullName}`
         }
         title={numero ? "Enviar WhatsApp" : "Sin celular registrado"}
-        className={`inline-flex shrink-0 items-center justify-center rounded-lg border border-success-200 bg-success-50 text-success-700 transition-colors hover:bg-success-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success-700 disabled:cursor-not-allowed disabled:border-neutral-200 disabled:bg-neutral-100 disabled:text-neutral-400 ${
+        className={`inline-flex shrink-0 items-center justify-center rounded-full border border-success-200 bg-success-50 text-success-700 transition-colors duration-element ease-in-out-soft hover:bg-success-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success-700 disabled:cursor-not-allowed disabled:border-neutral-200 disabled:bg-neutral-100 disabled:text-neutral-400 ${
           compacto ? "h-8 w-8" : "h-9 w-9"
         }`}
       >

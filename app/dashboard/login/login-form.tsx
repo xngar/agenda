@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
-import { Field, inputClasses } from "@/components/ui";
+import { buttonClasses, Field, inputClasses } from "@/components/ui";
 import { PasswordInput } from "@/components/password-input";
 
 /**
@@ -86,7 +86,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-xl bg-action-primary px-4 py-2.5 font-semibold text-action-primary-foreground transition-colors hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+        className={buttonClasses("primary", "lg", "w-full")}
       >
         {pending ? "Entrando…" : "Ingresar"}
       </button>

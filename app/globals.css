@@ -116,7 +116,7 @@
   /* Color de acción: solo controles, nunca textos ni superficies de marca */
   --color-action-primary: var(--action-primary);
   --color-action-primary-foreground: var(--action-primary-foreground);
-  --color-action-primary-hover: color-mix(in oklab, var(--action-primary) 88%, black);
+  --color-action-primary-hover: color-mix(in oklab, var(--action-primary) 92%, white);
   --color-action-primary-active: color-mix(in oklab, var(--action-primary) 78%, black);
   --color-action-primary-line: var(--action-primary-line);
   --shadow-action: 0 1px 3px color-mix(in srgb, var(--action-primary) 28%, transparent),

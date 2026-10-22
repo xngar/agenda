@@ -9,21 +9,21 @@ type ButtonSize = "sm" | "md" | "lg";
 type ButtonShape = "default" | "pill";
 
 const SHAPES: Record<ButtonShape, string> = {
-  default: "rounded-xl",
+  default: "rounded-full",
   pill: "rounded-full",
 };
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    "bg-gradient-to-b from-action-primary to-action-primary-active text-action-primary-foreground shadow-action hover:from-action-primary-hover hover:to-action-primary-active hover:shadow-action-hover hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] border border-action-primary-active/40 disabled:bg-neutral-300 disabled:from-neutral-300 disabled:to-neutral-300 disabled:border-transparent disabled:hover:translate-y-0 disabled:hover:shadow-none",
+    "border border-transparent bg-action-primary text-action-primary-foreground hover:bg-action-primary-hover disabled:bg-neutral-300 disabled:text-neutral-500",
   secondary:
-    "bg-action-primary text-action-primary-foreground shadow-action hover:bg-action-primary-hover hover:shadow-action-hover hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] border border-action-primary-active/30 disabled:bg-neutral-300 disabled:text-neutral-500 disabled:border-transparent disabled:hover:translate-y-0 disabled:hover:shadow-none",
+    "border border-transparent bg-action-primary text-action-primary-foreground hover:bg-action-primary-hover disabled:bg-neutral-300 disabled:text-neutral-500",
   ghost:
-    "bg-white/90 hover:bg-action-primary/5 text-brand-navy border border-neutral-200/90 shadow-2xs hover:shadow-xs active:scale-[0.97]",
+    "border border-neutral-200 bg-white text-brand-navy hover:bg-action-primary/5 disabled:text-neutral-500",
   danger:
-    "bg-gradient-to-b from-red-600 to-red-700 text-white shadow-[0_1px_3px_rgba(185,28,28,0.25),inset_0_1px_0_rgba(255,255,255,0.2)] hover:from-red-500 hover:to-red-600 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] border border-red-800/40 disabled:hover:translate-y-0 disabled:hover:shadow-none",
+    "border border-transparent bg-red-600 text-white hover:bg-red-500 disabled:bg-neutral-300 disabled:text-neutral-500",
   flat:
-    "bg-action-primary text-action-primary-foreground shadow-none hover:shadow-none disabled:bg-neutral-300 disabled:text-neutral-500",
+    "border border-transparent bg-action-primary text-action-primary-foreground hover:bg-action-primary-hover disabled:bg-neutral-300 disabled:text-neutral-500",
 };
 
 const SIZES: Record<ButtonSize, string> = {
@@ -39,7 +39,7 @@ export function buttonClasses(
   shape: ButtonShape = "default",
 ): string {
   return [
-    "inline-flex items-center justify-center font-semibold transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-micro ease-out-soft",
+    "inline-flex items-center justify-center font-semibold transition-colors duration-element ease-in-out-soft",
     "active:scale-[0.97] cursor-pointer select-none",
     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary",
     "disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:translate-y-0",
@@ -338,4 +338,3 @@ function CorreoIcon() {
     </svg>
   );
 }
-
