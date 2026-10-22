@@ -34,7 +34,7 @@ export default function Features() {
     <section id="funciones" className="bg-white">
       <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-[var(--lp-navy)] sm:text-4xl">
+          <h2 className="text-3xl font-bold tracking-tight text-action-primary sm:text-4xl">
             Todo lo que tu consulta necesita
           </h2>
         </div>
@@ -44,9 +44,9 @@ export default function Features() {
               key={title}
               className="flex flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[var(--lp-sky-200)]"
             >
-              <Icon className="h-7 w-7 text-[var(--lp-blue)]" />
-              <h3 className="mt-3 text-base font-semibold text-[var(--lp-navy)]">{title}</h3>
-              <p className="mt-2 text-sm text-[var(--lp-navy)]/80">{text}</p>
+              <Icon className="h-7 w-7 text-action-primary" />
+              <h3 className="mt-3 text-base font-semibold text-action-primary">{title}</h3>
+              <p className="mt-2 text-sm text-action-primary/80">{text}</p>
             </article>
           ))}
         </div>
@@ -65,7 +65,7 @@ export default function Features() {
                 className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
                   tab === id
                     ? "bg-[var(--lp-navy)] text-white"
-                    : "bg-white text-[var(--lp-navy)] ring-1 ring-[var(--lp-sky-200)] hover:bg-[var(--lp-sky-100)]"
+                    : "bg-white text-action-primary ring-1 ring-[var(--lp-sky-200)] hover:bg-[var(--lp-sky-100)]"
                 }`}
                 aria-selected={tab === id}
                 role="tab"
@@ -78,33 +78,33 @@ export default function Features() {
           <div className="mt-6 rounded-xl border border-[var(--lp-sky-200)] bg-white p-4 shadow-sm">
             {tab === "odontologia" ? (
               <div>
-                <h4 className="text-sm font-semibold text-[var(--lp-navy)]">Ficha odontológica</h4>
-                <p className="mt-1 text-sm text-[var(--lp-navy)]/80">
+                <h4 className="text-sm font-semibold text-action-primary">Ficha odontológica</h4>
+                <p className="mt-1 text-sm text-action-primary/80">
                   Odontograma, plan de tratamiento y registro por pieza dental.
                 </p>
-                <div className="mt-4 h-40 rounded-lg border border-dashed border-[var(--lp-sky-200)] bg-[var(--lp-sky-100)]/40 p-3 text-xs text-[var(--lp-navy)]/60">
+                <div className="mt-4 h-40 rounded-lg border border-dashed border-[var(--lp-sky-200)] bg-[var(--lp-sky-100)]/40 p-3 text-xs text-action-primary/60">
                   Mockup de ficha odontológica · {siteConfig.name}
                 </div>
               </div>
             ) : null}
             {tab === "medicina" ? (
               <div>
-                <h4 className="text-sm font-semibold text-[var(--lp-navy)]">Ficha médica</h4>
-                <p className="mt-1 text-sm text-[var(--lp-navy)]/80">
+                <h4 className="text-sm font-semibold text-action-primary">Ficha médica</h4>
+                <p className="mt-1 text-sm text-action-primary/80">
                   Signos vitales, examen físico, diagnósticos y recetas.
                 </p>
-                <div className="mt-4 h-40 rounded-lg border border-dashed border-[var(--lp-sky-200)] bg-[var(--lp-sky-100)]/40 p-3 text-xs text-[var(--lp-navy)]/60">
+                <div className="mt-4 h-40 rounded-lg border border-dashed border-[var(--lp-sky-200)] bg-[var(--lp-sky-100)]/40 p-3 text-xs text-action-primary/60">
                   Mockup de ficha médica · {siteConfig.name}
                 </div>
               </div>
             ) : null}
             {tab === "psicologia" ? (
               <div>
-                <h4 className="text-sm font-semibold text-[var(--lp-navy)]">Ficha psicológica</h4>
-                <p className="mt-1 text-sm text-[var(--lp-navy)]/80">
+                <h4 className="text-sm font-semibold text-action-primary">Ficha psicológica</h4>
+                <p className="mt-1 text-sm text-action-primary/80">
                   Historia del paciente, notas de sesión y seguimiento, con notas privadas visibles solo para el terapeuta.
                 </p>
-                <div className="mt-4 h-40 rounded-lg border border-dashed border-[var(--lp-sky-200)] bg-[var(--lp-sky-100)]/40 p-3 text-xs text-[var(--lp-navy)]/60">
+                <div className="mt-4 h-40 rounded-lg border border-dashed border-[var(--lp-sky-200)] bg-[var(--lp-sky-100)]/40 p-3 text-xs text-action-primary/60">
                   Mockup de ficha psicológica · {siteConfig.name}
                 </div>
               </div>

@@ -110,7 +110,7 @@ export function Agenda({
               className={`inline-flex min-h-9 items-center rounded-lg px-3 text-sm font-medium capitalize transition-colors ${
                 filtro === valor
                   ? "bg-action-primary text-action-primary-foreground shadow-2xs hover:bg-action-primary-hover"
-                  : "text-neutral-600 hover:bg-white hover:text-brand-navy"
+                  : "text-neutral-600 hover:bg-white hover:text-action-primary"
               }`}
             >
               {valor}{" "}

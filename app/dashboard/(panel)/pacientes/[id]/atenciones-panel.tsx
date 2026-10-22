@@ -334,7 +334,7 @@ const SIGNOS_VITALES = [
                   <div className="flex flex-wrap items-center gap-2">
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        e.status === "signed" ? "bg-success-50 text-success-700" : "bg-brand-sky-100 text-brand-navy-900"
+                        e.status === "signed" ? "bg-success-50 text-success-700" : "bg-brand-sky-100 text-action-primary"
                       }`}
                     >
                       {e.status === "signed" ? "Firmada" : "Borrador"}

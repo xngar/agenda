@@ -233,17 +233,17 @@ function StaffBookingModal({
         {error ? <ErrorNotice message={error} /> : null}
 
         <fieldset>
-          <legend className="mb-2 text-sm font-semibold text-brand-navy">Paciente</legend>
+          <legend className="mb-2 text-sm font-semibold text-action-primary">Paciente</legend>
           {elegido ? (
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-brand-sky-50 px-3 py-2">
-              <p className="text-sm font-medium text-brand-navy-900">
+              <p className="text-sm font-medium text-action-primary">
                 {elegido.full_name}
                 {elegido.rut ? ` · ${formatRutPartial(elegido.rut)}` : ""}
               </p>
               <button
                 type="button"
                 onClick={soltar}
-                className="text-sm font-medium text-brand-navy-700 underline-offset-2 hover:underline"
+                className="text-sm font-medium text-action-primary underline-offset-2 hover:underline"
               >
                 Cambiar
               </button>
@@ -334,7 +334,7 @@ function StaffBookingModal({
         </fieldset>
 
         <fieldset>
-          <legend className="mb-2 text-sm font-semibold text-brand-navy">Hora</legend>
+          <legend className="mb-2 text-sm font-semibold text-action-primary">Hora</legend>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <label className="block">
               <span className={label}>Servicio</span>

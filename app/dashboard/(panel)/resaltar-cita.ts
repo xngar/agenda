@@ -20,7 +20,7 @@ export function resaltarCita(cita: { status: AppointmentStatus; rescheduled_at: 
     return {
       borde: "border-2 border-brand-sky-600",
       fondo: "bg-brand-sky-100",
-      texto: "text-brand-navy-900",
+      texto: "text-action-primary",
     };
   }
   if (cita.rescheduled_at && (cita.status === "pending" || cita.status === "confirmed")) {

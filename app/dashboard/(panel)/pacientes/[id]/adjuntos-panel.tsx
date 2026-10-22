@@ -230,7 +230,7 @@ export function AdjuntosPanel({
                 <li key={a.id} className="flex items-center justify-between gap-3 px-5 py-4">
                   <div className="min-w-0 flex-1 space-y-0.5">
                     <div className="flex items-center gap-2 font-medium text-neutral-900">
-                      <span className="shrink-0 rounded-full bg-brand-sky-100 px-2 py-0.5 text-xs font-semibold text-brand-navy-900">
+                      <span className="shrink-0 rounded-full bg-brand-sky-100 px-2 py-0.5 text-xs font-semibold text-action-primary">
                         {KIND_LABEL[a.kind] ?? a.kind}
                       </span>
                       <TruncatedText
@@ -250,7 +250,7 @@ export function AdjuntosPanel({
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     <a
-                      className="inline-flex min-h-9 items-center whitespace-nowrap rounded-full border border-brand-navy-200 px-3 text-sm font-semibold text-brand-navy hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary"
+                      className="inline-flex min-h-9 items-center whitespace-nowrap rounded-full border border-brand-navy-200 px-3 text-sm font-semibold text-action-primary hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary"
                       href={`/api/ficha/attachments/${a.id}/url`}
                     >
                       Descargar
@@ -283,7 +283,7 @@ export function AdjuntosPanel({
           setErrorEliminar(null);
         }}
         title="¿Eliminar este adjunto?"
-        titleClassName="text-lg font-bold text-brand-navy"
+        titleClassName="text-lg font-bold text-action-primary"
         size="md"
         panelClassName="border-transparent shadow-card"
         busy={eliminando}

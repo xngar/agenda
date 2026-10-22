@@ -345,7 +345,7 @@ export function MonthView({
                   {citas.length > 0 ? (
                     <span
                       className={`rounded-full px-1.5 text-[10px] font-semibold tabular-nums ${
-                        esHoy ? "bg-white/70 text-brand-navy" : "text-neutral-400"
+                        esHoy ? "bg-white/70 text-action-primary" : "text-neutral-400"
                       }`}
                       aria-hidden
                     >
@@ -407,7 +407,7 @@ export function MonthView({
                   <button
                     type="button"
                     onClick={() => irAlDia(dia)}
-                    className="w-full rounded-lg px-1.5 py-0.5 text-left text-[11px] font-semibold text-brand-navy transition-colors hover:bg-action-primary/5"
+                    className="w-full rounded-lg px-1.5 py-0.5 text-left text-[11px] font-semibold text-action-primary transition-colors hover:bg-action-primary/5"
                   >
                     +{resto} más
                   </button>
@@ -513,11 +513,11 @@ const DIAS_SEMANA = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
  * atendida, gris atenuada = cancelada, rojo = no asistió.
  */
 const CHIP_TONO: Record<AppointmentStatus, string> = {
-  confirmed: "border-l-brand-navy bg-brand-navy-50 text-brand-navy-900",
-  pending: "border-l-brand-sky-400 bg-brand-sky-50 text-brand-navy",
+  confirmed: "border-l-brand-navy bg-brand-navy-50 text-action-primary",
+  pending: "border-l-brand-sky-400 bg-brand-sky-50 text-action-primary",
   cancelled:
     "border-l-neutral-300 bg-neutral-100 text-neutral-500 line-through decoration-neutral-400",
-  completed: "border-l-brand-sky-600 bg-brand-sky-50 text-brand-navy-900",
+  completed: "border-l-brand-sky-600 bg-brand-sky-50 text-action-primary",
   no_show: "border-l-danger-600 bg-danger-50 text-danger-700",
 };
 

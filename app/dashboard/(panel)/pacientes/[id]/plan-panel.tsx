@@ -24,7 +24,7 @@ function estadoBadge(status: TreatmentPlanStatus) {
   const map: Record<TreatmentPlanStatus, string> = {
     pendiente: "bg-neutral-200 text-neutral-700",
     aceptado: "bg-success-50 text-success-700",
-    en_curso: "bg-brand-sky-100 text-brand-navy-900",
+    en_curso: "bg-brand-sky-100 text-action-primary",
     realizado: "bg-brand-navy text-white",
     rechazado: "bg-neutral-200 text-neutral-600 line-through",
   };
@@ -471,7 +471,7 @@ export function PlanPanel({
               </div>
               <div>
                 <dt className="text-xs font-medium uppercase tracking-wide text-neutral-500">Saldo</dt>
-                <dd className={`mt-0.5 text-sm font-semibold tabular-nums ${saldo > 0 ? "text-brand-navy" : "text-neutral-500"}`}>{fmt(saldo)}</dd>
+                <dd className={`mt-0.5 text-sm font-semibold tabular-nums ${saldo > 0 ? "text-action-primary" : "text-neutral-500"}`}>{fmt(saldo)}</dd>
               </div>
             </dl>
           );
@@ -629,7 +629,7 @@ export function PlanPanel({
                       <button
                         type="button"
                         onClick={() => alternarCatalogo(c)}
-                        className={`rounded-lg border px-3 py-1.5 text-sm font-medium ${c.active ? "border-neutral-300 text-neutral-600 hover:bg-neutral-100" : "border-brand-navy-200 text-brand-navy"}`}
+                        className={`rounded-lg border px-3 py-1.5 text-sm font-medium ${c.active ? "border-neutral-300 text-neutral-600 hover:bg-neutral-100" : "border-brand-navy-200 text-action-primary"}`}
                       >
                         {c.active ? "Desactivar" : "Activar"}
                       </button>
@@ -656,7 +656,7 @@ export function PlanPanel({
         open={porEliminarCat !== null}
         onClose={() => setPorEliminarCat(null)}
         title={porEliminarCat ? `¿Eliminar ${porEliminarCat.name}?` : "Eliminar tratamiento"}
-        titleClassName="text-lg font-bold text-brand-navy"
+        titleClassName="text-lg font-bold text-action-primary"
         size="md"
         panelClassName="border-transparent shadow-card"
         busy={eliminandoCat}

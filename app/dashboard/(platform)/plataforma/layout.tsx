@@ -18,7 +18,7 @@ export default async function PlataformaLayout({ children }: { children: React.R
           <Link
             href="/dashboard/plataforma/organizaciones"
             aria-label="Ir a organizaciones"
-            className="flex shrink-0 items-center gap-2 rounded-lg font-semibold text-brand-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy"
+            className="flex shrink-0 items-center gap-2 rounded-lg font-semibold text-action-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy"
           >
             <span
               aria-hidden="true"
@@ -34,7 +34,7 @@ export default async function PlataformaLayout({ children }: { children: React.R
 
           <Link
             href="/dashboard/plataforma/organizaciones"
-            className="ml-auto hidden min-h-10 items-center rounded-lg px-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-brand-navy sm:inline-flex"
+            className="ml-auto hidden min-h-10 items-center rounded-lg px-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-action-primary sm:inline-flex"
           >
             Organizaciones
           </Link>

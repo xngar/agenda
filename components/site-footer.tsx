@@ -13,7 +13,7 @@ export default function SiteFooter({ brand = DEFAULT_BRAND }: { brand?: ClinicBr
     <footer className="mt-16 border-t border-neutral-200 bg-white">
       <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 sm:grid-cols-3 sm:px-6">
         <div>
-          <p className="text-sm font-bold text-brand-navy">{brand.name}</p>
+          <p className="text-sm font-bold text-action-primary">{brand.name}</p>
           <p className="mt-2 text-sm text-neutral-600">
             Clínica odontológica. Lunes a sábado.
           </p>
@@ -24,13 +24,13 @@ export default function SiteFooter({ brand = DEFAULT_BRAND }: { brand?: ClinicBr
           <address className="mt-2 space-y-1 text-sm not-italic text-neutral-600">
             <p>{address}</p>
             <p>
-              <a href={`tel:${phone?.replace(/\s/g, "")}`} className="hover:text-brand-navy">
+              <a href={`tel:${phone?.replace(/\s/g, "")}`} className="hover:text-action-primary">
                 {phone}
               </a>
             </p>
             {supportEmail ? (
               <p>
-                <a href={`mailto:${supportEmail}`} className="hover:text-brand-navy">
+                <a href={`mailto:${supportEmail}`} className="hover:text-action-primary">
                   {supportEmail}
                 </a>
               </p>
@@ -42,17 +42,17 @@ export default function SiteFooter({ brand = DEFAULT_BRAND }: { brand?: ClinicBr
           <p className="text-sm font-semibold text-neutral-800">Enlaces</p>
           <ul className="mt-2 space-y-1.5 text-sm">
             <li>
-              <Link href={reservarHref} className="text-neutral-600 hover:text-brand-navy">
+              <Link href={reservarHref} className="text-neutral-600 hover:text-action-primary">
                 Reservar hora
               </Link>
             </li>
             <li>
-              <Link href={privacidadHref} className="text-neutral-600 hover:text-brand-navy">
+              <Link href={privacidadHref} className="text-neutral-600 hover:text-action-primary">
                 Aviso de privacidad
               </Link>
             </li>
             <li>
-              <Link href="/dashboard" className="text-neutral-600 hover:text-brand-navy">
+              <Link href="/dashboard" className="text-neutral-600 hover:text-action-primary">
                 Acceso profesionales
               </Link>
             </li>

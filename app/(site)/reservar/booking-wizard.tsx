@@ -331,7 +331,7 @@ export default function BookingWizard(props: BookingWizardProps) {
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
-      <h1 className="text-2xl font-bold text-brand-navy sm:text-3xl">Reservar hora</h1>
+      <h1 className="text-2xl font-bold text-action-primary sm:text-3xl">Reservar hora</h1>
       <p className="mt-1.5 text-sm text-neutral-600">
         {props.clinicName} · {props.timezone.replace("_", " ")}
       </p>
@@ -404,7 +404,7 @@ export default function BookingWizard(props: BookingWizardProps) {
                 <button
                   type="button"
                   onClick={() => selectDoctor(null)}
-                  className="text-sm font-semibold text-brand-navy underline underline-offset-4"
+                  className="text-sm font-semibold text-action-primary underline underline-offset-4"
                 >
                   {doctorId ? "Cambiar" : "Cualquiera disponible"}
                 </button>
@@ -633,14 +633,14 @@ export default function BookingWizard(props: BookingWizardProps) {
                   </label>
                 </div>
                 {fieldErrors.consent ? (
-                  <p className="text-sm font-medium text-brand-navy-900">{fieldErrors.consent}</p>
+                  <p className="text-sm font-medium text-action-primary">{fieldErrors.consent}</p>
                 ) : null}
               </div>
 
               <Turnstile onToken={setTurnstileToken} resetKey={turnstileReset} />
 
               <div className="rounded-card border border-neutral-200 bg-neutral-50 p-4">
-                <h3 className="text-sm font-semibold text-brand-navy">Resumen</h3>
+                <h3 className="text-sm font-semibold text-action-primary">Resumen</h3>
                 <dl className="mt-2 space-y-1.5 text-sm">
                   <SummaryRow label="Servicio" value={service?.name ?? "—"} />
                   <SummaryRow
@@ -675,7 +675,7 @@ export default function BookingWizard(props: BookingWizardProps) {
                 <path d="m5 13 4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </span>
-            <h2 className="mt-4 text-xl font-bold text-brand-navy">¡Cita reservada!</h2>
+            <h2 className="mt-4 text-xl font-bold text-action-primary">¡Cita reservada!</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-neutral-700">
               Te enviamos la confirmación a <strong>{form.email}</strong> con un archivo para tu
               calendario y un enlace para ver, reprogramar o cancelar.
@@ -763,7 +763,7 @@ function StepIndicator({
                 </span>
                 <span
                   className={`hidden truncate text-xs font-medium sm:block ${
-                    state === "actual" ? "text-brand-navy" : "text-neutral-600"
+                    state === "actual" ? "text-action-primary" : "text-neutral-600"
                   }`}
                 >
                   {STEP_TITLES[step]}
@@ -864,7 +864,7 @@ function SlotGrid({
               className={`min-h-11 rounded-xl border text-sm font-semibold transition-colors ${
                 isSelected
                   ? "border-action-primary bg-action-primary text-action-primary-foreground"
-                  : "border-neutral-300 bg-white text-brand-navy hover:border-action-primary hover:bg-action-primary/5"
+                  : "border-neutral-300 bg-white text-action-primary hover:border-action-primary hover:bg-action-primary/5"
               }`}
             >
               {time}

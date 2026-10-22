@@ -24,9 +24,9 @@ const FECHA_HORA = new Intl.DateTimeFormat("es-CL", {
 
 const ACCION_BADGE: Record<AuditAction, string> = {
   insert: "border-success-200 bg-success-50 text-success-700",
-  update: "border-brand-sky-200 bg-brand-sky-50 text-brand-navy-700",
+  update: "border-brand-sky-200 bg-brand-sky-50 text-action-primary",
   delete: "border-danger-200 bg-danger-50 text-danger-700",
-  sign: "border-brand-navy-200 bg-brand-navy-50 text-brand-navy-800",
+  sign: "border-brand-navy-200 bg-brand-navy-50 text-action-primary",
   export: "border-warning-200 bg-warning-50 text-warning-700",
   view: "border-neutral-200 bg-neutral-100 text-neutral-600",
   contact: "border-success-200 bg-success-50 text-success-700",
@@ -140,7 +140,7 @@ export function AuditoriaPanel({
             exporta ? (
               <div className="flex flex-wrap gap-2">
                 <a
-                  className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary"
+                  className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-action-primary hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary"
                   href={`/api/ficha/patients/${patientId}/export`}
                   download
                   title="Descargar los datos de la ficha en JSON"
@@ -148,7 +148,7 @@ export function AuditoriaPanel({
                   Ficha (JSON)
                 </a>
                 <a
-                  className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary"
+                  className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-action-primary hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary"
                   href={hrefExport("json")}
                   download
                   title="Descargar todo el historial de cambios en JSON"
@@ -156,7 +156,7 @@ export function AuditoriaPanel({
                   Historial (JSON)
                 </a>
                 <a
-                  className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-brand-navy hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary"
+                  className="inline-flex min-h-9 items-center rounded-xl border border-brand-navy-200 bg-transparent px-3 text-sm font-semibold text-action-primary hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary"
                   href={hrefExport("csv")}
                   download
                   title="Descargar todo el historial de cambios en CSV"
@@ -319,7 +319,7 @@ export function AuditoriaPanel({
               type="button"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1 || cargando}
-              className="rounded-lg border border-brand-navy-200 px-3 py-1.5 text-sm font-medium text-brand-navy-700 transition-colors hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary disabled:cursor-not-allowed disabled:border-neutral-200 disabled:text-neutral-400"
+              className="rounded-lg border border-brand-navy-200 px-3 py-1.5 text-sm font-medium text-action-primary transition-colors hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary disabled:cursor-not-allowed disabled:border-neutral-200 disabled:text-neutral-400"
             >
               ‹ Anterior
             </button>
@@ -330,7 +330,7 @@ export function AuditoriaPanel({
               type="button"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages || cargando}
-              className="rounded-lg border border-brand-navy-200 px-3 py-1.5 text-sm font-medium text-brand-navy-700 transition-colors hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary disabled:cursor-not-allowed disabled:border-neutral-200 disabled:text-neutral-400"
+              className="rounded-lg border border-brand-navy-200 px-3 py-1.5 text-sm font-medium text-action-primary transition-colors hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary disabled:cursor-not-allowed disabled:border-neutral-200 disabled:text-neutral-400"
             >
               Siguiente ›
             </button>

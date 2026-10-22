@@ -116,7 +116,7 @@ export function FichaTabs({
             {patient.doctors?.full_name ? (
               <>
                 {" "}
-                · <span className="text-brand-navy-700">Paciente de {patient.doctors.full_name}</span>
+                · <span className="text-action-primary">Paciente de {patient.doctors.full_name}</span>
               </>
             ) : null}
           </>
@@ -232,7 +232,7 @@ export function FichaTabs({
         open={confirmandoEliminar}
         onClose={() => setConfirmandoEliminar(false)}
         title={`¿Eliminar ${patient.full_name}?`}
-        titleClassName="text-lg font-bold text-brand-navy"
+        titleClassName="text-lg font-bold text-action-primary"
         size="md"
         panelClassName="border-transparent shadow-card"
         busy={eliminando}

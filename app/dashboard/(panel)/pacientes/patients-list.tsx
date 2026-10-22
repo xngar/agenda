@@ -83,7 +83,7 @@ export async function PatientsList({
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   if (errorText) {
-    return <p className="text-sm text-brand-navy-900">{errorText}</p>;
+    return <p className="text-sm text-action-primary">{errorText}</p>;
   }
 
   if (total === 0) {
@@ -109,7 +109,7 @@ export async function PatientsList({
           <p>Esta página está vacía; hay {total} pacientes en total.</p>
           <Link
             href="/dashboard/pacientes"
-            className="font-medium text-brand-navy-700 underline-offset-2 hover:underline"
+            className="font-medium text-action-primary underline-offset-2 hover:underline"
           >
             Ir a la primera página
           </Link>

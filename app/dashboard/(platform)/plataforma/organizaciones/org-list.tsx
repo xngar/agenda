@@ -382,7 +382,7 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
                     <span
                       className={
                         org.active
-                          ? "inline-flex rounded-full bg-brand-sky-100 px-2.5 py-0.5 text-xs font-semibold text-brand-navy"
+                          ? "inline-flex rounded-full bg-brand-sky-100 px-2.5 py-0.5 text-xs font-semibold text-action-primary"
                           : "inline-flex rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-semibold text-neutral-600"
                       }
                     >
@@ -427,7 +427,7 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
                 <span
                   className={
                     org.active
-                      ? "shrink-0 rounded-full bg-brand-sky-100 px-2.5 py-0.5 text-xs font-semibold text-brand-navy"
+                      ? "shrink-0 rounded-full bg-brand-sky-100 px-2.5 py-0.5 text-xs font-semibold text-action-primary"
                       : "shrink-0 rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-semibold text-neutral-600"
                   }
                 >
@@ -507,7 +507,7 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
         open={confirmar !== null}
         onClose={() => setConfirmar(null)}
         title={confirmar ? `¿Eliminar ${confirmar.name}?` : "Eliminar organización"}
-        titleClassName="text-lg font-bold text-brand-navy"
+        titleClassName="text-lg font-bold text-action-primary"
         size="md"
         panelClassName="border-transparent shadow-card"
         busy={eliminando}
@@ -549,7 +549,7 @@ export function OrganizationList({ organizations }: { organizations: Organizatio
           setNuevaPassword("");
         }}
         title={resetOk ? "Contraseña restablecida" : `Nueva contraseña · ${resetear?.name ?? ""}`}
-        titleClassName="text-lg font-bold text-brand-navy"
+        titleClassName="text-lg font-bold text-action-primary"
         size="md"
         panelClassName="border-transparent shadow-card"
         busy={restableciendo}

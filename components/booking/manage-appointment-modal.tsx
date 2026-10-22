@@ -138,7 +138,7 @@ export default function ManageAppointmentModal({
 
   const triggerClasses =
     variant === "link"
-      ? "inline-flex items-center gap-1.5 text-sm font-semibold text-brand-navy hover:underline focus-visible:outline-2 focus-visible:outline-action-primary rounded-md py-1"
+      ? "inline-flex items-center gap-1.5 text-sm font-semibold text-action-primary hover:underline focus-visible:outline-2 focus-visible:outline-action-primary rounded-md py-1"
       : variant === "nav"
       ? "inline-flex items-center gap-1.5 rounded-lg border border-action-primary/20 bg-action-primary/10 px-3 py-2 text-sm font-medium text-action-primary transition-colors hover:border-action-primary/30 hover:bg-action-primary/15"
       : buttonClasses(variant, size, className);
@@ -198,7 +198,7 @@ export default function ManageAppointmentModal({
                 </button>
 
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-sky-100 text-brand-navy">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-sky-100 text-action-primary">
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
                         strokeLinecap="round"
@@ -209,7 +209,7 @@ export default function ManageAppointmentModal({
                     </svg>
                   </span>
                   <div>
-                    <h2 id="modal-title" className="text-xl font-bold text-brand-navy">
+                    <h2 id="modal-title" className="text-xl font-bold text-action-primary">
                       Gestionar o cancelar cita
                     </h2>
                     <p className="text-xs text-neutral-500">

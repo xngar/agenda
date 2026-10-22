@@ -201,14 +201,14 @@
 
   /* Foco visible y consistente en todo el sitio (WCAG 2.4.7). */
   :focus-visible {
-    outline: 2px solid var(--brand-navy);
+    outline: 2px solid var(--action-primary);
     outline-offset: 2px;
     border-radius: 0.35rem;
   }
 
   ::selection {
     background-color: color-mix(in srgb, var(--brand-sky) 45%, transparent);
-    color: var(--brand-navy);
+    color: var(--action-primary);
   }
 }
 
@@ -251,7 +251,7 @@
   --panel-line: #e4edf9;
   --panel-active-bg: color-mix(in oklab, var(--action-primary) 8%, white);
   --panel-hover-bg: color-mix(in oklab, var(--action-primary) 5%, white);
-  --panel-ink: var(--brand-navy);
+  --panel-ink: var(--action-primary);
   --panel-muted: var(--neutral-500);
   --panel-radius-card: 1.25rem;
   --panel-radius-control: 0.75rem;
@@ -488,18 +488,18 @@
 
 /* ============================================================================
    Tokens de shadcn/ui (sólo para sus componentes en components/ui/).
-   Mapeados a la marca: primary = navy, accent/ring = sky. No tocan los
+   Mapeados a la marca: primary = morado, accent/ring = sky. No tocan los
    tokens de marca de arriba ni los usan los componentes propios.
    ========================================================================== */
 :root {
   --background: #ffffff;
   --foreground: #1e293b;
-  --primary: #0b3c7a;
+  --primary: var(--action-primary);
   --primary-foreground: #ffffff;
   --secondary: #f1f5f9;
   --secondary-foreground: #1e293b;
   --accent: #e9f6fe;
-  --accent-foreground: #0b3c7a;
+  --accent-foreground: var(--action-primary);
   --muted: #f1f5f9;
   --muted-foreground: #64748b;
   --destructive: #b91c1c;

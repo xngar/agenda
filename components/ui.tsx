@@ -19,7 +19,7 @@ const VARIANTS: Record<ButtonVariant, string> = {
   secondary:
     "border border-transparent bg-action-primary text-action-primary-foreground hover:bg-action-primary-hover disabled:bg-neutral-300 disabled:text-neutral-500",
   ghost:
-    "border border-neutral-200 bg-white text-brand-navy hover:bg-action-primary/5 disabled:text-neutral-500",
+    "border border-neutral-200 bg-white text-action-primary hover:bg-action-primary/5 disabled:text-neutral-500",
   danger:
     "border border-transparent bg-red-600 text-white hover:bg-red-500 disabled:bg-neutral-300 disabled:text-neutral-500",
   flat:
@@ -99,7 +99,7 @@ export function CardHeader({
   title,
   description,
   action,
-  titleClassName = "text-brand-navy",
+  titleClassName = "text-action-primary",
 }: {
   title: ReactNode;
   description?: ReactNode;
@@ -143,7 +143,7 @@ export function Field({
       <label htmlFor={htmlFor} className="block text-sm font-medium text-neutral-800">
         {label}
         {required ? (
-          <span className="ml-1 text-brand-navy" aria-hidden="true">
+          <span className="ml-1 text-action-primary" aria-hidden="true">
             *
           </span>
         ) : (
@@ -214,7 +214,7 @@ export function EmptyState({
   description,
   action,
   icon = "calendario",
-  titleClassName = "text-brand-navy",
+  titleClassName = "text-action-primary",
 }: {
   title: string;
   description?: string;
@@ -226,7 +226,7 @@ export function EmptyState({
     <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
       <span
         aria-hidden="true"
-        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-sky-50 text-brand-navy"
+        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-sky-50 text-action-primary"
       >
         {icon === "correo" ? <CorreoIcon /> : icon === "diente" ? <DienteIcon /> : <CalendarioIcon />}
       </span>
@@ -272,7 +272,7 @@ export function ErrorNotice({
 
 export function InfoNotice({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-card border border-brand-sky-400/40 bg-brand-sky-50 px-4 py-3 text-sm text-brand-navy-900">
+    <div className="rounded-card border border-brand-sky-400/40 bg-brand-sky-50 px-4 py-3 text-sm text-action-primary">
       {children}
     </div>
   );
@@ -287,13 +287,13 @@ export function StatusBadge({ status }: { status: string }) {
     confirmed: { label: "Confirmada", className: "bg-brand-navy text-white" },
     pending: {
       label: "Por confirmar",
-      className: "bg-brand-sky-100 text-brand-navy-900 border border-brand-sky-400/50",
+      className: "bg-brand-sky-100 text-action-primary border border-brand-sky-400/50",
     },
     cancelled: {
       label: "Cancelada",
       className: "bg-neutral-200 text-neutral-600 line-through decoration-neutral-500",
     },
-    completed: { label: "Atendida", className: "bg-brand-sky text-brand-navy-900 border border-brand-sky-600/40" },
+    completed: { label: "Atendida", className: "bg-brand-sky text-action-primary border border-brand-sky-600/40" },
     no_show: {
       label: "No asistió",
       className: "bg-danger-50 text-danger-700 border border-danger-200",

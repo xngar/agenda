@@ -290,7 +290,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       )}
 
       <p className="text-sm text-neutral-500">
-        <Link className="underline underline-offset-4 hover:text-brand-navy" href="/">
+        <Link className="underline underline-offset-4 hover:text-action-primary" href="/">
           Ir al sitio público
         </Link>
       </p>

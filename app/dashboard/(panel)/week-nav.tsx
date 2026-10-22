@@ -54,7 +54,7 @@ export function WeekNav({ dayKey, today }: { dayKey: string; today: string }) {
           onChange={(e) => {
             if (e.target.value) irA(e.target.value);
           }}
-          className="h-9 rounded-lg border-0 bg-transparent px-2 text-sm text-neutral-800 transition-colors hover:text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-sky/40 disabled:opacity-50"
+          className="h-9 rounded-lg border-0 bg-transparent px-2 text-sm text-neutral-800 transition-colors hover:text-action-primary focus:outline-none focus:ring-2 focus:ring-brand-sky/40 disabled:opacity-50"
         />
 
         <button

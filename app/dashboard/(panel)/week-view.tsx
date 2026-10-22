@@ -46,13 +46,13 @@ const CHIP: Record<AppointmentStatus, { bg: string; border: string; text: string
   confirmed: {
     bg: "bg-brand-navy-50",
     border: "border-l-brand-navy",
-    text: "text-brand-navy-900",
+    text: "text-action-primary",
     badge: "bg-brand-navy text-white",
   },
   pending: {
     bg: "bg-brand-sky-50",
     border: "border-l-brand-sky-400",
-    text: "text-brand-navy",
+    text: "text-action-primary",
     badge: "bg-brand-sky-400 text-white",
   },
   cancelled: {
@@ -64,7 +64,7 @@ const CHIP: Record<AppointmentStatus, { bg: string; border: string; text: string
   completed: {
     bg: "bg-brand-sky-50",
     border: "border-l-brand-sky-600",
-    text: "text-brand-navy-900",
+    text: "text-action-primary",
     badge: "bg-brand-sky-600 text-white",
   },
   no_show: {
@@ -321,7 +321,7 @@ export function WeekView({
                 >
                   <span
                     className={`text-[11px] font-semibold uppercase tracking-wide ${
-                      esHoy ? "text-brand-navy" : "text-neutral-500"
+                      esHoy ? "text-action-primary" : "text-neutral-500"
                     }`}
                   >
                     {diaNombreCorto(dia)}

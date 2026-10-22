@@ -25,7 +25,7 @@ export default async function ReservarPage({ params, searchParams }: { params: P
     // base o la red, y no queremos exponer internals en pantalla.
     return (
       <div className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6">
-        <h1 className="text-2xl font-bold text-brand-navy">Reservar hora</h1>
+        <h1 className="text-2xl font-bold text-action-primary">Reservar hora</h1>
         <div className="mt-5">
           <ErrorNotice message="No pudimos cargar la agenda en este momento. Intenta en unos minutos o llámanos." />
         </div>

@@ -55,7 +55,7 @@ export function AgendaCards({
               color para contar el estado de un vistazo.
             */}
             <div className="w-14 shrink-0 pt-0.5 text-right sm:w-16">
-              <p className="text-base font-semibold tabular-nums text-brand-navy">
+              <p className="text-base font-semibold tabular-nums text-action-primary">
                 {formatTime(start)}
               </p>
               <p className="text-xs tabular-nums text-neutral-600">{formatTime(end)}</p>

@@ -44,8 +44,8 @@ function Segmented({
           onClick={() => onChange(opcion.valor)}
           className={`min-h-9 flex-1 rounded-lg px-3 text-sm font-medium transition-colors ${
             seccion === opcion.valor
-              ? "bg-white text-brand-navy shadow-card"
-              : "text-neutral-600 hover:text-brand-navy"
+              ? "bg-white text-action-primary shadow-card"
+              : "text-neutral-600 hover:text-action-primary"
           }`}
         >
           {opcion.etiqueta}

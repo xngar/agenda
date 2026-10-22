@@ -169,7 +169,7 @@ export function AgendaTable({
                         className={`inline-block size-2 shrink-0 rounded-full ${PUNTO[cita.status] ?? "bg-neutral-300"}`}
                       />
                       <span>
-                        <span className="block font-semibold tabular-nums text-brand-navy">
+                        <span className="block font-semibold tabular-nums text-action-primary">
                           {formatTime(start)}
                         </span>
                         <span className="block text-xs tabular-nums text-neutral-600">

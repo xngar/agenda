@@ -134,7 +134,7 @@ export function ServiceList({ initial }: { initial: ServiceItem[] }) {
         open={porEliminar !== null}
         onClose={() => setPorEliminar(null)}
         title={porEliminar ? `¿Eliminar ${porEliminar.name}?` : "Eliminar servicio"}
-        titleClassName="text-lg font-bold text-brand-navy"
+        titleClassName="text-lg font-bold text-action-primary"
         size="md"
         panelClassName="border-transparent shadow-card"
         busy={eliminando}

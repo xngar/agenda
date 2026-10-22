@@ -163,7 +163,7 @@ export function Modal({
         {title ? (
           <h2
             id={titleId}
-            className={cn("text-lg font-semibold text-brand-navy", titleClassName)}
+            className={cn("text-lg font-semibold text-action-primary", titleClassName)}
           >
             {title}
           </h2>

@@ -67,7 +67,7 @@ export default async function PanelLayout({
           >
             <span
               aria-hidden="true"
-              className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-navy-50 text-lg font-bold text-brand-navy"
+              className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-navy-50 text-lg font-bold text-action-primary"
             >
               {inicialesDe(session.full_name) || "?"}
             </span>
