@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button, ErrorNotice, InfoNotice, buttonClasses, inputClasses } from "@/components/ui";
 import { AsyncButton } from "@/components/motion/async-button";
@@ -200,6 +201,22 @@ export function ScheduleEditor({
 
   const total = franjas.length;
   const cerrados = DIAS.filter((d) => ordenadas(d.d).length === 0);
+  const firmaHorario = (reglas: AvailabilityRule[]) =>
+    JSON.stringify(
+      reglas
+        .map((r) => ({
+          weekday: r.weekday,
+          startTime: normalizar(r.startTime),
+          endTime: normalizar(r.endTime),
+        }))
+        .sort(
+          (a, b) =>
+            a.weekday - b.weekday ||
+            a.startTime.localeCompare(b.startTime) ||
+            a.endTime.localeCompare(b.endTime),
+        ),
+    );
+  const hayCambios = firmaHorario(franjas) !== firmaHorario(initial);
 
   return (
     <div className="space-y-4">
@@ -304,22 +321,22 @@ export function ScheduleEditor({
                       <button
                         type="button"
                         onClick={() => quitar(f.key)}
-                        aria-label={`Quitar la franja de ${nombre}`}
-                        className="rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-600 hover:bg-neutral-100"
+                        aria-label={`Quitar franja de ${nombre}, ${f.startTime} a ${f.endTime}`}
+                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-danger-200 bg-danger-50 px-3 text-sm font-semibold text-danger-700 transition-colors hover:bg-danger-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger-600"
                       >
-                        ×
+                        <Trash2 className="size-4" aria-hidden="true" />
+                        Quitar franja
                       </button>
                     </div>
                   ))
                 )}
 
-                <button
-                  type="button"
-                  onClick={() => agregar(d)}
-                  className="rounded-lg border border-dashed border-neutral-300 px-3 py-2 text-sm text-neutral-600 hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary"
-                >
-                  + Franja
-                </button>
+                <div className="flex justify-end">
+                  <Button type="button" onClick={() => agregar(d)} size="md">
+                    <Plus className="size-4" aria-hidden="true" />
+                    Agregar franja
+                  </Button>
+                </div>
               </div>
             </section>
           );
@@ -340,9 +357,11 @@ export function ScheduleEditor({
         >
           Guardar horario
         </AsyncButton>
-        <Button variant="secondary" onClick={resetear} disabled={guardando}>
-          Descartar cambios
-        </Button>
+        {hayCambios ? (
+          <Button variant="ghost" onClick={resetear} disabled={guardando}>
+            Restaurar horario guardado
+          </Button>
+        ) : null}
 
         {isAdmin ? (
           <span className="self-center text-xs text-neutral-500">
