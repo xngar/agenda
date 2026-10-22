@@ -6,6 +6,7 @@ import {
   bodyError,
   dbError,
   orgPatient,
+  auditPatientView,
 } from "@/lib/ficha/http";
 import { chartEntrySchema } from "@/lib/ficha/schemas";
 import { toothFaces } from "@/lib/ficha/dental";
@@ -30,6 +31,8 @@ export async function GET(_request: Request, { params }: Params) {
     .order("recorded_at", { ascending: false });
 
   if (error) return dbError(error);
+  const auditError = await auditPatientView(ctx, id, "dental_chart_entries");
+  if (auditError) return auditError;
 
   return NextResponse.json({ patient, chart: data ?? [] });
 }

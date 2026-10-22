@@ -3,10 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 /**
  * Verificación de Turnstile en el servidor.
  *
- * El fallo que esto fija: `TURNSTILE_ENABLED` se derivaba de
- * `Boolean(process.env.TURNSTILE_SECRET_KEY)`. Si alguien despliega sin la
- * clave, `verifyTurnstile` devolvía `true` para siempre y sin logs: la
- * clínica creyendo que tiene anti-bot y sin él, y nadie se enteraba.
+ * Si alguien despliega sin la clave, las reservas se bloquean y se deja
+ * constancia en los logs en vez de omitir la protección silenciosamente.
  *
  * El módulo se importa de forma dinámica porque `TURNSTILE_ENABLED` se
  * evalúa al cargar el archivo, así que hay que reseteear los módulos entre
@@ -31,8 +29,7 @@ describe("verifyTurnstile", () => {
     vi.stubEnv("NODE_ENV", "production");
     const { verifyTurnstile } = await import("@/lib/turnstile");
 
-    // Sigue dejando reservar (no se corta el despliegue), pero deja rastro.
-    expect(await verifyTurnstile(undefined)).toBe(true);
+    expect(await verifyTurnstile(undefined)).toBe("unavailable");
 
     expect(console.error).toHaveBeenCalledWith(
       expect.stringContaining("TURNSTILE_SECRET_KEY"),
@@ -57,7 +54,7 @@ describe("verifyTurnstile", () => {
     vi.stubEnv("NODE_ENV", "development");
     const { verifyTurnstile } = await import("@/lib/turnstile");
 
-    expect(await verifyTurnstile(undefined)).toBe(true);
+    expect(await verifyTurnstile(undefined)).toBe("verified");
     expect(console.error).not.toHaveBeenCalled();
   });
 
@@ -67,9 +64,7 @@ describe("verifyTurnstile", () => {
 
     const { verifyTurnstile } = await import("@/lib/turnstile");
 
-    // Esta es la parte que importa: con la clave puesta, el hueco de
-    // seguridad desaparece y el token pasa a ser obligatorio.
-    expect(await verifyTurnstile(undefined)).toBe(false);
+    expect(await verifyTurnstile(undefined)).toBe("invalid");
     expect(console.error).not.toHaveBeenCalled();
   });
 });

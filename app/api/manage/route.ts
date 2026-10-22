@@ -39,6 +39,12 @@ export async function POST(request: Request) {
   const identity = clientIdentity(request);
 
   const limit = await checkRateLimit("manage", identity, limits);
+  if (limit && !limit.available) {
+    return NextResponse.json(
+      { error: "La gestión de citas no está disponible temporalmente." },
+      { status: 503 },
+    );
+  }
   if (limit && !limit.ok) {
     return NextResponse.json(
       { error: "Demasiados intentos. Espera unos minutos e inténtalo de nuevo." },
@@ -108,6 +114,12 @@ export async function GET(request: Request) {
   const token = url.searchParams.get("token") ?? "";
 
   const limit = await checkRateLimit("manage", clientIdentity(request), limits);
+  if (limit && !limit.available) {
+    return NextResponse.json(
+      { error: "La gestión de citas no está disponible temporalmente." },
+      { status: 503 },
+    );
+  }
   if (limit && !limit.ok) {
     return NextResponse.json({ error: "Demasiados intentos." }, { status: 429 });
   }

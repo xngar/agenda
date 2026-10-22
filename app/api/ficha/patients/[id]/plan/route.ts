@@ -6,6 +6,7 @@ import {
   bodyError,
   dbError,
   orgPatient,
+  auditPatientView,
 } from "@/lib/ficha/http";
 import { treatmentPlanItemSchema } from "@/lib/ficha/schemas";
 
@@ -28,6 +29,8 @@ export async function GET(_request: Request, { params }: Params) {
     .order("priority", { ascending: true, nullsFirst: false });
 
   if (error) return dbError(error);
+  const auditError = await auditPatientView(ctx, id, "dental_treatment_plan_items");
+  if (auditError) return auditError;
 
   return NextResponse.json({ patient, items: data ?? [] });
 }

@@ -6,6 +6,7 @@ import {
   bodyError,
   dbError,
   orgPatient,
+  auditPatientView,
 } from "@/lib/ficha/http";
 import { encounterSchema } from "@/lib/ficha/schemas";
 import { validateEncounterData } from "@/lib/ficha/definitions";
@@ -30,6 +31,8 @@ export async function GET(_request: Request, { params }: Params) {
     .order("started_at", { ascending: false });
 
   if (error) return dbError(error);
+  const auditError = await auditPatientView(ctx, id, "encounters");
+  if (auditError) return auditError;
 
   return NextResponse.json({
     patient,

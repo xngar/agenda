@@ -25,6 +25,12 @@ export async function GET(request: Request) {
     requests: 30,
     windowMs: 60_000,
   });
+  if (limit && !limit.available) {
+    return NextResponse.json(
+      { error: "La consulta de horarios no está disponible temporalmente." },
+      { status: 503 },
+    );
+  }
   if (limit && !limit.ok) {
     return NextResponse.json(
       { error: "Demasiadas consultas, espera un momento." },

@@ -5,6 +5,7 @@ import {
   forbidden,
   notFound,
   dbError,
+  auditPatientView,
 } from "@/lib/ficha/http";
 import { redactEncounters } from "@/lib/ficha/privacy";
 
@@ -33,6 +34,8 @@ export async function GET(request: Request, { params }: Params) {
 
   if (error) return dbError(error);
   if (!patient) return notFound("Paciente no encontrado");
+  const auditError = await auditPatientView(ctx, id, "patient_export");
+  if (auditError) return auditError;
 
   if (format === "json") {
     const encounters = redactEncounters(

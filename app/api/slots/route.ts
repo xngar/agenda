@@ -33,6 +33,12 @@ export async function GET(request: Request) {
     requests: 120,
     windowMs: 60_000,
   });
+  if (limit && !limit.available) {
+    return NextResponse.json(
+      { error: "La consulta de horarios no está disponible temporalmente." },
+      { status: 503 },
+    );
+  }
   if (limit && !limit.ok) {
     return NextResponse.json(
       { error: "Demasiadas consultas, espera un momento." },
@@ -120,5 +126,4 @@ function diffInDays(from: string, to: string): number {
   const b = new Date(`${to}T00:00:00Z`).getTime();
   return Math.round((b - a) / 86_400_000);
 }
-
 

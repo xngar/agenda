@@ -8,6 +8,7 @@ import {
   forbidden,
   notFound,
   dbError,
+  auditPatientView,
 } from "@/lib/ficha/http";
 import { FACE_LABEL, STATE_LABEL } from "@/lib/ficha/dental";
 import { redactEncounters } from "@/lib/ficha/privacy";
@@ -345,6 +346,8 @@ export async function GET(_request: Request, { params }: Params) {
 
   if (error) return dbError(error);
   if (!patient) return notFound("Paciente no encontrado");
+  const auditError = await auditPatientView(ctx, id, "patient_pdf");
+  if (auditError) return auditError;
 
   // El PDF no imprime notas privadas; se redactan antes por seguridad.
   const encounters = redactEncounters(

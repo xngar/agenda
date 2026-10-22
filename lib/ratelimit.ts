@@ -7,9 +7,9 @@ import { serverEnv } from "@/lib/env";
 /**
  * Rate limiting en los endpoints públicos (Upstash).
  *
- * Sin credenciales de Upstash (desarrollo local) NO bloqueamos: devolvemos
- * `null` y el endpoint sigue funcionando. En producción el `.env.example`
- * exige las variables, así que un despliegue sin ellas es un error visible.
+ * En desarrollo local se permite continuar sin Upstash. En producción, la
+ * ausencia o caída del proveedor bloquea el request para no desactivar el
+ * límite de forma silenciosa.
  */
 
 type Limiter = Ratelimit;
@@ -49,16 +49,24 @@ export async function checkRateLimit(
   scope: string,
   identifier: string,
   opts: { requests: number; windowMs: number },
-): Promise<{ ok: boolean; remaining: number; reset: number } | null> {
-  if (!redisReady()) return null;
+): Promise<{ ok: boolean; remaining: number; reset: number; available: boolean } | null> {
+  if (!redisReady()) {
+    if (process.env.NODE_ENV !== "production") return null;
+    console.error(`[ratelimit] Upstash no está configurado para ${scope}`);
+    return { ok: false, remaining: 0, reset: Date.now(), available: false };
+  }
 
   try {
     const limiter = getLimiter(scope, opts.requests, opts.windowMs);
     const result = await limiter.limit(identifier);
-    return { ok: result.success, remaining: result.remaining, reset: result.reset };
+    return { ok: result.success, remaining: result.remaining, reset: result.reset, available: true };
   } catch (error) {
-    console.warn("[ratelimit] falló, se permite continuar:", error);
-    return null;
+    console.error(`[ratelimit] Upstash no disponible para ${scope}`);
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[ratelimit] fallo local; se permite continuar", error);
+      return null;
+    }
+    return { ok: false, remaining: 0, reset: Date.now(), available: false };
   }
 }
 

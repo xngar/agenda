@@ -32,14 +32,14 @@ function etiquetas(): string[] {
 }
 
 describe("SidebarNav", () => {
-  it("sin admin ve Agenda, Pacientes, Mi Horario y Bloqueos, y el activo se marca", () => {
+  it("sin admin ve Mi agenda, Pacientes, Mi Horario y Bloqueos, y el activo se marca", () => {
     act(() => {
       root.render(<SidebarNav isAdmin={false} />);
     });
 
     const links = enlaces();
     expect(links).toHaveLength(4);
-    expect(etiquetas()).toEqual(["Agenda", "Pacientes", "Mi Horario", "Bloqueos"]);
+    expect(etiquetas()).toEqual(["Mi agenda", "Pacientes", "Mi Horario", "Bloqueos"]);
 
     for (const a of links) {
       expect(a.querySelector("svg")).not.toBeNull();
@@ -60,7 +60,7 @@ describe("SidebarNav", () => {
 
     expect(enlaces()).toHaveLength(7);
     expect(etiquetas()).toEqual([
-      "Agenda",
+      "Mi agenda",
       "Pacientes",
       "Mi Horario",
       "Bloqueos",

@@ -86,7 +86,7 @@ export function FichaTabs({
       const res = await fetch(`/api/ficha/patients/${patient.id}`, { method: "DELETE" });
       const data = (await res.json().catch(() => null)) as { error?: string } | null;
       if (!res.ok) {
-        setErrorEliminar(data?.error ?? "No se pudo eliminar el paciente");
+        setErrorEliminar(data?.error ?? "No se pudo archivar el paciente");
         return;
       }
       setConfirmandoEliminar(false);
@@ -209,8 +209,8 @@ export function FichaTabs({
                 Zona peligrosa
               </h2>
               <p className="mt-1 text-sm text-neutral-600">
-                Elimina la ficha del paciente y todo su historial clínico. Solo se pueden eliminar
-                pacientes que nunca agendaron una cita. Esta acción no se puede deshacer.
+                Archiva al paciente sin borrar su ficha clínica. El paciente quedará inactivo y
+                sus antecedentes se conservarán.
               </p>
             </div>
             <button
@@ -222,7 +222,7 @@ export function FichaTabs({
               className={buttonClasses("danger", "sm", "shrink-0")}
             >
               <Trash2 className="size-4" aria-hidden />
-              Eliminar paciente
+              Archivar paciente
             </button>
           </div>
         </section>
@@ -231,15 +231,15 @@ export function FichaTabs({
       <Modal
         open={confirmandoEliminar}
         onClose={() => setConfirmandoEliminar(false)}
-        title={`¿Eliminar ${patient.full_name}?`}
+        title={`¿Archivar ${patient.full_name}?`}
         titleClassName="text-lg font-bold text-action-primary"
         size="md"
         panelClassName="border-transparent shadow-card"
         busy={eliminando}
       >
         <p className="mt-2 text-sm text-neutral-600">
-          Se borrará la ficha del paciente y todo su historial clínico. Solo se pueden eliminar
-          pacientes que nunca agendaron una cita. Esta acción no se puede deshacer.
+          El paciente quedará inactivo. Su ficha y los registros clínicos se conservarán y seguirán
+          sujetos a los permisos habituales.
         </p>
 
         {errorEliminar ? (
@@ -258,7 +258,7 @@ export function FichaTabs({
             disabled={eliminando}
             className={buttonClasses("danger", "sm")}
           >
-            {eliminando ? "Eliminando…" : "Eliminar paciente"}
+            {eliminando ? "Archivando…" : "Archivar paciente"}
           </button>
         </div>
       </Modal>

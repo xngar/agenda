@@ -27,6 +27,14 @@ const KIND_LABEL: Record<AttachmentKind, string> = Object.fromEntries(
 const fmtBytes = (b: number) => (b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.round(b / 1024)} KB`);
 
 const MAX_NOMBRE = 44;
+const MAX_ARCHIVO_BYTES = 20 * 1024 * 1024;
+const MIME_POR_EXTENSION: Record<string, string> = {
+  pdf: "application/pdf",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+};
 
 function acortarTexto(valor: string, max = MAX_NOMBRE): string {
   if (valor.length <= max) return valor;
@@ -90,6 +98,16 @@ export function AdjuntosPanel({
       setError("Selecciona un archivo");
       return;
     }
+    if (file.size > MAX_ARCHIVO_BYTES) {
+      setError("El archivo supera el límite de 20 MiB");
+      return;
+    }
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+    const mime = file.type || MIME_POR_EXTENSION[extension] || "";
+    if (!Object.values(MIME_POR_EXTENSION).includes(mime)) {
+      setError("Solo se permiten archivos PDF, JPEG, PNG o WebP");
+      return;
+    }
     setSubiendo(true);
     try {
       const cli = supabaseBrowser();
@@ -100,7 +118,7 @@ export function AdjuntosPanel({
       const safeName = file.name.replace(/[^\w.\-]+/g, "_");
       const path = `${orgId}/${patientId}/${crypto.randomUUID()}-${safeName}`;
       const { error: upError } = await cli.storage.from("ficha-adjuntos").upload(path, file, {
-        contentType: file.type,
+        contentType: mime,
         upsert: false,
       });
       if (upError) {
@@ -187,8 +205,19 @@ export function AdjuntosPanel({
               <input
                 id="file"
                 type="file"
+                accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
                 className={`${inputClasses} file:mr-3 file:rounded-lg file:border-0 file:bg-action-primary file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-action-primary-foreground hover:file:bg-action-primary-hover`}
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                onChange={(e) => {
+                  const selected = e.target.files?.[0] ?? null;
+                  if (selected && selected.size > MAX_ARCHIVO_BYTES) {
+                    setFile(null);
+                    setError("El archivo supera el límite de 20 MiB");
+                    e.currentTarget.value = "";
+                    return;
+                  }
+                  setError(null);
+                  setFile(selected);
+                }}
               />
             </Field>
             <Field label="Tipo" htmlFor="kind" required={false}>

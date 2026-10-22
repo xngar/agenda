@@ -6,6 +6,7 @@ import {
   bodyError,
   dbError,
   orgPatient,
+  auditPatientView,
 } from "@/lib/ficha/http";
 import { prescriptionSchema } from "@/lib/ficha/schemas";
 
@@ -28,6 +29,8 @@ export async function GET(_request: Request, { params }: Params) {
     .order("created_at", { ascending: false });
 
   if (error) return dbError(error);
+  const auditError = await auditPatientView(ctx, id, "prescriptions");
+  if (auditError) return auditError;
 
   return NextResponse.json({ patient, prescriptions: data ?? [] });
 }
