@@ -17,6 +17,8 @@ const PERFIL_PATH = "/dashboard/perfil";
 interface PerfilSheetContextValue {
   profile: PerfilSheetProfile;
   openProfile: () => void;
+  avatarVersion: number;
+  setHasAvatar: (hasAvatar: boolean) => void;
 }
 
 const PerfilSheetContext = createContext<PerfilSheetContextValue | null>(null);
@@ -33,13 +35,32 @@ export function PerfilSheetProvider({
   children: ReactNode;
 }) {
   const [abierto, setAbierto] = useState(false);
+  const [hasAvatar, setHasAvatar] = useState(profile.hasAvatar);
+  const [avatarVersion, setAvatarVersion] = useState(0);
   const openProfile = useCallback(() => setAbierto(true), []);
-  const contextValue = useMemo(() => ({ profile, openProfile }), [profile, openProfile]);
+  const updateAvatar = useCallback((next: boolean) => {
+    setHasAvatar(next);
+    setAvatarVersion((version) => version + 1);
+  }, []);
+  const contextValue = useMemo(
+    () => ({
+      profile: { ...profile, hasAvatar },
+      openProfile,
+      avatarVersion,
+      setHasAvatar: updateAvatar,
+    }),
+    [profile, hasAvatar, openProfile, avatarVersion, updateAvatar],
+  );
 
   return (
     <PerfilSheetContext.Provider value={contextValue}>
       {children}
-      <PerfilSheet profile={profile} abierto={abierto} onCerrar={() => setAbierto(false)} />
+      <PerfilSheet
+        profile={contextValue.profile}
+        onAvatarChange={updateAvatar}
+        abierto={abierto}
+        onCerrar={() => setAbierto(false)}
+      />
     </PerfilSheetContext.Provider>
   );
 }
@@ -91,4 +112,19 @@ export function PerfilTrigger({
 /** Datos de la sesión para la hoja; null fuera del panel del profesional. */
 export function usePerfilSheetProfile(): PerfilSheetProfile | null {
   return useContext(PerfilSheetContext)?.profile ?? null;
+}
+
+export function usePerfilAvatar(): {
+  hasAvatar: boolean;
+  avatarVersion: number;
+  setHasAvatar: (hasAvatar: boolean) => void;
+} | null {
+  const ctx = useContext(PerfilSheetContext);
+  return ctx
+    ? {
+        hasAvatar: ctx.profile.hasAvatar,
+        avatarVersion: ctx.avatarVersion,
+        setHasAvatar: ctx.setHasAvatar,
+      }
+    : null;
 }

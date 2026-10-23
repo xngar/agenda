@@ -4,6 +4,7 @@ import { getDoctorSession } from "@/lib/auth";
 import { PanelShell } from "@/components/dashboard/panel-shell";
 import { LogoutButton } from "../logout-button";
 import { PerfilSheetProvider, PerfilTrigger } from "./perfil/perfil-sheet-provider";
+import { PerfilAvatar } from "./perfil/perfil-avatar";
 import { RouteFade } from "@/components/motion/route-fade";
 
 export const metadata: Metadata = {
@@ -53,6 +54,7 @@ export default async function PanelLayout({
       profile={{
         fullName: session.full_name,
         specialty: session.specialty,
+        hasAvatar: false,
         role: session.role,
         roleLabel,
       }}
@@ -65,12 +67,10 @@ export default async function PanelLayout({
             title="Mi perfil"
             className="group flex w-full flex-col items-center gap-2 rounded-[var(--panel-radius-card)] bg-white px-4 py-5 text-center transition-colors duration-element ease-in-out-soft hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy"
           >
-            <span
-              aria-hidden="true"
-              className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-navy-50 text-lg font-bold text-action-primary"
-            >
-              {inicialesDe(session.full_name) || "?"}
-            </span>
+            <PerfilAvatar
+              initials={inicialesDe(session.full_name) || "?"}
+              fullName={session.full_name}
+            />
             <span className="block w-full truncate text-sm font-semibold leading-5 text-neutral-800">
               {session.full_name}
             </span>

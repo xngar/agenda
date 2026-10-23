@@ -11,7 +11,7 @@ export interface DoctorSession {
   orgSlug: string;
   orgType: OrganizationType;
   id: string;
-full_name: string;
+  full_name: string;
   specialty: string | null;
   role: DoctorRole;
   isAdmin: boolean;
@@ -47,7 +47,7 @@ export const getDoctorSession = cache(async (): Promise<DoctorSession | null> =>
 
   if (!user) return null;
 
-const { data: doctor, error } = await supabase
+  const { data: doctor, error } = await supabase
     .from("doctors")
     .select("id, full_name, specialty, is_admin, is_super_admin, active, role, org_id, organizations!doctors_org_id_fkey (slug, type)")
     .eq("id", user.id)
@@ -59,10 +59,10 @@ const { data: doctor, error } = await supabase
     id: doctor.id,
     full_name: doctor.full_name,
     specialty: doctor.specialty,
-isAdmin: doctor.is_admin,
+    isAdmin: doctor.is_admin,
     isSuperAdmin: doctor.is_super_admin,
     orgId: doctor.org_id,
-orgSlug: orgSlugOf(doctor.organizations),
+    orgSlug: orgSlugOf(doctor.organizations),
     orgType: orgTypeOf(doctor.organizations),
     role: doctor.role === "reception" ? "reception" : "professional",
   };

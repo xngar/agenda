@@ -4,6 +4,11 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { supabaseServer } from "@/lib/supabase/server";
 import { profileUpdateSchema } from "@/lib/validation";
 
+function faltaMigracionAvatar(error: { code?: string; message?: string }): boolean {
+  if (!error.message?.includes("avatar_path")) return false;
+  return error.code === "42703" || error.code === "PGRST204" || error.message.toLowerCase().includes("schema cache");
+}
+
 /**
  * Mi perfil: lectura y edición del propio nombre y especialidad.
  *
@@ -29,14 +34,24 @@ export async function GET() {
   const supabase = await supabaseServer();
   const { data, error } = await supabase
     .from("doctors")
-    .select("id, full_name, specialty, role, is_admin")
+    .select("id, full_name, specialty, avatar_path, role, is_admin")
     .eq("id", session.id)
     .maybeSingle();
 
   if (error || !data) {
+    if (error && faltaMigracionAvatar(error)) {
+      return NextResponse.json(
+        {
+          error:
+            "Las fotos de perfil aún no están habilitadas en la base de datos. Aplica la migración 20261023130000_doctor_profile_avatar.sql y vuelve a intentarlo.",
+        },
+        { status: 503 },
+      );
+    }
     return NextResponse.json({ error: "No se pudo leer tu perfil" }, { status: 500 });
   }
-  return NextResponse.json({ profile: data });
+  const { avatar_path: _avatarPath, ...profile } = data;
+  return NextResponse.json({ profile: { ...profile, hasAvatar: Boolean(_avatarPath) } });
 }
 
 export async function PATCH(request: Request) {
