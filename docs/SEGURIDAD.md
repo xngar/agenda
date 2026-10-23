@@ -62,7 +62,7 @@ Migraciones aplican RLS por tablas:
 
 ## Rate limiting
 
-- **Implementación**: `lib/ratelimit.ts`. Usa `@upstash/ratelimit` + Redis si `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN` configurados. Sino fallback a `Map` in-memory (válido dev/single instance).
+- **Implementación**: `lib/ratelimit.ts`. Usa `@upstash/ratelimit` + Redis si `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN` están configurados. Si faltan o Redis falla, aplica un límite en memoria por instancia para mantener el servicio disponible. En despliegues con varias instancias, ese fallback no es compartido ni persistente; configura Upstash para aplicar límites consistentes.
 - **Endpoints protegidos**: booking (5/hora), slots (120/min), otros según lógica. Retorna 429 si excede.
 
 ## Turnstile (captcha)

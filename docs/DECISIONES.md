@@ -92,11 +92,11 @@ Registro de decisiones técnicas tomadas y su motivo, deducidas únicamente del 
 
 ## 12. Rate limiting con fallback seguro
 
-**Contexto.** En desarrollo/local puede no haber Redis Upstash; en producción multi-replica necesita storage compartido.
+**Contexto.** El rate limiting no debe impedir el servicio cuando Redis Upstash no está configurado o no responde. En despliegues con varias instancias, el contador necesita storage compartido para mantener un límite consistente.
 
-**Decisión.** `lib/ratelimit.ts` usa Upstash si credenciales presentes, else `Map` in-memory. Distingue por identidad (IP/headers). Límites razonables.
+**Decisión.** `lib/ratelimit.ts` usa Upstash si las credenciales están presentes; de lo contrario, o si Redis falla, aplica un límite en memoria por instancia. Distingue por identidad (IP/headers). Límites razonables.
 
-**Consecuencia.** Funciona en todos entornos. Fallback no compartido entre réplicas (limitación conocida en dev/prod single instance) - aceptable según diseño (documentado). En prod con múltiples réplicas conviene configurar Upstash.
+**Consecuencia.** El servicio sigue disponible sin Upstash. El fallback no se comparte entre instancias y se reinicia cuando una instancia se recicla; en producción multi-instancia Upstash sigue siendo recomendable para que el límite sea consistente.
 
 ## 13. Configuración fail-fast
 
