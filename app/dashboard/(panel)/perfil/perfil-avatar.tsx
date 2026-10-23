@@ -15,14 +15,14 @@ export function PerfilAvatar({
   return (
     <span
       aria-hidden="true"
-      className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-navy-50 text-lg font-bold text-action-primary"
+      className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-navy-50 text-2xl font-bold text-action-primary"
     >
       <Image
         key={avatar?.avatarVersion ?? 0}
         src={`/api/dashboard/profile/avatar?v=${avatar?.avatarVersion ?? 0}`}
         alt=""
         fill
-        sizes="64px"
+        sizes="96px"
         unoptimized
         className="object-cover"
         onError={(event) => {
