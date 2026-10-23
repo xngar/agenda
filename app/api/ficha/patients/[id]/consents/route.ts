@@ -23,7 +23,7 @@ export async function GET(_request: Request, { params }: Params) {
 
   const { data, error } = await ctx.supabase
     .from("consents")
-    .select("*")
+    .select("*, evidence_attachment:attachments!consents_evidence_attachment_id_fkey(id,file_name)")
     .eq("org_id", ctx.session.orgId)
     .eq("patient_id", id)
     .order("accepted_at", { ascending: false });
@@ -48,6 +48,25 @@ export async function POST(request: Request, { params }: Params) {
   const body = consentAcceptanceSchema.safeParse(raw);
   if (!body.success) return bodyError(body.error);
 
+  if (body.data.evidence_attachment_id) {
+    const { data: attachment, error: attachmentError } = await ctx.supabase
+      .from("attachments")
+      .select("id")
+      .eq("id", body.data.evidence_attachment_id)
+      .eq("org_id", ctx.session.orgId)
+      .eq("patient_id", id)
+      .eq("kind", "consentimiento")
+      .maybeSingle();
+
+    if (attachmentError) return dbError(attachmentError);
+    if (!attachment) {
+      return NextResponse.json(
+        { error: "El respaldo debe ser un adjunto de consentimiento de este paciente." },
+        { status: 400 },
+      );
+    }
+  }
+
   const { data, error } = await ctx.supabase
     .from("consents")
     .insert({
@@ -62,6 +81,8 @@ export async function POST(request: Request, { params }: Params) {
       accepted_by_name: body.data.accepted_by_name,
       accepted_by_relation: body.data.accepted_by_relation?.trim() || null,
       acceptance_method: body.data.acceptance_method,
+      acceptance_channel: body.data.acceptance_channel,
+      evidence_attachment_id: body.data.evidence_attachment_id ?? null,
       signed_by: ctx.session.id,
     })
     .select()

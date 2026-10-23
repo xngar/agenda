@@ -145,6 +145,8 @@ describe("fase 3: campos por especialidad", () => {
       accepted_by_patient: true,
       accepted_by_name: "Nombre Paciente",
       acceptance_method: "documento",
+      acceptance_channel: "presencial",
+      evidence_attachment_id: "00000000-0000-0000-0000-000000000000",
       consentObtained: true,
     };
     expect(consentAcceptanceSchema.safeParse(base).success).toBe(true);
@@ -161,6 +163,34 @@ describe("fase 3: campos por especialidad", () => {
         patient_id: "00000000-0000-0000-0000-000000000000",
       }).success,
     ).toBe(true);
+    expect(
+      consentAcceptanceSchema.safeParse({
+        ...base,
+        kind: "datos_personales",
+        acceptance_method: "verbal",
+        acceptance_channel: "videollamada",
+        evidence_attachment_id: null,
+      }).success,
+    ).toBe(true);
+    expect(
+      consentAcceptanceSchema.safeParse({
+        ...base,
+        acceptance_method: "documento",
+        evidence_attachment_id: null,
+      }).success,
+    ).toBe(false);
+    expect(
+      consentAcceptanceSchema.safeParse({
+        ...base,
+        acceptance_channel: "desconocido",
+      }).success,
+    ).toBe(false);
+    expect(
+      consentAcceptanceSchema.safeParse({
+        ...base,
+        acceptance_channel: undefined,
+      }).success,
+    ).toBe(false);
   });
 
   it("interpreta PHQ-9 y GAD-7 en los rangos estándar", () => {

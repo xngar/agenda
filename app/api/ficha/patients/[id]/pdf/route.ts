@@ -61,11 +61,19 @@ const PLAN_ESTADO: Record<string, string> = {
 };
 
 const CONSENT_TIPO: Record<string, string> = {
-  datos_personales: "Datos personales",
+  datos_personales: "Información sobre tratamiento de datos",
   tratamiento_dental: "Tratamiento dental",
-  psicoterapia: "Psicoterapia",
-  atencion_online: "Atención online",
+  psicoterapia: "Atención psicológica",
+  atencion_online: "Atención psicológica a distancia",
   other: "Otro",
+};
+
+const CONSENT_CANAL: Record<string, string> = {
+  presencial: "Presencial",
+  videollamada: "Videollamada",
+  llamada_telefonica: "Llamada telefónica",
+  correo_electronico: "Correo electrónico",
+  plataforma_digital: "Plataforma digital",
 };
 
 const ADJUNTO_TIPO: Record<string, string> = {
@@ -328,7 +336,19 @@ async function buildPdf(
               ? ` (${text(c.accepted_by_relation)})`
               : ""),
         );
-        field("Forma de aceptación", c.acceptance_method);
+        field(
+          "Forma de aceptación",
+          c.acceptance_method === "remoto" ? "A distancia (registro anterior)" : text(c.acceptance_method),
+        );
+        if (c.acceptance_channel) {
+          field("Canal de aceptación", CONSENT_CANAL[text(c.acceptance_channel)] ?? text(c.acceptance_channel));
+        }
+        if (c.evidence_attachment_id) {
+          field(
+            "Documento de respaldo",
+            text((c.evidence_attachment as Record<string, unknown> | null)?.file_name) || "Adjunto vinculado",
+          );
+        }
       }
       field("Texto aceptado", c.accepted_text);
     }
@@ -382,7 +402,7 @@ export async function GET(_request: Request, { params }: Params) {
   const { data: patient, error } = await ctx.supabase
     .from("patients")
     .select(
-      "*, patient_medical_background (*), encounters (*), dental_chart_entries (*), dental_treatment_plan_items (*), dental_payments (*), consents (*), prescriptions (*), periodontal_records (*), attachments (*)",
+      "*, patient_medical_background (*), encounters (*), dental_chart_entries (*), dental_treatment_plan_items (*), dental_payments (*), consents (*, evidence_attachment:attachments!consents_evidence_attachment_id_fkey(file_name)), prescriptions (*), periodontal_records (*), attachments (*)",
     )
     .eq("org_id", ctx.session.orgId)
     .eq("id", id)

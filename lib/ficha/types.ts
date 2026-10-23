@@ -31,6 +31,13 @@ export type ConsentKind =
   | "atencion_online"
   | "other";
 
+export type ConsentAcceptanceChannel =
+  | "presencial"
+  | "videollamada"
+  | "llamada_telefonica"
+  | "correo_electronico"
+  | "plataforma_digital";
+
 export type DentalDentition = "permanent" | "deciduous";
 
 export type DentalFace =
@@ -209,6 +216,8 @@ export interface Consent {
   accepted_by_name: string | null;
   accepted_by_relation: string | null;
   acceptance_method: "verbal" | "documento" | "remoto" | "por_verificar";
+  acceptance_channel: ConsentAcceptanceChannel | null;
+  evidence_attachment_id: string | null;
   signature_hash: string | null;
   signed_by: string | null;
 }

@@ -112,7 +112,15 @@ export const consentAcceptanceSchema = z.object({
   accepted_by_patient: z.boolean(),
   accepted_by_name: z.string().trim().min(2, "Ingresa el nombre de quien aceptó").max(120),
   accepted_by_relation: z.string().trim().max(100).nullable().optional(),
-  acceptance_method: z.enum(["verbal", "documento", "remoto"]),
+  acceptance_method: z.enum(["verbal", "documento"]),
+  acceptance_channel: z.enum([
+    "presencial",
+    "videollamada",
+    "llamada_telefonica",
+    "correo_electronico",
+    "plataforma_digital",
+  ]),
+  evidence_attachment_id: uuidSchema.nullable().optional(),
   consentObtained: z.literal(true, {
     error: "Confirma que la aceptación fue obtenida antes de registrarla",
   }),
@@ -122,6 +130,13 @@ export const consentAcceptanceSchema = z.object({
       code: "custom",
       path: ["accepted_by_relation"],
       message: "Indica el vínculo de la persona que aceptó en representación del paciente.",
+    });
+  }
+  if (data.acceptance_method === "documento" && !data.evidence_attachment_id) {
+    context.addIssue({
+      code: "custom",
+      path: ["evidence_attachment_id"],
+      message: "Adjunta el documento firmado antes de registrar este método.",
     });
   }
 });
