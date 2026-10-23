@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type { Attachment } from "@/lib/ficha/types";
+import type { OrganizationType } from "@/lib/ficha/types";
 import { AdjuntosPanel } from "@/app/dashboard/(panel)/pacientes/[id]/adjuntos-panel";
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
@@ -72,10 +73,18 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-async function render(puedeEliminar = true) {
+async function render(
+  puedeEliminar = true,
+  orgType: OrganizationType = "dental",
+) {
   await act(async () => {
     root.render(
-      <AdjuntosPanel patientId="pac-1" orgId="org-1" puedeEliminar={puedeEliminar} />,
+      <AdjuntosPanel
+        patientId="pac-1"
+        orgId="org-1"
+        orgType={orgType}
+        puedeEliminar={puedeEliminar}
+      />,
     );
   });
 }
@@ -107,6 +116,33 @@ describe("AdjuntosPanel", () => {
     root = createRoot(container);
     await render(true);
     expect(botonEliminar()).toBeDefined();
+  });
+
+  it("muestra solo tipos compartidos y psicológicos en la ficha psicológica", async () => {
+    await render(true, "psychological");
+
+    const opciones = [...container.querySelectorAll("#kind option")].map((option) => option.textContent);
+    expect(opciones).toEqual(["Documento", "Consentimiento", "Informe", "Otro"]);
+    expect(container.textContent).not.toContain("Radiografía");
+    expect(container.textContent).not.toContain("Foto intraoral");
+    expect(container.textContent).not.toContain("Foto extraoral");
+  });
+
+  it("muestra tipos odontológicos sin exponerlos a otras especialidades", async () => {
+    await render(true, "dental");
+    const dentales = [...container.querySelectorAll("#kind option")].map((option) => option.textContent);
+    expect(dentales).toContain("Foto intraoral");
+    expect(dentales).toContain("Foto extraoral");
+    expect(dentales).toContain("Radiografía");
+
+    act(() => root.unmount());
+    root = createRoot(container);
+    await render(true, "medical");
+    const medicos = [...container.querySelectorAll("#kind option")].map((option) => option.textContent);
+    expect(medicos).toContain("Radiografía / imagenología");
+    expect(medicos).not.toContain("Foto intraoral");
+    expect(medicos).not.toContain("Foto extraoral");
+    expect(medicos).not.toContain("Modelo");
   });
 
   it("confirma y elimina el adjunto", async () => {

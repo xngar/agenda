@@ -583,7 +583,7 @@ const SIGNOS_VITALES = [
               label="Notas privadas (solo tratante)"
               htmlFor="notas-privadas"
               required={false}
-              hint="Nunca se comparten con otros profesionales ni aparecen en el export o el PDF."
+              hint="Solo el profesional tratante y los administradores pueden verlas en la ficha. Nunca se incluyen en exportaciones ni en el PDF."
             >
               <textarea
                 id="notas-privadas"

@@ -11,7 +11,9 @@ import {
   auditPatientView,
 } from "@/lib/ficha/http";
 import { FACE_LABEL, STATE_LABEL } from "@/lib/ficha/dental";
-import { redactEncounters } from "@/lib/ficha/privacy";
+import { redactEncountersForExport } from "@/lib/ficha/privacy";
+import { fichaFor } from "@/lib/ficha/definitions";
+import type { OrganizationType } from "@/lib/ficha/types";
 import { formatRut } from "@/lib/rut";
 import { formatPhonePartial } from "@/lib/phone";
 
@@ -108,7 +110,10 @@ function ordenar(
   });
 }
 
-async function buildPdf(patient: Record<string, unknown>, ctx: { orgName: string }): Promise<Buffer> {
+async function buildPdf(
+  patient: Record<string, unknown>,
+  ctx: { orgName: string; orgType: OrganizationType },
+): Promise<Buffer> {
   const doc = new PDFDocument({ size: "A4", margin: 48, bufferPages: true });
   const chunks: Buffer[] = [];
   doc.on("data", (chunk: Buffer) => chunks.push(chunk));
@@ -200,6 +205,27 @@ async function buildPdf(patient: Record<string, unknown>, ctx: { orgName: string
     field("Evolución", encounter.evolucion);
     field("Diagnóstico", encounter.diagnostico);
     field("Indicaciones", encounter.indicaciones);
+    const specialtyData = encounter.specialty_data;
+    if (specialtyData && typeof specialtyData === "object" && !Array.isArray(specialtyData)) {
+      const fields = fichaFor(ctx.orgType).encounterFields.flatMap((group) => group.fields);
+      for (const definition of fields) {
+        const value = (specialtyData as Record<string, unknown>)[definition.key];
+        if (value === null || value === undefined || value === "") continue;
+        if (typeof value === "boolean" && !value) continue;
+        const displayValue =
+          typeof value === "string"
+            ? definition.options?.find((option) => option.value === value)?.label ?? value
+            : typeof value === "boolean"
+              ? "Sí"
+              : Array.isArray(value)
+                ? value.join(", ")
+                : value;
+        field(
+          definition.label,
+          displayValue,
+        );
+      }
+    }
     field(
       "Estado",
       etiqueta(ATENCION_ESTADO, encounter.status) +
@@ -292,6 +318,19 @@ async function buildPdf(patient: Record<string, unknown>, ctx: { orgName: string
         [etiqueta(CONSENT_TIPO, c.kind), text(c.version)].filter(Boolean).join(" · ") +
           (c.accepted_at ? ` · ${fecha(c.accepted_at)}` : ""),
       );
+      if (c.acceptance_method === "por_verificar") {
+        field("Aceptación", "Registro previo sin identidad ni método de aceptación verificables");
+      } else {
+        field(
+          "Aceptó",
+          `${c.accepted_by_patient ? "Paciente" : "Representante"} · ${text(c.accepted_by_name)}` +
+            (!c.accepted_by_patient && c.accepted_by_relation
+              ? ` (${text(c.accepted_by_relation)})`
+              : ""),
+        );
+        field("Forma de aceptación", c.acceptance_method);
+      }
+      field("Texto aceptado", c.accepted_text);
     }
   }
 
@@ -333,7 +372,12 @@ export async function GET(_request: Request, { params }: Params) {
   if (!ctx.clinical) return forbidden();
 
   const { id } = await params;
-  const { data: org } = await ctx.supabase.from("organizations").select("name").eq("id", ctx.session.orgId).single();
+  const { data: org, error: orgError } = await ctx.supabase
+    .from("organizations")
+    .select("name, type")
+    .eq("id", ctx.session.orgId)
+    .single();
+  if (orgError) return dbError(orgError);
 
   const { data: patient, error } = await ctx.supabase
     .from("patients")
@@ -350,11 +394,13 @@ export async function GET(_request: Request, { params }: Params) {
   if (auditError) return auditError;
 
   // El PDF no imprime notas privadas; se redactan antes por seguridad.
-  const encounters = redactEncounters(
+  const encounters = redactEncountersForExport(
     ((patient.encounters as unknown[] | null) ?? []) as Record<string, unknown>[],
-    ctx.session,
   );
-  const pdf = await buildPdf({ ...patient, encounters }, { orgName: org?.name ?? "Clínica" });
+  const pdf = await buildPdf(
+    { ...patient, encounters },
+    { orgName: org.name ?? "Clínica", orgType: org.type as OrganizationType },
+  );
 
   return new NextResponse(new Uint8Array(pdf), {
     headers: {

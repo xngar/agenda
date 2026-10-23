@@ -104,13 +104,29 @@ export const versionSchema = z.object({
   reason: z.string().trim().min(3, "Indica el motivo de la corrección").max(400),
 });
 
-export const consentSchema = z.object({
-  patient_id: uuidSchema,
+export const consentAcceptanceSchema = z.object({
   encounter_id: uuidSchema.nullable().optional(),
   kind: z.enum(["datos_personales", "tratamiento_dental", "psicoterapia", "atencion_online", "other"]),
   accepted_text: z.string().trim().min(20, "El texto del consentimiento es demasiado corto").max(8000),
   version: z.string().trim().max(20).optional(),
+  accepted_by_patient: z.boolean(),
+  accepted_by_name: z.string().trim().min(2, "Ingresa el nombre de quien aceptó").max(120),
+  accepted_by_relation: z.string().trim().max(100).nullable().optional(),
+  acceptance_method: z.enum(["verbal", "documento", "remoto"]),
+  consentObtained: z.literal(true, {
+    error: "Confirma que la aceptación fue obtenida antes de registrarla",
+  }),
+}).superRefine((data, context) => {
+  if (!data.accepted_by_patient && !data.accepted_by_relation?.trim()) {
+    context.addIssue({
+      code: "custom",
+      path: ["accepted_by_relation"],
+      message: "Indica el vínculo de la persona que aceptó en representación del paciente.",
+    });
+  }
 });
+
+export const consentSchema = consentAcceptanceSchema.extend({ patient_id: uuidSchema });
 
 export const prescriptionSchema = z.object({
   patient_id: uuidSchema,

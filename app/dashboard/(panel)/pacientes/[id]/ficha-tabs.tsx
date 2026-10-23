@@ -16,6 +16,7 @@ import { PlanPanel } from "./plan-panel";
 import { RecetasPanel } from "./recetas-panel";
 import { AdjuntosPanel } from "./adjuntos-panel";
 import { AuditoriaPanel } from "./auditoria-panel";
+import { ConsentimientosPanel } from "./consentimientos-panel";
 
 const TABS_CLINICA_COMMON = [
   { id: "resumen", label: "Datos del paciente" },
@@ -32,6 +33,14 @@ const TABS_DENTAL = [
   { id: "odontograma", label: "Odontograma" },
   { id: "plan", label: "Plan" },
   { id: "recetas", label: "Recetas" },
+  { id: "adjuntos", label: "Adjuntos" },
+];
+
+const TABS_PSYCHOLOGICAL = [
+  { id: "resumen", label: "Datos del paciente" },
+  { id: "antecedentes", label: "Antecedentes" },
+  { id: "atenciones", label: "Atenciones" },
+  { id: "consentimientos", label: "Consentimientos" },
   { id: "adjuntos", label: "Adjuntos" },
 ];
 
@@ -72,7 +81,12 @@ export function FichaTabs({
   /** El dueño del paciente también ve su historial, no sólo el admin. */
   canViewAudit?: boolean;
 }) {
-  const tabs = orgType === "dental" ? TABS_DENTAL : TABS_CLINICA_COMMON;
+  const tabs =
+    orgType === "dental"
+      ? TABS_DENTAL
+      : orgType === "psychological"
+        ? TABS_PSYCHOLOGICAL
+        : TABS_CLINICA_COMMON;
   const router = useRouter();
   const [active, setActive] = useState(tabs[0].id);
   const [confirmandoEliminar, setConfirmandoEliminar] = useState(false);
@@ -191,8 +205,15 @@ export function FichaTabs({
         <PlanPanel patientId={patient.id} isAdmin={isAdmin} />
       ) : active === "recetas" ? (
         <RecetasPanel patientId={patient.id} />
+      ) : active === "consentimientos" && orgType === "psychological" ? (
+        <ConsentimientosPanel patientId={patient.id} />
       ) : active === "adjuntos" ? (
-        <AdjuntosPanel patientId={patient.id} orgId={orgId} puedeEliminar={canEdit} />
+        <AdjuntosPanel
+          patientId={patient.id}
+          orgId={orgId}
+          orgType={orgType}
+          puedeEliminar={canEdit}
+        />
       ) : active === "auditoria" ? (
         <AuditoriaPanel patientId={patient.id} isAdmin={isAdmin} puedeExportar={canEdit} />
       ) : null}

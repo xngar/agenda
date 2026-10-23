@@ -171,7 +171,7 @@ export interface FieldOption {
 export interface FieldDef {
   key: string;
   label: string;
-  kind: "text" | "textarea" | "select" | "radio" | "date" | "checkbox";
+  kind: "text" | "textarea" | "select" | "radio" | "date" | "number" | "checkbox";
   options?: FieldOption[];
   optional?: boolean;
   placeholder?: string;

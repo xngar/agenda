@@ -8,7 +8,7 @@ import {
   orgPatient,
   auditPatientView,
 } from "@/lib/ficha/http";
-import { consentSchema } from "@/lib/ficha/schemas";
+import { consentAcceptanceSchema } from "@/lib/ficha/schemas";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -45,7 +45,7 @@ export async function POST(request: Request, { params }: Params) {
   if (patientError) return patientError;
 
   const raw = await request.json().catch(() => null);
-  const body = consentSchema.omit({ patient_id: true }).safeParse(raw);
+  const body = consentAcceptanceSchema.safeParse(raw);
   if (!body.success) return bodyError(body.error);
 
   const { data, error } = await ctx.supabase
@@ -58,7 +58,10 @@ export async function POST(request: Request, { params }: Params) {
       accepted_text: body.data.accepted_text,
       version: body.data.version ?? "1",
       accepted_at: new Date().toISOString(),
-      accepted_by_patient: true,
+      accepted_by_patient: body.data.accepted_by_patient,
+      accepted_by_name: body.data.accepted_by_name,
+      accepted_by_relation: body.data.accepted_by_relation?.trim() || null,
+      acceptance_method: body.data.acceptance_method,
       signed_by: ctx.session.id,
     })
     .select()

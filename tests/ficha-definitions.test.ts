@@ -7,7 +7,7 @@ import {
 } from "@/lib/ficha/definitions";
 import { cie10Schema, calcularIMC, etiquetaIMC } from "@/lib/ficha/medical";
 import { interpretarGAD7, interpretarPHQ9 } from "@/lib/ficha/psychological";
-import { paymentSchema } from "@/lib/ficha/schemas";
+import { consentAcceptanceSchema, consentSchema, paymentSchema } from "@/lib/ficha/schemas";
 
 describe("ficha por tipo de organización", () => {
   it("los tres tipos tienen definición con campos de perfil y encuentro", () => {
@@ -120,6 +120,47 @@ describe("fase 3: campos por especialidad", () => {
     expect(validateEncounterData("psychological", { modality: "carrier" }).success).toBe(false);
     expect(validateEncounterData("psychological", { phq9: 28 }).success).toBe(false);
     expect(validateEncounterData("psychological", { gad7: -1 }).success).toBe(false);
+  });
+
+  it("el encuentro psicológico valida seguimiento de sesión y límites de duración", () => {
+    expect(
+      validateEncounterData("psychological", {
+        attendance: "attended",
+        durationMinutes: 50,
+        interventions: "Psicoeducación",
+        response: "Participa durante la sesión",
+        goalsProgress: "Avance parcial",
+        nextSteps: "Continuar seguimiento",
+        riskResponse: "Se acuerda seguimiento clínico",
+      }).success,
+    ).toBe(true);
+    expect(validateEncounterData("psychological", { durationMinutes: 0 }).success).toBe(false);
+    expect(validateEncounterData("psychological", { attendance: "absent" }).success).toBe(false);
+  });
+
+  it("el consentimiento requiere aceptación confirmada y vínculo del representante", () => {
+    const base = {
+      kind: "psicoterapia",
+      accepted_text: "Texto de consentimiento informado suficientemente largo.",
+      accepted_by_patient: true,
+      accepted_by_name: "Nombre Paciente",
+      acceptance_method: "documento",
+      consentObtained: true,
+    };
+    expect(consentAcceptanceSchema.safeParse(base).success).toBe(true);
+    expect(
+      consentAcceptanceSchema.safeParse({ ...base, consentObtained: false }).success,
+    ).toBe(false);
+    expect(
+      consentAcceptanceSchema
+        .safeParse({ ...base, accepted_by_patient: false, accepted_by_relation: "" }).success,
+    ).toBe(false);
+    expect(
+      consentSchema.safeParse({
+        ...base,
+        patient_id: "00000000-0000-0000-0000-000000000000",
+      }).success,
+    ).toBe(true);
   });
 
   it("interpreta PHQ-9 y GAD-7 en los rangos estándar", () => {

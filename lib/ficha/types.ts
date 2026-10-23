@@ -205,7 +205,10 @@ export interface Consent {
   accepted_text: string;
   version: string;
   accepted_at: string;
-  accepted_by_patient: boolean;
+  accepted_by_patient: boolean | null;
+  accepted_by_name: string | null;
+  accepted_by_relation: string | null;
+  acceptance_method: "verbal" | "documento" | "remoto" | "por_verificar";
   signature_hash: string | null;
   signed_by: string | null;
 }

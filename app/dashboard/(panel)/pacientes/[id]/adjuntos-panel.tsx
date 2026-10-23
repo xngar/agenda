@@ -2,27 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { Attachment, AttachmentKind } from "@/lib/ficha/types";
+import type { Attachment, AttachmentKind, OrganizationType } from "@/lib/ficha/types";
+import { attachmentKindLabel, attachmentKindsForOrganization } from "@/lib/ficha/attachments";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { Card, Button, ErrorNotice, Field, Spinner, inputClasses } from "@/components/ui";
 import { Modal } from "@/components/motion/modal";
 import { FichaCardHeader } from "./panels-shared";
 import { TruncatedText } from "@/components/ui/truncated-text";
-
-const KINDS: { value: AttachmentKind; label: string }[] = [
-  { value: "document", label: "Documento" },
-  { value: "radiografia", label: "Radiografía" },
-  { value: "foto_intraoral", label: "Foto intraoral" },
-  { value: "foto_extraoral", label: "Foto extraoral" },
-  { value: "modelo", label: "Modelo" },
-  { value: "consentimiento", label: "Consentimiento" },
-  { value: "informe", label: "Informe" },
-  { value: "other", label: "Otro" },
-];
-
-const KIND_LABEL: Record<AttachmentKind, string> = Object.fromEntries(
-  KINDS.map((k) => [k.value, k.label]),
-) as Record<AttachmentKind, string>;
 
 const fmtBytes = (b: number) => (b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.round(b / 1024)} KB`);
 
@@ -55,12 +41,15 @@ function acortarArchivo(nombre: string, max = MAX_NOMBRE): string {
 export function AdjuntosPanel({
   patientId,
   orgId,
+  orgType,
   puedeEliminar = false,
 }: {
   patientId: string;
   orgId: string;
+  orgType: OrganizationType;
   puedeEliminar?: boolean;
 }) {
+  const kinds = attachmentKindsForOrganization(orgType);
   const [attachments, setAttachments] = useState<Attachment[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -198,7 +187,16 @@ export function AdjuntosPanel({
       {error ? <ErrorNotice message={error} /> : null}
 
       <Card>
-        <FichaCardHeader title="Subir adjunto" description="Radiografías, fotografías o documentos complementarios." />
+        <FichaCardHeader
+          title="Subir adjunto"
+          description={
+            orgType === "dental"
+              ? "Radiografías, fotografías clínicas y documentos odontológicos."
+              : orgType === "medical"
+                ? "Imágenes, informes y documentos clínicos."
+                : "Informes, consentimientos y documentos clínicos."
+          }
+        />
         <form onSubmit={subir} className="space-y-4 px-5 py-5">
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Archivo" htmlFor="file">
@@ -222,7 +220,7 @@ export function AdjuntosPanel({
             </Field>
             <Field label="Tipo" htmlFor="kind" required={false}>
               <select id="kind" className={inputClasses} value={kind} onChange={(e) => setKind(e.target.value as AttachmentKind)}>
-                {KINDS.map((k) => (
+                {kinds.map((k) => (
                   <option key={k.value} value={k.value}>{k.label}</option>
                 ))}
               </select>
@@ -230,7 +228,17 @@ export function AdjuntosPanel({
             <Field label="Descripción" htmlFor="description" required={false}>
               <input id="description" className={inputClasses} value={description} onChange={(e) => setDescription(e.target.value)} />
             </Field>
-            <Field label="Fecha (radiografía o foto)" htmlFor="taken_at" required={false}>
+            <Field
+              label={
+                orgType === "dental"
+                  ? "Fecha (radiografía o foto)"
+                  : orgType === "medical"
+                    ? "Fecha del examen"
+                    : "Fecha del documento (si aplica)"
+              }
+              htmlFor="taken_at"
+              required={false}
+            >
               <input id="taken_at" type="date" className={inputClasses} value={takenAt} onChange={(e) => setTakenAt(e.target.value)} />
             </Field>
           </div>
@@ -260,7 +268,7 @@ export function AdjuntosPanel({
                   <div className="min-w-0 flex-1 space-y-0.5">
                     <div className="flex items-center gap-2 font-medium text-neutral-900">
                       <span className="shrink-0 rounded-full bg-brand-sky-100 px-2 py-0.5 text-xs font-semibold text-action-primary">
-                        {KIND_LABEL[a.kind] ?? a.kind}
+                        {attachmentKindLabel(a.kind) ?? a.kind}
                       </span>
                       <TruncatedText
                         text={tituloCorto}

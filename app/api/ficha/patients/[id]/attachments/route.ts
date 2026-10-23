@@ -11,6 +11,7 @@ import {
   type FichaContext,
 } from "@/lib/ficha/http";
 import { attachmentSchema } from "@/lib/ficha/schemas";
+import { isAttachmentKindAllowed } from "@/lib/ficha/attachments";
 
 const attachmentRecordSchema = attachmentSchema
   .omit({ patient_id: true })
@@ -113,6 +114,18 @@ export async function POST(request: Request, { params }: Params) {
   const path = body.data.storage_path;
   if (!path.startsWith(`${ctx.session.orgId}/${id}/`)) {
     return forbidden("La ruta del archivo no corresponde a este paciente");
+  }
+
+  if (!isAttachmentKindAllowed(ctx.session.orgType, body.data.kind)) {
+    const removed = await removeUploadedObject(ctx, path);
+    return NextResponse.json(
+      {
+        error: removed
+          ? "Ese tipo de adjunto no corresponde a la especialidad de esta organización."
+          : "Ese tipo de adjunto no corresponde a la especialidad de esta organización y no se pudo limpiar el archivo del almacenamiento.",
+      },
+      { status: removed ? 400 : 500 },
+    );
   }
 
   const { data: uploaded, error: downloadError } = await ctx.supabase.storage
