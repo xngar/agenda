@@ -3,10 +3,39 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { DentalChartEntry, DentalFace, DentalState } from "@/lib/ficha/types";
-import { aggregateToothState } from "@/lib/ficha/dental";
+import { aggregateToothState, STATE_LABEL } from "@/lib/ficha/dental";
 import { Card, FichaCardHeader, Button, ErrorNotice, Spinner } from "./panels-shared";
 import { Modal } from "@/components/motion/modal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { inputClasses } from "@/components/ui";
+
+interface EncounterOption {
+  id: string;
+  started_at: string;
+  care_type: string | null;
+  status: "draft" | "signed";
+  doctors?: { full_name: string } | null;
+}
+
+interface ChartHistoryEntry extends DentalChartEntry {
+  created_by_name?: string | null;
+  encounter_started_at?: string | null;
+  encounter_care_type?: string | null;
+  encounter_doctor_name?: string | null;
+}
+
+function formatDateTime(value: string): string {
+  return new Date(value).toLocaleString("es-CL", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "America/Santiago",
+  });
+}
+
+function formatDate(value: string): string {
+  const [year, month, day] = value.slice(0, 10).split("-");
+  return year && month && day ? `${day}-${month}-${year}` : value;
+}
 
 const STATES: { value: DentalState; label: string }[] = [
   { value: "sana", label: "Sana" },
@@ -119,8 +148,13 @@ function ToothIcon({ tooth }: { tooth: number }) {
 
 export function OdontogramaPanel({ patientId }: { patientId: string }) {
   const [chart, setChart] = useState<DentalChartEntry[] | null>(null);
+  const [encounters, setEncounters] = useState<EncounterOption[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
+  const [selectedEncounterId, setSelectedEncounterId] = useState("");
+  const [history, setHistory] = useState<ChartHistoryEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
   const [edits, setEdits] = useState<Record<string, DentalState>>({});
   const [iniciales, setIniciales] = useState<Record<string, DentalState>>({});
   const [guardando, setGuardando] = useState(false);
@@ -139,10 +173,27 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
     }
   }, [patientId]);
 
+  const cargarAtenciones = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/ficha/patients/${patientId}/encounters`);
+      const data = (await response.json()) as { encounters?: EncounterOption[]; error?: string };
+      if (!response.ok) {
+        setError(data.error ?? "No se pudieron cargar las atenciones");
+        setEncounters([]);
+        return;
+      }
+      setEncounters((data.encounters ?? []).filter((encounter) => encounter.status === "draft"));
+    } catch {
+      setError("No pudimos cargar las atenciones para vincular el registro.");
+      setEncounters([]);
+    }
+  }, [patientId]);
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount, setState tras await
     cargar();
-  }, [cargar]);
+    cargarAtenciones();
+  }, [cargar, cargarAtenciones]);
 
   if (chart === null) {
     return (
@@ -173,6 +224,24 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
     return partes.length > 0 ? partes.join(" · ") : "sin registro";
   };
 
+  async function cargarHistoria(tooth: number) {
+    setHistoryLoading(true);
+    setHistoryError(null);
+    try {
+      const response = await fetch(`/api/ficha/patients/${patientId}/chart?tooth=${tooth}`);
+      const data = (await response.json()) as { chart?: ChartHistoryEntry[]; error?: string };
+      if (!response.ok) {
+        setHistoryError(data.error ?? "No se pudo cargar el historial de la pieza");
+        return;
+      }
+      setHistory(data.chart ?? []);
+    } catch {
+      setHistoryError("No pudimos cargar el historial de la pieza.");
+    } finally {
+      setHistoryLoading(false);
+    }
+  }
+
   function abrir(tooth: number) {
     // El modal precarga lo guardado: lo que ves es lo que hay.
     const precarga: Record<string, DentalState> = {};
@@ -181,6 +250,10 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
       if (estado) precarga[f] = estado;
     }
     setSelected(tooth);
+    setSelectedEncounterId("");
+    setHistory([]);
+    setHistoryError(null);
+    cargarHistoria(tooth);
     setEdits(precarga);
     setIniciales(precarga);
     setError(null);
@@ -204,6 +277,10 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
     if (!selected) return;
+    if (!selectedEncounterId) {
+      setError("Selecciona una atención abierta para asociar la evolución.");
+      return;
+    }
     setGuardando(true);
     setError(null);
     try {
@@ -211,6 +288,7 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
         tooth: selected,
         face,
         state,
+        encounter_id: selectedEncounterId,
       }));
       if (!entries.length) {
         setSelected(null);
@@ -320,6 +398,33 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
             <FichaCardHeader title={`Pieza ${selected}`} description="Se muestran los valores guardados. Cambia sólo las caras a registrar; se guarda únicamente lo que difiere." />
             <form onSubmit={guardar} className="space-y-3 px-5 py-5">
               {error ? <ErrorNotice message={error} /> : null}
+              <label className="block">
+                <span className="mb-1 block text-xs font-medium text-neutral-600">
+                  Atención abierta a la que se asociará la evolución
+                </span>
+                <select
+                  className={inputClasses}
+                  value={selectedEncounterId}
+                  onChange={(event) => setSelectedEncounterId(event.target.value)}
+                  disabled={encounters === null || encounters.length === 0}
+                  required
+                >
+                  <option value="">
+                    {encounters === null ? "Cargando atenciones…" : "Selecciona una atención"}
+                  </option>
+                  {(encounters ?? []).map((encounter) => (
+                    <option key={encounter.id} value={encounter.id}>
+                      {formatDate(encounter.started_at)} · {encounter.care_type || "Atención"}
+                      {encounter.doctors?.full_name ? ` · ${encounter.doctors.full_name}` : ""}
+                    </option>
+                  ))}
+                </select>
+                {encounters?.length === 0 ? (
+                  <span className="mt-1 block text-xs text-warning-700">
+                    No hay atenciones abiertas. Registra o edita una atención en la pestaña Atenciones y vuelve para asociar los cambios.
+                  </span>
+                ) : null}
+              </label>
               <div className="grid gap-3 sm:grid-cols-2">
                 {toothFaces(selected).map((face) => (
                   <label key={face} className="block">
@@ -352,12 +457,46 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
                 {estadoPieza(selected) ?? "sin registrar"}
               </p>
               <div className="flex flex-wrap gap-3">
-                <Button type="submit" disabled={guardando || diferencias().length === 0}>
+                <Button type="submit" disabled={guardando || diferencias().length === 0 || !selectedEncounterId}>
                   {guardando ? "Guardando…" : "Guardar caras"}
                 </Button>
                 <Button variant="ghost" onClick={() => setSelected(null)} disabled={guardando}>Cancelar</Button>
               </div>
             </form>
+            <section className="border-t border-neutral-200 px-5 py-4" aria-labelledby="historial-pieza">
+              <h3 id="historial-pieza" className="text-sm font-semibold text-neutral-800">
+                Historial de la pieza ({history.length})
+              </h3>
+              {historyError ? <p role="alert" className="mt-2 text-sm text-red-700">{historyError}</p> : null}
+              {historyLoading ? (
+                <div className="py-4"><Spinner label="Cargando historial…" /></div>
+              ) : history.length === 0 ? (
+                <p className="mt-2 text-sm text-neutral-500">Esta pieza todavía no tiene cambios registrados.</p>
+              ) : (
+                <ol className="mt-3 max-h-56 space-y-3 overflow-y-auto pl-1">
+                  {history.map((entry) => (
+                    <li key={entry.id} className="border-l-2 border-action-primary/20 pl-3">
+                      <p className="text-sm font-medium text-neutral-800">
+                        {FACE_LABELS[entry.face]}: {STATE_LABEL[entry.state] ?? entry.state}
+                        {entry.current ? <span className="ml-2 text-xs font-semibold text-action-primary">Actual</span> : null}
+                      </p>
+                      <p className="text-xs text-neutral-500">
+                        {formatDateTime(entry.created_at)} · {entry.created_by_name ?? "Profesional no identificado"}
+                      </p>
+                      {entry.encounter_id ? (
+                        <p className="text-xs text-neutral-500">
+                          Atención del {entry.encounter_started_at ? formatDate(entry.encounter_started_at) : formatDate(entry.recorded_at)}
+                          {entry.encounter_care_type ? ` · ${entry.encounter_care_type}` : ""}
+                          {entry.encounter_doctor_name ? ` · ${entry.encounter_doctor_name}` : ""}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-neutral-500">Sin atención asociada</p>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </section>
           </>
         ) : null}
       </Modal>
