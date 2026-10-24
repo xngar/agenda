@@ -6,11 +6,14 @@ import { usePerfilAvatar } from "./perfil-sheet-provider";
 export function PerfilAvatar({
   initials,
   fullName,
+  profileId,
 }: {
   initials: string;
   fullName: string;
+  profileId: string;
 }) {
   const avatar = usePerfilAvatar();
+  const avatarVersion = avatar?.avatarVersion ?? 0;
 
   return (
     <span
@@ -18,8 +21,8 @@ export function PerfilAvatar({
       className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-navy-50 text-2xl font-bold text-action-primary"
     >
       <Image
-        key={avatar?.avatarVersion ?? 0}
-        src={`/api/dashboard/profile/avatar?v=${avatar?.avatarVersion ?? 0}`}
+        key={`${profileId}:${avatarVersion}`}
+        src={`/api/dashboard/profile/avatar?profile=${encodeURIComponent(profileId)}&v=${avatarVersion}`}
         alt=""
         fill
         sizes="96px"

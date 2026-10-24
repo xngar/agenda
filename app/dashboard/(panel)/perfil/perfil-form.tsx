@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { buttonClasses, inputClasses } from "@/components/ui";
 import { AsyncButton } from "@/components/motion/async-button";
 
-const MAX_AVATAR_BYTES = 200 * 1024;
+const MAX_AVATAR_BYTES = 60 * 1024;
 const MAX_SOURCE_BYTES = 10 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
@@ -19,31 +19,33 @@ async function comprimirAvatar(file: File): Promise<File> {
 
   const bitmap = await createImageBitmap(file);
   try {
-    const side = 512;
-    const canvas = document.createElement("canvas");
-    canvas.width = side;
-    canvas.height = side;
-    const context = canvas.getContext("2d");
-    if (!context) throw new Error("No se pudo procesar la imagen.");
-
     const sourceSide = Math.min(bitmap.width, bitmap.height);
     const sourceX = (bitmap.width - sourceSide) / 2;
     const sourceY = (bitmap.height - sourceSide) / 2;
-    context.drawImage(bitmap, sourceX, sourceY, sourceSide, sourceSide, 0, 0, side, side);
 
-    for (const quality of [0.88, 0.78, 0.68, 0.58, 0.48]) {
-      const blob = await new Promise<Blob | null>((resolve) =>
-        canvas.toBlob(resolve, "image/jpeg", quality),
-      );
-      if (!blob) throw new Error("No se pudo procesar la imagen.");
-      if (blob.size <= MAX_AVATAR_BYTES) {
-        return new File([blob], "avatar.jpg", { type: "image/jpeg" });
+    for (const targetSide of [256, 192, 128]) {
+      const side = Math.min(targetSide, sourceSide);
+      const canvas = document.createElement("canvas");
+      canvas.width = side;
+      canvas.height = side;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("No se pudo procesar la imagen.");
+      context.drawImage(bitmap, sourceX, sourceY, sourceSide, sourceSide, 0, 0, side, side);
+
+      for (const quality of [0.84, 0.72, 0.6, 0.48, 0.36, 0.24, 0.16]) {
+        const blob = await new Promise<Blob | null>((resolve) =>
+          canvas.toBlob(resolve, "image/jpeg", quality),
+        );
+        if (!blob) throw new Error("No se pudo procesar la imagen.");
+        if (blob.size <= MAX_AVATAR_BYTES) {
+          return new File([blob], "avatar.jpg", { type: "image/jpeg" });
+        }
       }
     }
   } finally {
     bitmap.close();
   }
-  throw new Error("No se pudo reducir la imagen a 200 KB. Prueba con otra foto.");
+  throw new Error("No se pudo reducir la imagen a 60 KB. Prueba con otra foto.");
 }
 
 export function PerfilForm({
@@ -204,7 +206,7 @@ export function PerfilForm({
       <section aria-labelledby="perfil-foto-titulo" className="space-y-2">
         <h3 id="perfil-foto-titulo" className="text-sm font-medium text-neutral-800">Foto de perfil</h3>
         <p className="text-xs text-neutral-600">
-          Opcional. Selecciona una imagen JPG, PNG o WebP; se recortará al centro y se optimizará a un máximo de 200 KB.
+          Opcional. Selecciona una imagen JPG, PNG o WebP; se recortará al centro y se optimizará a un máximo de 60 KB.
         </p>
         <div className="flex flex-wrap gap-2">
           <input

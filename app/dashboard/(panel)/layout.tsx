@@ -51,6 +51,7 @@ export default async function PanelLayout({
 
   return (
     <PerfilSheetProvider
+      key={session.id}
       profile={{
         fullName: session.full_name,
         specialty: session.specialty,
@@ -70,6 +71,7 @@ export default async function PanelLayout({
             <PerfilAvatar
               initials={inicialesDe(session.full_name) || "?"}
               fullName={session.full_name}
+              profileId={session.id}
             />
             <span className="block w-full truncate text-sm font-semibold leading-5 text-neutral-800">
               {session.full_name}

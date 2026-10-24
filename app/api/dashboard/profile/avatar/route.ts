@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { supabaseServer } from "@/lib/supabase/server";
 
 const BUCKET = "perfil-profesionales";
-const MAX_AVATAR_BYTES = 200 * 1024;
+const MAX_AVATAR_BYTES = 60 * 1024;
 const MIGRATION_MESSAGE =
   "Las fotos de perfil aún no están habilitadas en la base de datos. Aplica la migración 20261023130000_doctor_profile_avatar.sql y vuelve a intentarlo.";
 
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
 
   const contentLength = Number(request.headers.get("content-length"));
   if (Number.isFinite(contentLength) && contentLength > MAX_AVATAR_BYTES + 32 * 1024) {
-    return NextResponse.json({ error: "La foto no puede superar 200 KB." }, { status: 413 });
+    return NextResponse.json({ error: "La foto no puede superar 60 KB." }, { status: 413 });
   }
 
   const form = await request.formData().catch(() => null);
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "La imagen debe estar optimizada en formato JPG." }, { status: 415 });
   }
   if (avatar.size === 0 || avatar.size > MAX_AVATAR_BYTES) {
-    return NextResponse.json({ error: "La foto no puede superar 200 KB." }, { status: 413 });
+    return NextResponse.json({ error: "La foto no puede superar 60 KB." }, { status: 413 });
   }
 
   const bytes = new Uint8Array(await avatar.arrayBuffer());
