@@ -106,8 +106,24 @@ export const versionSchema = z.object({
 
 export const consentAcceptanceSchema = z.object({
   encounter_id: uuidSchema.nullable().optional(),
-  kind: z.enum(["datos_personales", "tratamiento_dental", "psicoterapia", "atencion_online", "other"]),
-  accepted_text: z.string().trim().min(20, "El texto del consentimiento es demasiado corto").max(8000),
+  kind: z.enum([
+    "datos_personales",
+    "tratamiento_dental",
+    "psicoterapia",
+    "atencion_online",
+    "medical_procedure",
+    "medical_treatment",
+    "medical_anesthesia",
+    "other",
+  ]),
+  outcome: z.enum(["accepted", "rejected"]).default("accepted"),
+  accepted_text: z.string().trim().max(8000).optional(),
+  procedure: z.string().trim().min(2).max(300).optional(),
+  purpose: z.string().trim().min(2).max(2000).optional(),
+  benefits: z.string().trim().min(2).max(2000).optional(),
+  risks: z.string().trim().min(2).max(3000).optional(),
+  alternatives: z.string().trim().min(2).max(2000).optional(),
+  refusal_consequences: z.string().trim().min(2).max(2000).optional(),
   version: z.string().trim().max(20).optional(),
   accepted_by_patient: z.boolean(),
   accepted_by_name: z.string().trim().min(2, "Ingresa el nombre de quien aceptó").max(120),
@@ -121,10 +137,28 @@ export const consentAcceptanceSchema = z.object({
     "plataforma_digital",
   ]),
   evidence_attachment_id: uuidSchema.nullable().optional(),
-  consentObtained: z.literal(true, {
-    error: "Confirma que la aceptación fue obtenida antes de registrarla",
+  decisionConfirmed: z.literal(true, {
+    error: "Confirma que registras fielmente la decisión informada",
   }),
 }).superRefine((data, context) => {
+  const isMedicalConsent = data.kind.startsWith("medical_");
+  if (isMedicalConsent) {
+    for (const field of ["procedure", "purpose", "benefits", "risks", "alternatives", "refusal_consequences"] as const) {
+      if (!data[field]?.trim()) {
+        context.addIssue({
+          code: "custom",
+          path: [field],
+          message: "Completa este campo; si no aplica, indícalo expresamente.",
+        });
+      }
+    }
+  } else if (!data.accepted_text || data.accepted_text.trim().length < 20) {
+    context.addIssue({
+      code: "custom",
+      path: ["accepted_text"],
+      message: "El texto del consentimiento debe tener al menos 20 caracteres.",
+    });
+  }
   if (!data.accepted_by_patient && !data.accepted_by_relation?.trim()) {
     context.addIssue({
       code: "custom",

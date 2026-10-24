@@ -4,7 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Encounter, EncounterVersion, OrganizationType } from "@/lib/ficha/types";
 import { fichaFor } from "@/lib/ficha/definitions";
-import { calcularIMC, etiquetaIMC } from "@/lib/ficha/medical";
+import {
+  calcularIMC,
+  etiquetaIMC,
+  MEDICAL_VITAL_RANGES,
+} from "@/lib/ficha/medical";
 import { interpretarGAD7, interpretarPHQ9 } from "@/lib/ficha/psychological";
 import {
   Card,
@@ -92,12 +96,12 @@ export function AtencionesPanel({
   const esMedica = orgType === "medical";
 
 const SIGNOS_VITALES = [
-  { key: "temperatureC", label: "T° (C)" },
-  { key: "systolicMmHg", label: "PAS" },
-  { key: "diastolicMmHg", label: "PAD" },
-  { key: "heartRateBpm", label: "FC" },
-  { key: "respiratoryRate", label: "FR" },
-  { key: "spo2", label: "SpO2 %" },
+  { key: "temperatureC", label: "T° (°C)" },
+  { key: "systolicMmHg", label: "PAS (mmHg)" },
+  { key: "diastolicMmHg", label: "PAD (mmHg)" },
+  { key: "heartRateBpm", label: "FC (lpm)" },
+  { key: "respiratoryRate", label: "FR (rpm)" },
+  { key: "spo2", label: "SpO₂ (%)" },
   { key: "weightKg", label: "Peso (kg)" },
   { key: "heightCm", label: "Talla (cm)" },
 ] as const;
@@ -567,8 +571,9 @@ const SIGNOS_VITALES = [
                     <input
                       id={`vital-${key}`}
                       type="number"
-                      step="any"
-                      min={0}
+                      step={key === "temperatureC" || key === "weightKg" || key === "heightCm" ? "any" : 1}
+                      min={MEDICAL_VITAL_RANGES[key].min}
+                      max={MEDICAL_VITAL_RANGES[key].max}
                       className={inputClasses}
                       value={vitalesTxt[key] ?? ""}
                       onChange={(e) => setVitalesTxt((v) => ({ ...v, [key]: e.target.value }))}

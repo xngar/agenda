@@ -48,6 +48,58 @@ export async function POST(request: Request, { params }: Params) {
   const body = consentAcceptanceSchema.safeParse(raw);
   if (!body.success) return bodyError(body.error);
 
+  const { data: organization, error: organizationError } = await ctx.supabase
+    .from("organizations")
+    .select("type")
+    .eq("id", ctx.session.orgId)
+    .maybeSingle();
+  if (organizationError) return dbError(organizationError);
+  if (!organization) return NextResponse.json({ error: "No se encontró la organización." }, { status: 404 });
+
+  const medicalKinds = ["medical_procedure", "medical_treatment", "medical_anesthesia"];
+  if (
+    (medicalKinds.includes(body.data.kind) && organization.type !== "medical") ||
+    (organization.type === "medical" && !medicalKinds.includes(body.data.kind) &&
+      !["datos_personales", "other"].includes(body.data.kind))
+  ) {
+    return NextResponse.json(
+      { error: "El tipo de consentimiento no corresponde a la ficha de esta organización." },
+      { status: 400 },
+    );
+  }
+
+  if (body.data.encounter_id) {
+    const { data: encounter, error: encounterError } = await ctx.supabase
+      .from("encounters")
+      .select("id")
+      .eq("id", body.data.encounter_id)
+      .eq("org_id", ctx.session.orgId)
+      .eq("patient_id", id)
+      .maybeSingle();
+    if (encounterError) return dbError(encounterError);
+    if (!encounter) {
+      return NextResponse.json(
+        { error: "La atención debe pertenecer a este paciente y organización." },
+        { status: 400 },
+      );
+    }
+  }
+
+  const acceptedText = medicalKinds.includes(body.data.kind)
+    ? [
+        `Procedimiento o atención: ${body.data.procedure}`,
+        `Propósito: ${body.data.purpose}`,
+        `Beneficios esperados: ${body.data.benefits}`,
+        `Riesgos relevantes: ${body.data.risks}`,
+        `Alternativas: ${body.data.alternatives}`,
+        `Consecuencias de rechazar o postergar: ${body.data.refusal_consequences}`,
+      ].join("\n\n")
+    : body.data.accepted_text;
+  const maxTextLength = medicalKinds.includes(body.data.kind) ? 12000 : 8000;
+  if (!acceptedText || acceptedText.length > maxTextLength) {
+    return NextResponse.json({ error: "El contenido del registro supera el máximo permitido." }, { status: 400 });
+  }
+
   if (body.data.evidence_attachment_id) {
     const { data: attachment, error: attachmentError } = await ctx.supabase
       .from("attachments")
@@ -74,7 +126,8 @@ export async function POST(request: Request, { params }: Params) {
       patient_id: id,
       encounter_id: body.data.encounter_id ?? null,
       kind: body.data.kind,
-      accepted_text: body.data.accepted_text,
+      outcome: body.data.outcome,
+      accepted_text: acceptedText,
       version: body.data.version ?? "1",
       accepted_at: new Date().toISOString(),
       accepted_by_patient: body.data.accepted_by_patient,

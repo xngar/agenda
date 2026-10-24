@@ -29,6 +29,9 @@ export type ConsentKind =
   | "tratamiento_dental"
   | "psicoterapia"
   | "atencion_online"
+  | "medical_procedure"
+  | "medical_treatment"
+  | "medical_anesthesia"
   | "other";
 
 export type ConsentAcceptanceChannel =
@@ -209,6 +212,7 @@ export interface Consent {
   patient_id: string;
   encounter_id: string | null;
   kind: ConsentKind;
+  outcome: "accepted" | "rejected";
   accepted_text: string;
   version: string;
   accepted_at: string;

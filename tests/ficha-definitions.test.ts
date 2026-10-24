@@ -47,6 +47,28 @@ describe("ficha por tipo de organización", () => {
     expect(ok.success).toBe(true);
   });
 
+  it("valida rangos amplios y unidades plausibles para signos vitales médicos", () => {
+    expect(
+      validateEncounterData("medical", {
+        vitals: {
+          temperatureC: 36.5,
+          systolicMmHg: 120,
+          diastolicMmHg: 80,
+          heartRateBpm: 72,
+          respiratoryRate: 16,
+          spo2: 98,
+          weightKg: 70,
+          heightCm: 175,
+        },
+      }).success,
+    ).toBe(true);
+
+    expect(validateEncounterData("medical", { vitals: { temperatureC: 100 } }).success).toBe(false);
+    expect(validateEncounterData("medical", { vitals: { systolicMmHg: 999 } }).success).toBe(false);
+    expect(validateEncounterData("medical", { vitals: { spo2: 101 } }).success).toBe(false);
+    expect(validateEncounterData("medical", { vitals: { heightCm: 400 } }).success).toBe(false);
+  });
+
   it("valida objeto vacío como perfil sin datos", () => {
     expect(validateProfile("dental", {}).success).toBe(true);
     expect(validateProfile("dental", undefined).success).toBe(true);
@@ -147,11 +169,11 @@ describe("fase 3: campos por especialidad", () => {
       acceptance_method: "documento",
       acceptance_channel: "presencial",
       evidence_attachment_id: "00000000-0000-0000-0000-000000000000",
-      consentObtained: true,
+      decisionConfirmed: true,
     };
     expect(consentAcceptanceSchema.safeParse(base).success).toBe(true);
     expect(
-      consentAcceptanceSchema.safeParse({ ...base, consentObtained: false }).success,
+      consentAcceptanceSchema.safeParse({ ...base, decisionConfirmed: false }).success,
     ).toBe(false);
     expect(
       consentAcceptanceSchema
@@ -190,6 +212,31 @@ describe("fase 3: campos por especialidad", () => {
         ...base,
         acceptance_channel: undefined,
       }).success,
+    ).toBe(false);
+  });
+
+  it("el consentimiento médico requiere información clínica y permite registrar rechazo", () => {
+    const medical = {
+      kind: "medical_procedure",
+      outcome: "rejected",
+      procedure: "Endoscopía",
+      purpose: "Evaluar síntomas digestivos",
+      benefits: "Apoyar el diagnóstico",
+      risks: "Molestias y riesgos propios del procedimiento",
+      alternatives: "Evaluación clínica y otros exámenes",
+      refusal_consequences: "Persistencia de síntomas y retraso diagnóstico",
+      accepted_by_patient: true,
+      accepted_by_name: "Nombre Paciente",
+      acceptance_method: "verbal",
+      acceptance_channel: "presencial",
+      decisionConfirmed: true,
+    };
+    expect(consentAcceptanceSchema.safeParse(medical).success).toBe(true);
+    expect(
+      consentAcceptanceSchema.safeParse({ ...medical, risks: "" }).success,
+    ).toBe(false);
+    expect(
+      consentAcceptanceSchema.safeParse({ ...medical, outcome: "pending" }).success,
     ).toBe(false);
   });
 

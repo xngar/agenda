@@ -22,6 +22,7 @@ const TABS_CLINICA_COMMON = [
   { id: "resumen", label: "Datos del paciente" },
   { id: "antecedentes", label: "Antecedentes" },
   { id: "atenciones", label: "Atenciones" },
+  { id: "consentimientos", label: "Consentimientos" },
   { id: "recetas", label: "Recetas" },
   { id: "adjuntos", label: "Adjuntos" },
 ];
@@ -205,8 +206,8 @@ export function FichaTabs({
         <PlanPanel patientId={patient.id} isAdmin={isAdmin} />
       ) : active === "recetas" ? (
         <RecetasPanel patientId={patient.id} />
-      ) : active === "consentimientos" && orgType === "psychological" ? (
-        <ConsentimientosPanel patientId={patient.id} />
+      ) : active === "consentimientos" && (orgType === "psychological" || orgType === "medical") ? (
+        <ConsentimientosPanel patientId={patient.id} orgType={orgType} />
       ) : active === "adjuntos" ? (
         <AdjuntosPanel
           patientId={patient.id}

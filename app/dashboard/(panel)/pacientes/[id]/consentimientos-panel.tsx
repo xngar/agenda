@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { Attachment, Consent } from "@/lib/ficha/types";
+import type { Attachment, Consent, ConsentKind, Encounter, OrganizationType } from "@/lib/ficha/types";
 import { Card, Button, ErrorNotice, Field, Spinner, inputClasses } from "@/components/ui";
 import { FichaCardHeader } from "./panels-shared";
 
@@ -10,11 +10,32 @@ interface ConsentRecord extends Consent {
   evidence_attachment?: Pick<Attachment, "id" | "file_name"> | null;
 }
 
-const TIPO_CONSENTIMIENTO = [
+type EncounterOption = Pick<Encounter, "id" | "started_at" | "care_type">;
+
+const CONSENTIMIENTOS_PSICOLOGICOS = [
   { value: "psicoterapia", label: "Psicoterapia" },
   { value: "atencion_online", label: "Atención psicológica a distancia" },
   { value: "datos_personales", label: "Información sobre tratamiento de datos" },
 ] as const;
+
+const CONSENTIMIENTOS_MEDICOS = [
+  { value: "medical_procedure", label: "Procedimiento médico" },
+  { value: "medical_treatment", label: "Tratamiento médico" },
+  { value: "medical_anesthesia", label: "Anestesia o sedación" },
+  { value: "datos_personales", label: "Información sobre tratamiento de datos" },
+  { value: "other", label: "Otro" },
+] as const;
+
+const CAMPOS_MEDICOS = [
+  { key: "procedure", label: "Procedimiento o atención propuesta", maxLength: 300 },
+  { key: "purpose", label: "Propósito y descripción", maxLength: 2000 },
+  { key: "benefits", label: "Beneficios esperados", maxLength: 2000 },
+  { key: "risks", label: "Riesgos relevantes y molestias posibles", maxLength: 3000 },
+  { key: "alternatives", label: "Alternativas disponibles", maxLength: 2000 },
+  { key: "refusal_consequences", label: "Consecuencias de rechazar o postergar", maxLength: 2000 },
+] as const;
+
+type CampoMedico = (typeof CAMPOS_MEDICOS)[number]["key"];
 
 const METODOS_ACEPTACION = [
   { value: "verbal", label: "Verbal" },
@@ -37,14 +58,26 @@ function fechaHora(value: string): string {
   });
 }
 
-export function ConsentimientosPanel({ patientId }: { patientId: string }) {
+export function ConsentimientosPanel({
+  patientId,
+  orgType,
+}: {
+  patientId: string;
+  orgType: Extract<OrganizationType, "medical" | "psychological">;
+}) {
   const [consents, setConsents] = useState<ConsentRecord[] | null>(null);
   const [attachments, setAttachments] = useState<Attachment[] | null>(null);
   const [attachmentsError, setAttachmentsError] = useState<string | null>(null);
+  const [encounters, setEncounters] = useState<EncounterOption[] | null>(null);
+  const [encountersError, setEncountersError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [kind, setKind] = useState<(typeof TIPO_CONSENTIMIENTO)[number]["value"]>("psicoterapia");
+  const [kind, setKind] = useState<ConsentKind>(
+    orgType === "medical" ? "medical_procedure" : "psicoterapia",
+  );
+  const [encounterId, setEncounterId] = useState("");
+  const [outcome, setOutcome] = useState<"accepted" | "rejected">("accepted");
   const [acceptedByPatient, setAcceptedByPatient] = useState(true);
   const [acceptedByName, setAcceptedByName] = useState("");
   const [acceptedByRelation, setAcceptedByRelation] = useState("");
@@ -55,7 +88,18 @@ export function ConsentimientosPanel({ patientId }: { patientId: string }) {
   const [evidenceAttachmentId, setEvidenceAttachmentId] = useState("");
   const [version, setVersion] = useState("1");
   const [acceptedText, setAcceptedText] = useState("");
-  const [consentObtained, setConsentObtained] = useState(false);
+  const [decisionConfirmed, setDecisionConfirmed] = useState(false);
+  const [medicalDetails, setMedicalDetails] = useState<Record<CampoMedico, string>>({
+    procedure: "",
+    purpose: "",
+    benefits: "",
+    risks: "",
+    alternatives: "",
+    refusal_consequences: "",
+  });
+  const tiposConsentimiento =
+    orgType === "medical" ? CONSENTIMIENTOS_MEDICOS : CONSENTIMIENTOS_PSICOLOGICOS;
+  const isMedicalConsent = kind.startsWith("medical_");
   const consentAttachments = attachments?.filter((attachment) => attachment.kind === "consentimiento") ?? null;
 
   const cargar = useCallback(async () => {
@@ -89,13 +133,30 @@ export function ConsentimientosPanel({ patientId }: { patientId: string }) {
     }
   }, [patientId]);
 
+  const cargarAtenciones = useCallback(async () => {
+    setEncountersError(null);
+    try {
+      const response = await fetch(`/api/ficha/patients/${patientId}/encounters`);
+      const data = (await response.json()) as { encounters?: EncounterOption[]; error?: string };
+      if (!response.ok) {
+        setEncountersError(data.error ?? "No se pudieron cargar las atenciones");
+        return;
+      }
+      setEncounters(data.encounters ?? []);
+    } catch {
+      setEncountersError("No pudimos conectarnos al cargar las atenciones.");
+    }
+  }, [patientId]);
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount, setState tras await
     void cargar();
   }, [cargar]);
 
   function resetForm() {
-    setKind("psicoterapia");
+    setKind(orgType === "medical" ? "medical_procedure" : "psicoterapia");
+    setOutcome("accepted");
+    setEncounterId("");
     setAcceptedByPatient(true);
     setAcceptedByName("");
     setAcceptedByRelation("");
@@ -104,7 +165,15 @@ export function ConsentimientosPanel({ patientId }: { patientId: string }) {
     setEvidenceAttachmentId("");
     setVersion("1");
     setAcceptedText("");
-    setConsentObtained(false);
+    setDecisionConfirmed(false);
+    setMedicalDetails({
+      procedure: "",
+      purpose: "",
+      benefits: "",
+      risks: "",
+      alternatives: "",
+      refusal_consequences: "",
+    });
   }
 
   async function guardar(event: React.FormEvent<HTMLFormElement>) {
@@ -117,7 +186,9 @@ export function ConsentimientosPanel({ patientId }: { patientId: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           kind,
-          accepted_text: acceptedText,
+          encounter_id: encounterId || null,
+          outcome,
+          ...(isMedicalConsent ? medicalDetails : { accepted_text: acceptedText }),
           version,
           accepted_by_patient: acceptedByPatient,
           accepted_by_name: acceptedByName,
@@ -125,7 +196,7 @@ export function ConsentimientosPanel({ patientId }: { patientId: string }) {
           acceptance_method: acceptanceMethod,
           acceptance_channel: acceptanceChannel,
           evidence_attachment_id: evidenceAttachmentId || null,
-          consentObtained,
+          decisionConfirmed,
         }),
       });
       const data = (await response.json().catch(() => ({}))) as { error?: string };
@@ -168,7 +239,11 @@ export function ConsentimientosPanel({ patientId }: { patientId: string }) {
       <Card>
         <FichaCardHeader
           title="Consentimientos"
-          description="Registra por separado qué información se aceptó, cómo se obtuvo la aceptación y por qué canal. Este registro no constituye una firma electrónica."
+          description={
+            orgType === "medical"
+              ? "Documenta la información entregada y la decisión del paciente o representante. Este registro no constituye una firma electrónica ni reemplaza los requisitos aplicables a cada procedimiento."
+              : "Registra por separado qué información se aceptó, cómo se obtuvo la aceptación y por qué canal. Este registro no constituye una firma electrónica."
+          }
           action={
             <Button
               size="sm"
@@ -176,7 +251,10 @@ export function ConsentimientosPanel({ patientId }: { patientId: string }) {
               onClick={() => {
                 const shouldOpen = !formOpen;
                 setFormOpen(shouldOpen);
-                if (shouldOpen) void cargarAdjuntos();
+                if (shouldOpen) {
+                  void cargarAdjuntos();
+                  void cargarAtenciones();
+                }
               }}
             >
               {formOpen ? "Cancelar" : "Registrar consentimiento"}
@@ -193,18 +271,79 @@ export function ConsentimientosPanel({ patientId }: { patientId: string }) {
                   value={kind}
                   onChange={(event) => setKind(event.target.value as typeof kind)}
                 >
-                  {TIPO_CONSENTIMIENTO.map((option) => (
+                  {tiposConsentimiento.map((option) => (
                     <option key={option.value} value={option.value}>{option.label}</option>
                   ))}
                 </select>
               </Field>
-              <p className="text-sm text-neutral-600 sm:col-span-2">
+              {!isMedicalConsent ? <p className="text-sm text-neutral-600 sm:col-span-2">
                 {kind === "psicoterapia"
                   ? "Registra la aceptación del proceso de atención psicológica."
                   : kind === "atencion_online"
                     ? "Registra por separado la información y aceptación asociada a la atención psicológica a distancia."
                     : "Registra por separado el aviso o consentimiento sobre tratamiento de datos personales y de salud que fue efectivamente informado y aceptado, según corresponda."}
-              </p>
+              </p> : null}
+              {isMedicalConsent ? (
+                <div className="space-y-3 sm:col-span-2">
+                  <p className="text-sm text-neutral-600">
+                    Completa la información explicada al paciente. Usa “No aplica” cuando corresponda y adapta el contenido al caso clínico y al protocolo de la organización.
+                  </p>
+                  {CAMPOS_MEDICOS.map(({ key, label, maxLength }) => (
+                    <Field key={key} label={label} htmlFor={`consent-${key}`}>
+                      <textarea
+                        id={`consent-${key}`}
+                        rows={key === "procedure" ? 2 : 3}
+                        maxLength={maxLength}
+                        minLength={2}
+                        required
+                        className={inputClasses}
+                        value={medicalDetails[key]}
+                        onChange={(event) =>
+                          setMedicalDetails((current) => ({ ...current, [key]: event.target.value }))
+                        }
+                      />
+                    </Field>
+                  ))}
+                </div>
+              ) : null}
+              {orgType === "medical" ? (
+                <Field label="Decisión registrada" htmlFor="consent-outcome">
+                  <select
+                    id="consent-outcome"
+                    className={inputClasses}
+                    value={outcome}
+                    onChange={(event) => setOutcome(event.target.value as typeof outcome)}
+                  >
+                    <option value="accepted">Acepta la propuesta</option>
+                    <option value="rejected">Rechaza la propuesta</option>
+                  </select>
+                </Field>
+              ) : null}
+              <Field label="Atención relacionada (opcional)" htmlFor="consent-encounter">
+                <select
+                  id="consent-encounter"
+                  className={inputClasses}
+                  value={encounterId}
+                  onChange={(event) => setEncounterId(event.target.value)}
+                  disabled={encounters === null}
+                >
+                  <option value="">Sin vincular a una atención</option>
+                  {(encounters ?? []).map((encounter) => (
+                    <option key={encounter.id} value={encounter.id}>
+                      {fechaHora(encounter.started_at)}
+                      {encounter.care_type ? ` · ${encounter.care_type}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              {encountersError ? (
+                <div className="space-y-2 sm:col-span-2">
+                  <ErrorNotice message={encountersError} />
+                  <Button type="button" size="sm" variant="secondary" onClick={() => void cargarAtenciones()}>
+                    Reintentar carga de atenciones
+                  </Button>
+                </div>
+              ) : null}
               <Field label="Versión del documento" htmlFor="consent-version">
                 <input
                   id="consent-version"
@@ -216,24 +355,28 @@ export function ConsentimientosPanel({ patientId }: { patientId: string }) {
                 />
               </Field>
             </div>
-            <Field
-              label="Texto aceptado"
-              htmlFor="consent-text"
-              hint="Copia el texto exacto de la versión aceptada por el paciente o su representante."
-            >
-              <textarea
-                id="consent-text"
-                rows={6}
-                minLength={20}
-                maxLength={8000}
-                required
-                className={inputClasses}
-                value={acceptedText}
-                onChange={(event) => setAcceptedText(event.target.value)}
-              />
-            </Field>
+            {!isMedicalConsent ? (
+              <Field
+                label="Texto aceptado"
+                htmlFor="consent-text"
+                hint="Copia el texto exacto de la versión aceptada por el paciente o su representante."
+              >
+                <textarea
+                  id="consent-text"
+                  rows={6}
+                  minLength={20}
+                  maxLength={8000}
+                  required
+                  className={inputClasses}
+                  value={acceptedText}
+                  onChange={(event) => setAcceptedText(event.target.value)}
+                />
+              </Field>
+            ) : null}
             <fieldset className="space-y-3">
-              <legend className="text-sm font-medium text-neutral-800">Persona que aceptó</legend>
+              <legend className="text-sm font-medium text-neutral-800">
+                {orgType === "medical" ? "Persona que tomó la decisión" : "Persona que aceptó"}
+              </legend>
               <div className="flex flex-wrap gap-4 text-sm">
                 <label className="inline-flex min-h-11 items-center gap-2">
                   <input
@@ -347,20 +490,24 @@ export function ConsentimientosPanel({ patientId }: { patientId: string }) {
               <input
                 type="checkbox"
                 className="mt-0.5 size-4 shrink-0"
-                checked={consentObtained}
-                onChange={(event) => setConsentObtained(event.target.checked)}
+                checked={decisionConfirmed}
+                onChange={(event) => setDecisionConfirmed(event.target.checked)}
               />
-              <span>Confirmo que la persona indicada aceptó este texto y que estoy registrando lo ocurrido, no capturando una firma digital.</span>
+              <span>
+                {orgType === "medical"
+                  ? "Confirmo que registré fielmente la información entregada y la decisión expresada; esto no captura una firma digital."
+                  : "Confirmo que la persona indicada aceptó este texto y que estoy registrando lo ocurrido, no capturando una firma digital."}
+              </span>
             </label>
             <Button
               type="submit"
               disabled={
                 saving ||
-                !consentObtained ||
+                !decisionConfirmed ||
                 (acceptanceMethod === "documento" && !evidenceAttachmentId)
               }
             >
-              {saving ? "Guardando…" : "Guardar registro"}
+              {saving ? "Guardando…" : "Guardar decisión"}
             </Button>
           </form>
         ) : null}
@@ -372,7 +519,13 @@ export function ConsentimientosPanel({ patientId }: { patientId: string }) {
               <li key={consent.id} className="space-y-2 px-5 py-4">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <p className="font-medium text-neutral-900">
-                    {TIPO_CONSENTIMIENTO.find((option) => option.value === consent.kind)?.label ?? consent.kind}
+                    {[
+                      ...CONSENTIMIENTOS_MEDICOS,
+                      ...CONSENTIMIENTOS_PSICOLOGICOS,
+                    ].find((option) => option.value === consent.kind)?.label ?? consent.kind}
+                    {consent.outcome
+                      ? ` · ${consent.outcome === "accepted" ? "Aceptado" : "Rechazado"}`
+                      : ""}
                     {" · "}Versión {consent.version}
                   </p>
                   <time className="text-sm text-neutral-500" dateTime={consent.accepted_at}>
@@ -420,7 +573,7 @@ export function ConsentimientosPanel({ patientId }: { patientId: string }) {
                 ) : null}
                 <details className="text-sm">
                   <summary className="min-h-11 cursor-pointer py-2 font-medium text-action-primary">
-                    Ver texto registrado
+                    {orgType === "medical" ? "Ver información y decisión registradas" : "Ver texto registrado"}
                   </summary>
                   <p className="whitespace-pre-wrap rounded-xl bg-neutral-50 p-3 text-neutral-700">
                     {consent.accepted_text}

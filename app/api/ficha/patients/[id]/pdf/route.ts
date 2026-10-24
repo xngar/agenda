@@ -65,6 +65,9 @@ const CONSENT_TIPO: Record<string, string> = {
   tratamiento_dental: "Tratamiento dental",
   psicoterapia: "Atención psicológica",
   atencion_online: "Atención psicológica a distancia",
+  medical_procedure: "Procedimiento médico",
+  medical_treatment: "Tratamiento médico",
+  medical_anesthesia: "Anestesia o sedación",
   other: "Otro",
 };
 
@@ -324,13 +327,14 @@ async function buildPdf(
       field(
         "Tipo",
         [etiqueta(CONSENT_TIPO, c.kind), text(c.version)].filter(Boolean).join(" · ") +
+          `${c.outcome ? ` · ${c.outcome === "rejected" ? "Rechazado" : "Aceptado"}` : ""}` +
           (c.accepted_at ? ` · ${fecha(c.accepted_at)}` : ""),
       );
       if (c.acceptance_method === "por_verificar") {
         field("Aceptación", "Registro previo sin identidad ni método de aceptación verificables");
       } else {
         field(
-          "Aceptó",
+          c.outcome === "rejected" ? "Persona que rechazó" : "Persona que aceptó",
           `${c.accepted_by_patient ? "Paciente" : "Representante"} · ${text(c.accepted_by_name)}` +
             (!c.accepted_by_patient && c.accepted_by_relation
               ? ` (${text(c.accepted_by_relation)})`
@@ -350,7 +354,12 @@ async function buildPdf(
           );
         }
       }
-      field("Texto aceptado", c.accepted_text);
+      field(
+        c.kind && text(c.kind).startsWith("medical_")
+          ? "Información y decisión registradas"
+          : "Texto aceptado",
+        c.accepted_text,
+      );
     }
   }
 
