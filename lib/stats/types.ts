@@ -47,6 +47,11 @@ export interface StatsHeatmapRow {
 
 export type StatsKpiUnit = "count" | "pct" | "hours" | "currency";
 
+export interface StatsKpiBreakdown {
+  label: string;
+  value: number;
+}
+
 export interface StatsKpi {
   key: string;
   label: string;
@@ -60,6 +65,8 @@ export interface StatsKpi {
   unit: StatsKpiUnit;
   /** Cuando subir la métrica es mala noticia (inasistencia, cancelaciones). */
   goodDown?: boolean;
+  /** Desglose opcional de subcategorías (ej. canceladas por paciente, profesional, tardías). */
+  breakdown?: StatsKpiBreakdown[];
 }
 
 export interface StatsSnapshot {

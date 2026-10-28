@@ -112,6 +112,10 @@ export async function fetchStatsSnapshot(options: FetchStatsOptions): Promise<St
   const current = { ...empty, ...currentRes };
   const previous = { ...empty, ...previousRes };
 
+  const totalCanceladas = (current.canceladas_paciente ?? 0) + (current.canceladas_profesional ?? 0);
+  const totalCanceladasPrevias =
+    (previous.canceladas_paciente ?? 0) + (previous.canceladas_profesional ?? 0);
+
   const kpis: StatsKpi[] = [
     {
       key: "citas",
@@ -144,35 +148,20 @@ export async function fetchStatsSnapshot(options: FetchStatsOptions): Promise<St
       goodDown: true,
     },
     {
-      key: "canceladas_paciente",
-      label: "Canceladas por paciente",
-      current: current.canceladas_paciente,
-      previous: previous.canceladas_paciente,
-      deltaPct: difPct(current.canceladas_paciente, previous.canceladas_paciente),
+      key: "cancelaciones",
+      label: "Cancelaciones",
+      hint: "Total de citas canceladas en el periodo",
+      current: totalCanceladas,
+      previous: totalCanceladasPrevias,
+      deltaPct: difPct(totalCanceladas, totalCanceladasPrevias),
       deltaPoints: null,
       unit: "count",
       goodDown: true,
-    },
-    {
-      key: "canceladas_profesional",
-      label: "Canceladas por profesional",
-      current: current.canceladas_profesional,
-      previous: previous.canceladas_profesional,
-      deltaPct: difPct(current.canceladas_profesional, previous.canceladas_profesional),
-      deltaPoints: null,
-      unit: "count",
-      goodDown: true,
-    },
-    {
-      key: "canceladas_tardias",
-      label: "Cancelaciones tardías",
-      hint: "Con menos de 24 h de anticipación",
-      current: current.canceladas_tardias,
-      previous: previous.canceladas_tardias,
-      deltaPct: difPct(current.canceladas_tardias, previous.canceladas_tardias),
-      deltaPoints: null,
-      unit: "count",
-      goodDown: true,
+      breakdown: [
+        { label: "Paciente", value: current.canceladas_paciente ?? 0 },
+        { label: "Profesional", value: current.canceladas_profesional ?? 0 },
+        { label: "Tardías (< 24 h)", value: current.canceladas_tardias ?? 0 },
+      ],
     },
     {
       key: "pacientes_nuevos",

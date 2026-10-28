@@ -24,6 +24,14 @@ function PacientesIcon() {
   );
 }
 
+function EstadisticasIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+      <path d="M4 20V10M10 20V5M16 20v-7M21 20H3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function HorarioIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
@@ -88,6 +96,7 @@ interface NavItem {
 const principal: NavItem[] = [
   { href: "/dashboard", label: "Mi agenda", icon: <CalendarioIcon /> },
   { href: "/dashboard/pacientes", label: "Pacientes", icon: <PacientesIcon /> },
+  { href: "/dashboard/estadisticas", label: "Estadísticas", icon: <EstadisticasIcon /> },
 ];
 
 const disponibilidadBase: NavItem[] = [

@@ -32,13 +32,15 @@ function etiquetas(): string[] {
 }
 
 describe("SidebarNav", () => {
-  it("sin admin ve Mi agenda, Pacientes, Mi Horario y Bloqueos, y el activo se marca", () => {
+  it("sin admin ve Mi agenda, Pacientes, Estadísticas, Mi Horario y Bloqueos, y el activo se marca", () => {
     act(() => {
       root.render(<SidebarNav isAdmin={false} />);
     });
 
     const links = enlaces();
-    expect(links).toHaveLength(2);
+    expect(links).toHaveLength(5);
+    expect(etiquetas()).toEqual(["Mi agenda", "Pacientes", "Estadísticas", "Mi Horario", "Bloqueos"]);
+
     for (const a of links) {
       expect(a.querySelector("svg")).not.toBeNull();
       expect(a.textContent?.trim().length).toBeGreaterThan(0);
@@ -46,19 +48,21 @@ describe("SidebarNav", () => {
 
     const pacientes = links.find((a) => a.getAttribute("href") === "/dashboard/pacientes");
     expect(pacientes?.getAttribute("aria-current")).toBe("page");
+    expect(pacientes?.className).toContain("text-action-primary");
     const agenda = links.find((a) => a.getAttribute("href") === "/dashboard");
     expect(agenda?.getAttribute("aria-current")).toBeNull();
   });
 
-  it("el admin ve los siete accesos en orden, sin el botón Disponibilidad", () => {
+  it("el admin ve los ocho accesos en orden, sin el botón Disponibilidad", () => {
     act(() => {
       root.render(<SidebarNav isAdmin={true} />);
     });
 
-    expect(enlaces()).toHaveLength(7);
+    expect(enlaces()).toHaveLength(8);
     expect(etiquetas()).toEqual([
       "Mi agenda",
       "Pacientes",
+      "Estadísticas",
       "Mi Horario",
       "Bloqueos",
       "Feriados",
@@ -77,13 +81,17 @@ describe("SidebarNav", () => {
     act(() => {
       root.render(<SidebarNav isAdmin={false} />);
     });
-    const links = enlaces();
-    expect(links).toHaveLength(4);
-    expect(container.textContent).toContain("Servicios");
-    expect(triggerDisponibilidad().textContent).toContain("Disponibilidad");
+
+    const labels = etiquetas();
+    expect(labels).toContain("Estadísticas");
+    expect(labels).toContain("Mi Horario");
+    expect(labels).toContain("Bloqueos");
+    expect(labels).not.toContain("Feriados");
+    expect(labels).not.toContain("Equipo");
+    expect(labels).not.toContain("Servicios");
   });
 
-  it("los accesos de disponibilidad conservan sus rutas", () => {
+  it("los accesos conservan sus rutas", () => {
     act(() => {
       root.render(<SidebarNav isAdmin={true} />);
     });
@@ -91,6 +99,7 @@ describe("SidebarNav", () => {
     expect(enlaces().map((a) => a.getAttribute("href"))).toEqual([
       "/dashboard",
       "/dashboard/pacientes",
+      "/dashboard/estadisticas",
       "/dashboard/horario",
       "/dashboard/bloqueos",
       "/dashboard/feriados",
