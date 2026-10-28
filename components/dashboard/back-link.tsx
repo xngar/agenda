@@ -12,7 +12,7 @@ export function BackLink({
   return (
     <Link
       href={href}
-      className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-600 transition-colors hover:text-brand-navy"
+      className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-600 transition-colors hover:text-action-primary"
     >
       <ArrowLeft aria-hidden="true" className="h-4 w-4" />
       {children}

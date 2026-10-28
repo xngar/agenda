@@ -8,9 +8,12 @@ import {
   forbidden,
   notFound,
   dbError,
+  auditPatientView,
 } from "@/lib/ficha/http";
 import { FACE_LABEL, STATE_LABEL } from "@/lib/ficha/dental";
-import { redactEncounters } from "@/lib/ficha/privacy";
+import { redactEncountersForExport } from "@/lib/ficha/privacy";
+import { fichaFor } from "@/lib/ficha/definitions";
+import type { OrganizationType } from "@/lib/ficha/types";
 import { formatRut } from "@/lib/rut";
 import { formatPhonePartial } from "@/lib/phone";
 
@@ -58,11 +61,22 @@ const PLAN_ESTADO: Record<string, string> = {
 };
 
 const CONSENT_TIPO: Record<string, string> = {
-  datos_personales: "Datos personales",
+  datos_personales: "Información sobre tratamiento de datos",
   tratamiento_dental: "Tratamiento dental",
-  psicoterapia: "Psicoterapia",
-  atencion_online: "Atención online",
+  psicoterapia: "Atención psicológica",
+  atencion_online: "Atención psicológica a distancia",
+  medical_procedure: "Procedimiento médico",
+  medical_treatment: "Tratamiento médico",
+  medical_anesthesia: "Anestesia o sedación",
   other: "Otro",
+};
+
+const CONSENT_CANAL: Record<string, string> = {
+  presencial: "Presencial",
+  videollamada: "Videollamada",
+  llamada_telefonica: "Llamada telefónica",
+  correo_electronico: "Correo electrónico",
+  plataforma_digital: "Plataforma digital",
 };
 
 const ADJUNTO_TIPO: Record<string, string> = {
@@ -107,7 +121,10 @@ function ordenar(
   });
 }
 
-async function buildPdf(patient: Record<string, unknown>, ctx: { orgName: string }): Promise<Buffer> {
+async function buildPdf(
+  patient: Record<string, unknown>,
+  ctx: { orgName: string; orgType: OrganizationType },
+): Promise<Buffer> {
   const doc = new PDFDocument({ size: "A4", margin: 48, bufferPages: true });
   const chunks: Buffer[] = [];
   doc.on("data", (chunk: Buffer) => chunks.push(chunk));
@@ -199,6 +216,27 @@ async function buildPdf(patient: Record<string, unknown>, ctx: { orgName: string
     field("Evolución", encounter.evolucion);
     field("Diagnóstico", encounter.diagnostico);
     field("Indicaciones", encounter.indicaciones);
+    const specialtyData = encounter.specialty_data;
+    if (specialtyData && typeof specialtyData === "object" && !Array.isArray(specialtyData)) {
+      const fields = fichaFor(ctx.orgType).encounterFields.flatMap((group) => group.fields);
+      for (const definition of fields) {
+        const value = (specialtyData as Record<string, unknown>)[definition.key];
+        if (value === null || value === undefined || value === "") continue;
+        if (typeof value === "boolean" && !value) continue;
+        const displayValue =
+          typeof value === "string"
+            ? definition.options?.find((option) => option.value === value)?.label ?? value
+            : typeof value === "boolean"
+              ? "Sí"
+              : Array.isArray(value)
+                ? value.join(", ")
+                : value;
+        field(
+          definition.label,
+          displayValue,
+        );
+      }
+    }
     field(
       "Estado",
       etiqueta(ATENCION_ESTADO, encounter.status) +
@@ -289,7 +327,38 @@ async function buildPdf(patient: Record<string, unknown>, ctx: { orgName: string
       field(
         "Tipo",
         [etiqueta(CONSENT_TIPO, c.kind), text(c.version)].filter(Boolean).join(" · ") +
+          `${c.outcome ? ` · ${c.outcome === "rejected" ? "Rechazado" : "Aceptado"}` : ""}` +
           (c.accepted_at ? ` · ${fecha(c.accepted_at)}` : ""),
+      );
+      if (c.acceptance_method === "por_verificar") {
+        field("Aceptación", "Registro previo sin identidad ni método de aceptación verificables");
+      } else {
+        field(
+          c.outcome === "rejected" ? "Persona que rechazó" : "Persona que aceptó",
+          `${c.accepted_by_patient ? "Paciente" : "Representante"} · ${text(c.accepted_by_name)}` +
+            (!c.accepted_by_patient && c.accepted_by_relation
+              ? ` (${text(c.accepted_by_relation)})`
+              : ""),
+        );
+        field(
+          "Forma de aceptación",
+          c.acceptance_method === "remoto" ? "A distancia (registro anterior)" : text(c.acceptance_method),
+        );
+        if (c.acceptance_channel) {
+          field("Canal de aceptación", CONSENT_CANAL[text(c.acceptance_channel)] ?? text(c.acceptance_channel));
+        }
+        if (c.evidence_attachment_id) {
+          field(
+            "Documento de respaldo",
+            text((c.evidence_attachment as Record<string, unknown> | null)?.file_name) || "Adjunto vinculado",
+          );
+        }
+      }
+      field(
+        c.kind && text(c.kind).startsWith("medical_")
+          ? "Información y decisión registradas"
+          : "Texto aceptado",
+        c.accepted_text,
       );
     }
   }
@@ -332,12 +401,17 @@ export async function GET(_request: Request, { params }: Params) {
   if (!ctx.clinical) return forbidden();
 
   const { id } = await params;
-  const { data: org } = await ctx.supabase.from("organizations").select("name").eq("id", ctx.session.orgId).single();
+  const { data: org, error: orgError } = await ctx.supabase
+    .from("organizations")
+    .select("name, type")
+    .eq("id", ctx.session.orgId)
+    .single();
+  if (orgError) return dbError(orgError);
 
   const { data: patient, error } = await ctx.supabase
     .from("patients")
     .select(
-      "*, patient_medical_background (*), encounters (*), dental_chart_entries (*), dental_treatment_plan_items (*), dental_payments (*), consents (*), prescriptions (*), periodontal_records (*), attachments (*)",
+      "*, patient_medical_background (*), encounters (*), dental_chart_entries (*), dental_treatment_plan_items (*), dental_payments (*), consents (*, evidence_attachment:attachments!consents_evidence_attachment_id_fkey(file_name)), prescriptions (*), periodontal_records (*), attachments (*)",
     )
     .eq("org_id", ctx.session.orgId)
     .eq("id", id)
@@ -345,13 +419,17 @@ export async function GET(_request: Request, { params }: Params) {
 
   if (error) return dbError(error);
   if (!patient) return notFound("Paciente no encontrado");
+  const auditError = await auditPatientView(ctx, id, "patient_pdf");
+  if (auditError) return auditError;
 
   // El PDF no imprime notas privadas; se redactan antes por seguridad.
-  const encounters = redactEncounters(
+  const encounters = redactEncountersForExport(
     ((patient.encounters as unknown[] | null) ?? []) as Record<string, unknown>[],
-    ctx.session,
   );
-  const pdf = await buildPdf({ ...patient, encounters }, { orgName: org?.name ?? "Clínica" });
+  const pdf = await buildPdf(
+    { ...patient, encounters },
+    { orgName: org.name ?? "Clínica", orgType: org.type as OrganizationType },
+  );
 
   return new NextResponse(new Uint8Array(pdf), {
     headers: {

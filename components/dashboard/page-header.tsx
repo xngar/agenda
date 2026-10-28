@@ -24,11 +24,11 @@ export function PageHeader({
     <header className="anim-fade-up flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
       <div className="min-w-0">
         {eyebrow ? (
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-navy-600">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-action-primary">
             {eyebrow}
           </p>
         ) : null}
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-brand-navy sm:text-3xl">
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-action-primary sm:text-3xl">
           {title}
         </h1>
         {description ? (

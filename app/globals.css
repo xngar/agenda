@@ -4,18 +4,22 @@
 /* ============================================================================
    Tokens de marca
    ----------------------------------------------------------------------------
-   Los DOS colores base viven aquí y en ningún otro lado. Todo lo demás
-   (tintes, sombras, bordes) se deriva con color-mix() para que cambiar la
-   paleta sea editar estas dos líneas.
+   Los colores base de marca viven aquí y en ningún otro lado. Todo lo demás
+   (tintes, sombras, bordes) se deriva con color-mix(). El color de acción de
+   los botones se controla solo con --action-primary.
 
    Contraste verificado (WCAG AA):
      texto blanco sobre --brand-navy  -> 10.8:1  (AAA)
      --brand-navy sobre --brand-sky  ->  5.8:1  (AA para texto normal)
+     texto blanco sobre --action-primary -> 8.9:1 (AAA)
    Nunca se pone texto blanco sobre celeste.
    ========================================================================== */
 :root {
   --brand-sky: #7cc7f0;
   --brand-navy: #0b3c7a;
+  --action-primary: #832161;
+  --action-primary-foreground: #ffffff;
+  --action-primary-line: color-mix(in oklab, var(--action-primary) 28%, white);
 
   /* Tokens aislados para landing */
   --lp-navy: #0B2A5B;
@@ -109,6 +113,17 @@
   --color-brand-sky-100: color-mix(in oklab, var(--brand-sky) 35%, white);
   --color-brand-sky-50: color-mix(in oklab, var(--brand-sky) 18%, white);
 
+  /* Color de acción: solo controles, nunca textos ni superficies de marca */
+  --color-action-primary: var(--action-primary);
+  --color-action-primary-foreground: var(--action-primary-foreground);
+  --color-action-primary-hover: color-mix(in oklab, var(--action-primary) 92%, white);
+  --color-action-primary-active: color-mix(in oklab, var(--action-primary) 78%, black);
+  --color-action-primary-line: var(--action-primary-line);
+  --shadow-action: 0 1px 3px color-mix(in srgb, var(--action-primary) 28%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 0.22);
+  --shadow-action-hover: 0 4px 16px color-mix(in srgb, var(--action-primary) 35%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 0.3);
+
   /* Neutros */
   --color-neutral-50: var(--neutral-50);
   --color-neutral-100: var(--neutral-100);
@@ -146,6 +161,16 @@
   --color-lp-sky-200: var(--lp-sky-200);
   --color-lp-yellow: var(--lp-yellow);
 
+  /* Panel privado */
+  --color-panel-bg: var(--panel-bg);
+  --color-panel-line: var(--panel-line);
+  --color-panel-active: var(--panel-active-bg);
+  --color-panel-hover: var(--panel-hover-bg);
+  --color-panel-ink: var(--panel-ink);
+  --color-panel-muted: var(--panel-muted);
+  --shadow-panel: var(--panel-shadow-card);
+  --radius-control: var(--panel-radius-control);
+
   /* Sombras derivadas de navy: nunca negro puro */
   --shadow-card: 0 1px 2px color-mix(in srgb, var(--brand-navy) 8%, transparent),
     0 8px 24px -12px color-mix(in srgb, var(--brand-navy) 22%, transparent);
@@ -155,7 +180,9 @@
 
   --radius-card: 0.875rem;
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+  --font-poppins: var(--font-poppins-family), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, sans-serif;
 }
 
@@ -174,14 +201,14 @@
 
   /* Foco visible y consistente en todo el sitio (WCAG 2.4.7). */
   :focus-visible {
-    outline: 2px solid var(--brand-navy);
+    outline: 2px solid var(--action-primary);
     outline-offset: 2px;
     border-radius: 0.35rem;
   }
 
   ::selection {
     background-color: color-mix(in srgb, var(--brand-sky) 45%, transparent);
-    color: var(--brand-navy);
+    color: var(--action-primary);
   }
 }
 
@@ -209,6 +236,39 @@
   .skip-link:focus {
     top: 0.5rem;
   }
+}
+
+/* ============================================================================
+   Panel privado
+   ----------------------------------------------------------------------------
+   Tokens del shell autenticado. Viven scopeados para no alterar la landing ni
+   el sitio público. Las tarjetas blancas del panel comparten radio y el shell
+   usa sombras suaves, sin tocar los controles internos.
+   ========================================================================== */
+.panel-shell,
+.panel-sheet {
+  --panel-bg: #f3f8fe;
+  --panel-line: #e4edf9;
+  --panel-active-bg: color-mix(in oklab, var(--action-primary) 8%, white);
+  --panel-hover-bg: color-mix(in oklab, var(--action-primary) 5%, white);
+  --panel-ink: var(--action-primary);
+  --panel-muted: var(--neutral-500);
+  --panel-radius-card: 1.25rem;
+  --panel-radius-control: 0.75rem;
+  --panel-shadow-card: 0 1px 2px color-mix(in srgb, var(--brand-navy) 5%, transparent),
+    0 16px 36px -24px color-mix(in srgb, var(--brand-navy) 22%, transparent);
+  --panel-shadow-lift: 0 2px 4px color-mix(in srgb, var(--brand-navy) 8%, transparent),
+    0 24px 48px -24px color-mix(in srgb, var(--brand-navy) 28%, transparent);
+}
+
+.panel-shell {
+  min-height: 100dvh;
+  background-color: var(--panel-bg);
+  color: var(--neutral-800);
+}
+
+.panel-shell .rounded-card.bg-white {
+  border-radius: var(--panel-radius-card);
 }
 
 /* ----------------------------------------------------------------------------
@@ -428,18 +488,18 @@
 
 /* ============================================================================
    Tokens de shadcn/ui (sólo para sus componentes en components/ui/).
-   Mapeados a la marca: primary = navy, accent/ring = sky. No tocan los
+   Mapeados a la marca: primary = morado, accent/ring = sky. No tocan los
    tokens de marca de arriba ni los usan los componentes propios.
    ========================================================================== */
 :root {
   --background: #ffffff;
   --foreground: #1e293b;
-  --primary: #0b3c7a;
+  --primary: var(--action-primary);
   --primary-foreground: #ffffff;
   --secondary: #f1f5f9;
   --secondary-foreground: #1e293b;
   --accent: #e9f6fe;
-  --accent-foreground: #0b3c7a;
+  --accent-foreground: var(--action-primary);
   --muted: #f1f5f9;
   --muted-foreground: #64748b;
   --destructive: #b91c1c;

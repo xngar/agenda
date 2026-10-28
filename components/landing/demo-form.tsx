@@ -39,10 +39,10 @@ export default function DemoForm() {
     <section id="demo" className="bg-gradient-to-b from-[var(--lp-sky-100)] to-white">
       <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-[var(--lp-navy)] sm:text-4xl">
+          <h2 className="text-3xl font-bold tracking-tight text-action-primary sm:text-4xl">
             Lleva tu consulta al siguiente nivel
           </h2>
-          <p className="mt-4 text-lg text-[var(--lp-navy)]/90">
+          <p className="mt-4 text-lg text-action-primary/90">
             Agenda una demo y mira cómo {siteConfig.name} puede ordenar tu día a día.
           </p>
         </div>
@@ -50,7 +50,7 @@ export default function DemoForm() {
           <form onSubmit={onSubmit} className="grid gap-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-[var(--lp-navy)]" htmlFor="nombre">
+                <label className="text-sm font-medium text-action-primary" htmlFor="nombre">
                   Nombre
                 </label>
                 <input
@@ -61,7 +61,7 @@ export default function DemoForm() {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-[var(--lp-navy)]" htmlFor="correo">
+                <label className="text-sm font-medium text-action-primary" htmlFor="correo">
                   Correo
                 </label>
                 <input
@@ -75,7 +75,7 @@ export default function DemoForm() {
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-[var(--lp-navy)]" htmlFor="telefono">
+                <label className="text-sm font-medium text-action-primary" htmlFor="telefono">
                   Teléfono o WhatsApp
                 </label>
                 <input
@@ -86,7 +86,7 @@ export default function DemoForm() {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-[var(--lp-navy)]" htmlFor="tipo">
+                <label className="text-sm font-medium text-action-primary" htmlFor="tipo">
                   Tipo de consulta
                 </label>
                 <select
@@ -104,7 +104,7 @@ export default function DemoForm() {
               </div>
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[var(--lp-navy)]" htmlFor="profesionales">
+              <label className="text-sm font-medium text-action-primary" htmlFor="profesionales">
                 Cantidad de profesionales
               </label>
               <input
@@ -115,7 +115,7 @@ export default function DemoForm() {
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[var(--lp-navy)]" htmlFor="mensaje">
+              <label className="text-sm font-medium text-action-primary" htmlFor="mensaje">
                 Mensaje (opcional)
               </label>
               <textarea
@@ -133,7 +133,7 @@ export default function DemoForm() {
               {status === "loading" ? "Enviando..." : "Solicitar demo"}
             </button>
             {status === "success" ? (
-              <p className="text-sm font-medium text-[var(--lp-blue)]">
+              <p className="text-sm font-medium text-action-primary">
                 Gracias. Te contactaremos pronto.
               </p>
             ) : null}
@@ -141,7 +141,7 @@ export default function DemoForm() {
               <p className="text-sm font-medium text-red-600">{error}</p>
             ) : null}
           </form>
-          <div className="mt-6 border-t border-[var(--lp-sky-200)] pt-4 text-sm text-[var(--lp-navy)]/80">
+          <div className="mt-6 border-t border-[var(--lp-sky-200)] pt-4 text-sm text-action-primary/80">
             <p>
               Contacto: <a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a> ·{" "}
               <a href={`https://wa.me/${siteConfig.whatsapp.replace(/\D/g, "")}`}>WhatsApp</a>

@@ -5,8 +5,9 @@ import {
   forbidden,
   notFound,
   dbError,
+  auditPatientView,
 } from "@/lib/ficha/http";
-import { redactEncounters } from "@/lib/ficha/privacy";
+import { redactEncountersForExport } from "@/lib/ficha/privacy";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -33,11 +34,12 @@ export async function GET(request: Request, { params }: Params) {
 
   if (error) return dbError(error);
   if (!patient) return notFound("Paciente no encontrado");
+  const auditError = await auditPatientView(ctx, id, "patient_export");
+  if (auditError) return auditError;
 
   if (format === "json") {
-    const encounters = redactEncounters(
+    const encounters = redactEncountersForExport(
       ((patient.encounters as unknown[] | null) ?? []) as Record<string, unknown>[],
-      ctx.session,
     );
     return NextResponse.json({ patient: { ...patient, encounters } });
   }

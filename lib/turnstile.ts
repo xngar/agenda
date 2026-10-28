@@ -5,16 +5,8 @@ import { serverEnv } from "@/lib/env";
 /**
  * Cloudflare Turnstile.
  *
- * Sin secreto configurado (desarrollo) se omite la verificación, igual
- * que el rate limiting: la app debe poder correr local sin credenciales.
- * En producción `TURNSTILE_SECRET_KEY` es obligatoria.
- *
- * Que sea "obligatoria" no significa que algo lo exija: si se despliega sin
- * la clave, `TURNSTILE_ENABLED` queda en falso y `verifyTurnstile` acepta
- * cualquier reserva sin mirar el token. Eso es un fallo silencioso y
- * permanentes, así que en producción se avisa una vez por proceso en vez de
- * seguir como si nada. No se corta el despliegue porque eso dejaría la
- * clínica sin agendar; que quede registrado en los logs.
+ * Sin secreto se omite sólo en desarrollo. En producción, una configuración
+ * ausente o una caída del proveedor bloquea reservas.
  */
 export const TURNSTILE_ENABLED = Boolean(process.env.TURNSTILE_SECRET_KEY);
 
@@ -25,7 +17,7 @@ function avisarSiFaltaEnProduccion() {
   avisado = true;
   if (process.env.NODE_ENV !== "production") return;
   console.error(
-    "[turnstile] TURNSTILE_SECRET_KEY no está definida: la verificación anti-bot está DESACTIVADA en producción y se aceptarán reservas sin comprobar el token.",
+    "[turnstile] TURNSTILE_SECRET_KEY no está definida: las reservas se bloquearán hasta configurar la verificación anti-bot.",
   );
 }
 
@@ -34,15 +26,18 @@ interface TurnstileResponse {
   "error-codes"?: string[];
 }
 
-export async function verifyTurnstile(token: string | undefined, ip?: string): Promise<boolean> {
+export async function verifyTurnstile(
+  token: string | undefined,
+  ip?: string,
+): Promise<"verified" | "invalid" | "unavailable"> {
   if (!TURNSTILE_ENABLED) {
     avisarSiFaltaEnProduccion();
-    return true;
+    return process.env.NODE_ENV !== "production" ? "verified" : "unavailable";
   }
-  if (!token) return false;
+  if (!token) return "invalid";
 
   const env = serverEnv();
-  if (!env.TURNSTILE_SECRET_KEY) return false;
+  if (!env.TURNSTILE_SECRET_KEY) return "unavailable";
 
   const body = new URLSearchParams({ secret: env.TURNSTILE_SECRET_KEY, response: token });
   if (ip) body.set("remoteip", ip);
@@ -53,15 +48,22 @@ export async function verifyTurnstile(token: string | undefined, ip?: string): P
       body,
       signal: AbortSignal.timeout(5_000),
     });
-    if (!response.ok) return false;
+    if (!response.ok) return "unavailable";
 
     const data = (await response.json()) as TurnstileResponse;
-    return data.success === true;
+    if (typeof data.success !== "boolean") return "unavailable";
+    if (data.success) return "verified";
+    if (
+      data["error-codes"]?.some((code) =>
+        ["internal-error", "missing-input-secret", "invalid-input-secret"].includes(code),
+      )
+    ) {
+      return "unavailable";
+    }
+    return "invalid";
   } catch {
-    // Fallo de red con Turnstile: preferimos bloquear sólo si la clave
-    // está configurada y el servicio responde mal.
     console.warn("[turnstile] verificación falló");
-    return false;
+    return "unavailable";
   }
 }
 

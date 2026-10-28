@@ -1,23 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { createContext, useCallback, useContext, type ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import type { PerfilSheetProfile } from "./perfil-sheet";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import { usePathname } from "next/navigation";
+import { PerfilSheet, type PerfilSheetProfile } from "./perfil-sheet";
 
 const PERFIL_PATH = "/dashboard/perfil";
 
 interface PerfilSheetContextValue {
   profile: PerfilSheetProfile;
+  openProfile: () => void;
+  avatarVersion: number;
+  setHasAvatar: (hasAvatar: boolean) => void;
 }
 
 const PerfilSheetContext = createContext<PerfilSheetContextValue | null>(null);
 
 /**
- * La hoja de perfil se enruta, no se guarda en estado: el disparador navega a
- * `/dashboard/perfil` y esa ruta está interceptada en el slot `@perfil`, así que
- * se dibuja sobre la página actual sin desmontarla. Acá solo aportamos los datos
- * que ya trajo la sesión del panel.
+ * La hoja se abre localmente con los datos de sesión ya disponibles para evitar
+ * una navegación de servidor antes de mostrar el formulario.
  */
 export function PerfilSheetProvider({
   profile,
@@ -26,14 +34,40 @@ export function PerfilSheetProvider({
   profile: PerfilSheetProfile;
   children: ReactNode;
 }) {
+  const [abierto, setAbierto] = useState(false);
+  const [hasAvatar, setHasAvatar] = useState(profile.hasAvatar);
+  const [avatarVersion, setAvatarVersion] = useState(0);
+  const openProfile = useCallback(() => setAbierto(true), []);
+  const updateAvatar = useCallback((next: boolean) => {
+    setHasAvatar(next);
+    setAvatarVersion((version) => version + 1);
+  }, []);
+  const contextValue = useMemo(
+    () => ({
+      profile: { ...profile, hasAvatar },
+      openProfile,
+      avatarVersion,
+      setHasAvatar: updateAvatar,
+    }),
+    [profile, hasAvatar, openProfile, avatarVersion, updateAvatar],
+  );
+
   return (
-    <PerfilSheetContext.Provider value={{ profile }}>{children}</PerfilSheetContext.Provider>
+    <PerfilSheetContext.Provider value={contextValue}>
+      {children}
+      <PerfilSheet
+        profile={contextValue.profile}
+        onAvatarChange={updateAvatar}
+        abierto={abierto}
+        onCerrar={() => setAbierto(false)}
+      />
+    </PerfilSheetContext.Provider>
   );
 }
 
 /**
- * Disparador de la hoja. Donde no hay provider (área de plataforma) cae al enlace
- * de siempre, para no romper la navegación del super-admin.
+ * Disparador local de la hoja. Donde no hay provider (área de plataforma) cae al
+ * enlace de siempre, para no romper la navegación del super-admin.
  */
 export function PerfilTrigger({
   className,
@@ -47,14 +81,8 @@ export function PerfilTrigger({
   children: ReactNode;
 }) {
   const ctx = useContext(PerfilSheetContext);
-  const router = useRouter();
   const pathname = usePathname();
   const activo = pathname.startsWith(PERFIL_PATH);
-
-  const abrir = useCallback(() => {
-    onClick?.();
-    router.push(PERFIL_PATH, { scroll: false });
-  }, [onClick, router]);
 
   if (!ctx) {
     return (
@@ -67,7 +95,10 @@ export function PerfilTrigger({
   return (
     <button
       type="button"
-      onClick={abrir}
+      onClick={() => {
+        onClick?.();
+        ctx.openProfile();
+      }}
       className={className}
       title={title}
       aria-haspopup="dialog"
@@ -81,4 +112,19 @@ export function PerfilTrigger({
 /** Datos de la sesión para la hoja; null fuera del panel del profesional. */
 export function usePerfilSheetProfile(): PerfilSheetProfile | null {
   return useContext(PerfilSheetContext)?.profile ?? null;
+}
+
+export function usePerfilAvatar(): {
+  hasAvatar: boolean;
+  avatarVersion: number;
+  setHasAvatar: (hasAvatar: boolean) => void;
+} | null {
+  const ctx = useContext(PerfilSheetContext);
+  return ctx
+    ? {
+        hasAvatar: ctx.profile.hasAvatar,
+        avatarVersion: ctx.avatarVersion,
+        setHasAvatar: ctx.setHasAvatar,
+      }
+    : null;
 }

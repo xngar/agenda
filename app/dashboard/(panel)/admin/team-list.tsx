@@ -78,7 +78,7 @@ export function TeamList({ initial, selfId }: { initial: TeamMember[]; selfId: s
           onClick={() => setTab("activos")}
           className={`inline-flex min-h-9 flex-1 items-center justify-center rounded-lg px-3 text-sm font-medium transition-colors ${
             tab === "activos"
-              ? "bg-white text-brand-navy shadow-sm"
+              ? "bg-white text-action-primary shadow-sm"
               : "text-neutral-600 hover:text-neutral-900"
           }`}
         >
@@ -91,7 +91,7 @@ export function TeamList({ initial, selfId }: { initial: TeamMember[]; selfId: s
           onClick={() => setTab("desactivados")}
           className={`inline-flex min-h-9 flex-1 items-center justify-center rounded-lg px-3 text-sm font-medium transition-colors ${
             tab === "desactivados"
-              ? "bg-white text-brand-navy shadow-sm"
+              ? "bg-white text-action-primary shadow-sm"
               : "text-neutral-600 hover:text-neutral-900"
           }`}
         >
@@ -133,13 +133,13 @@ export function TeamList({ initial, selfId }: { initial: TeamMember[]; selfId: s
 
               <div className="flex flex-wrap items-center gap-2">
                 {d.is_admin ? (
-                  <span className="rounded-full bg-brand-navy-50 px-2.5 py-1 text-xs font-semibold text-brand-navy">
+                  <span className="rounded-full bg-brand-navy-50 px-2.5 py-1 text-xs font-semibold text-action-primary">
                     Administrador
                   </span>
                 ) : null}
 
                 {d.role === "reception" ? (
-                  <span className="rounded-full bg-brand-sky-50 px-2.5 py-1 text-xs font-semibold text-brand-navy">
+                  <span className="rounded-full bg-brand-sky-50 px-2.5 py-1 text-xs font-semibold text-action-primary">
                     Recepción
                   </span>
                 ) : null}

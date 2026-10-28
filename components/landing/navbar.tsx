@@ -20,14 +20,14 @@ export default function Navbar() {
     <header className="fixed top-0 z-50 w-full border-b border-[var(--lp-sky-200)] bg-white/95 backdrop-blur">
       <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         <Link href="#top" className="flex items-center gap-2">
-          <span className="text-lg font-bold text-[var(--lp-navy)]">{siteConfig.name}</span>
+          <span className="text-lg font-bold text-action-primary">{siteConfig.name}</span>
         </Link>
         <div className="hidden items-center gap-6 md:flex">
           {links.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className="text-sm font-medium text-[var(--lp-navy)] transition hover:text-[var(--lp-blue)]"
+              className="text-sm font-medium text-action-primary transition hover:text-action-primary"
             >
               {l.label}
             </Link>
@@ -55,7 +55,7 @@ export default function Navbar() {
               <Link
                 key={l.href}
                 href={l.href}
-                className="py-1 text-sm font-medium text-[var(--lp-navy)]"
+                className="py-1 text-sm font-medium text-action-primary"
                 onClick={() => setOpen(false)}
               >
                 {l.label}

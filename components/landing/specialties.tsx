@@ -11,7 +11,7 @@ export default function Specialties() {
         ].map(({ label, Icon }) => (
           <div
             key={label}
-            className="flex items-center gap-2 rounded-full bg-[var(--lp-sky-100)] px-4 py-2 text-sm font-medium text-[var(--lp-navy)] ring-1 ring-[var(--lp-sky-200)]"
+            className="flex items-center gap-2 rounded-full bg-[var(--lp-sky-100)] px-4 py-2 text-sm font-medium text-action-primary ring-1 ring-[var(--lp-sky-200)]"
           >
             <Icon className="h-4 w-4" />
             <span>{label}</span>

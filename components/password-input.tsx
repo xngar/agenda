@@ -76,7 +76,7 @@ export function PasswordInput({
         aria-pressed={visible}
         aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
         title={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
-        className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-xl text-neutral-500 transition-colors hover:text-brand-navy focus-visible:outline-2 focus-visible:outline-brand-navy"
+        className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-xl text-neutral-500 transition-colors hover:text-action-primary focus-visible:outline-2 focus-visible:outline-action-primary"
       >
         {visible ? <OjoCerradoIcon /> : <OjoIcon />}
       </button>

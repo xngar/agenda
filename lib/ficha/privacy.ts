@@ -33,6 +33,13 @@ export function redactEncounters(encounters: Fila[], session: DoctorSession): Fi
   return encounters.map((e) => redactEncounter(e, session));
 }
 
+export function redactEncountersForExport(encounters: Fila[]): Fila[] {
+  return encounters.map((encounter) => ({
+    ...encounter,
+    specialty_data: sinPrivateNotes(encounter.specialty_data),
+  }));
+}
+
 export function redactVersion(version: Fila, session: DoctorSession): Fila {
   const snapshot = version.snapshot;
   if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) return version;

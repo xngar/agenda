@@ -39,6 +39,8 @@ export function PatientsSearch({
     const next = new URLSearchParams();
     if (qVal.trim()) next.set("q", qVal.trim());
     if (statusVal) next.set("status", statusVal);
+    const tab = searchParams.get("tab");
+    if (tab) next.set("tab", tab);
     const sort = searchParams.get("sort");
     const dir = searchParams.get("dir");
     if (sort) next.set("sort", sort);
@@ -48,6 +50,7 @@ export function PatientsSearch({
     const actualStatus = searchParams.get("status") ?? "";
     if (actualQ) actual.set("q", actualQ);
     if (actualStatus) actual.set("status", actualStatus);
+    if (tab) actual.set("tab", tab);
     if (sort) actual.set("sort", sort);
     if (dir) actual.set("dir", dir);
     if (next.toString() === actual.toString()) return;
@@ -66,6 +69,9 @@ export function PatientsSearch({
     if (timer.current) clearTimeout(timer.current);
     navegar(q, status);
   }
+
+  const currentTab = searchParams.get("tab");
+  const clearHref = currentTab ? `/dashboard/pacientes?tab=${currentTab}` : "/dashboard/pacientes";
 
   return (
     <form onSubmit={buscar} role="search" className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -145,7 +151,7 @@ export function PatientsSearch({
           )}
         </Button>
         <Link
-          href="/dashboard/pacientes"
+          href={clearHref}
           aria-disabled={!hasFilter}
           tabIndex={hasFilter ? undefined : -1}
           className={buttonClasses(

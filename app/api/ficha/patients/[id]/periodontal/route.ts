@@ -6,6 +6,7 @@ import {
   bodyError,
   dbError,
   orgPatient,
+  auditPatientView,
 } from "@/lib/ficha/http";
 import { periodontalSchema } from "@/lib/ficha/schemas";
 
@@ -28,6 +29,8 @@ export async function GET(_request: Request, { params }: Params) {
     .order("recorded_at", { ascending: false });
 
   if (error) return dbError(error);
+  const auditError = await auditPatientView(ctx, id, "periodontal_records");
+  if (auditError) return auditError;
 
   return NextResponse.json({ patient, records: data ?? [] });
 }

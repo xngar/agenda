@@ -16,13 +16,20 @@ export interface PsychologicalProfile {
 export interface PsychologicalEncounterData {
   sessionType: string;
   modality: string;
+  attendance: string;
+  durationMinutes: number | null;
   currentState: string;
   riskAssessment: string;
+  riskResponse: string;
   mhGapSection: string;
   safetyConcerns: boolean | null;
   phq9: number | null;
   gad7: number | null;
   dsm5: string;
+  interventions: string;
+  response: string;
+  goalsProgress: string;
+  nextSteps: string;
   observations: string;
   privateNotes: string;
 }
@@ -45,13 +52,20 @@ export const psychologicalProfileSchema = z.object({
 export const psychologicalEncounterSchema = z.object({
   sessionType: z.string().trim().max(200).optional(),
   modality: z.enum(["presencial", "online"]).nullable().optional(),
+  attendance: z.enum(["attended", "late", "no_show", "rescheduled"]).nullable().optional(),
+  durationMinutes: z.number().int().min(1).max(240).nullable().optional(),
   currentState: z.string().trim().max(4000).optional(),
   riskAssessment: z.string().trim().max(4000).optional(),
+  riskResponse: z.string().trim().max(4000).optional(),
   mhGapSection: z.string().trim().max(4000).optional(),
   safetyConcerns: z.boolean().nullable().optional(),
   phq9: escala(27),
   gad7: escala(21),
   dsm5: z.string().trim().max(1000).optional(),
+  interventions: z.string().trim().max(8000).optional(),
+  response: z.string().trim().max(8000).optional(),
+  goalsProgress: z.string().trim().max(4000).optional(),
+  nextSteps: z.string().trim().max(4000).optional(),
   observations: z.string().trim().max(8000).optional(),
   privateNotes: z.string().trim().max(8000).optional(),
 }) as z.ZodType<PsychologicalEncounterData>;
@@ -125,10 +139,28 @@ export const PSYCHOLOGICAL_ENCOUNTER_FIELDS: SectionDef[] = [
         ],
         optional: true,
       },
+      {
+        key: "attendance",
+        label: "Asistencia",
+        kind: "select",
+        options: [
+          { value: "attended", label: "Asistió" },
+          { value: "late", label: "Asistió con atraso" },
+          { value: "no_show", label: "No asistió" },
+          { value: "rescheduled", label: "Reagendada" },
+        ],
+        optional: true,
+      },
+      { key: "durationMinutes", label: "Duración (minutos)", kind: "number", optional: true },
       { key: "currentState", label: "Estado actual", kind: "textarea", optional: true },
       { key: "riskAssessment", label: "Evaluación de riesgo", kind: "textarea", optional: true },
+      { key: "riskResponse", label: "Acciones y seguimiento acordados ante el riesgo", kind: "textarea", optional: true },
       { key: "mhGapSection", label: "Sección mhGAP", kind: "textarea", optional: true },
       { key: "safetyConcerns", label: "Preocupaciones de seguridad", kind: "checkbox", optional: true },
+      { key: "interventions", label: "Intervenciones realizadas", kind: "textarea", optional: true },
+      { key: "response", label: "Respuesta del paciente", kind: "textarea", optional: true },
+      { key: "goalsProgress", label: "Avance de objetivos terapéuticos", kind: "textarea", optional: true },
+      { key: "nextSteps", label: "Plan y próximos pasos", kind: "textarea", optional: true },
       { key: "observations", label: "Observaciones", kind: "textarea", optional: true },
     ],
   },

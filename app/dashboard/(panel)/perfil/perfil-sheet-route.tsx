@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { PerfilSheet } from "./perfil-sheet";
-import { usePerfilSheetProfile } from "./perfil-sheet-provider";
+import { usePerfilAvatar, usePerfilSheetProfile } from "./perfil-sheet-provider";
 
 /**
  * Envoltura de ruta de la hoja.
@@ -14,11 +14,13 @@ import { usePerfilSheetProfile } from "./perfil-sheet-provider";
 export function PerfilSheetRoute({ volverAtras = false }: { volverAtras?: boolean }) {
   const router = useRouter();
   const profile = usePerfilSheetProfile();
-  if (!profile) return null;
+  const avatar = usePerfilAvatar();
+  if (!profile || !avatar) return null;
 
   return (
     <PerfilSheet
       profile={profile}
+      onAvatarChange={avatar.setHasAvatar}
       abierto
       onCerrar={() => {
         if (volverAtras) router.back();

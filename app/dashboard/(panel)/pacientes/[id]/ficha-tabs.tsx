@@ -16,22 +16,32 @@ import { PlanPanel } from "./plan-panel";
 import { RecetasPanel } from "./recetas-panel";
 import { AdjuntosPanel } from "./adjuntos-panel";
 import { AuditoriaPanel } from "./auditoria-panel";
+import { ConsentimientosPanel } from "./consentimientos-panel";
 
 const TABS_CLINICA_COMMON = [
-  { id: "resumen", label: "Resumen" },
+  { id: "resumen", label: "Datos del paciente" },
   { id: "antecedentes", label: "Antecedentes" },
   { id: "atenciones", label: "Atenciones" },
+  { id: "consentimientos", label: "Consentimientos" },
   { id: "recetas", label: "Recetas" },
   { id: "adjuntos", label: "Adjuntos" },
 ];
 
 const TABS_DENTAL = [
-  { id: "resumen", label: "Resumen" },
+  { id: "resumen", label: "Datos del paciente" },
   { id: "antecedentes", label: "Antecedentes" },
   { id: "atenciones", label: "Atenciones" },
   { id: "odontograma", label: "Odontograma" },
   { id: "plan", label: "Plan" },
   { id: "recetas", label: "Recetas" },
+  { id: "adjuntos", label: "Adjuntos" },
+];
+
+const TABS_PSYCHOLOGICAL = [
+  { id: "resumen", label: "Datos del paciente" },
+  { id: "antecedentes", label: "Antecedentes" },
+  { id: "atenciones", label: "Atenciones" },
+  { id: "consentimientos", label: "Consentimientos" },
   { id: "adjuntos", label: "Adjuntos" },
 ];
 
@@ -72,7 +82,12 @@ export function FichaTabs({
   /** El dueño del paciente también ve su historial, no sólo el admin. */
   canViewAudit?: boolean;
 }) {
-  const tabs = orgType === "dental" ? TABS_DENTAL : TABS_CLINICA_COMMON;
+  const tabs =
+    orgType === "dental"
+      ? TABS_DENTAL
+      : orgType === "psychological"
+        ? TABS_PSYCHOLOGICAL
+        : TABS_CLINICA_COMMON;
   const router = useRouter();
   const [active, setActive] = useState(tabs[0].id);
   const [confirmandoEliminar, setConfirmandoEliminar] = useState(false);
@@ -86,7 +101,7 @@ export function FichaTabs({
       const res = await fetch(`/api/ficha/patients/${patient.id}`, { method: "DELETE" });
       const data = (await res.json().catch(() => null)) as { error?: string } | null;
       if (!res.ok) {
-        setErrorEliminar(data?.error ?? "No se pudo eliminar el paciente");
+        setErrorEliminar(data?.error ?? "No se pudo archivar el paciente");
         return;
       }
       setConfirmandoEliminar(false);
@@ -116,7 +131,7 @@ export function FichaTabs({
             {patient.doctors?.full_name ? (
               <>
                 {" "}
-                · <span className="text-brand-navy-700">Paciente de {patient.doctors.full_name}</span>
+                · <span className="text-action-primary">Paciente de {patient.doctors.full_name}</span>
               </>
             ) : null}
           </>
@@ -133,7 +148,7 @@ export function FichaTabs({
         actions={
           <>
             <a
-              className={buttonClasses("ghost", "sm")}
+              className={buttonClasses("primary", "sm")}
               href={`/api/ficha/patients/${patient.id}/pdf`}
               title="Descargar ficha en PDF"
             >
@@ -153,14 +168,14 @@ export function FichaTabs({
             aria-current={active === tab.id ? "page" : undefined}
             className={`relative rounded-t-lg px-3 py-2 text-sm font-medium transition-colors duration-micro ease-out-soft ${
               active === tab.id
-                ? "text-brand-navy"
-                : "text-neutral-600 hover:bg-neutral-100"
+                ? "text-action-primary"
+                : "text-neutral-600 hover:bg-action-primary/5 hover:text-action-primary"
             }`}
           >
             {active === tab.id ? (
               <motion.span
                 layoutId="ficha-tab-indicator"
-                className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-brand-navy"
+                className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-action-primary"
                 transition={{ type: "spring", stiffness: 500, damping: 35 }}
               />
             ) : null}
@@ -191,8 +206,15 @@ export function FichaTabs({
         <PlanPanel patientId={patient.id} isAdmin={isAdmin} />
       ) : active === "recetas" ? (
         <RecetasPanel patientId={patient.id} />
+      ) : active === "consentimientos" && (orgType === "psychological" || orgType === "medical") ? (
+        <ConsentimientosPanel patientId={patient.id} orgType={orgType} />
       ) : active === "adjuntos" ? (
-        <AdjuntosPanel patientId={patient.id} orgId={orgId} puedeEliminar={canEdit} />
+        <AdjuntosPanel
+          patientId={patient.id}
+          orgId={orgId}
+          orgType={orgType}
+          puedeEliminar={canEdit}
+        />
       ) : active === "auditoria" ? (
         <AuditoriaPanel patientId={patient.id} isAdmin={isAdmin} puedeExportar={canEdit} />
       ) : null}
@@ -209,8 +231,8 @@ export function FichaTabs({
                 Zona peligrosa
               </h2>
               <p className="mt-1 text-sm text-neutral-600">
-                Elimina la ficha del paciente y todo su historial clínico. Solo se pueden eliminar
-                pacientes que nunca agendaron una cita. Esta acción no se puede deshacer.
+                Archiva al paciente sin borrar su ficha clínica. El paciente quedará inactivo y
+                sus antecedentes se conservarán.
               </p>
             </div>
             <button
@@ -222,7 +244,7 @@ export function FichaTabs({
               className={buttonClasses("danger", "sm", "shrink-0")}
             >
               <Trash2 className="size-4" aria-hidden />
-              Eliminar paciente
+              Archivar paciente
             </button>
           </div>
         </section>
@@ -231,15 +253,15 @@ export function FichaTabs({
       <Modal
         open={confirmandoEliminar}
         onClose={() => setConfirmandoEliminar(false)}
-        title={`¿Eliminar ${patient.full_name}?`}
-        titleClassName="text-lg font-bold text-brand-navy"
+        title={`¿Archivar ${patient.full_name}?`}
+        titleClassName="text-lg font-bold text-action-primary"
         size="md"
         panelClassName="border-transparent shadow-card"
         busy={eliminando}
       >
         <p className="mt-2 text-sm text-neutral-600">
-          Se borrará la ficha del paciente y todo su historial clínico. Solo se pueden eliminar
-          pacientes que nunca agendaron una cita. Esta acción no se puede deshacer.
+          El paciente quedará inactivo. Su ficha y los registros clínicos se conservarán y seguirán
+          sujetos a los permisos habituales.
         </p>
 
         {errorEliminar ? (
@@ -258,7 +280,7 @@ export function FichaTabs({
             disabled={eliminando}
             className={buttonClasses("danger", "sm")}
           >
-            {eliminando ? "Eliminando…" : "Eliminar paciente"}
+            {eliminando ? "Archivando…" : "Archivar paciente"}
           </button>
         </div>
       </Modal>

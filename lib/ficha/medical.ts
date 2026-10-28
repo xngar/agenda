@@ -35,7 +35,26 @@ export interface MedicalEncounterData {
   referral: string;
 }
 
-const numOrNull = z.number().min(0).max(9999).nullable().optional();
+export const MEDICAL_VITAL_RANGES = {
+  temperatureC: { min: 25, max: 45 },
+  systolicMmHg: { min: 30, max: 300 },
+  diastolicMmHg: { min: 10, max: 200 },
+  heartRateBpm: { min: 0, max: 300 },
+  respiratoryRate: { min: 0, max: 100 },
+  spo2: { min: 0, max: 100 },
+  weightKg: { min: 0, max: 500 },
+  heightCm: { min: 0, max: 300 },
+} as const;
+
+type MedicalVitalKey = keyof typeof MEDICAL_VITAL_RANGES;
+
+const vitalSchema = (key: MedicalVitalKey) =>
+  z
+    .number()
+    .min(MEDICAL_VITAL_RANGES[key].min)
+    .max(MEDICAL_VITAL_RANGES[key].max)
+    .nullable()
+    .optional();
 
 /** Código CIE-10 individual: letra + 2 dígitos, con sufijo opcional (p. ej. J06.9). Los rangos de capítulo (G00-G99) no son códigos y se rechazan. */
 export const cie10Schema = z
@@ -62,14 +81,14 @@ export const medicalEncounterSchema = z.object({
   physicalExam: z.string().trim().max(4000).optional(),
   vitals: z
     .object({
-      temperatureC: numOrNull,
-      systolicMmHg: numOrNull,
-      diastolicMmHg: numOrNull,
-      heartRateBpm: numOrNull,
-      respiratoryRate: numOrNull,
-      spo2: numOrNull,
-      weightKg: numOrNull,
-      heightCm: numOrNull,
+      temperatureC: vitalSchema("temperatureC"),
+      systolicMmHg: vitalSchema("systolicMmHg"),
+      diastolicMmHg: vitalSchema("diastolicMmHg"),
+      heartRateBpm: vitalSchema("heartRateBpm"),
+      respiratoryRate: vitalSchema("respiratoryRate"),
+      spo2: vitalSchema("spo2"),
+      weightKg: vitalSchema("weightKg"),
+      heightCm: vitalSchema("heightCm"),
     })
     .nullable()
     .optional(),

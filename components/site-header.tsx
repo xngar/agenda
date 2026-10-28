@@ -22,7 +22,7 @@ export default function SiteHeader({ brand = DEFAULT_BRAND }: { brand?: ClinicBr
           aria-label="Ir al inicio"
         >
           <span className="min-w-0">
-            <span className="block truncate text-sm font-bold leading-tight text-brand-navy">
+            <span className="block truncate text-sm font-bold leading-tight text-action-primary">
               {brand.name}
             </span>
             <span className="block truncate text-xs leading-tight text-neutral-600">

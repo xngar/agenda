@@ -19,7 +19,7 @@ export default function PrivacyNotice({
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
-      <h1 className="text-3xl font-bold text-brand-navy">Aviso de privacidad</h1>
+      <h1 className="text-3xl font-bold text-action-primary">Aviso de privacidad</h1>
       <p className="mt-2 text-base text-neutral-700">{consentText ?? CONSENT_TEXT}</p>
 
       <div className="mt-8 space-y-6">
@@ -59,7 +59,7 @@ export default function PrivacyNotice({
             {supportEmail ? (
               <p>
                 Para ejercer tus derechos de acceso, rectificación o eliminación escribe a{" "}
-                <a href={`mailto:${supportEmail}`} className="font-semibold text-brand-navy">
+                <a href={`mailto:${supportEmail}`} className="font-semibold text-action-primary">
                   {supportEmail}
                 </a>
                 .
@@ -68,7 +68,7 @@ export default function PrivacyNotice({
             {phone ? (
               <p>
                 También puedes llamar al{" "}
-                <a href={`tel:${phone.replace(/\s/g, "")}`} className="font-semibold text-brand-navy">
+                <a href={`tel:${phone.replace(/\s/g, "")}`} className="font-semibold text-action-primary">
                   {phone}
                 </a>
                 .

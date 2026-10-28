@@ -6,10 +6,10 @@ export default function Security() {
     <section id="seguridad" className="bg-white">
       <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-[var(--lp-navy)] sm:text-4xl">
+          <h2 className="text-3xl font-bold tracking-tight text-action-primary sm:text-4xl">
             Los datos de tus pacientes, protegidos
           </h2>
-          <p className="mt-4 text-lg text-[var(--lp-navy)]/90">
+          <p className="mt-4 text-lg text-action-primary/90">
             Sabemos que la información de salud es sensible. Por eso {siteConfig.name} está diseñada pensando en la normativa chilena de fichas clínicas y protección de datos.
           </p>
         </div>
@@ -24,8 +24,8 @@ export default function Security() {
               key={text}
               className="flex flex-col items-center rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-[var(--lp-sky-200)]"
             >
-              <Icon className="h-8 w-8 text-[var(--lp-blue)]" />
-              <p className="mt-3 text-sm font-medium text-[var(--lp-navy)]">{text}</p>
+              <Icon className="h-8 w-8 text-action-primary" />
+              <p className="mt-3 text-sm font-medium text-action-primary">{text}</p>
             </article>
           ))}
         </div>

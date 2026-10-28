@@ -17,6 +17,7 @@ import { PerfilPasswordForm } from "./perfil-password-form";
 export interface PerfilSheetProfile {
   fullName: string;
   specialty: string | null;
+  hasAvatar: boolean;
   role: "professional" | "reception";
   roleLabel: string;
 }
@@ -44,8 +45,8 @@ function Segmented({
           onClick={() => onChange(opcion.valor)}
           className={`min-h-9 flex-1 rounded-lg px-3 text-sm font-medium transition-colors ${
             seccion === opcion.valor
-              ? "bg-white text-brand-navy shadow-card"
-              : "text-neutral-600 hover:text-brand-navy"
+              ? "bg-white text-action-primary shadow-card"
+              : "text-neutral-600 hover:text-action-primary"
           }`}
         >
           {opcion.etiqueta}
@@ -57,10 +58,12 @@ function Segmented({
 
 export function PerfilSheet({
   profile,
+  onAvatarChange,
   abierto,
   onCerrar,
 }: {
   profile: PerfilSheetProfile;
+  onAvatarChange: (hasAvatar: boolean) => void;
   abierto: boolean;
   onCerrar: () => void;
 }) {
@@ -109,6 +112,9 @@ export function PerfilSheet({
               key={`datos-${formKey}`}
               initialName={profile.fullName}
               initialSpecialty={profile.specialty}
+              initialHasAvatar={profile.hasAvatar}
+              onAvatarChange={onAvatarChange}
+              abierto={abierto}
               role={profile.role}
               onDirtyChange={setDirtyDatos}
             />

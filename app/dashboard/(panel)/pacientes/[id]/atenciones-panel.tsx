@@ -4,11 +4,14 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Encounter, EncounterVersion, OrganizationType } from "@/lib/ficha/types";
 import { fichaFor } from "@/lib/ficha/definitions";
-import { calcularIMC, etiquetaIMC } from "@/lib/ficha/medical";
+import {
+  calcularIMC,
+  etiquetaIMC,
+  MEDICAL_VITAL_RANGES,
+} from "@/lib/ficha/medical";
 import { interpretarGAD7, interpretarPHQ9 } from "@/lib/ficha/psychological";
 import {
   Card,
-  CardHeader,
   Button,
   ErrorNotice,
   Field,
@@ -16,6 +19,7 @@ import {
   inputClasses,
 } from "@/components/ui";
 import { Modal } from "@/components/motion/modal";
+import { FichaCardHeader } from "./panels-shared";
 import { SpecialtyForm, SpecialtyView, type SpecialtyValues } from "./specialty-section";
 
 interface EncounterRow extends Encounter {
@@ -92,12 +96,12 @@ export function AtencionesPanel({
   const esMedica = orgType === "medical";
 
 const SIGNOS_VITALES = [
-  { key: "temperatureC", label: "T° (C)" },
-  { key: "systolicMmHg", label: "PAS" },
-  { key: "diastolicMmHg", label: "PAD" },
-  { key: "heartRateBpm", label: "FC" },
-  { key: "respiratoryRate", label: "FR" },
-  { key: "spo2", label: "SpO2 %" },
+  { key: "temperatureC", label: "T° (°C)" },
+  { key: "systolicMmHg", label: "PAS (mmHg)" },
+  { key: "diastolicMmHg", label: "PAD (mmHg)" },
+  { key: "heartRateBpm", label: "FC (lpm)" },
+  { key: "respiratoryRate", label: "FR (rpm)" },
+  { key: "spo2", label: "SpO₂ (%)" },
   { key: "weightKg", label: "Peso (kg)" },
   { key: "heightCm", label: "Talla (cm)" },
 ] as const;
@@ -291,7 +295,7 @@ const SIGNOS_VITALES = [
   if (encounters === null) {
     return (
       <Card>
-        <CardHeader title="Atenciones" />
+        <FichaCardHeader title="Atenciones" />
         <div className="px-5 py-8">
           <Spinner label="Cargando atenciones…" />
         </div>
@@ -311,7 +315,7 @@ const SIGNOS_VITALES = [
       ) : null}
 
       <Card>
-        <CardHeader
+        <FichaCardHeader
           title="Atenciones"
           description="Los borradores se pueden editar; al firmar la atención queda inmutable."
           action={<Button size="sm" variant="secondary" onClick={abrirNueva}>Nueva atención</Button>}
@@ -334,7 +338,7 @@ const SIGNOS_VITALES = [
                   <div className="flex flex-wrap items-center gap-2">
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        e.status === "signed" ? "bg-success-50 text-success-700" : "bg-brand-sky-100 text-brand-navy-900"
+                        e.status === "signed" ? "bg-success-50 text-success-700" : "bg-brand-sky-100 text-action-primary"
                       }`}
                     >
                       {e.status === "signed" ? "Firmada" : "Borrador"}
@@ -514,7 +518,7 @@ const SIGNOS_VITALES = [
         panelClassName="p-0 border-neutral-200 shadow-card"
         busy={guardando}
       >
-        <CardHeader
+        <FichaCardHeader
           title={dialogo === "nueva" ? "Nueva atención" : "Editar borrador"}
           description="Registra la atención. Mientras sea borrador puedes editarla; al firmarla queda inmutable."
         />
@@ -558,7 +562,7 @@ const SIGNOS_VITALES = [
           />
           {esMedica ? (
             <fieldset>
-              <legend className="mb-3 text-sm font-semibold text-brand-navy">
+              <legend className="mb-3 text-sm font-semibold text-action-primary">
                 Signos vitales
               </legend>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -567,8 +571,9 @@ const SIGNOS_VITALES = [
                     <input
                       id={`vital-${key}`}
                       type="number"
-                      step="any"
-                      min={0}
+                      step={key === "temperatureC" || key === "weightKg" || key === "heightCm" ? "any" : 1}
+                      min={MEDICAL_VITAL_RANGES[key].min}
+                      max={MEDICAL_VITAL_RANGES[key].max}
                       className={inputClasses}
                       value={vitalesTxt[key] ?? ""}
                       onChange={(e) => setVitalesTxt((v) => ({ ...v, [key]: e.target.value }))}
@@ -583,7 +588,7 @@ const SIGNOS_VITALES = [
               label="Notas privadas (solo tratante)"
               htmlFor="notas-privadas"
               required={false}
-              hint="Nunca se comparten con otros profesionales ni aparecen en el export o el PDF."
+              hint="Solo el profesional tratante y los administradores pueden verlas en la ficha. Nunca se incluyen en exportaciones ni en el PDF."
             >
               <textarea
                 id="notas-privadas"

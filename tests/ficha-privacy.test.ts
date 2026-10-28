@@ -4,6 +4,7 @@ import {
   puedeVerNotasPrivadas,
   redactEncounter,
   redactEncounters,
+  redactEncountersForExport,
   redactVersion,
 } from "@/lib/ficha/privacy";
 
@@ -55,6 +56,17 @@ describe("privacidad de notas privadas", () => {
     );
     expect(lista[0].specialty_data).toEqual(ATENCION.specialty_data);
     expect(lista[1].specialty_data).toEqual({ currentState: "Estable" });
+  });
+
+  it("las exportaciones siempre excluyen notas privadas, incluso para tratante y admin", () => {
+    const exportadas = redactEncountersForExport([
+      { ...ATENCION },
+      { ...ATENCION, doctor_id: "otro" },
+    ]);
+    expect(exportadas.map((encounter) => encounter.specialty_data)).toEqual([
+      { currentState: "Estable" },
+      { currentState: "Estable" },
+    ]);
   });
 
   it("redactVersion limpia el snapshot sin tocar el resto de la versión", () => {

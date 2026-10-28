@@ -6,6 +6,7 @@ import {
   notFound,
   bodyError,
   dbError,
+  auditPatientView,
 } from "@/lib/ficha/http";
 import { versionSchema } from "@/lib/ficha/schemas";
 import { redactVersions } from "@/lib/ficha/privacy";
@@ -18,6 +19,15 @@ export async function GET(_request: Request, { params }: Params) {
   if (!ctx.clinical) return forbidden();
 
   const { id } = await params;
+  const { data: encounter, error: encounterError } = await ctx.supabase
+    .from("encounters")
+    .select("patient_id")
+    .eq("org_id", ctx.session.orgId)
+    .eq("id", id)
+    .maybeSingle();
+  if (encounterError) return dbError(encounterError);
+  if (!encounter) return notFound("Atención no encontrada");
+
   const { data, error } = await ctx.supabase
     .from("encounter_versions")
     .select("*, doctors!encounter_versions_author_id_fkey (full_name)")
@@ -26,6 +36,8 @@ export async function GET(_request: Request, { params }: Params) {
     .order("created_at", { ascending: false });
 
   if (error) return dbError(error);
+  const auditError = await auditPatientView(ctx, encounter.patient_id, "encounter_versions");
+  if (auditError) return auditError;
 
   return NextResponse.json({
     versions: redactVersions((data ?? []) as unknown as Record<string, unknown>[], ctx.session),

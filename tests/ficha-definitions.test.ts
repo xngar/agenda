@@ -7,7 +7,7 @@ import {
 } from "@/lib/ficha/definitions";
 import { cie10Schema, calcularIMC, etiquetaIMC } from "@/lib/ficha/medical";
 import { interpretarGAD7, interpretarPHQ9 } from "@/lib/ficha/psychological";
-import { paymentSchema } from "@/lib/ficha/schemas";
+import { consentAcceptanceSchema, consentSchema, paymentSchema } from "@/lib/ficha/schemas";
 
 describe("ficha por tipo de organización", () => {
   it("los tres tipos tienen definición con campos de perfil y encuentro", () => {
@@ -45,6 +45,28 @@ describe("ficha por tipo de organización", () => {
       vitals: { systolicMmHg: 120, diastolicMmHg: 80 },
     });
     expect(ok.success).toBe(true);
+  });
+
+  it("valida rangos amplios y unidades plausibles para signos vitales médicos", () => {
+    expect(
+      validateEncounterData("medical", {
+        vitals: {
+          temperatureC: 36.5,
+          systolicMmHg: 120,
+          diastolicMmHg: 80,
+          heartRateBpm: 72,
+          respiratoryRate: 16,
+          spo2: 98,
+          weightKg: 70,
+          heightCm: 175,
+        },
+      }).success,
+    ).toBe(true);
+
+    expect(validateEncounterData("medical", { vitals: { temperatureC: 100 } }).success).toBe(false);
+    expect(validateEncounterData("medical", { vitals: { systolicMmHg: 999 } }).success).toBe(false);
+    expect(validateEncounterData("medical", { vitals: { spo2: 101 } }).success).toBe(false);
+    expect(validateEncounterData("medical", { vitals: { heightCm: 400 } }).success).toBe(false);
   });
 
   it("valida objeto vacío como perfil sin datos", () => {
@@ -120,6 +142,102 @@ describe("fase 3: campos por especialidad", () => {
     expect(validateEncounterData("psychological", { modality: "carrier" }).success).toBe(false);
     expect(validateEncounterData("psychological", { phq9: 28 }).success).toBe(false);
     expect(validateEncounterData("psychological", { gad7: -1 }).success).toBe(false);
+  });
+
+  it("el encuentro psicológico valida seguimiento de sesión y límites de duración", () => {
+    expect(
+      validateEncounterData("psychological", {
+        attendance: "attended",
+        durationMinutes: 50,
+        interventions: "Psicoeducación",
+        response: "Participa durante la sesión",
+        goalsProgress: "Avance parcial",
+        nextSteps: "Continuar seguimiento",
+        riskResponse: "Se acuerda seguimiento clínico",
+      }).success,
+    ).toBe(true);
+    expect(validateEncounterData("psychological", { durationMinutes: 0 }).success).toBe(false);
+    expect(validateEncounterData("psychological", { attendance: "absent" }).success).toBe(false);
+  });
+
+  it("el consentimiento requiere aceptación confirmada y vínculo del representante", () => {
+    const base = {
+      kind: "psicoterapia",
+      accepted_text: "Texto de consentimiento informado suficientemente largo.",
+      accepted_by_patient: true,
+      accepted_by_name: "Nombre Paciente",
+      acceptance_method: "documento",
+      acceptance_channel: "presencial",
+      evidence_attachment_id: "00000000-0000-0000-0000-000000000000",
+      decisionConfirmed: true,
+    };
+    expect(consentAcceptanceSchema.safeParse(base).success).toBe(true);
+    expect(
+      consentAcceptanceSchema.safeParse({ ...base, decisionConfirmed: false }).success,
+    ).toBe(false);
+    expect(
+      consentAcceptanceSchema
+        .safeParse({ ...base, accepted_by_patient: false, accepted_by_relation: "" }).success,
+    ).toBe(false);
+    expect(
+      consentSchema.safeParse({
+        ...base,
+        patient_id: "00000000-0000-0000-0000-000000000000",
+      }).success,
+    ).toBe(true);
+    expect(
+      consentAcceptanceSchema.safeParse({
+        ...base,
+        kind: "datos_personales",
+        acceptance_method: "verbal",
+        acceptance_channel: "videollamada",
+        evidence_attachment_id: null,
+      }).success,
+    ).toBe(true);
+    expect(
+      consentAcceptanceSchema.safeParse({
+        ...base,
+        acceptance_method: "documento",
+        evidence_attachment_id: null,
+      }).success,
+    ).toBe(false);
+    expect(
+      consentAcceptanceSchema.safeParse({
+        ...base,
+        acceptance_channel: "desconocido",
+      }).success,
+    ).toBe(false);
+    expect(
+      consentAcceptanceSchema.safeParse({
+        ...base,
+        acceptance_channel: undefined,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("el consentimiento médico requiere información clínica y permite registrar rechazo", () => {
+    const medical = {
+      kind: "medical_procedure",
+      outcome: "rejected",
+      procedure: "Endoscopía",
+      purpose: "Evaluar síntomas digestivos",
+      benefits: "Apoyar el diagnóstico",
+      risks: "Molestias y riesgos propios del procedimiento",
+      alternatives: "Evaluación clínica y otros exámenes",
+      refusal_consequences: "Persistencia de síntomas y retraso diagnóstico",
+      accepted_by_patient: true,
+      accepted_by_name: "Nombre Paciente",
+      acceptance_method: "verbal",
+      acceptance_channel: "presencial",
+      decisionConfirmed: true,
+    };
+    expect(consentAcceptanceSchema.safeParse(medical).success).toBe(true);
+    expect(
+      consentAcceptanceSchema.safeParse({ ...medical, risks: "" }).success,
+    ).toBe(false);
+    expect(
+      consentAcceptanceSchema.safeParse({ ...medical, outcome: "pending" }).success,
+    ).toBe(false);
   });
 
   it("interpreta PHQ-9 y GAD-7 en los rangos estándar", () => {

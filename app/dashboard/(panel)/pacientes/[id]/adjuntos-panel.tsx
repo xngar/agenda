@@ -2,30 +2,25 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { Attachment, AttachmentKind } from "@/lib/ficha/types";
+import type { Attachment, AttachmentKind, OrganizationType } from "@/lib/ficha/types";
+import { attachmentKindLabel, attachmentKindsForOrganization } from "@/lib/ficha/attachments";
 import { supabaseBrowser } from "@/lib/supabase/browser";
-import { Card, CardHeader, Button, ErrorNotice, Field, Spinner, inputClasses } from "@/components/ui";
+import { Card, Button, ErrorNotice, Field, Spinner, inputClasses } from "@/components/ui";
 import { Modal } from "@/components/motion/modal";
+import { FichaCardHeader } from "./panels-shared";
 import { TruncatedText } from "@/components/ui/truncated-text";
-
-const KINDS: { value: AttachmentKind; label: string }[] = [
-  { value: "document", label: "Documento" },
-  { value: "radiografia", label: "Radiografía" },
-  { value: "foto_intraoral", label: "Foto intraoral" },
-  { value: "foto_extraoral", label: "Foto extraoral" },
-  { value: "modelo", label: "Modelo" },
-  { value: "consentimiento", label: "Consentimiento" },
-  { value: "informe", label: "Informe" },
-  { value: "other", label: "Otro" },
-];
-
-const KIND_LABEL: Record<AttachmentKind, string> = Object.fromEntries(
-  KINDS.map((k) => [k.value, k.label]),
-) as Record<AttachmentKind, string>;
 
 const fmtBytes = (b: number) => (b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.round(b / 1024)} KB`);
 
 const MAX_NOMBRE = 44;
+const MAX_ARCHIVO_BYTES = 20 * 1024 * 1024;
+const MIME_POR_EXTENSION: Record<string, string> = {
+  pdf: "application/pdf",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+};
 
 function acortarTexto(valor: string, max = MAX_NOMBRE): string {
   if (valor.length <= max) return valor;
@@ -46,12 +41,15 @@ function acortarArchivo(nombre: string, max = MAX_NOMBRE): string {
 export function AdjuntosPanel({
   patientId,
   orgId,
+  orgType,
   puedeEliminar = false,
 }: {
   patientId: string;
   orgId: string;
+  orgType: OrganizationType;
   puedeEliminar?: boolean;
 }) {
+  const kinds = attachmentKindsForOrganization(orgType);
   const [attachments, setAttachments] = useState<Attachment[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -89,6 +87,16 @@ export function AdjuntosPanel({
       setError("Selecciona un archivo");
       return;
     }
+    if (file.size > MAX_ARCHIVO_BYTES) {
+      setError("El archivo supera el límite de 20 MiB");
+      return;
+    }
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+    const mime = file.type || MIME_POR_EXTENSION[extension] || "";
+    if (!Object.values(MIME_POR_EXTENSION).includes(mime)) {
+      setError("Solo se permiten archivos PDF, JPEG, PNG o WebP");
+      return;
+    }
     setSubiendo(true);
     try {
       const cli = supabaseBrowser();
@@ -99,7 +107,7 @@ export function AdjuntosPanel({
       const safeName = file.name.replace(/[^\w.\-]+/g, "_");
       const path = `${orgId}/${patientId}/${crypto.randomUUID()}-${safeName}`;
       const { error: upError } = await cli.storage.from("ficha-adjuntos").upload(path, file, {
-        contentType: file.type,
+        contentType: mime,
         upsert: false,
       });
       if (upError) {
@@ -166,7 +174,7 @@ export function AdjuntosPanel({
   if (attachments === null) {
     return (
       <Card>
-        <CardHeader title="Adjuntos" />
+        <FichaCardHeader title="Adjuntos" />
         <div className="px-5 py-8">
           <Spinner label="Cargando adjuntos…" />
         </div>
@@ -179,20 +187,40 @@ export function AdjuntosPanel({
       {error ? <ErrorNotice message={error} /> : null}
 
       <Card>
-        <CardHeader title="Subir adjunto" description="Radiografías, fotografías o documentos complementarios." />
+        <FichaCardHeader
+          title="Subir adjunto"
+          description={
+            orgType === "dental"
+              ? "Radiografías, fotografías clínicas y documentos odontológicos."
+              : orgType === "medical"
+                ? "Imágenes, informes y documentos clínicos."
+                : "Informes, consentimientos y documentos clínicos."
+          }
+        />
         <form onSubmit={subir} className="space-y-4 px-5 py-5">
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Archivo" htmlFor="file">
               <input
                 id="file"
                 type="file"
-                className={`${inputClasses} file:mr-3 file:rounded-lg file:border-0 file:bg-brand-sky-100 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-brand-navy`}
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+                className={`${inputClasses} file:mr-3 file:rounded-lg file:border-0 file:bg-action-primary file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-action-primary-foreground hover:file:bg-action-primary-hover`}
+                onChange={(e) => {
+                  const selected = e.target.files?.[0] ?? null;
+                  if (selected && selected.size > MAX_ARCHIVO_BYTES) {
+                    setFile(null);
+                    setError("El archivo supera el límite de 20 MiB");
+                    e.currentTarget.value = "";
+                    return;
+                  }
+                  setError(null);
+                  setFile(selected);
+                }}
               />
             </Field>
             <Field label="Tipo" htmlFor="kind" required={false}>
               <select id="kind" className={inputClasses} value={kind} onChange={(e) => setKind(e.target.value as AttachmentKind)}>
-                {KINDS.map((k) => (
+                {kinds.map((k) => (
                   <option key={k.value} value={k.value}>{k.label}</option>
                 ))}
               </select>
@@ -200,7 +228,17 @@ export function AdjuntosPanel({
             <Field label="Descripción" htmlFor="description" required={false}>
               <input id="description" className={inputClasses} value={description} onChange={(e) => setDescription(e.target.value)} />
             </Field>
-            <Field label="Fecha (radiografía o foto)" htmlFor="taken_at" required={false}>
+            <Field
+              label={
+                orgType === "dental"
+                  ? "Fecha (radiografía o foto)"
+                  : orgType === "medical"
+                    ? "Fecha del examen"
+                    : "Fecha del documento (si aplica)"
+              }
+              htmlFor="taken_at"
+              required={false}
+            >
               <input id="taken_at" type="date" className={inputClasses} value={takenAt} onChange={(e) => setTakenAt(e.target.value)} />
             </Field>
           </div>
@@ -209,7 +247,7 @@ export function AdjuntosPanel({
       </Card>
 
       <Card>
-        <CardHeader title="Adjuntos registrados" />
+        <FichaCardHeader title="Adjuntos registrados" />
         <ul className="divide-y divide-neutral-100">
           {attachments.length === 0 ? (
             <li className="px-5 py-8 text-sm text-neutral-500">Sin adjuntos registrados.</li>
@@ -229,8 +267,8 @@ export function AdjuntosPanel({
                 <li key={a.id} className="flex items-center justify-between gap-3 px-5 py-4">
                   <div className="min-w-0 flex-1 space-y-0.5">
                     <div className="flex items-center gap-2 font-medium text-neutral-900">
-                      <span className="shrink-0 rounded-full bg-brand-sky-100 px-2 py-0.5 text-xs font-semibold text-brand-navy-900">
-                        {KIND_LABEL[a.kind] ?? a.kind}
+                      <span className="shrink-0 rounded-full bg-brand-sky-100 px-2 py-0.5 text-xs font-semibold text-action-primary">
+                        {attachmentKindLabel(a.kind) ?? a.kind}
                       </span>
                       <TruncatedText
                         text={tituloCorto}
@@ -249,10 +287,8 @@ export function AdjuntosPanel({
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     <a
-                      className="inline-flex min-h-9 items-center whitespace-nowrap rounded-xl border border-brand-navy-200 px-3 text-sm font-semibold text-brand-navy hover:bg-brand-navy-50"
+                      className="inline-flex min-h-9 items-center whitespace-nowrap rounded-full border border-brand-navy-200 px-3 text-sm font-semibold text-action-primary hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary"
                       href={`/api/ficha/attachments/${a.id}/url`}
-                      target="_blank"
-                      rel="noreferrer"
                     >
                       Descargar
                     </a>
@@ -284,7 +320,7 @@ export function AdjuntosPanel({
           setErrorEliminar(null);
         }}
         title="¿Eliminar este adjunto?"
-        titleClassName="text-lg font-bold text-brand-navy"
+        titleClassName="text-lg font-bold text-action-primary"
         size="md"
         panelClassName="border-transparent shadow-card"
         busy={eliminando}

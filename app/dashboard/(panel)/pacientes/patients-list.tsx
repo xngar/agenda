@@ -10,9 +10,11 @@ export type PatientSort = "full_name" | "rut" | "birth_date" | "patient_status";
 interface PatientsListProps {
   orgId: string;
   orgName: string;
+  doctorId: string;
   clinical: boolean;
   q: string;
   status: string | null;
+  tab: "all" | "favorites";
   page: number;
   sort: PatientSort;
   dir: "asc" | "desc";
@@ -26,9 +28,11 @@ interface PatientsListProps {
 export async function PatientsList({
   orgId,
   orgName,
+  doctorId,
   clinical,
   q,
   status,
+  tab,
   page,
   sort,
   dir,
@@ -40,6 +44,30 @@ export async function PatientsList({
   let total = 0;
   let errorText: string | null = null;
 
+  // 1. Obtener los IDs de pacientes favoritos del profesional actual
+  const { data: favRows, error: favError } = await supabase
+    .from("doctor_favorite_patients")
+    .select("patient_id")
+    .eq("doctor_id", doctorId);
+
+  if (favError) {
+    // Si falla la consulta de favoritos, no bloqueamos la lista
+  }
+  const favoriteIds = new Set((favRows ?? []).map((r) => r.patient_id));
+
+  // Si estamos en la pestaña de favoritos y no hay ninguno marcado:
+  if (tab === "favorites" && favoriteIds.size === 0) {
+    return (
+      <Card>
+        <EmptyState
+          icon={clinical ? "diente" : "correo"}
+          title="No tienes pacientes favoritos"
+          description="Marca pacientes con la estrella para acceder rápidamente a ellos desde esta pestaña."
+        />
+      </Card>
+    );
+  }
+
   if (clinical) {
     let query = supabase
       .from("patients")
@@ -48,42 +76,66 @@ export async function PatientsList({
         { count: "exact" },
       )
       .eq("org_id", orgId);
+
     if (status) query = query.eq("patient_status", status);
+
+    if (tab === "favorites") {
+      query = query.in("id", Array.from(favoriteIds));
+    }
+
     if (q) {
       const like = `%${q}%`;
       query = query.or(`full_name.ilike.${like},rut.ilike.${like},email.ilike.${like}`);
     }
+
     query = query
       .order(sort, { ascending: dir === "asc", nullsFirst: false })
       .order("id", { ascending: true })
       .range(offset, offset + PAGE_SIZE - 1);
+
     const { data, error, count } = await query;
-    if (error) errorText = error.message;
-    else {
-      patients = (data ?? []) as ListPatient[];
+    if (error) {
+      errorText = error.message;
+    } else {
+      patients = (data ?? []).map((p) => ({
+        ...p,
+        is_favorite: favoriteIds.has(p.id),
+      })) as ListPatient[];
       total = count ?? 0;
     }
   } else {
     const { data, error } = await supabase.rpc("list_patients_contact", {
       p_q: q || null,
       p_status: status,
-      p_limit: PAGE_SIZE,
-      p_offset: offset,
+      p_limit: tab === "favorites" ? 100 : PAGE_SIZE,
+      p_offset: tab === "favorites" ? 0 : offset,
       p_sort: sort,
       p_dir: dir,
     });
-    if (error) errorText = error.message;
-    else {
-      const rows = (data ?? []) as (ListPatient & { total?: number | string })[];
-      patients = rows;
-      total = rows.length ? Number(rows[0].total ?? 0) : 0;
+    if (error) {
+      errorText = error.message;
+    } else {
+      let rows = (data ?? []) as (ListPatient & { total?: number | string })[];
+      if (tab === "favorites") {
+        rows = rows.filter((r) => favoriteIds.has(r.id));
+        total = rows.length;
+        patients = rows
+          .slice(offset, offset + PAGE_SIZE)
+          .map((r) => ({ ...r, is_favorite: true }));
+      } else {
+        total = rows.length ? Number(rows[0].total ?? 0) : 0;
+        patients = rows.map((r) => ({
+          ...r,
+          is_favorite: favoriteIds.has(r.id),
+        }));
+      }
     }
   }
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   if (errorText) {
-    return <p className="text-sm text-brand-navy-900">{errorText}</p>;
+    return <p className="text-sm text-action-primary">{errorText}</p>;
   }
 
   if (total === 0) {
@@ -91,11 +143,13 @@ export async function PatientsList({
       <Card>
         <EmptyState
           icon={clinical ? "diente" : "correo"}
-          title="No hay pacientes"
+          title={tab === "favorites" ? "Sin resultados en favoritos" : "No hay pacientes"}
           description={
             q || status
               ? "Ningún paciente coincide con la búsqueda."
-              : "Los pacientes aparecen acá cuando reservan por internet o los registras."
+              : tab === "favorites"
+                ? "No tienes pacientes favoritos marcados aún."
+                : "Los pacientes aparecen acá cuando reservan por internet o los registras."
           }
         />
       </Card>
@@ -108,8 +162,8 @@ export async function PatientsList({
         <div className="space-y-2 p-5 text-sm text-neutral-600">
           <p>Esta página está vacía; hay {total} pacientes en total.</p>
           <Link
-            href="/dashboard/pacientes"
-            className="font-medium text-brand-navy-700 underline-offset-2 hover:underline"
+            href={tab === "favorites" ? "/dashboard/pacientes?tab=favorites" : "/dashboard/pacientes"}
+            className="font-medium text-action-primary underline-offset-2 hover:underline"
           >
             Ir a la primera página
           </Link>
@@ -124,7 +178,7 @@ export async function PatientsList({
       total={total}
       page={page}
       totalPages={totalPages}
-      params={{ q, status: status ?? "", sort, dir }}
+      params={{ q, status: status ?? "", sort, dir, tab }}
       orgName={orgName}
     />
   );

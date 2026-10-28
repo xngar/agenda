@@ -4,18 +4,26 @@ import type { CSSProperties, ReactNode } from "react";
 /* Botones                                                              */
 /* ------------------------------------------------------------------ */
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "flat";
 type ButtonSize = "sm" | "md" | "lg";
+type ButtonShape = "default" | "pill";
+
+const SHAPES: Record<ButtonShape, string> = {
+  default: "rounded-full",
+  pill: "rounded-full",
+};
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    "bg-gradient-to-b from-brand-navy to-brand-navy-900 text-white shadow-[0_1px_3px_rgba(11,60,122,0.25),inset_0_1px_0_rgba(255,255,255,0.22)] hover:from-brand-navy-700 hover:to-brand-navy-800 hover:shadow-[0_4px_16px_rgba(11,60,122,0.35),inset_0_1px_0_rgba(255,255,255,0.3)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] border border-brand-navy-900/40 disabled:bg-neutral-300 disabled:from-neutral-300 disabled:to-neutral-300 disabled:border-transparent disabled:hover:translate-y-0 disabled:hover:shadow-none",
+    "border border-transparent bg-action-primary text-action-primary-foreground hover:bg-action-primary-hover disabled:bg-neutral-300 disabled:text-neutral-500",
   secondary:
-    "bg-gradient-to-b from-brand-sky-100 to-brand-sky text-brand-navy-900 shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.6)] hover:from-brand-sky-50 hover:to-brand-sky-200 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] border border-brand-sky-600/30 disabled:hover:translate-y-0 disabled:hover:shadow-none",
+    "border border-transparent bg-action-primary text-action-primary-foreground hover:bg-action-primary-hover disabled:bg-neutral-300 disabled:text-neutral-500",
   ghost:
-    "bg-white/90 hover:bg-neutral-100/90 text-brand-navy border border-neutral-200/90 shadow-2xs hover:shadow-xs active:scale-[0.97]",
+    "border border-neutral-200 bg-white text-action-primary hover:bg-action-primary/5 disabled:text-neutral-500",
   danger:
-    "bg-gradient-to-b from-red-600 to-red-700 text-white shadow-[0_1px_3px_rgba(185,28,28,0.25),inset_0_1px_0_rgba(255,255,255,0.2)] hover:from-red-500 hover:to-red-600 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] border border-red-800/40 disabled:hover:translate-y-0 disabled:hover:shadow-none",
+    "border border-transparent bg-red-600 text-white hover:bg-red-500 disabled:bg-neutral-300 disabled:text-neutral-500",
+  flat:
+    "border border-transparent bg-action-primary text-action-primary-foreground hover:bg-action-primary-hover disabled:bg-neutral-300 disabled:text-neutral-500",
 };
 
 const SIZES: Record<ButtonSize, string> = {
@@ -28,14 +36,16 @@ export function buttonClasses(
   variant: ButtonVariant = "primary",
   size: ButtonSize = "md",
   className = "",
+  shape: ButtonShape = "default",
 ): string {
   return [
-    "inline-flex items-center justify-center rounded-xl font-semibold transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-micro ease-out-soft",
+    "inline-flex items-center justify-center font-semibold transition-colors duration-element ease-in-out-soft",
     "active:scale-[0.97] cursor-pointer select-none",
-    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy",
+    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary",
     "disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:translate-y-0",
     VARIANTS[variant],
     SIZES[size],
+    SHAPES[shape],
     className,
   ]
     .filter(Boolean)
@@ -45,15 +55,17 @@ export function buttonClasses(
 export function Button({
   variant = "primary",
   size = "md",
+  shape = "default",
   className = "",
   type = "button",
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  shape?: ButtonShape;
 }) {
   return (
-    <button type={type} className={buttonClasses(variant, size, className)} {...props} />
+    <button type={type} className={buttonClasses(variant, size, className, shape)} {...props} />
   );
 }
 
@@ -87,15 +99,17 @@ export function CardHeader({
   title,
   description,
   action,
+  titleClassName = "text-action-primary",
 }: {
   title: ReactNode;
   description?: ReactNode;
   action?: ReactNode;
+  titleClassName?: string;
 }) {
   return (
     <div className="flex flex-wrap items-start justify-between gap-3 border-b border-neutral-200 px-5 py-4">
       <div className="min-w-0">
-        <h2 className="text-base font-semibold text-brand-navy">{title}</h2>
+        <h2 className={`text-base font-semibold ${titleClassName}`}>{title}</h2>
         {description ? (
           <p className="mt-1 text-sm text-neutral-600">{description}</p>
         ) : null}
@@ -129,7 +143,7 @@ export function Field({
       <label htmlFor={htmlFor} className="block text-sm font-medium text-neutral-800">
         {label}
         {required ? (
-          <span className="ml-1 text-brand-navy" aria-hidden="true">
+          <span className="ml-1 text-action-primary" aria-hidden="true">
             *
           </span>
         ) : (
@@ -200,21 +214,23 @@ export function EmptyState({
   description,
   action,
   icon = "calendario",
+  titleClassName = "text-action-primary",
 }: {
   title: string;
   description?: string;
   action?: ReactNode;
   icon?: "calendario" | "diente" | "correo";
+  titleClassName?: string;
 }) {
   return (
     <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
       <span
         aria-hidden="true"
-        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-sky-50 text-brand-navy"
+        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-sky-50 text-action-primary"
       >
         {icon === "correo" ? <CorreoIcon /> : icon === "diente" ? <DienteIcon /> : <CalendarioIcon />}
       </span>
-      <p className="text-base font-semibold text-brand-navy">{title}</p>
+      <p className={`text-base font-semibold ${titleClassName}`}>{title}</p>
       {description ? <p className="max-w-sm text-sm text-neutral-600">{description}</p> : null}
       {action}
     </div>
@@ -256,7 +272,7 @@ export function ErrorNotice({
 
 export function InfoNotice({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-card border border-brand-sky-400/40 bg-brand-sky-50 px-4 py-3 text-sm text-brand-navy-900">
+    <div className="rounded-card border border-brand-sky-400/40 bg-brand-sky-50 px-4 py-3 text-sm text-action-primary">
       {children}
     </div>
   );
@@ -271,13 +287,13 @@ export function StatusBadge({ status }: { status: string }) {
     confirmed: { label: "Confirmada", className: "bg-brand-navy text-white" },
     pending: {
       label: "Por confirmar",
-      className: "bg-brand-sky-100 text-brand-navy-900 border border-brand-sky-400/50",
+      className: "bg-brand-sky-100 text-action-primary border border-brand-sky-400/50",
     },
     cancelled: {
       label: "Cancelada",
       className: "bg-neutral-200 text-neutral-600 line-through decoration-neutral-500",
     },
-    completed: { label: "Atendida", className: "bg-neutral-100 text-neutral-800 border border-neutral-200" },
+    completed: { label: "Atendida", className: "bg-brand-sky text-action-primary border border-brand-sky-600/40" },
     no_show: {
       label: "No asistió",
       className: "bg-danger-50 text-danger-700 border border-danger-200",
@@ -324,4 +340,3 @@ function CorreoIcon() {
     </svg>
   );
 }
-

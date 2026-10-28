@@ -167,7 +167,7 @@ export default function ManageAppointment({
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-bold text-brand-navy sm:text-3xl">Tu cita</h1>
+        <h1 className="text-2xl font-bold text-action-primary sm:text-3xl">Tu cita</h1>
         <StatusBadge status={appointment.status} />
       </div>
       <p className="mt-1.5 text-sm text-neutral-600">
@@ -229,7 +229,7 @@ export default function ManageAppointment({
         {!canModify && appointment.status !== "cancelled" ? (
           <p className="mt-5 border-t border-neutral-200 pt-5 text-sm text-neutral-600">
             Esta cita ya no se puede modificar por internet. Si necesitas cambios, llámanos al{" "}
-            <a href={`tel:${phone.replace(/\s/g, "")}`} className="font-semibold text-brand-navy">
+            <a href={`tel:${phone.replace(/\s/g, "")}`} className="font-semibold text-action-primary">
               {phone}
             </a>
             .
@@ -246,7 +246,7 @@ export default function ManageAppointment({
               <button
                 type="button"
                 onClick={() => setMode("view")}
-                className="text-sm font-semibold text-brand-navy underline underline-offset-4"
+                className="text-sm font-semibold text-action-primary underline underline-offset-4"
               >
                 Volver
               </button>
@@ -296,8 +296,8 @@ export default function ManageAppointment({
                       }}
                       className={`min-h-11 rounded-xl border text-sm font-semibold transition-colors ${
                         newSlot === start
-                          ? "border-brand-navy bg-brand-navy text-white"
-                          : "border-neutral-300 bg-white text-brand-navy hover:border-brand-navy hover:bg-brand-navy-50"
+                          ? "border-action-primary bg-action-primary text-action-primary-foreground"
+                          : "border-neutral-300 bg-white text-action-primary hover:border-action-primary hover:bg-action-primary/5"
                       }`}
                     >
                       {new Intl.DateTimeFormat("es-CL", {
@@ -338,7 +338,7 @@ export default function ManageAppointment({
               <button
                 type="button"
                 onClick={() => setMode("view")}
-                className="text-sm font-semibold text-brand-navy underline underline-offset-4"
+                className="text-sm font-semibold text-action-primary underline underline-offset-4"
               >
                 Volver
               </button>

@@ -17,9 +17,11 @@ import { appointmentsByDay } from "@/lib/agenda";
 import { EmptyState, StatusBadge } from "@/components/ui";
 import { WhatsappIcon, WhatsappModal } from "@/components/dashboard/whatsapp-button";
 import { useRealtimeNotifications } from "../use-realtime";
+import { resaltarCita } from "./resaltar-cita";
 import { motion, AnimatePresence } from "motion/react";
 import { RefreshCw } from "lucide-react";
 import { DUR, EASE } from "@/lib/motion";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Props {
   initial: DoctorAppointment[];
@@ -35,8 +37,10 @@ interface Props {
   currentUserId: string;
   /** Admin o recepción: pueden actuar sobre cualquier cita de la organización. */
   canManage: boolean;
-  /** Profesional cuyas notificaciones se escuchan (el filtro o el dueño). */
-  realtimeDoctorId: string;
+  /** Profesional cuyas notificaciones se escuchan; null = todo el equipo. */
+  realtimeDoctorId: string | null;
+  /** Organización, para el canal Realtime de la vista de equipo. */
+  orgId: string;
   /** `?doctor=` actual, para que la navegación no lo pierda. */
   doctorFilter: string | null;
   /** Nombre de la clínica, para el mensaje de WhatsApp. */
@@ -68,6 +72,7 @@ export function MonthView({
   currentUserId,
   canManage,
   realtimeDoctorId,
+  orgId,
   doctorFilter,
   orgName,
 }: Props) {
@@ -86,7 +91,7 @@ export function MonthView({
   }, []);
 
   const { connected, error: realtimeError } = useRealtimeNotifications(
-    realtimeDoctorId,
+    { doctorId: realtimeDoctorId, orgId },
     useCallback(() => {
       setNuevas((n) => n + 1);
       if (refreshTimer.current) clearTimeout(refreshTimer.current);
@@ -233,13 +238,13 @@ export function MonthView({
             type="button"
             onClick={() => irAMes(addMonthsToKey(mesKey, -1))}
             aria-label="Mes anterior"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-600 transition-colors hover:border-brand-navy-300 hover:text-brand-navy"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-600 transition-colors hover:border-action-primary/30 hover:bg-action-primary/5 hover:text-action-primary"
           >
             <ChevronLeft />
           </button>
           <h2
             key={mesKey}
-            className="anim-label min-w-40 px-2 text-center text-lg font-semibold text-brand-navy"
+            className="anim-label min-w-40 px-2 text-center text-lg font-semibold text-action-primary"
           >
             {monthLabel(mesKey)}
           </h2>
@@ -247,7 +252,7 @@ export function MonthView({
             type="button"
             onClick={() => irAMes(addMonthsToKey(mesKey, 1))}
             aria-label="Mes siguiente"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-600 transition-colors hover:border-brand-navy-300 hover:text-brand-navy"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-600 transition-colors hover:border-action-primary/30 hover:bg-action-primary/5 hover:text-action-primary"
           >
             <ChevronRight />
           </button>
@@ -255,7 +260,7 @@ export function MonthView({
             type="button"
             onClick={() => irAMes(hoy.slice(0, 7))}
             disabled={mesKey === hoy.slice(0, 7)}
-            className="ml-1 rounded-xl border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:border-brand-navy-300 hover:text-brand-navy disabled:cursor-not-allowed disabled:opacity-50"
+            className="ml-1 rounded-xl border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:border-action-primary/30 hover:bg-action-primary/5 hover:text-action-primary disabled:cursor-not-allowed disabled:opacity-50"
           >
             Hoy
           </button>
@@ -286,7 +291,7 @@ export function MonthView({
             setNuevas(0);
             router.refresh();
           }}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-sky-400/60 bg-brand-sky-50 px-4 py-2.5 text-sm font-semibold text-brand-navy transition-colors hover:bg-brand-sky-100"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-action-primary/20 bg-action-primary/10 px-4 py-2.5 text-sm font-semibold text-action-primary transition-colors hover:border-action-primary/30 hover:bg-action-primary/15"
         >
           <RefreshCw aria-hidden className="h-4 w-4" />
           Hay cambios nuevos en la agenda · actualizar
@@ -315,9 +320,9 @@ export function MonthView({
                 style={{ animationDelay: `${Math.min(i, 21) * 16}ms` }}
                 className={`anim-month-cell flex min-h-20 flex-col gap-1 rounded-card border p-1 transition-colors duration-150 sm:min-h-28 sm:p-1.5 ${
                   esHoy
-                    ? "border-brand-sky bg-brand-sky-50"
+                    ? "border-action-primary/30 bg-action-primary/5"
                     : enMes
-                      ? "border-neutral-200 bg-white hover:border-brand-navy-300"
+                      ? "border-neutral-200 bg-white hover:border-action-primary/30"
                       : "border-neutral-200/70 bg-neutral-50/70"
                 }`}
               >
@@ -328,9 +333,9 @@ export function MonthView({
                     aria-label={`Ver la agenda del ${diaLabel(dia)}`}
                     className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold tabular-nums transition-colors ${
                       esHoy
-                        ? "bg-brand-navy text-white hover:bg-brand-navy-800"
+                        ? "bg-action-primary text-action-primary-foreground hover:bg-action-primary-hover"
                         : enMes
-                          ? "text-neutral-600 hover:bg-brand-navy-100"
+                          ? "text-neutral-600 hover:bg-action-primary/10"
                           : "text-neutral-400 hover:bg-neutral-200"
                     }`}
                   >
@@ -340,7 +345,7 @@ export function MonthView({
                   {citas.length > 0 ? (
                     <span
                       className={`rounded-full px-1.5 text-[10px] font-semibold tabular-nums ${
-                        esHoy ? "bg-white/70 text-brand-navy" : "text-neutral-400"
+                        esHoy ? "bg-white/70 text-action-primary" : "text-neutral-400"
                       }`}
                       aria-hidden
                     >
@@ -352,31 +357,49 @@ export function MonthView({
                 {visibles.map(({ cita, start, end }) => {
                   const nombre = cita.patient?.full_name ?? "Paciente";
                   const canAct = puedeActuar(cita);
+                  const resalte = resaltarCita(cita);
 
                   return (
-                    <button
-                      key={cita.id}
-                      data-cita
-                      type="button"
-                      title={`${formatTime(start)} – ${formatTime(end)} · ${nombre} · ${
-                        cita.service?.name ? `${cita.service.name} · ` : ""
-                      }${STATUS_LABEL[cita.status]}`}
-                      aria-label={`${formatTime(start)} ${nombre}, ${STATUS_LABEL[cita.status]}. ${
-                        canAct ? "Ver acciones de la cita" : "Ver día"
-                      }`}
-                      aria-haspopup={canAct ? "menu" : undefined}
-                      onClick={(e) => {
-                        if (canAct) abrirMenu(e, cita);
-                        else irAlDia(dia);
-                      }}
-                      onContextMenu={(e) => {
-                        if (canAct) abrirMenu(e, cita);
-                      }}
-                      className={`w-full truncate rounded-lg border border-neutral-200 border-l-[3px] px-1.5 py-1 text-left text-[11px] leading-tight transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft hover:-translate-y-0.5 hover:shadow-card active:scale-[0.98] cursor-pointer ${CHIP_TONO[cita.status]}`}
-                    >
-                      <span className="font-semibold tabular-nums">{formatTime(start)}</span>{" "}
-                      <span className="font-medium">{nombre}</span>
-                    </button>
+                    <Tooltip key={cita.id}>
+                      <TooltipTrigger asChild>
+                        <button
+                          data-cita
+                          type="button"
+                          aria-label={`${formatTime(start)} ${nombre}, ${STATUS_LABEL[cita.status]}. ${
+                            canAct ? "Ver acciones de la cita" : "Ver día"
+                          }`}
+                          aria-haspopup={canAct ? "menu" : undefined}
+                          onClick={(e) => {
+                            if (canAct) abrirMenu(e, cita);
+                            else irAlDia(dia);
+                          }}
+                          onContextMenu={(e) => {
+                            if (canAct) abrirMenu(e, cita);
+                          }}
+                          className={`w-full truncate rounded-lg ${
+                            resalte ? "border-2" : "border"
+                          } border-l-[3px] px-1.5 py-1 text-left text-[11px] leading-tight transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft hover:-translate-y-0.5 hover:shadow-card active:scale-[0.98] cursor-pointer ${
+                            resalte ? `${resalte.borde} ${resalte.fondo}` : "border-neutral-200"
+                          } ${resalte ? resalte.texto : CHIP_TONO[cita.status]} ${
+                            resalte && cita.status === "cancelled" ? "line-through" : ""
+                          }`}
+                        >
+                          <span className="font-semibold tabular-nums">{formatTime(start)}</span>{" "}
+                          <span className="font-medium">{nombre}</span>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-sm space-y-1 rounded-lg px-3 py-2 text-left text-sm">
+                        <p className="font-semibold">{nombre}</p>
+                        <p className="font-normal">{diaLabel(dia)}</p>
+                        <p className="font-normal">
+                          {formatTime(start)}–{formatTime(end)}
+                        </p>
+                        {cita.service?.name ? (
+                          <p className="font-normal">{cita.service.name}</p>
+                        ) : null}
+                        <p className="font-normal">{STATUS_LABEL[cita.status]}</p>
+                      </TooltipContent>
+                    </Tooltip>
                   );
                 })}
 
@@ -384,7 +407,7 @@ export function MonthView({
                   <button
                     type="button"
                     onClick={() => irAlDia(dia)}
-                    className="w-full rounded-lg px-1.5 py-0.5 text-left text-[11px] font-semibold text-brand-navy transition-colors hover:bg-brand-navy-50"
+                    className="w-full rounded-lg px-1.5 py-0.5 text-left text-[11px] font-semibold text-action-primary transition-colors hover:bg-action-primary/5"
                   >
                     +{resto} más
                   </button>
@@ -438,7 +461,7 @@ export function MonthView({
                   onClick={() => ejecutar(menu.cita.id, accion.action)}
                   className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                     accion.tono === "primario"
-                      ? "bg-brand-navy text-white hover:bg-brand-navy-800"
+                      ? "bg-action-primary text-action-primary-foreground hover:bg-action-primary-hover"
                       : accion.tono === "peligro"
                         ? "text-danger-700 hover:bg-danger-50"
                         : accion.tono === "whatsapp"
@@ -486,15 +509,15 @@ const DIAS_SEMANA = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
 
 /**
  * Chip por estado. Misma historia de color que `StatusBadge`
- * (components/ui.tsx): navy = confirmada, celeste = por confirmar,
- * gris atenuada = cancelada.
+ * (components/ui.tsx): navy = confirmada, celeste = por confirmar o
+ * atendida, gris atenuada = cancelada, rojo = no asistió.
  */
 const CHIP_TONO: Record<AppointmentStatus, string> = {
-  confirmed: "border-l-brand-navy bg-brand-navy-50 text-brand-navy-900",
-  pending: "border-l-brand-sky-400 bg-brand-sky-50 text-brand-navy",
+  confirmed: "border-l-brand-navy bg-brand-navy-50 text-action-primary",
+  pending: "border-l-brand-sky-400 bg-brand-sky-50 text-action-primary",
   cancelled:
     "border-l-neutral-300 bg-neutral-100 text-neutral-500 line-through decoration-neutral-400",
-  completed: "border-l-brand-navy-300 bg-neutral-100 text-neutral-700",
+  completed: "border-l-brand-sky-600 bg-brand-sky-50 text-action-primary",
   no_show: "border-l-danger-600 bg-danger-50 text-danger-700",
 };
 

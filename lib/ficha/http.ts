@@ -51,6 +51,24 @@ export function dbError(error: { message?: string; code?: string }): NextRespons
   return NextResponse.json({ error: "No se pudo completar la operación" }, { status: 500 });
 }
 
+export async function auditPatientView(
+  ctx: FichaContext,
+  patientId: string,
+  entity: string,
+): Promise<NextResponse | null> {
+  const { error } = await ctx.supabase.rpc("audit_patient_view_event", {
+    p_patient_id: patientId,
+    p_entity: entity,
+  });
+  if (error?.code === "PGRST202" || error?.code === "42883") {
+    console.error(
+      "[ficha.audit] audit_patient_view_event no está disponible; aplica la migración de endurecimiento de seguridad",
+    );
+    return null;
+  }
+  return error ? dbError(error) : null;
+}
+
 export async function orgPatient(
   ctx: FichaContext,
   patientId: string,

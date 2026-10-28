@@ -18,6 +18,12 @@ export async function POST(request: Request) {
   const identity = clientIdentity(request);
 
   const limit = await checkRateLimit("manage-lookup", identity, limits);
+  if (limit && !limit.available) {
+    return NextResponse.json(
+      { error: "La búsqueda de citas no está disponible temporalmente." },
+      { status: 503 },
+    );
+  }
   if (limit && !limit.ok) {
     return NextResponse.json(
       { error: "Demasiados intentos. Por seguridad, espera 10 minutos antes de intentar de nuevo." },

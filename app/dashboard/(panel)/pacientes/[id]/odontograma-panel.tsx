@@ -3,9 +3,39 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { DentalChartEntry, DentalFace, DentalState } from "@/lib/ficha/types";
-import { aggregateToothState } from "@/lib/ficha/dental";
-import { Card, CardHeader, Button, ErrorNotice, Spinner } from "./panels-shared";
+import { aggregateToothState, STATE_LABEL } from "@/lib/ficha/dental";
+import { Card, FichaCardHeader, Button, ErrorNotice, Spinner } from "./panels-shared";
 import { Modal } from "@/components/motion/modal";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { inputClasses } from "@/components/ui";
+
+interface EncounterOption {
+  id: string;
+  started_at: string;
+  care_type: string | null;
+  status: "draft" | "signed";
+  doctors?: { full_name: string } | null;
+}
+
+interface ChartHistoryEntry extends DentalChartEntry {
+  created_by_name?: string | null;
+  encounter_started_at?: string | null;
+  encounter_care_type?: string | null;
+  encounter_doctor_name?: string | null;
+}
+
+function formatDateTime(value: string): string {
+  return new Date(value).toLocaleString("es-CL", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "America/Santiago",
+  });
+}
+
+function formatDate(value: string): string {
+  const [year, month, day] = value.slice(0, 10).split("-");
+  return year && month && day ? `${day}-${month}-${year}` : value;
+}
 
 const STATES: { value: DentalState; label: string }[] = [
   { value: "sana", label: "Sana" },
@@ -56,10 +86,75 @@ function toothFaces(tooth: number): DentalFace[] {
   return tooth >= 11 && tooth <= 48 ? [...base, "occlusal"] : [...base, "incisal"];
 }
 
+function ToothIcon({ tooth }: { tooth: number }) {
+  const position = tooth % 10;
+
+  if (position >= 6) {
+    return (
+      <svg aria-hidden="true" focusable="false" viewBox="0 0 24 30" className="h-6 w-5 shrink-0">
+        <path
+          d="M4 3.5c1.6-1.2 3.3-.6 4.4.1 1.1-.7 2.8-1.3 4.3-.2 1.4-1 3.2-.8 4.5.2 1.8 1.4 2.4 4.5 1.7 7.2-.4 1.5-1.3 2.3-2.2 3.1-.9.8-1.5 1.7-1.6 3l-.5 8.2c-.1 1.4-1.9 1.6-2.4.2l-1.6-4.4-1.7 4.4c-.5 1.3-2.2 1-2.3-.4l-.3-8.2c-.1-1.3-.8-2.2-1.7-3-1-.8-1.9-1.7-2.3-3.2-.7-2.7 0-5.6 1.7-7Z"
+          fill="white"
+          stroke="currentColor"
+          strokeWidth="1.3"
+          strokeLinejoin="round"
+        />
+        <path d="M8.4 4.1c-.3 2 .1 3.6 1.2 4.8m6-4.8c.2 2-.2 3.5-1.2 4.7" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (position >= 4) {
+    return (
+      <svg aria-hidden="true" focusable="false" viewBox="0 0 24 30" className="h-6 w-5 shrink-0">
+        <path
+          d="M7.4 3.1c1.4-.8 2.9-.4 4.1.4 1.4-.8 3-.8 4.3 0 2.2 1.3 2.5 4.2 1.6 6.6-.6 1.6-1.6 2.4-2.7 3.3-.8.7-1.2 1.6-1.3 2.8l-.4 8.8c-.1 1.3-1.8 1.5-2.3.3l-.8-2.2-.7 2.2c-.5 1.3-2.2 1.1-2.3-.3l-.5-8.8c-.1-1.2-.6-2.1-1.4-2.8-1.1-.9-2.1-1.8-2.7-3.4-.8-2.5-.4-5.5 1.8-6.9 1-.6 2.2-.6 3.3 0Z"
+          fill="white"
+          stroke="currentColor"
+          strokeWidth="1.3"
+          strokeLinejoin="round"
+        />
+        <path d="M8.2 4.1c-.2 1.8.2 3.4 1.2 4.8m6.1-4.7c.2 1.8-.2 3.4-1.2 4.7" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (position === 3) {
+    return (
+      <svg aria-hidden="true" focusable="false" viewBox="0 0 24 30" className="h-6 w-5 shrink-0">
+        <path
+          d="M6.2 3.3c1.8-.8 3.7.1 5.8 1.2 2.1-1.1 4-2 5.8-1.2 2.2.9 2.2 4.2 1.1 6.5-.7 1.5-1.7 2.1-3 2.7-1.4.7-2.3 1.6-2.7 3.2l-1.1 8.9c-.2 1.5-2 1.5-2.2 0l-1.1-8.9c-.4-1.6-1.3-2.5-2.7-3.2-1.3-.6-2.3-1.2-3-2.7-1.1-2.3-1.1-5.6 1.1-6.5Z"
+          fill="white"
+          stroke="currentColor"
+          strokeWidth="1.3"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 30" className="h-6 w-5 shrink-0">
+      <path
+        d="M8.2 3c1.3-.7 2.6-.3 3.8.4 1.2-.7 2.5-1.1 3.8-.4 2.1 1.2 2.2 4.3 1.2 6.7-.5 1.4-1.2 2.1-2.2 2.8-.9.8-1.3 1.7-1.4 3l-.3 9c-.1 1.4-1.7 1.5-2.2.2l-.9-2.6-.9 2.6c-.5 1.3-2.1 1.2-2.2-.2l-.3-9c-.1-1.3-.5-2.2-1.4-3-1-.7-1.7-1.4-2.2-2.8-1-2.4-.9-5.5 1.2-6.7 1.3-.7 2.6-.3 3.8.4Z"
+        fill="white"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function OdontogramaPanel({ patientId }: { patientId: string }) {
   const [chart, setChart] = useState<DentalChartEntry[] | null>(null);
+  const [encounters, setEncounters] = useState<EncounterOption[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
+  const [selectedEncounterId, setSelectedEncounterId] = useState("");
+  const [history, setHistory] = useState<ChartHistoryEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
   const [edits, setEdits] = useState<Record<string, DentalState>>({});
   const [iniciales, setIniciales] = useState<Record<string, DentalState>>({});
   const [guardando, setGuardando] = useState(false);
@@ -78,15 +173,32 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
     }
   }, [patientId]);
 
+  const cargarAtenciones = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/ficha/patients/${patientId}/encounters`);
+      const data = (await response.json()) as { encounters?: EncounterOption[]; error?: string };
+      if (!response.ok) {
+        setError(data.error ?? "No se pudieron cargar las atenciones");
+        setEncounters([]);
+        return;
+      }
+      setEncounters((data.encounters ?? []).filter((encounter) => encounter.status === "draft"));
+    } catch {
+      setError("No pudimos cargar las atenciones para vincular el registro.");
+      setEncounters([]);
+    }
+  }, [patientId]);
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount, setState tras await
     cargar();
-  }, [cargar]);
+    cargarAtenciones();
+  }, [cargar, cargarAtenciones]);
 
   if (chart === null) {
     return (
       <Card>
-        <CardHeader title="Odontograma" />
+        <FichaCardHeader title="Odontograma" />
         <div className="px-5 py-8">
           <Spinner label="Cargando odontograma…" />
         </div>
@@ -112,6 +224,24 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
     return partes.length > 0 ? partes.join(" · ") : "sin registro";
   };
 
+  async function cargarHistoria(tooth: number) {
+    setHistoryLoading(true);
+    setHistoryError(null);
+    try {
+      const response = await fetch(`/api/ficha/patients/${patientId}/chart?tooth=${tooth}`);
+      const data = (await response.json()) as { chart?: ChartHistoryEntry[]; error?: string };
+      if (!response.ok) {
+        setHistoryError(data.error ?? "No se pudo cargar el historial de la pieza");
+        return;
+      }
+      setHistory(data.chart ?? []);
+    } catch {
+      setHistoryError("No pudimos cargar el historial de la pieza.");
+    } finally {
+      setHistoryLoading(false);
+    }
+  }
+
   function abrir(tooth: number) {
     // El modal precarga lo guardado: lo que ves es lo que hay.
     const precarga: Record<string, DentalState> = {};
@@ -120,6 +250,10 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
       if (estado) precarga[f] = estado;
     }
     setSelected(tooth);
+    setSelectedEncounterId("");
+    setHistory([]);
+    setHistoryError(null);
+    cargarHistoria(tooth);
     setEdits(precarga);
     setIniciales(precarga);
     setError(null);
@@ -143,6 +277,10 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
     if (!selected) return;
+    if (!selectedEncounterId) {
+      setError("Selecciona una atención abierta para asociar la evolución.");
+      return;
+    }
     setGuardando(true);
     setError(null);
     try {
@@ -150,6 +288,7 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
         tooth: selected,
         face,
         state,
+        encounter_id: selectedEncounterId,
       }));
       if (!entries.length) {
         setSelected(null);
@@ -182,18 +321,29 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
       <div className="overflow-x-auto pb-1">
         <div className="flex min-w-max justify-center gap-0.5 sm:gap-1" aria-label={`Dientes ${grupo[0]}–${grupo[grupo.length - 1]}`}>
           {arr.map((t) => {
-            const c = estadoPieza(t);
-            const className = c ? COLORS[c] : "bg-neutral-100 text-neutral-500 hover:bg-brand-sky-100";
+            const estados = toothFaces(t).map((face) => estadoDe(t, face));
+            const c =
+              estadoPieza(t) ??
+              (estados.some((estado) => estado === "sana") ? "sana" : undefined);
+            const className = c ? COLORS[c] : "bg-neutral-100 text-neutral-500 hover:bg-action-primary/10";
             return (
-              <button
-                key={t}
-                type="button"
-                onClick={() => abrir(t)}
-                className={`flex h-8 w-8 items-center justify-center rounded-lg text-[11px] font-bold transition-colors sm:h-9 sm:w-9 sm:text-xs ${className}`}
-                title={`Pieza ${t}: ${desglosePieza(t)}`}
-              >
-                {t}
-              </button>
+              <Tooltip key={t}>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => abrir(t)}
+                    className={`flex h-12 w-9 flex-col items-center justify-center gap-0.5 rounded-lg text-[11px] font-bold transition-colors sm:w-10 sm:text-xs ${className}`}
+                    aria-label={`Pieza ${t}: ${desglosePieza(t)}`}
+                  >
+                    <ToothIcon tooth={t} />
+                    {t}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-sm space-y-1 rounded-lg px-3 py-2 text-left text-sm">
+                  <p className="font-semibold">Pieza {t}</p>
+                  <p className="font-normal">{desglosePieza(t)}</p>
+                </TooltipContent>
+              </Tooltip>
             );
           })}
         </div>
@@ -211,7 +361,7 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
       {error ? <ErrorNotice message={error} /> : null}
 
       <Card>
-        <CardHeader
+        <FichaCardHeader
           title="Odontograma"
           description="Haz clic en una pieza para registrar el estado de cada cara."
         />
@@ -245,9 +395,36 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
       >
         {selected !== null ? (
           <>
-            <CardHeader title={`Pieza ${selected}`} description="Se muestran los valores guardados. Cambia sólo las caras a registrar; se guarda únicamente lo que difiere." />
+            <FichaCardHeader title={`Pieza ${selected}`} description="Se muestran los valores guardados. Cambia sólo las caras a registrar; se guarda únicamente lo que difiere." />
             <form onSubmit={guardar} className="space-y-3 px-5 py-5">
               {error ? <ErrorNotice message={error} /> : null}
+              <label className="block">
+                <span className="mb-1 block text-xs font-medium text-neutral-600">
+                  Atención abierta a la que se asociará la evolución
+                </span>
+                <select
+                  className={inputClasses}
+                  value={selectedEncounterId}
+                  onChange={(event) => setSelectedEncounterId(event.target.value)}
+                  disabled={encounters === null || encounters.length === 0}
+                  required
+                >
+                  <option value="">
+                    {encounters === null ? "Cargando atenciones…" : "Selecciona una atención"}
+                  </option>
+                  {(encounters ?? []).map((encounter) => (
+                    <option key={encounter.id} value={encounter.id}>
+                      {formatDate(encounter.started_at)} · {encounter.care_type || "Atención"}
+                      {encounter.doctors?.full_name ? ` · ${encounter.doctors.full_name}` : ""}
+                    </option>
+                  ))}
+                </select>
+                {encounters?.length === 0 ? (
+                  <span className="mt-1 block text-xs text-warning-700">
+                    No hay atenciones abiertas. Registra o edita una atención en la pestaña Atenciones y vuelve para asociar los cambios.
+                  </span>
+                ) : null}
+              </label>
               <div className="grid gap-3 sm:grid-cols-2">
                 {toothFaces(selected).map((face) => (
                   <label key={face} className="block">
@@ -280,12 +457,46 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
                 {estadoPieza(selected) ?? "sin registrar"}
               </p>
               <div className="flex flex-wrap gap-3">
-                <Button type="submit" disabled={guardando || diferencias().length === 0}>
+                <Button type="submit" disabled={guardando || diferencias().length === 0 || !selectedEncounterId}>
                   {guardando ? "Guardando…" : "Guardar caras"}
                 </Button>
                 <Button variant="ghost" onClick={() => setSelected(null)} disabled={guardando}>Cancelar</Button>
               </div>
             </form>
+            <section className="border-t border-neutral-200 px-5 py-4" aria-labelledby="historial-pieza">
+              <h3 id="historial-pieza" className="text-sm font-semibold text-neutral-800">
+                Historial de la pieza ({history.length})
+              </h3>
+              {historyError ? <p role="alert" className="mt-2 text-sm text-red-700">{historyError}</p> : null}
+              {historyLoading ? (
+                <div className="py-4"><Spinner label="Cargando historial…" /></div>
+              ) : history.length === 0 ? (
+                <p className="mt-2 text-sm text-neutral-500">Esta pieza todavía no tiene cambios registrados.</p>
+              ) : (
+                <ol className="mt-3 max-h-56 space-y-3 overflow-y-auto pl-1">
+                  {history.map((entry) => (
+                    <li key={entry.id} className="border-l-2 border-action-primary/20 pl-3">
+                      <p className="text-sm font-medium text-neutral-800">
+                        {FACE_LABELS[entry.face]}: {STATE_LABEL[entry.state] ?? entry.state}
+                        {entry.current ? <span className="ml-2 text-xs font-semibold text-action-primary">Actual</span> : null}
+                      </p>
+                      <p className="text-xs text-neutral-500">
+                        {formatDateTime(entry.created_at)} · {entry.created_by_name ?? "Profesional no identificado"}
+                      </p>
+                      {entry.encounter_id ? (
+                        <p className="text-xs text-neutral-500">
+                          Atención del {entry.encounter_started_at ? formatDate(entry.encounter_started_at) : formatDate(entry.recorded_at)}
+                          {entry.encounter_care_type ? ` · ${entry.encounter_care_type}` : ""}
+                          {entry.encounter_doctor_name ? ` · ${entry.encounter_doctor_name}` : ""}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-neutral-500">Sin atención asociada</p>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </section>
           </>
         ) : null}
       </Modal>

@@ -22,14 +22,10 @@ export default async function HomePage({ params }: { params: Promise<{ clinicSlu
   return (
     <>
       {/* Hero */}
-      <section className="border-b border-neutral-200 bg-gradient-to-b from-brand-sky-50 to-white">
+      <section className="border-b border-neutral-200 bg-gradient-to-b from-action-primary/5 to-white">
         <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>
-            <p className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-brand-navy shadow-card">
-              <span aria-hidden="true" className="h-2 w-2 rounded-full bg-brand-sky" />
-              Lunes a sábado · Confirmación inmediata
-            </p>
-            <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-brand-navy sm:text-4xl lg:text-[2.75rem]">
+            <h1 className="text-3xl font-bold leading-tight tracking-tight text-action-primary sm:text-4xl lg:text-[2.75rem]">
               {settings.name}
             </h1>
             <p className="mt-3 text-lg font-semibold text-neutral-800 sm:text-xl">
@@ -47,12 +43,12 @@ export default async function HomePage({ params }: { params: Promise<{ clinicSlu
                 Llamar {phone}
               </a>
             </div>
-            <div className="mt-3.5 rounded-xl border border-brand-navy-100 bg-white/80 px-4 py-3 shadow-card">
+            <div className="mt-3.5 rounded-xl border border-action-primary/10 bg-white/80 px-4 py-3 shadow-card">
               <ManageAppointmentModal clinicSlug={clinicSlug} clinicName={settings.name} variant="link">
                 <span className="flex items-center gap-3 text-left">
                   <span
                     aria-hidden="true"
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-navy-50 text-brand-navy"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-action-primary/5 text-action-primary"
                   >
                     <svg
                       className="h-5 w-5"
@@ -72,7 +68,7 @@ export default async function HomePage({ params }: { params: Promise<{ clinicSlu
                     <span className="block text-sm font-normal text-neutral-600">
                       ¿Ya tienes cita?
                     </span>
-                    <span className="block text-sm font-semibold text-brand-navy">
+                    <span className="block text-sm font-semibold text-action-primary">
                       Gestionar o cancelar
                     </span>
                   </span>
@@ -85,7 +81,7 @@ export default async function HomePage({ params }: { params: Promise<{ clinicSlu
           </div>
 
           <Card className="p-5 sm:p-6">
-            <h2 className="text-base font-semibold text-brand-navy">Cómo funciona</h2>
+            <h2 className="text-base font-semibold text-action-primary">Cómo funciona</h2>
             <ol className="mt-4 space-y-4">
               {[
                 { n: 1, t: "Elige qué necesitas", d: "Control, limpieza o urgencia dental." },
@@ -95,7 +91,7 @@ export default async function HomePage({ params }: { params: Promise<{ clinicSlu
                 <li key={step.n} className="flex gap-3.5">
                   <span
                     aria-hidden="true"
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-navy text-sm font-bold text-white"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-action-primary text-sm font-bold text-white"
                   >
                     {step.n}
                   </span>
@@ -114,7 +110,7 @@ export default async function HomePage({ params }: { params: Promise<{ clinicSlu
       <section aria-labelledby="datos" className="border-y border-neutral-200 bg-white">
         <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
           <div className="max-w-3xl">
-            <h2 id="datos" className="text-2xl font-bold text-brand-navy">
+            <h2 id="datos" className="text-2xl font-bold text-action-primary">
               Datos de la clínica
             </h2>
             <dl className="mt-5 divide-y divide-neutral-200 overflow-hidden rounded-card border border-neutral-200 bg-white">
@@ -135,10 +131,10 @@ export default async function HomePage({ params }: { params: Promise<{ clinicSlu
             {doctor ? (
               <Card className="mt-5 p-4">
                 <p className="text-sm text-neutral-700">
-                  Hola, <strong className="text-brand-navy">{doctor.full_name}</strong>. Tienes una
+                  Hola, <strong className="text-action-primary">{doctor.full_name}</strong>. Tienes una
                   sesión abierta en el panel.
                 </p>
-                <Link href="/dashboard" className={buttonClasses("ghost", "sm", "mt-3")}>
+                <Link href="/dashboard" className={buttonClasses("secondary", "sm", "mt-3")}>
                   Ir a mi agenda
                 </Link>
               </Card>

@@ -40,6 +40,21 @@ export async function DELETE(_request: Request, { params }: Params) {
     return forbidden("Solo el administrador o el médico dueño del paciente puede eliminar adjuntos");
   }
 
+  const { data: consentimientoVinculado, error: consentimientoError } = await ctx.supabase
+    .from("consents")
+    .select("id")
+    .eq("evidence_attachment_id", id)
+    .limit(1)
+    .maybeSingle();
+
+  if (consentimientoError) return dbError(consentimientoError);
+  if (consentimientoVinculado) {
+    return NextResponse.json(
+      { error: "No se puede eliminar este adjunto porque respalda un consentimiento registrado." },
+      { status: 409 },
+    );
+  }
+
   const { error: storageError } = await ctx.supabase.storage
     .from("ficha-adjuntos")
     .remove([adjunto.storage_path]);

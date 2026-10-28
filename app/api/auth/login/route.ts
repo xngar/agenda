@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { checkRateLimit, clientIdentity } from "@/lib/ratelimit";
 import { supabaseServer } from "@/lib/supabase/server";
 
 const bodySchema = z.object({
@@ -19,6 +20,23 @@ const bodySchema = z.object({
  * correos existen.
  */
 export async function POST(request: Request) {
+  const limit = await checkRateLimit("login", clientIdentity(request), {
+    requests: 10,
+    windowMs: 15 * 60 * 1000,
+  });
+  if (limit && !limit.available) {
+    return NextResponse.json(
+      { error: "El inicio de sesión no está disponible temporalmente." },
+      { status: 503 },
+    );
+  }
+  if (limit && !limit.ok) {
+    return NextResponse.json(
+      { error: "Demasiados intentos. Espera unos minutos antes de volver a intentar." },
+      { status: 429 },
+    );
+  }
+
   const body = await request.json().catch(() => null);
   const parsed = bodySchema.safeParse(body);
 

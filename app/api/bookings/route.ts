@@ -35,6 +35,12 @@ export async function POST(request: Request) {
     requests: 5,
     windowMs: 60 * 60 * 1000,
   });
+  if (limit && !limit.available) {
+    return NextResponse.json(
+      { error: "Las reservas no están disponibles temporalmente. Intenta más tarde." },
+      { status: 503 },
+    );
+  }
   if (limit && !limit.ok) {
     return NextResponse.json(
       { error: "Demasiados intentos de reserva. Intenta en unos minutos." },
@@ -60,11 +66,17 @@ export async function POST(request: Request) {
     );
   }
 
-  const turnstileOk = await verifyTurnstile(
+  const turnstileResult = await verifyTurnstile(
     parsed.data.turnstileToken,
     clientIp(request),
   );
-  if (!turnstileOk) {
+  if (turnstileResult === "unavailable") {
+    return NextResponse.json(
+      { error: "La verificación anti-bot no está disponible temporalmente. Intenta más tarde." },
+      { status: 503 },
+    );
+  }
+  if (turnstileResult === "invalid") {
     return NextResponse.json(
       { error: "No pudimos verificar que eres una persona. Recarga la página e intenta de nuevo." },
       { status: 422 },

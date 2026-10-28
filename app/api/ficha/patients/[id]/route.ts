@@ -6,8 +6,8 @@ import {
   notFound,
   bodyError,
   dbError,
-  conflictMessage,
   orgPatient,
+  auditPatientView,
 } from "@/lib/ficha/http";
 import { patientBaseSchema } from "@/lib/ficha/schemas";
 import { validateProfile } from "@/lib/ficha/definitions";
@@ -30,6 +30,8 @@ export async function GET(_request: Request, { params }: Params) {
 
   if (error) return dbError(error);
   if (!patient) return notFound("Paciente no encontrado");
+  const auditError = await auditPatientView(ctx, id, "patients");
+  if (auditError) return auditError;
 
   return NextResponse.json({ patient });
 }
@@ -102,32 +104,28 @@ export async function DELETE(_request: Request, { params }: Params) {
 
   if (!patient) return notFound("Paciente no encontrado");
 
-  const { data: dueno } = await ctx.supabase
+  const { data: dueno, error: duenoError } = await ctx.supabase
     .from("patients")
     .select("doctor_id")
     .eq("org_id", ctx.session.orgId)
     .eq("id", id)
     .maybeSingle();
 
+  if (duenoError) return dbError(duenoError);
   if (!dueno || (dueno.doctor_id !== ctx.session.id && !ctx.session.isAdmin)) {
-    return forbidden("Solo el médico dueño del paciente o el administrador puede borrarlo");
+    return forbidden("Solo el médico dueño del paciente o el administrador puede archivarlo");
   }
 
-  const { error: delError } = await ctx.supabase
+  const { data: actualizado, error: updateError } = await ctx.supabase
     .from("patients")
-    .delete()
+    .update({ patient_status: "inactive" })
     .eq("org_id", ctx.session.orgId)
-    .eq("id", id);
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
 
-  if (delError) {
-    if (delError.code === "23503") {
-      return conflictMessage(
-        "Este paciente tiene o tuvo citas; solo se pueden eliminar pacientes sin citas",
-        "tiene_citas",
-      );
-    }
-    return dbError(delError);
-  }
+  if (updateError) return dbError(updateError);
+  if (!actualizado) return notFound("Paciente no encontrado");
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, archived: true });
 }

@@ -13,6 +13,7 @@ function cita(id: string, during: string): DoctorAppointment {
     cancelled_by: null,
     cancel_reason: null,
     created_at: "2026-09-01T00:00:00Z",
+    rescheduled_at: null,
     patient: null,
     service: null,
   };

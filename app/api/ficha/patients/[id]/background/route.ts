@@ -6,6 +6,7 @@ import {
   bodyError,
   dbError,
   orgPatient,
+  auditPatientView,
 } from "@/lib/ficha/http";
 import { backgroundSchema } from "@/lib/ficha/schemas";
 
@@ -28,6 +29,8 @@ export async function GET(_request: Request, { params }: Params) {
     .maybeSingle();
 
   if (error) return dbError(error);
+  const auditError = await auditPatientView(ctx, id, "patient_background");
+  if (auditError) return auditError;
 
   return NextResponse.json({ patient, background: data ?? null });
 }

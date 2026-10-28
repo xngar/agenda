@@ -172,14 +172,14 @@ export default function WeekdayPicker({
               className={[
                 "relative flex min-h-14 flex-col items-center justify-center rounded-xl border text-sm transition-colors sm:min-h-16",
                 isSelected
-                  ? "border-brand-navy bg-brand-navy text-white hover:bg-brand-navy"
+                  ? "border-action-primary bg-action-primary text-action-primary-foreground hover:bg-action-primary-hover"
                   : cell.past
                     ? "cursor-not-allowed border-neutral-100 bg-neutral-50 text-neutral-300"
                     : cell.disabled
                       ? "cursor-not-allowed border-neutral-200 bg-neutral-100 text-neutral-400 line-through"
                       : isToday
-                        ? "border-brand-sky bg-brand-sky-50 text-neutral-800 hover:border-brand-navy hover:bg-brand-navy-50"
-                        : "border-neutral-300 bg-white text-neutral-800 hover:border-brand-navy hover:bg-brand-navy-50",
+                        ? "border-action-primary/40 bg-action-primary/5 text-neutral-800 hover:border-action-primary hover:bg-action-primary/10"
+                        : "border-neutral-300 bg-white text-neutral-800 hover:border-action-primary/30 hover:bg-action-primary/5",
               ]
                 .filter(Boolean)
                 .join(" ")}

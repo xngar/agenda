@@ -14,7 +14,10 @@ import { DUR, EASE } from "@/lib/motion";
 interface Props {
   initial: DoctorAppointment[];
   dayKey: string;
-  doctorId: string;
+  /** Profesional de la vista; null = todo el equipo (escucha por org). */
+  doctorId: string | null;
+  /** Organización, para el canal Realtime de la vista de equipo. */
+  orgId: string;
   /** Días cercanos que sí tienen citas, para explicar un día vacío. */
   diasConCitas: { day: string; total: number; pendientes: number }[];
   /** Profesionales entre los que el rol puede elegir al reagendar. */
@@ -37,6 +40,7 @@ export function Agenda({
   initial,
   dayKey,
   doctorId,
+  orgId,
   diasConCitas,
   doctors,
   orgName,
@@ -55,7 +59,7 @@ export function Agenda({
     connected,
     realtimeError,
     recientes,
-  } = useAgendaAcciones({ doctorId, doctors });
+  } = useAgendaAcciones({ doctorId, orgId, doctors });
 
   const conteos = useMemo(() => {
     let activas = 0;
@@ -105,8 +109,8 @@ export function Agenda({
               onClick={() => setFiltro(valor)}
               className={`inline-flex min-h-9 items-center rounded-lg px-3 text-sm font-medium capitalize transition-colors ${
                 filtro === valor
-                  ? "bg-brand-navy text-white shadow-2xs"
-                  : "text-neutral-600 hover:bg-white hover:text-brand-navy"
+                  ? "bg-action-primary text-action-primary-foreground shadow-2xs hover:bg-action-primary-hover"
+                  : "text-neutral-600 hover:bg-white hover:text-action-primary"
               }`}
             >
               {valor}{" "}
@@ -145,7 +149,7 @@ export function Agenda({
         <button
           type="button"
           onClick={refrescarAhora}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-sky-400/60 bg-brand-sky-50 px-4 py-2.5 text-sm font-semibold text-brand-navy transition-[color,background-color,border-color] duration-micro ease-out-soft hover:bg-brand-sky-100"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-action-primary/20 bg-action-primary/10 px-4 py-2.5 text-sm font-semibold text-action-primary transition-[color,background-color,border-color] duration-micro ease-out-soft hover:border-action-primary/30 hover:bg-action-primary/15"
         >
           <RefreshCw aria-hidden className="h-4 w-4" />
           Hay cambios nuevos en la agenda · actualizar
@@ -187,10 +191,15 @@ export function Agenda({
           */
           <EmptyState
             title="Sin citas para este día"
+            titleClassName="text-action-primary"
             description={`No hay horas reservadas el ${new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${dayKey}T12:00:00Z`))}. Hay citas en los próximos días: usa las fechas de arriba para verlas.`}
           />
         ) : (
-          <EmptyState title="Sin citas para este día" description="No hay horas reservadas que mostrar." />
+          <EmptyState
+            title="Sin citas para este día"
+            titleClassName="text-action-primary"
+            description="No hay horas reservadas que mostrar."
+          />
         )
       ) : (
         <>

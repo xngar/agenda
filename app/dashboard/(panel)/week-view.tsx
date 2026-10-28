@@ -17,10 +17,12 @@ import { whatsappPhone } from "@/lib/phone";
 import { useAgendaAcciones } from "./agenda-actions";
 import { StaffRescheduleModal } from "./staff-reschedule-modal";
 import { WhatsappIcon, WhatsappModal } from "@/components/dashboard/whatsapp-button";
+import { resaltarCita } from "./resaltar-cita";
 import type { StaffDoctor } from "./staff-booking-button";
 import { motion, AnimatePresence } from "motion/react";
 import { RefreshCw } from "lucide-react";
 import { DUR, EASE } from "@/lib/motion";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 /* ------------------------------------------------------------------ */
 /* Constantes de layout                                                 */
@@ -44,13 +46,13 @@ const CHIP: Record<AppointmentStatus, { bg: string; border: string; text: string
   confirmed: {
     bg: "bg-brand-navy-50",
     border: "border-l-brand-navy",
-    text: "text-brand-navy-900",
+    text: "text-action-primary",
     badge: "bg-brand-navy text-white",
   },
   pending: {
     bg: "bg-brand-sky-50",
     border: "border-l-brand-sky-400",
-    text: "text-brand-navy",
+    text: "text-action-primary",
     badge: "bg-brand-sky-400 text-white",
   },
   cancelled: {
@@ -60,10 +62,10 @@ const CHIP: Record<AppointmentStatus, { bg: string; border: string; text: string
     badge: "bg-neutral-300 text-neutral-700",
   },
   completed: {
-    bg: "bg-neutral-50",
-    border: "border-l-brand-navy-300",
-    text: "text-neutral-600",
-    badge: "bg-brand-navy-300 text-white",
+    bg: "bg-brand-sky-50",
+    border: "border-l-brand-sky-600",
+    text: "text-action-primary",
+    badge: "bg-brand-sky-600 text-white",
   },
   no_show: {
     bg: "bg-danger-50",
@@ -95,6 +97,7 @@ export function WeekView({
   hoy,
   timezone,
   doctorId,
+  orgId,
   doctors,
   orgName,
 }: {
@@ -103,7 +106,10 @@ export function WeekView({
   weekTo: string;
   hoy: string;
   timezone?: string;
-  doctorId: string;
+  /** Profesional de la vista; null = todo el equipo (escucha por org). */
+  doctorId: string | null;
+  /** Organización, para el canal Realtime de la vista de equipo. */
+  orgId: string;
   doctors: StaffDoctor[];
   /** Nombre de la clínica, para el mensaje de WhatsApp. */
   orgName: string;
@@ -118,7 +124,7 @@ export function WeekView({
     refrescarAhora,
     connected,
     realtimeError,
-  } = useAgendaAcciones({ doctorId, doctors });
+  } = useAgendaAcciones({ doctorId, orgId, doctors });
 
   const porDia = useMemo(() => appointmentsByDay(initial, timezone), [initial, timezone]);
 
@@ -253,7 +259,7 @@ export function WeekView({
         <button
           type="button"
           onClick={refrescarAhora}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-sky-400/60 bg-brand-sky-50 px-4 py-2.5 text-sm font-semibold text-brand-navy transition-colors hover:bg-brand-sky-100"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-action-primary/20 bg-action-primary/10 px-4 py-2.5 text-sm font-semibold text-action-primary transition-colors hover:border-action-primary/30 hover:bg-action-primary/15"
         >
           <RefreshCw aria-hidden className="h-4 w-4" />
           Hay cambios nuevos en la agenda · actualizar
@@ -309,20 +315,20 @@ export function WeekView({
                   type="button"
                   onClick={() => irAlDia(dia)}
                   title={`Ver agenda de ${cabeceraDia(dia)}`}
-                  className={`flex h-14 w-full flex-col items-center justify-center gap-0.5 border-b border-neutral-200 transition-colors hover:bg-brand-sky-50 ${
-                    esHoy ? "bg-brand-sky-50" : "bg-neutral-50"
+                  className={`flex h-14 w-full flex-col items-center justify-center gap-0.5 border-b border-neutral-200 transition-colors hover:bg-action-primary/5 ${
+                    esHoy ? "bg-action-primary/5" : "bg-neutral-50"
                   }`}
                 >
                   <span
                     className={`text-[11px] font-semibold uppercase tracking-wide ${
-                      esHoy ? "text-brand-navy" : "text-neutral-500"
+                      esHoy ? "text-action-primary" : "text-neutral-500"
                     }`}
                   >
                     {diaNombreCorto(dia)}
                   </span>
                   <span
                     className={`flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold tabular-nums ${
-                      esHoy ? "bg-brand-navy text-white" : "text-neutral-700"
+                      esHoy ? "bg-action-primary text-action-primary-foreground" : "text-neutral-700"
                     }`}
                   >
                     {Number(dia.slice(8))}
@@ -373,47 +379,62 @@ export function WeekView({
                     const chip = CHIP[cita.status] ?? CHIP.confirmed;
                     const nombre = cita.patient?.full_name ?? "Paciente";
                     const cancelada = cita.status === "cancelled";
+                    const resaltar = resaltarCita(cita);
 
                     return (
-                      <button
-                        key={cita.id}
-                        type="button"
-                        style={{
-                          position: "absolute",
-                          top,
-                          height,
-                          left: `${leftPct}%`,
-                          width: `calc(${widthPct}% - 2px)`,
-                          marginLeft: 1,
-                          marginRight: 1,
-                        }}
-                        className={`overflow-hidden rounded-lg border border-transparent border-l-[3px] px-1.5 py-0.5 text-left transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft hover:-translate-y-0.5 hover:shadow-lift active:scale-[0.98] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky ${
-                          chip.bg
-                        } ${chip.border} ${chip.text} ${
-                          cancelada ? "opacity-60 line-through decoration-neutral-400" : ""
-                        } ${pendiente?.startsWith(cita.id) ? "opacity-50" : ""}`}
-                        title={`${formatTime(start)} – ${formatTime(end)} · ${nombre}${
-                          cita.service ? ` · ${cita.service.name}` : ""
-                        } · ${STATUS_LABEL[cita.status]}`}
-                        aria-label={`${formatTime(start)} ${nombre}, ${STATUS_LABEL[cita.status]}. Ver acciones`}
-                        aria-haspopup="menu"
-                        onClick={(e) => abrirMenu(e, cita)}
-                        onContextMenu={(e) => abrirMenu(e, cita)}
-                      >
-                        <span className="block truncate text-[11px] font-bold tabular-nums leading-tight">
-                          {formatTime(start)}
-                        </span>
-                        {height >= 30 ? (
-                          <span className="block truncate text-[11px] font-medium leading-tight">
-                            {nombre}
-                          </span>
-                        ) : null}
-                        {height >= 48 && cita.service ? (
-                          <span className="block truncate text-[10px] leading-tight opacity-80">
-                            {cita.service.name}
-                          </span>
-                        ) : null}
-                      </button>
+                      <Tooltip key={cita.id}>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            style={{
+                              position: "absolute",
+                              top,
+                              height,
+                              left: `${leftPct}%`,
+                              width: `calc(${widthPct}% - 2px)`,
+                              marginLeft: 1,
+                              marginRight: 1,
+                            }}
+                            className={`overflow-hidden rounded-lg ${
+                              resaltar ? "border-2" : "border"
+                            } border-l-[3px] px-1.5 py-0.5 text-left transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft hover:-translate-y-0.5 hover:shadow-lift active:scale-[0.98] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky ${
+                              resaltar
+                                ? `${resaltar.borde} ${resaltar.fondo} ${resaltar.texto}`
+                                : `border-transparent ${chip.bg} ${chip.border} ${chip.text}`
+                            } ${
+                              cancelada ? "opacity-60 line-through decoration-neutral-400" : ""
+                            } ${pendiente?.startsWith(cita.id) ? "opacity-50" : ""}`}
+                            aria-label={`${formatTime(start)} ${nombre}, ${STATUS_LABEL[cita.status]}. Ver acciones`}
+                            aria-haspopup="menu"
+                            onClick={(e) => abrirMenu(e, cita)}
+                            onContextMenu={(e) => abrirMenu(e, cita)}
+                          >
+                            <span className="block truncate text-[11px] font-bold tabular-nums leading-tight">
+                              {formatTime(start)}
+                            </span>
+                            {height >= 30 ? (
+                              <span className="block truncate text-[11px] font-medium leading-tight">
+                                {nombre}
+                              </span>
+                            ) : null}
+                            {height >= 48 && cita.service ? (
+                              <span className="block truncate text-[10px] leading-tight opacity-80">
+                                {cita.service.name}
+                              </span>
+                            ) : null}
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-sm space-y-1 rounded-lg px-3 py-2 text-left text-sm">
+                          <p className="font-semibold">{nombre}</p>
+                          <p className="font-normal">
+                            {cabeceraDia(dia)} · {formatTime(start)}–{formatTime(end)}
+                          </p>
+                          {cita.service ? (
+                            <p className="font-normal">{cita.service.name}</p>
+                          ) : null}
+                          <p className="font-normal">{STATUS_LABEL[cita.status]}</p>
+                        </TooltipContent>
+                      </Tooltip>
                     );
                   })}
                 </div>
@@ -465,7 +486,7 @@ export function WeekView({
                   onClick={() => ejecutar(menu.cita.id, accion.action)}
                   className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${
                     accion.tono === "primario"
-                      ? "bg-brand-navy text-white hover:bg-brand-navy-800"
+                      ? "bg-action-primary text-action-primary-foreground hover:bg-action-primary-hover"
                       : accion.tono === "peligro"
                         ? "text-danger-700 hover:bg-danger-50"
                         : accion.tono === "whatsapp"

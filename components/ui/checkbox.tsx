@@ -20,12 +20,12 @@ function Checkbox({ className, ...props }: React.ComponentProps<"input">) {
       className={cn(
         "peer relative size-4 shrink-0 cursor-pointer appearance-none rounded border border-neutral-300 bg-white",
         "transition-[background-color,border-color,box-shadow] duration-micro ease-out-soft",
-        "checked:border-brand-navy checked:bg-brand-navy",
+        "checked:border-action-primary checked:bg-action-primary",
         "after:absolute after:inset-0 after:m-auto after:h-2 after:w-2 after:rotate-45 after:scale-0 after:opacity-0",
         "after:border-b-2 after:border-r-2 after:border-white after:content-['']",
         "after:transition-[scale,opacity] duration-micro ease-out-soft",
         "checked:after:scale-100 checked:after:opacity-100",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary",
         "disabled:cursor-not-allowed disabled:opacity-50",
         className,
       )}

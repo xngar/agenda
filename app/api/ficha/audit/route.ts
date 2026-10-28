@@ -100,13 +100,22 @@ export async function GET(request: Request) {
 
   if (download) {
     try {
-      await ctx.supabase.rpc("audit_export_event", {
+      const { error } = await ctx.supabase.rpc("audit_export_event", {
         p_entity: body.data.entity ?? (body.data.entity_id ? "patients" : "audit_log"),
         p_entity_id: body.data.entity_id ?? body.data.patient_id ?? null,
         p_summary: { format, registros: entries.length },
       });
+      if (error) {
+        return NextResponse.json(
+          { error: "No se pudo registrar la exportación; la descarga fue bloqueada." },
+          { status: 503 },
+        );
+      }
     } catch {
-      // La descarga no se bloquea si no se pudo registrar el evento.
+      return NextResponse.json(
+        { error: "No se pudo registrar la exportación; la descarga fue bloqueada." },
+        { status: 503 },
+      );
     }
   }
 

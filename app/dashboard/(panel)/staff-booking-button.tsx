@@ -48,7 +48,7 @@ export function StaffBookingButton({
 
   return (
     <>
-      <Button size="md" onClick={() => setOpen(true)}>
+      <Button variant="flat" size="md" shape="pill" onClick={() => setOpen(true)}>
         + Nueva reserva
       </Button>
       <AnimatePresence>
@@ -233,17 +233,17 @@ function StaffBookingModal({
         {error ? <ErrorNotice message={error} /> : null}
 
         <fieldset>
-          <legend className="mb-2 text-sm font-semibold text-brand-navy">Paciente</legend>
+          <legend className="mb-2 text-sm font-semibold text-action-primary">Paciente</legend>
           {elegido ? (
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-brand-sky-50 px-3 py-2">
-              <p className="text-sm font-medium text-brand-navy-900">
+              <p className="text-sm font-medium text-action-primary">
                 {elegido.full_name}
                 {elegido.rut ? ` · ${formatRutPartial(elegido.rut)}` : ""}
               </p>
               <button
                 type="button"
                 onClick={soltar}
-                className="text-sm font-medium text-brand-navy-700 underline-offset-2 hover:underline"
+                className="text-sm font-medium text-action-primary underline-offset-2 hover:underline"
               >
                 Cambiar
               </button>
@@ -270,7 +270,7 @@ function StaffBookingModal({
                         <button
                           type="button"
                           onClick={() => elegir(p)}
-                          className="block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-brand-sky-50"
+                          className="block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-action-primary/5"
                         >
                           <span className="font-medium text-neutral-900">{p.full_name}</span>
                           <span className="block text-xs text-neutral-500">
@@ -334,7 +334,7 @@ function StaffBookingModal({
         </fieldset>
 
         <fieldset>
-          <legend className="mb-2 text-sm font-semibold text-brand-navy">Hora</legend>
+          <legend className="mb-2 text-sm font-semibold text-action-primary">Hora</legend>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <label className="block">
               <span className={label}>Servicio</span>
@@ -396,8 +396,8 @@ function StaffBookingModal({
                     onClick={() => setSlotStart(s.slot_start)}
                     className={`rounded-lg border px-3 py-1.5 text-sm font-semibold tabular-nums transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft active:scale-95 cursor-pointer ${
                       slotStart === s.slot_start
-                        ? "border-brand-navy bg-brand-navy text-white shadow-xs scale-[1.03]"
-                        : "border-neutral-300 bg-white text-neutral-700 hover:border-brand-navy hover:text-brand-navy hover:shadow-2xs"
+                        ? "border-action-primary bg-action-primary text-action-primary-foreground shadow-xs scale-[1.03]"
+                        : "border-neutral-300 bg-white text-neutral-700 hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary hover:shadow-2xs"
                     }`}
                   >
                     {formatTime(s.slot_start)}
