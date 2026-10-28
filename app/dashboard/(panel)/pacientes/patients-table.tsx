@@ -7,6 +7,7 @@ import { formatRut } from "@/lib/rut";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { WhatsappButton } from "@/components/dashboard/whatsapp-button";
 import { AnimatedNumber } from "@/components/motion/animated-number";
+import { FavoriteStarButton } from "./favorite-star-button";
 
 export interface ListPatient {
   id: string;
@@ -18,6 +19,7 @@ export interface ListPatient {
   sex: string | null;
   patient_status?: string | null;
   doctor?: { full_name: string } | null;
+  is_favorite?: boolean;
 }
 
 type SortKey = "full_name" | "rut" | "birth_date" | "patient_status";
@@ -27,6 +29,7 @@ interface ListParams {
   status: string;
   sort: SortKey;
   dir: "asc" | "desc";
+  tab?: string;
 }
 
 const COLUMNS: { label: string; sort?: SortKey; className?: string }[] = [
@@ -39,6 +42,7 @@ const COLUMNS: { label: string; sort?: SortKey; className?: string }[] = [
 
 function listHref(params: ListParams, page: number): string {
   const query = new URLSearchParams();
+  if (params.tab && params.tab !== "all") query.set("tab", params.tab);
   if (params.q) query.set("q", params.q);
   if (params.status) query.set("status", params.status);
   if (params.sort !== "full_name") query.set("sort", params.sort);
@@ -166,15 +170,20 @@ export function PatientsTable({
                 style={{ animationDelay: `${Math.min(indice, 12) * 35}ms` }}
               >
                 <td className="px-4 py-3">
-                  <Link
-                    href={`/dashboard/pacientes/${p.id}`}
-                    className="font-medium text-neutral-900 transition-colors duration-micro ease-out-soft hover:text-action-primary hover:underline"
-                  >
-                    {p.full_name}
-                  </Link>
-                  {p.doctor?.full_name ? (
-                    <p className="text-xs text-action-primary">Paciente de {p.doctor.full_name}</p>
-                  ) : null}
+                  <div className="flex items-center gap-2">
+                    <FavoriteStarButton patientId={p.id} initialFavorite={!!p.is_favorite} />
+                    <div className="min-w-0">
+                      <Link
+                        href={`/dashboard/pacientes/${p.id}`}
+                        className="font-medium text-neutral-900 transition-colors duration-micro ease-out-soft hover:text-action-primary hover:underline"
+                      >
+                        {p.full_name}
+                      </Link>
+                      {p.doctor?.full_name ? (
+                        <p className="text-xs text-action-primary">Paciente de {p.doctor.full_name}</p>
+                      ) : null}
+                    </div>
+                  </div>
                 </td>
                 <td className="whitespace-nowrap px-4 py-3 text-neutral-700">
                   {p.rut ? (formatRut(p.rut) ?? p.rut) : "—"}
@@ -240,16 +249,19 @@ export function PatientsTable({
             style={{ animationDelay: `${Math.min(indice, 12) * 35}ms` }}
           >
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <Link
-                  href={`/dashboard/pacientes/${p.id}`}
-                  className="font-medium text-neutral-900 transition-colors duration-micro ease-out-soft hover:text-action-primary hover:underline"
-                >
-                  {p.full_name}
-                </Link>
-                {p.doctor?.full_name ? (
-                  <p className="text-xs text-action-primary">Paciente de {p.doctor.full_name}</p>
-                ) : null}
+              <div className="flex items-center gap-2 min-w-0">
+                <FavoriteStarButton patientId={p.id} initialFavorite={!!p.is_favorite} />
+                <div className="min-w-0">
+                  <Link
+                    href={`/dashboard/pacientes/${p.id}`}
+                    className="font-medium text-neutral-900 transition-colors duration-micro ease-out-soft hover:text-action-primary hover:underline"
+                  >
+                    {p.full_name}
+                  </Link>
+                  {p.doctor?.full_name ? (
+                    <p className="text-xs text-action-primary">Paciente de {p.doctor.full_name}</p>
+                  ) : null}
+                </div>
               </div>
               {statusPill(p.patient_status)}
             </div>
