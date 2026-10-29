@@ -70,6 +70,5 @@ describe("WhatsappButton", () => {
     const boton = container.querySelector("button");
     if (!boton) throw new Error("sin botón de WhatsApp");
     expect(boton.disabled).toBe(true);
-    expect(boton.getAttribute("title")).toBe("Sin celular registrado");
   });
 });

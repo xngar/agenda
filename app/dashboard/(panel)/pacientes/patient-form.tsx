@@ -1,11 +1,14 @@
 "use client";
 
+import { Plus } from "lucide-react";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button, buttonClasses, inputClasses } from "@/components/ui";
 import { AsyncButton } from "@/components/motion/async-button";
 import { Modal } from "@/components/motion/modal";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatRutPartial, normalizeRut } from "@/lib/rut";
 import { formatPhonePartial, normalizePhone } from "@/lib/phone";
 
@@ -222,7 +225,20 @@ export function NewPatientButton() {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Nuevo paciente</Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            onClick={() => setOpen(true)}
+            className="anim-new-patient flex items-center gap-2 rounded-full bg-action-primary px-3 py-2 text-sm font-medium text-action-primary-foreground"
+          >
+            <Plus className="anim-new-patient-icon h-4 w-4" />
+            Nuevo paciente
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs text-xs px-2 py-1.5 rounded-md bg-neutral-800 text-neutral-100">
+          Crear nuevo paciente
+        </TooltipContent>
+      </Tooltip>
       <PatientFormModal open={open} onClose={() => setOpen(false)} />
     </>
   );

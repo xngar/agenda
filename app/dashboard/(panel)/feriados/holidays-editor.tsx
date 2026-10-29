@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { ErrorNotice, InfoNotice, buttonClasses, inputClasses } from "@/components/ui";
 import { AsyncButton } from "@/components/motion/async-button";
@@ -133,9 +134,12 @@ export function HolidaysEditor({ initial }: { initial: Holiday[] }) {
             onClick={crear}
             loading={guardando}
             pendingLabel="Guardando feriado"
-            className={buttonClasses("primary", "md")}
+            className={`${buttonClasses("primary", "md")} anim-new-patient`}
           >
-            Agregar feriado
+            <span className="flex items-center gap-2">
+              <Plus className="anim-new-patient-icon h-4 w-4" aria-hidden="true" />
+              Agregar feriado
+            </span>
           </AsyncButton>
         </div>
       </section>

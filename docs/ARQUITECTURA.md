@@ -43,13 +43,13 @@ Ubicaciones: `app/(site)/reservar/`, `app/[clinicSlug]/reservar/`, `app/api/book
 - Gestión: doctores, servicios, disponibilidad (rules), feriados, time-off
 - RPCs para consultas optimizadas (dashboard_appointments, etc.)
 
-Ubicaciones: `app/dashboard/`, `app/api/dashboard/`, `app/dashboard/nav-links.tsx`.
+Ubicaciones: `app/dashboard/`, `app/api/dashboard/`, `components/dashboard/panel-shell.tsx`, `components/dashboard/sidebar-nav.tsx`.
 
 ## UI responsive (móvil primero donde aplica)
 
 Regla aplicada de forma consistente en cabeceras y tablas:
 
-- **Cabeceras**: patrón hamburguesa. Los enlaces de navegación se ocultan bajo `md` y se sustituyen por un botón `Menu`/`X` (lucide-react) que despliega un panel. Implementado en las tres cabeceras: landing (`components/landing/navbar.tsx`), sitio público (`components/site-header.tsx`) y panel (`app/dashboard/nav-links.tsx`).
+- **Cabeceras**: patrón hamburguesa. Los enlaces de navegación se ocultan bajo `md` y se sustituyen por un botón `Menu`/`X` (lucide-react) que despliega un panel. Implementado en las tres cabeceras: landing (`components/landing/navbar.tsx`), sitio público (`components/site-header.tsx`) y panel (`components/dashboard/panel-shell.tsx`).
 - **Tablas**: en móvil se muestra una lista de tarjetas (`hidden md:block` para la tabla + `md:hidden` para las tarjetas). Aplicado en agenda, pacientes y organizaciones de plataforma.
 - **Anchos fijos**: elementos que no caben en móvil (odontograma, calendario mensual) usan scroll horizontal **contenido** (`overflow-x-auto` + `min-w-max`), nunca desbordan la página.
 - Se evita `overflow-x-hidden` global para no enmascarar desbordes reales.

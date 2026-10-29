@@ -38,6 +38,16 @@ export function normalizeRut(input: string): string {
   return input.replace(/[\s.\-]/g, "").toUpperCase();
 }
 
+/**
+ * ¿La búsqueda apunta a un RUT? Sólo dígitos, puntos, guiones, espacios y un
+ * `k` final. Sirve para decidir si conviene comparar contra el RUT guardado
+ * (normalizado) en vez del texto crudo.
+ */
+export function looksLikeRutSearch(input: string): boolean {
+  const value = input.trim();
+  return value !== "" && /\d/.test(value) && /^[\d.\-\s]+[kK]?$/.test(value);
+}
+
 /** Calcula el dígito verificador para los primeros dígitos del RUT. */
 export function rutVerifier(digits: string): string {
   let sum = 0;

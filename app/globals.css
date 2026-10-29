@@ -460,6 +460,52 @@
   transition: transform var(--motion-duration-micro) var(--motion-ease-out);
 }
 
+/* Flecha del botón "Ver ficha": avanza y retrocede sin parar mientras el
+   contenedor con `group` está en hover. */
+@keyframes arrow-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
+
+.group:hover .anim-arrow-nudge {
+  animation: arrow-nudge 1s var(--motion-ease-in-out) infinite;
+}
+
+/* Botones de acción principal ("Nuevo paciente", "Agregar feriado"): fondo
+   morado por defecto; en hover se aclara un poco, crece y el icono `+` gira
+   una vuelta completa. */
+.anim-new-patient {
+  background-color: var(--action-primary);
+  color: var(--action-primary-foreground);
+  transition:
+    transform var(--motion-duration-micro) var(--motion-ease-out),
+    background-color var(--motion-duration-element) var(--motion-ease-in-out),
+    color var(--motion-duration-element) var(--motion-ease-in-out);
+}
+
+.anim-new-patient:hover {
+  background-color: color-mix(in oklab, var(--action-primary) 92%, white);
+  color: var(--action-primary-foreground);
+  transform: scale(1.05);
+}
+
+.anim-new-patient:active {
+  transform: scale(0.97);
+}
+
+.anim-new-patient-icon {
+  transition: transform var(--motion-duration-section) var(--motion-ease-out);
+}
+
+.anim-new-patient:hover .anim-new-patient-icon {
+  transform: rotate(360deg);
+}
+
 /* ----------------------------------------------------------------------------
    Toasts (sonner).
    Sonner inyecta su propia hoja de estilos en runtime, así que una clase

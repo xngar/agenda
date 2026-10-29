@@ -3,6 +3,7 @@
 import type { AriaAttributes, ReactNode } from "react";
 import Link from "next/link";
 import { ChevronsUpDown, ChevronUp } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatRut } from "@/lib/rut";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { WhatsappButton } from "@/components/dashboard/whatsapp-button";
@@ -213,22 +214,46 @@ export function PatientsTable({
                 <td className="whitespace-nowrap px-4 py-3">{statusPill(p.patient_status)}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-2">
-                    <WhatsappButton
-                      patientId={p.id}
-                      fullName={p.full_name}
-                      phone={p.phone}
-                      orgName={orgName}
-                    />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex">
+                          <WhatsappButton
+                            patientId={p.id}
+                            fullName={p.full_name}
+                            phone={p.phone}
+                            orgName={orgName}
+                          />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs text-xs px-2 py-1.5 rounded-md bg-neutral-800 text-neutral-100">
+                        Enviar mensaje
+                      </TooltipContent>
+                    </Tooltip>
                     <Link
                       href={`/dashboard/pacientes/${p.id}`}
                       aria-label={`Abrir ficha de ${p.full_name}`}
-                      title="Abrir ficha"
-                      className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full bg-[#fdb833] px-2.5 text-sm font-semibold text-action-primary transition-colors duration-element ease-in-out-soft hover:bg-[#ffd16b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy"
+                      className="group inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full bg-[#fdb833] px-3 text-sm font-semibold text-action-primary transition-colors duration-element ease-in-out-soft hover:bg-[#ffd16b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy"
                     >
-                      Ver ficha
-                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
-                        <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="inline-flex items-center gap-1.5">
+                            Ver ficha
+                            <svg
+                              viewBox="0 0 24 24"
+                              className="anim-arrow-nudge h-4 w-4"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth={2.2}
+                              aria-hidden="true"
+                            >
+                              <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs text-xs px-2 py-1.5 rounded-md bg-neutral-800 text-neutral-100">
+                          Ver ficha
+                        </TooltipContent>
+                      </Tooltip>
                     </Link>
                   </div>
                 </td>
@@ -294,21 +319,46 @@ export function PatientsTable({
             </dl>
 
             <div className="mt-3 flex items-center gap-2">
-              <WhatsappButton
-                patientId={p.id}
-                fullName={p.full_name}
-                phone={p.phone}
-                orgName={orgName}
-              />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex">
+                    <WhatsappButton
+                      patientId={p.id}
+                      fullName={p.full_name}
+                      phone={p.phone}
+                      orgName={orgName}
+                    />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs text-xs px-2 py-1.5 rounded-md bg-neutral-800 text-neutral-100">
+                  Enviar mensaje
+                </TooltipContent>
+              </Tooltip>
               <Link
                 href={`/dashboard/pacientes/${p.id}`}
                 aria-label={`Abrir ficha de ${p.full_name}`}
-                className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full bg-[#fdb833] px-2.5 text-sm font-semibold text-action-primary transition-colors duration-element ease-in-out-soft hover:bg-[#ffd16b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy"
+                className="group ml-auto inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full bg-[#fdb833] px-3 text-sm font-semibold text-action-primary transition-colors duration-element ease-in-out-soft hover:bg-[#ffd16b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy"
               >
-                Ver ficha
-                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
-                  <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center gap-1.5">
+                      Ver ficha
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="anim-arrow-nudge h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2.2}
+                        aria-hidden="true"
+                      >
+                        <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs text-xs px-2 py-1.5 rounded-md bg-neutral-800 text-neutral-100">
+                    Ver ficha
+                  </TooltipContent>
+                </Tooltip>
               </Link>
             </div>
           </li>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
+import { looksLikeRutSearch, normalizeRut } from "@/lib/rut";
 import { Card, EmptyState } from "@/components/ui";
 import { PatientsTable, type ListPatient } from "./patients-table";
 
@@ -85,7 +86,10 @@ export async function PatientsList({
 
     if (q) {
       const like = `%${q}%`;
-      query = query.or(`full_name.ilike.${like},rut.ilike.${like},email.ilike.${like}`);
+      const filters = [`full_name.ilike.${like}`, `email.ilike.${like}`, `rut.ilike.${like}`];
+      const rutLike = normalizeRut(q);
+      if (looksLikeRutSearch(q) && rutLike !== q) filters.push(`rut.ilike.%${rutLike}%`);
+      query = query.or(filters.join(","));
     }
 
     query = query
@@ -105,7 +109,7 @@ export async function PatientsList({
     }
   } else {
     const { data, error } = await supabase.rpc("list_patients_contact", {
-      p_q: q || null,
+      p_q: (looksLikeRutSearch(q) ? normalizeRut(q) : q) || null,
       p_status: status,
       p_limit: tab === "favorites" ? 100 : PAGE_SIZE,
       p_offset: tab === "favorites" ? 0 : offset,

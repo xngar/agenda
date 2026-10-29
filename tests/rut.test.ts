@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidRut, normalizeRut, formatRut, formatRutPartial } from "@/lib/rut";
+import { isValidRut, normalizeRut, formatRut, formatRutPartial, looksLikeRutSearch } from "@/lib/rut";
 
 /**
  * Regresiones del módulo de RUT.
@@ -27,6 +27,24 @@ describe("normalizeRut", () => {
     // Mayúsculas: el verificador "k" se normaliza a "K".
     expect(normalizeRut("abc")).toBe("ABC");
     expect(normalizeRut("12345678k")).toBe("12345678K");
+  });
+});
+
+describe("looksLikeRutSearch", () => {
+  it("reconoce RUT con puntos, guión o sólo dígitos", () => {
+    expect(looksLikeRutSearch("12.345.678-5")).toBe(true);
+    expect(looksLikeRutSearch("12345678-5")).toBe(true);
+    expect(looksLikeRutSearch("123456785")).toBe(true);
+    expect(looksLikeRutSearch("12.345")).toBe(true);
+    expect(looksLikeRutSearch("12345678k")).toBe(true);
+  });
+
+  it("no confunde nombres ni correos con un RUT", () => {
+    expect(looksLikeRutSearch("ana")).toBe(false);
+    expect(looksLikeRutSearch("ana perez")).toBe(false);
+    expect(looksLikeRutSearch("ana@correo.cl")).toBe(false);
+    expect(looksLikeRutSearch("")).toBe(false);
+    expect(looksLikeRutSearch("---")).toBe(false);
   });
 });
 
