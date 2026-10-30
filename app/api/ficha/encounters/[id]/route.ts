@@ -19,7 +19,7 @@ export async function PUT(request: Request, { params }: Params) {
 
   const { id } = await params;
   const raw = await request.json().catch(() => null);
-  const body = encounterSchema.omit({ patient_id: true, started_at: true }).safeParse(raw);
+  const body = encounterSchema.omit({ patient_id: true }).safeParse(raw);
   if (!body.success) return bodyError(body.error);
 
   // Merge y no reemplazo: el borrador puede no traer campos que otro
@@ -39,10 +39,13 @@ export async function PUT(request: Request, { params }: Params) {
   });
   if (!especialidad.success) return bodyError(especialidad.error);
 
+  const { started_at, ...campos } = body.data;
+
   const { data, error } = await ctx.supabase
     .from("encounters")
     .update({
-      ...body.data,
+      ...campos,
+      ...(started_at ? { started_at: `${started_at}T00:00:00Z` } : {}),
       specialty_data: especialidad.data,
     })
     .eq("org_id", ctx.session.orgId)

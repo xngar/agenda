@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Prescription } from "@/lib/ficha/types";
 import { Card, Button, ErrorNotice, Field, Spinner, inputClasses } from "@/components/ui";
+import { formatDayKey } from "@/lib/dates";
 import { FichaCardHeader } from "./panels-shared";
 
 interface EncounterOption {
@@ -140,7 +141,7 @@ export function RecetasPanel({ patientId }: { patientId: string }) {
                 <option value="">Sin atención asociada</option>
                 {encounters.map((encounter) => (
                   <option key={encounter.id} value={encounter.id}>
-                    {formatDateTime(encounter.started_at)} · {encounter.care_type || "Atención"}
+                    {formatDayKey(encounter.started_at)} · {encounter.care_type || "Atención"}
                     {encounter.doctors?.full_name ? ` · ${encounter.doctors.full_name}` : ""}
                   </option>
                 ))}
@@ -187,7 +188,7 @@ export function RecetasPanel({ patientId }: { patientId: string }) {
                 </p>
                 <p className="mt-1 text-xs text-neutral-500">
                   {r.encounter
-                    ? `Atención: ${formatDateTime(r.encounter.started_at)} · ${r.encounter.care_type || "Atención"}`
+                    ? `Atención: ${formatDayKey(r.encounter.started_at)} · ${r.encounter.care_type || "Atención"}`
                     : "Sin atención asociada"}
                 </p>
               </li>

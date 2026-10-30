@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { Attachment, AttachmentKind, OrganizationType } from "@/lib/ficha/types";
 import { attachmentKindLabel, attachmentKindsForOrganization } from "@/lib/ficha/attachments";
@@ -60,6 +60,7 @@ export function AdjuntosPanel({
   const [aEliminar, setAEliminar] = useState<Attachment | null>(null);
   const [eliminando, setEliminando] = useState(false);
   const [errorEliminar, setErrorEliminar] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const cargar = useCallback(async () => {
     try {
@@ -139,6 +140,7 @@ export function AdjuntosPanel({
       setDescription("");
       setTakenAt("");
       setKind("document");
+      if (fileInputRef.current) fileInputRef.current.value = "";
       cargar();
     } catch {
       setError("No pudimos conectarnos. Intenta de nuevo.");
@@ -202,6 +204,7 @@ export function AdjuntosPanel({
             <Field label="Archivo" htmlFor="file">
               <input
                 id="file"
+                ref={fileInputRef}
                 type="file"
                 accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
                 className={`${inputClasses} file:mr-3 file:rounded-lg file:border-0 file:bg-action-primary file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-action-primary-foreground hover:file:bg-action-primary-hover`}

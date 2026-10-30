@@ -15,6 +15,7 @@ export const AUDIT_ENTIDADES: Record<string, string> = {
   encounters: "Atención",
   encounter_versions: "Versión",
   dental_chart_entries: "Odontograma",
+  periodontal_records: "Periodoncia",
   dental_treatment_plan_items: "Plan",
   dental_payments: "Pago",
   prescriptions: "Receta",
@@ -108,6 +109,11 @@ export function detalleAuditoria(entry: {
       STATE_LABEL[String(s.state) as keyof typeof STATE_LABEL] ?? texto(s.state);
     if (action === "delete") return "Eliminó un registro del odontograma";
     return `Pieza ${texto(s.tooth)} · ${cara}: ${estado}`.trim();
+  }
+
+  if (entity === "periodontal_records") {
+    if (action === "delete") return "Eliminó un registro periodontal";
+    return `Periodoncia: pieza ${texto(s.tooth)} · movilidad ${texto(s.mobility)}`.trim();
   }
 
   if (entity === "dental_treatment_plan_items") {

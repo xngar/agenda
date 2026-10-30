@@ -19,6 +19,7 @@ import {
   inputClasses,
 } from "@/components/ui";
 import { Modal } from "@/components/motion/modal";
+import { todayKey } from "@/lib/dates";
 import { FichaCardHeader } from "./panels-shared";
 import { SpecialtyForm, SpecialtyView, type SpecialtyValues } from "./specialty-section";
 
@@ -50,7 +51,7 @@ interface FormState {
 }
 
 const EMPTY_FORM: FormState = {
-  started_at: new Date().toISOString().slice(0, 10),
+  started_at: todayKey(),
   care_type: "",
   motivo: "",
   evolucion: "",
@@ -152,7 +153,7 @@ const SIGNOS_VITALES = [
   }
 
   function abrirNueva() {
-    setForm({ ...EMPTY_FORM, started_at: new Date().toISOString().slice(0, 10) });
+    setForm({ ...EMPTY_FORM, started_at: todayKey() });
     setEspecialidad({});
     setVitalesTxt({});
     setDialogo("nueva");
@@ -244,30 +245,35 @@ const SIGNOS_VITALES = [
     }
   }
 
-  async function verVersiones(e: EncounterRow) {
-    if (versionesDe === e.id) {
-      setVersionesDe(null);
-      setVersiones([]);
-      return;
-    }
+  async function cargarVersiones(encounterId: string) {
     setError(null);
     try {
-      const response = await fetch(`/api/ficha/encounters/${e.id}/versions`);
+      const response = await fetch(`/api/ficha/encounters/${encounterId}/versions`);
       const data = (await response.json()) as { versions?: VersionRow[]; error?: string };
       if (!response.ok) {
         setError(data.error ?? "No se pudieron cargar las versiones");
         return;
       }
-      setVersionesDe(e.id);
+      setVersionesDe(encounterId);
       setVersiones(data.versions ?? []);
     } catch {
       setError("No pudimos conectarnos.");
     }
   }
 
+  async function verVersiones(e: EncounterRow) {
+    if (versionesDe === e.id) {
+      setVersionesDe(null);
+      setVersiones([]);
+      return;
+    }
+    await cargarVersiones(e.id);
+  }
+
   async function corregir(e: React.FormEvent) {
     e.preventDefault();
     if (!corrigiendo || razon.trim().length < 3) return;
+    const encounterId = corrigiendo;
     setGuardando(true);
     setError(null);
     try {
@@ -282,9 +288,9 @@ const SIGNOS_VITALES = [
         return;
       }
       toast.success("Corrección registrada en el historial");
+      await cargarVersiones(encounterId);
       setCorrigiendo(null);
       setRazon("");
-      verVersiones(encounters?.find((en) => en.id === corrigiendo) as EncounterRow);
     } catch {
       setError("No pudimos conectarnos.");
     } finally {

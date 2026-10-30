@@ -22,7 +22,11 @@ export async function PATCH(request: Request, { params }: Params) {
   if (!body.success) return bodyError(body.error);
 
   const patch: Record<string, unknown> = { ...body.data };
-  if (body.data.approved) patch.approved_at = new Date().toISOString();
+  if (body.data.approved === true) {
+    patch.approved_at = new Date().toISOString();
+  } else if (body.data.approved === false) {
+    patch.approved_at = null;
+  }
 
   const { data, error } = await ctx.supabase
     .from("dental_treatment_plan_items")

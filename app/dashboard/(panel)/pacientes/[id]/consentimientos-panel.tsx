@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Attachment, Consent, ConsentKind, Encounter, OrganizationType } from "@/lib/ficha/types";
 import { Card, Button, ErrorNotice, Field, Spinner, inputClasses } from "@/components/ui";
+import { formatDayKey } from "@/lib/dates";
 import { FichaCardHeader } from "./panels-shared";
 
 interface ConsentRecord extends Consent {
@@ -254,6 +255,8 @@ export function ConsentimientosPanel({
                 if (shouldOpen) {
                   void cargarAdjuntos();
                   void cargarAtenciones();
+                } else {
+                  resetForm();
                 }
               }}
             >
@@ -330,7 +333,7 @@ export function ConsentimientosPanel({
                   <option value="">Sin vincular a una atención</option>
                   {(encounters ?? []).map((encounter) => (
                     <option key={encounter.id} value={encounter.id}>
-                      {fechaHora(encounter.started_at)}
+                      {formatDayKey(encounter.started_at)}
                       {encounter.care_type ? ` · ${encounter.care_type}` : ""}
                     </option>
                   ))}

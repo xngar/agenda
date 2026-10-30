@@ -52,6 +52,7 @@ const STATES: { value: DentalState; label: string }[] = [
   { value: "por_extraer", label: "Por extraer" },
   { value: "extraida", label: "Extraída" },
   { value: "incluida", label: "Incluida" },
+  { value: "protesis_removible", label: "Prótesis removible" },
 ];
 
 const COLORS: Record<DentalState, string> = {
@@ -315,12 +316,11 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
     }
   }
 
-  const fila = (grupo: number[], reverse = false) => {
-    const arr = reverse ? [...grupo].reverse() : grupo;
+  const fila = (grupo: number[]) => {
     return (
       <div className="overflow-x-auto pb-1">
         <div className="flex min-w-max justify-center gap-0.5 sm:gap-1" aria-label={`Dientes ${grupo[0]}–${grupo[grupo.length - 1]}`}>
-          {arr.map((t) => {
+          {grupo.map((t) => {
             const estados = toothFaces(t).map((face) => estadoDe(t, face));
             const c =
               estadoPieza(t) ??
@@ -353,8 +353,8 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
 
   const superior = [...Array(8)].map((_, i) => 18 - i); // 18..11
   const superiorDer = [...Array(8)].map((_, i) => 21 + i); // 21..28
-  const inferior = [...Array(8)].map((_, i) => 41 + i); // 41..48
-  const inferiorIzq = [...Array(8)].map((_, i) => 31 - i); // 31..38
+  const inferiorDer = [...Array(8)].map((_, i) => 48 - i); // 48..41
+  const inferiorIzq = [...Array(8)].map((_, i) => 31 + i); // 31..38
 
   return (
     <div className="space-y-4">
@@ -372,7 +372,7 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
           </div>
           <div className="space-y-1">
             <p className="text-center text-xs font-semibold text-neutral-500">Inferior</p>
-            {fila([...inferiorIzq, ...inferior])}
+            {fila([...inferiorDer, ...inferiorIzq])}
           </div>
           <div className="grid grid-cols-2 gap-1 pt-2 text-[11px] text-neutral-600 sm:grid-cols-4 md:grid-cols-7">
             {STATES.map((s) => (

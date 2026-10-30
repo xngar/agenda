@@ -9,6 +9,7 @@ import {
   auditPatientView,
 } from "@/lib/ficha/http";
 import { paymentSchema } from "@/lib/ficha/schemas";
+import { todayKey } from "@/lib/dates";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -55,7 +56,7 @@ export async function POST(request: Request, { params }: Params) {
       patient_id: id,
       plan_item_id: body.data.plan_item_id ?? null,
       amount: body.data.amount,
-      paid_at: body.data.paid_at ?? new Date().toISOString().slice(0, 10),
+      paid_at: body.data.paid_at ?? todayKey(),
       method: body.data.method ?? "efectivo",
       note: body.data.note ?? null,
       created_by: ctx.session.id,

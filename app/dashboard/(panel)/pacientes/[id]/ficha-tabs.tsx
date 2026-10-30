@@ -12,6 +12,7 @@ import { ResumenPanel } from "./resumen-panel";
 import { AntecedentesPanel } from "./antecedentes-panel";
 import { AtencionesPanel } from "./atenciones-panel";
 import { OdontogramaPanel } from "./odontograma-panel";
+import { PeriodontogramaPanel } from "./periodontograma-panel";
 import { PlanPanel } from "./plan-panel";
 import { RecetasPanel } from "./recetas-panel";
 import { AdjuntosPanel } from "./adjuntos-panel";
@@ -32,6 +33,7 @@ const TABS_DENTAL = [
   { id: "antecedentes", label: "Antecedentes" },
   { id: "atenciones", label: "Atenciones" },
   { id: "odontograma", label: "Odontograma" },
+  { id: "periodoncia", label: "Periodoncia" },
   { id: "plan", label: "Plan" },
   { id: "recetas", label: "Recetas" },
   { id: "adjuntos", label: "Adjuntos" },
@@ -202,6 +204,8 @@ export function FichaTabs({
         />
       ) : active === "odontograma" ? (
         <OdontogramaPanel patientId={patient.id} />
+      ) : active === "periodoncia" ? (
+        <PeriodontogramaPanel patientId={patient.id} />
       ) : active === "plan" ? (
         <PlanPanel patientId={patient.id} isAdmin={isAdmin} />
       ) : active === "recetas" ? (
