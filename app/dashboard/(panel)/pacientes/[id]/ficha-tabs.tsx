@@ -73,7 +73,11 @@ export function FichaTabs({
   orgId,
   isAdmin,
   canEdit = false,
+  canEditProfile = false,
+  canDelete = false,
   canViewAudit = false,
+  canExport = true,
+  administrative = false,
 }: {
   patient: Patient;
   background: PatientMedicalBackground | null;
@@ -81,11 +85,17 @@ export function FichaTabs({
   orgId: string;
   isAdmin: boolean;
   canEdit?: boolean;
-  /** El dueño del paciente también ve su historial, no sólo el admin. */
+  canEditProfile?: boolean;
+  canDelete?: boolean;
+  /** El profesional tratante también ve su historial, no sólo el admin. */
   canViewAudit?: boolean;
+  canExport?: boolean;
+  /** La recepción ve sólo los datos administrativos del paciente. */
+  administrative?: boolean;
 }) {
-  const tabs =
-    orgType === "dental"
+  const tabs = administrative
+    ? [{ id: "resumen", label: "Datos del paciente" }]
+    : orgType === "dental"
       ? TABS_DENTAL
       : orgType === "psychological"
         ? TABS_PSYCHOLOGICAL
@@ -148,16 +158,18 @@ export function FichaTabs({
           </span>
         }
         actions={
-          <>
-            <a
-              className={buttonClasses("primary", "sm")}
-              href={`/api/ficha/patients/${patient.id}/pdf`}
-              title="Descargar ficha en PDF"
-            >
-              <Download className="size-4" aria-hidden />
-              Exportar ficha
-            </a>
-          </>
+          canExport ? (
+            <>
+              <a
+                className={buttonClasses("primary", "sm")}
+                href={`/api/ficha/patients/${patient.id}/pdf`}
+                title="Descargar ficha en PDF"
+              >
+                <Download className="size-4" aria-hidden />
+                Exportar ficha
+              </a>
+            </>
+          ) : undefined
         }
       />
 
@@ -188,7 +200,13 @@ export function FichaTabs({
 
       <div key={active} className="anim-view-fade">
       {active === "resumen" ? (
-        <ResumenPanel patient={patient} orgType={orgType} canEdit={canEdit} />
+        <ResumenPanel
+          patient={patient}
+          orgType={orgType}
+          canEdit={canEdit}
+          canEditProfile={canEditProfile}
+          showClinicalProfile={!administrative}
+        />
       ) : active === "antecedentes" ? (
         <AntecedentesPanel patientId={patient.id} initial={background} />
       ) : active === "atenciones" ? (
@@ -217,14 +235,14 @@ export function FichaTabs({
           patientId={patient.id}
           orgId={orgId}
           orgType={orgType}
-          puedeEliminar={canEdit}
+          puedeEliminar={canDelete}
         />
       ) : active === "auditoria" ? (
-        <AuditoriaPanel patientId={patient.id} isAdmin={isAdmin} puedeExportar={canEdit} />
+        <AuditoriaPanel patientId={patient.id} isAdmin={isAdmin} puedeExportar={canDelete} />
       ) : null}
       </div>
 
-      {active === "resumen" && canEdit ? (
+      {active === "resumen" && canDelete ? (
         <section
           aria-labelledby="zona-peligrosa-paciente"
           className="rounded-card border border-red-200 bg-red-50/40 px-5 py-4"

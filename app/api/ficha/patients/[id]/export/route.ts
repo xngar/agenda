@@ -5,6 +5,7 @@ import {
   forbidden,
   notFound,
   dbError,
+  orgPatient,
   auditPatientView,
 } from "@/lib/ficha/http";
 import { redactEncountersForExport } from "@/lib/ficha/privacy";
@@ -22,6 +23,9 @@ export async function GET(request: Request, { params }: Params) {
   const { id } = await params;
   const { searchParams } = new URL(request.url);
   const format = searchParams.get("format") === "csv" ? "csv" : "json";
+
+  const { error: accessError } = await orgPatient(ctx, id);
+  if (accessError) return accessError;
 
   const { data: patient, error } = await ctx.supabase
     .from("patients")

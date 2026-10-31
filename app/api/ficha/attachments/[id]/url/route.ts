@@ -5,6 +5,7 @@ import {
   forbidden,
   notFound,
   dbError,
+  orgPatient,
   auditPatientView,
 } from "@/lib/ficha/http";
 
@@ -25,6 +26,9 @@ export async function GET(_request: Request, { params }: Params) {
 
   if (error) return dbError(error);
   if (!data) return notFound("Adjunto no encontrado");
+
+  const { error: accessError } = await orgPatient(ctx, data.patient_id);
+  if (accessError) return accessError;
 
   const { data: signed, error: signedError } = await ctx.supabase.storage
     .from("ficha-adjuntos")

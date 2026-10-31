@@ -26,12 +26,21 @@ export async function PUT(request: Request, { params }: Params) {
   // profesional ya guardó (p. ej. notas privadas), y no deben perderse.
   const { data: previa, error: previaError } = await ctx.supabase
     .from("encounters")
-    .select("specialty_data")
+    .select("doctor_id,status,specialty_data")
     .eq("org_id", ctx.session.orgId)
     .eq("id", id)
     .maybeSingle();
   if (previaError) return dbError(previaError);
-  if (!previa) return notFound("Atención no encontrada o ya fue firmada");
+  if (!previa) return notFound("Atención no encontrada");
+  if (previa.status === "signed") {
+    return NextResponse.json(
+      { error: "La atención firmada es inmutable; crea una corrección o addendum" },
+      { status: 409 },
+    );
+  }
+  if (previa.doctor_id !== ctx.session.id) {
+    return forbidden("Solo el autor puede editar su propio borrador");
+  }
 
   const especialidad = validateEncounterData(ctx.session.orgType, {
     ...((previa.specialty_data as Record<string, unknown> | null) ?? {}),
@@ -65,6 +74,19 @@ export async function POST(_request: Request, { params }: Params) {
   if (!ctx.clinical) return forbidden();
 
   const { id } = await params;
+
+  const { data: previa, error: previaError } = await ctx.supabase
+    .from("encounters")
+    .select("doctor_id,status")
+    .eq("org_id", ctx.session.orgId)
+    .eq("id", id)
+    .maybeSingle();
+  if (previaError) return dbError(previaError);
+  if (!previa) return notFound("Atención no encontrada");
+  if (previa.status === "signed") return notFound("Atención no encontrada o ya firmada");
+  if (previa.doctor_id !== ctx.session.id) {
+    return forbidden("Solo el autor puede firmar su atención");
+  }
 
   const { data, error } = await ctx.supabase
     .from("encounters")

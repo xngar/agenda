@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getDoctorSession, isClinical } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { Card, EmptyState } from "@/components/ui";
-import { auditPatientView } from "@/lib/ficha/http";
+import { auditPatientView, patientAccess } from "@/lib/ficha/http";
 import { FichaTabs } from "./ficha-tabs";
 import type { OrganizationType } from "@/lib/ficha/types";
 
@@ -17,14 +17,15 @@ export default async function PacientePage({ params }: { params: Promise<{ id: s
   if (!session) redirect("/dashboard/login");
 
   const { id } = await params;
+  const clinical = isClinical(session);
 
-  if (!isClinical(session)) {
+  if (!clinical && session.role !== "reception") {
     return (
       <Card>
         <EmptyState
           icon="correo"
-          title="Solo el equipo clínico abre fichas"
-          description="Como persona de recepción puedes ver el listado de pacientes con sus datos de contacto y la agenda, pero no el contenido clínico."
+          title="No tienes acceso a fichas clínicas"
+          description="Solo el equipo clínico y la recepción pueden abrir la ficha administrativa de un paciente."
         />
       </Card>
     );
@@ -64,20 +65,36 @@ export default async function PacientePage({ params }: { params: Promise<{ id: s
     );
   }
 
-  const auditContext = { session, supabase, clinical: true };
-  for (const entity of ["patients", "patient_background"]) {
-    const auditError = await auditPatientView(auditContext, id, entity);
-    if (auditError) {
-      console.error(`[ficha.audit] No se pudo registrar el acceso a ${entity}`);
-      return (
-        <Card>
-          <EmptyState
-            icon="correo"
-            title="No se pudo abrir la ficha"
-            description="No fue posible registrar el acceso a la información clínica. Intenta nuevamente."
-          />
-        </Card>
-      );
+  const ctx = { session, supabase, clinical };
+  const access = await patientAccess(ctx, patient);
+
+  if (clinical && !access.canViewClinical) {
+    return (
+      <Card>
+        <EmptyState
+          icon="correo"
+          title="Sin relación con la atención"
+          description="Solo puedes abrir fichas de pacientes que tienes asignados o con quienes tienes una cita o atención registrada."
+        />
+      </Card>
+    );
+  }
+
+  if (access.canViewClinical) {
+    for (const entity of ["patients", "patient_background"]) {
+      const auditError = await auditPatientView(ctx, id, entity);
+      if (auditError) {
+        console.error(`[ficha.audit] No se pudo registrar el acceso a ${entity}`);
+        return (
+          <Card>
+            <EmptyState
+              icon="correo"
+              title="No se pudo abrir la ficha"
+              description="No fue posible registrar el acceso a la información clínica. Intenta nuevamente."
+            />
+          </Card>
+        );
+      }
     }
   }
 
@@ -91,10 +108,12 @@ export default async function PacientePage({ params }: { params: Promise<{ id: s
       orgType={orgType as OrganizationType}
       orgId={session.orgId}
       isAdmin={session.isAdmin}
-      canEdit={session.isAdmin || patient.doctor_id === session.id}
-      canViewAudit={
-        session.isAdmin || session.isSuperAdmin || patient.doctor_id === session.id
-      }
+      canEdit={access.canEditIdentity}
+      canEditProfile={access.canEditClinical}
+      canDelete={access.canDelete}
+      canViewAudit={access.canViewAudit}
+      canExport={access.canViewClinical}
+      administrative={access.isReception}
     />
   );
 }

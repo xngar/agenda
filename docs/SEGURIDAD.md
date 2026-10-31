@@ -39,9 +39,27 @@ Helpers:
 ### RLS (capas)
 Migraciones aplican RLS por tablas:
 - Público (anon/authenticated): lectura mínima catálogo (settings, holidays, active doctors con campos limitados, active services). No expone info sensible.
-- Autenticado (doctors): ve propio perfil, reglas/ausencias propias o admin, appointments propios (con excepciones admin/reception según políticas/migraciones), notifications propias, patients vinculados históricamente (políticas ajustadas en ficha a org-based).
+- Autenticado (doctors): ve propio perfil, reglas/ausencias propias o admin, appointments propios (con excepciones admin/reception según políticas/migraciones), notifications propias, patients con vínculo asistencial (tratante, cita o atención propia) y recepción con datos administrativos.
 - Admin clínico: manage doctors/services/holidays/settings (según políticas 0004 y posteriores).
-- Ficha: políticas específicas (draft vs signed encounters, versiones solo lectura/alta, audit lectura restringida). Ver migraciones 20260102000008_ficha_rls_roles_triggers.sql.
+- Ficha: políticas específicas (draft vs signed encounters, versiones solo lectura/alta, audit lectura restringida). Ver migraciones `20260102000008_ficha_rls_roles_triggers.sql` y `20261030120000_ficha_care_link_permissions.sql`.
+
+### Permisos de ficha por relación con la atención
+
+`patients.doctor_id` identifica al **profesional tratante principal**, no al dueño de la ficha (la ficha pertenece al prestador). La migración `20261030120000_ficha_care_link_permissions.sql` aplica:
+
+| Acción | Recepción | Profesional vinculado | Admin / superadmin |
+|---|---|---|---|
+| Ver datos administrativos | Sí | Sí | Sí |
+| Ver contenido clínico | No | Sí, si es tratante principal o tiene cita/atención propia | Sí |
+| Editar identidad/contacto | Sí, vía `update_patient_admin` (lista blanca) | Sí | Sí |
+| Crear su propia atención | No | Sí | Sí |
+| Editar/firmar borrador | No | Sólo el autor | Sólo si es autor |
+| Editar atención firmada | No | No; se corrige con versión/addendum | No; se corrige con versión/addendum |
+| Antecedentes/alergias | No | Sí, con `updated_by` y auditoría | Sí |
+| Notas privadas | No | Sólo el autor | Excepcional, con auditoría |
+| Ver auditoría | No | Sí, si es tratante principal | Sí |
+
+Todos los endpoints de ficha revalidan el vínculo con `patientAccess()`/`orgPatient()` además de RLS.
 
 **Importante:** RLS puede devolver 0 filas o 403 implícito; endpoints revalidan autorización explícita para mensajes claros.
 

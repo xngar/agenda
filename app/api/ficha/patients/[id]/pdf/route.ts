@@ -8,6 +8,7 @@ import {
   forbidden,
   notFound,
   dbError,
+  orgPatient,
   auditPatientView,
 } from "@/lib/ficha/http";
 import { FACE_LABEL, STATE_LABEL } from "@/lib/ficha/dental";
@@ -401,6 +402,9 @@ export async function GET(_request: Request, { params }: Params) {
   if (!ctx.clinical) return forbidden();
 
   const { id } = await params;
+  const { error: accessError } = await orgPatient(ctx, id);
+  if (accessError) return accessError;
+
   const { data: org, error: orgError } = await ctx.supabase
     .from("organizations")
     .select("name, type")

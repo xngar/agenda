@@ -69,18 +69,127 @@ export async function auditPatientView(
   return error ? dbError(error) : null;
 }
 
+export interface PatientAccess {
+  isAdmin: boolean;
+  isReception: boolean;
+  linked: boolean;
+  canViewClinical: boolean;
+  canEditIdentity: boolean;
+  canEditClinical: boolean;
+  canDelete: boolean;
+  canViewAudit: boolean;
+}
+
+interface PatientRef {
+  id: string;
+  org_id?: string | null;
+  doctor_id?: string | null;
+}
+
+async function hasCareLink(
+  ctx: FichaContext,
+  patient: PatientRef,
+): Promise<boolean> {
+  if (patient.doctor_id === ctx.session.id) return true;
+
+  const [appointment, encounter] = await Promise.all([
+    ctx.supabase
+      .from("appointments")
+      .select("id", { count: "exact", head: true })
+      .eq("org_id", ctx.session.orgId)
+      .eq("patient_id", patient.id)
+      .eq("doctor_id", ctx.session.id),
+    ctx.supabase
+      .from("encounters")
+      .select("id", { count: "exact", head: true })
+      .eq("org_id", ctx.session.orgId)
+      .eq("patient_id", patient.id)
+      .eq("doctor_id", ctx.session.id),
+  ]);
+
+  return (appointment.count ?? 0) > 0 || (encounter.count ?? 0) > 0;
+}
+
+/**
+ * Permisos clínicos por relación con la atención:
+ * - admin/superadmin: acceso completo y auditoría;
+ * - recepción: sólo datos administrativos;
+ * - profesional: sólo pacientes con vínculo asistencial (tratante, cita o
+ *   atención propia), y edición clínica mientras no invada registros ajenos.
+ */
+export async function patientAccess(
+  ctx: FichaContext,
+  patient: PatientRef,
+): Promise<PatientAccess> {
+  const isAdmin = ctx.session.isAdmin || ctx.session.isSuperAdmin;
+
+  if (isAdmin) {
+    return {
+      isAdmin: true,
+      isReception: false,
+      linked: true,
+      canViewClinical: true,
+      canEditIdentity: true,
+      canEditClinical: true,
+      canDelete: true,
+      canViewAudit: true,
+    };
+  }
+
+  if (ctx.session.role === "reception") {
+    return {
+      isAdmin: false,
+      isReception: true,
+      linked: false,
+      canViewClinical: false,
+      canEditIdentity: true,
+      canEditClinical: false,
+      canDelete: false,
+      canViewAudit: false,
+    };
+  }
+
+  const linked = await hasCareLink(ctx, patient);
+  const principal = patient.doctor_id === ctx.session.id;
+
+  return {
+    isAdmin: false,
+    isReception: false,
+    linked,
+    canViewClinical: linked,
+    canEditIdentity: linked,
+    canEditClinical: linked,
+    canDelete: principal,
+    canViewAudit: principal,
+  };
+}
+
 export async function orgPatient(
   ctx: FichaContext,
   patientId: string,
-): Promise<{ patient: { id: string; org_id: string } | null; error: NextResponse | null }> {
+): Promise<{
+  patient: { id: string; org_id: string; doctor_id: string | null } | null;
+  access: PatientAccess | null;
+  error: NextResponse | null;
+}> {
   const { data, error } = await ctx.supabase
     .from("patients")
-    .select("id,org_id")
+    .select("id,org_id,doctor_id")
     .eq("org_id", ctx.session.orgId)
     .eq("id", patientId)
     .maybeSingle();
 
-  if (error) return { patient: null, error: dbError(error) };
-  if (!data) return { patient: null, error: notFound("Paciente no encontrado") };
-  return { patient: data, error: null };
+  if (error) return { patient: null, access: null, error: dbError(error) };
+  if (!data) return { patient: null, access: null, error: notFound("Paciente no encontrado") };
+
+  const access = await patientAccess(ctx, data);
+  if (!access.canViewClinical) {
+    return {
+      patient: null,
+      access,
+      error: forbidden("No tienes relación con la atención de este paciente"),
+    };
+  }
+
+  return { patient: data, access, error: null };
 }
