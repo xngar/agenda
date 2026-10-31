@@ -34,8 +34,17 @@ export interface PsychologicalEncounterData {
   privateNotes: string;
 }
 
+const vacioANull = (valor: unknown) =>
+  valor === "" || valor === undefined ? null : valor;
+
 const escala = (max: number) =>
-  z.coerce.number().min(0).max(max).nullable().optional();
+  z.preprocess(
+    vacioANull,
+    z.coerce.number().min(0).max(max).nullable(),
+  );
+
+const opcion = <T extends readonly [string, ...string[]]>(valores: T) =>
+  z.preprocess(vacioANull, z.enum(valores).nullable().optional());
 
 export const psychologicalProfileSchema = z.object({
   reasonBackground: z.string().trim().max(4000).optional(),
@@ -51,8 +60,8 @@ export const psychologicalProfileSchema = z.object({
 
 export const psychologicalEncounterSchema = z.object({
   sessionType: z.string().trim().max(200).optional(),
-  modality: z.enum(["presencial", "online"]).nullable().optional(),
-  attendance: z.enum(["attended", "late", "no_show", "rescheduled"]).nullable().optional(),
+  modality: opcion(["presencial", "online"]),
+  attendance: opcion(["attended", "late", "no_show", "rescheduled"]),
   durationMinutes: z.number().int().min(1).max(240).nullable().optional(),
   currentState: z.string().trim().max(4000).optional(),
   riskAssessment: z.string().trim().max(4000).optional(),

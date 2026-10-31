@@ -35,6 +35,7 @@ const TABS_DENTAL = [
   { id: "odontograma", label: "Odontograma" },
   { id: "periodoncia", label: "Periodoncia" },
   { id: "plan", label: "Plan" },
+  { id: "consentimientos", label: "Consentimientos" },
   { id: "recetas", label: "Recetas" },
   { id: "adjuntos", label: "Adjuntos" },
 ];
@@ -228,7 +229,7 @@ export function FichaTabs({
         <PlanPanel patientId={patient.id} isAdmin={isAdmin} />
       ) : active === "recetas" ? (
         <RecetasPanel patientId={patient.id} />
-      ) : active === "consentimientos" && (orgType === "psychological" || orgType === "medical") ? (
+      ) : active === "consentimientos" ? (
         <ConsentimientosPanel patientId={patient.id} orgType={orgType} />
       ) : active === "adjuntos" ? (
         <AdjuntosPanel

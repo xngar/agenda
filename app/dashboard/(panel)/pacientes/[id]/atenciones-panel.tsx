@@ -589,7 +589,7 @@ const SIGNOS_VITALES = [
               </div>
             </fieldset>
           ) : null}
-          {esPsicologica && (dialogo === "nueva" || "privateNotes" in especialidad) ? (
+          {esPsicologica ? (
             <Field
               label="Notas privadas (solo tratante)"
               htmlFor="notas-privadas"

@@ -19,6 +19,12 @@ const CONSENTIMIENTOS_PSICOLOGICOS = [
   { value: "datos_personales", label: "Información sobre tratamiento de datos" },
 ] as const;
 
+const CONSENTIMIENTOS_DENTALES = [
+  { value: "tratamiento_dental", label: "Tratamiento dental" },
+  { value: "datos_personales", label: "Información sobre tratamiento de datos" },
+  { value: "other", label: "Otro" },
+] as const;
+
 const CONSENTIMIENTOS_MEDICOS = [
   { value: "medical_procedure", label: "Procedimiento médico" },
   { value: "medical_treatment", label: "Tratamiento médico" },
@@ -51,6 +57,20 @@ const CANALES_ACEPTACION = [
   { value: "plataforma_digital", label: "Plataforma digital" },
 ] as const;
 
+type ConsentOrgType = Extract<OrganizationType, "medical" | "psychological" | "dental">;
+
+function tipoInicial(orgType: ConsentOrgType): ConsentKind {
+  if (orgType === "medical") return "medical_procedure";
+  if (orgType === "dental") return "tratamiento_dental";
+  return "psicoterapia";
+}
+
+function tiposDeConsentimiento(orgType: ConsentOrgType) {
+  if (orgType === "medical") return CONSENTIMIENTOS_MEDICOS;
+  if (orgType === "dental") return CONSENTIMIENTOS_DENTALES;
+  return CONSENTIMIENTOS_PSICOLOGICOS;
+}
+
 function fechaHora(value: string): string {
   return new Date(value).toLocaleString("es-CL", {
     dateStyle: "medium",
@@ -64,7 +84,7 @@ export function ConsentimientosPanel({
   orgType,
 }: {
   patientId: string;
-  orgType: Extract<OrganizationType, "medical" | "psychological">;
+  orgType: ConsentOrgType;
 }) {
   const [consents, setConsents] = useState<ConsentRecord[] | null>(null);
   const [attachments, setAttachments] = useState<Attachment[] | null>(null);
@@ -74,9 +94,7 @@ export function ConsentimientosPanel({
   const [error, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [kind, setKind] = useState<ConsentKind>(
-    orgType === "medical" ? "medical_procedure" : "psicoterapia",
-  );
+  const [kind, setKind] = useState<ConsentKind>(tipoInicial(orgType));
   const [encounterId, setEncounterId] = useState("");
   const [outcome, setOutcome] = useState<"accepted" | "rejected">("accepted");
   const [acceptedByPatient, setAcceptedByPatient] = useState(true);
@@ -98,8 +116,7 @@ export function ConsentimientosPanel({
     alternatives: "",
     refusal_consequences: "",
   });
-  const tiposConsentimiento =
-    orgType === "medical" ? CONSENTIMIENTOS_MEDICOS : CONSENTIMIENTOS_PSICOLOGICOS;
+  const tiposConsentimiento = tiposDeConsentimiento(orgType);
   const isMedicalConsent = kind.startsWith("medical_");
   const consentAttachments = attachments?.filter((attachment) => attachment.kind === "consentimiento") ?? null;
 
@@ -155,7 +172,7 @@ export function ConsentimientosPanel({
   }, [cargar]);
 
   function resetForm() {
-    setKind(orgType === "medical" ? "medical_procedure" : "psicoterapia");
+    setKind(tipoInicial(orgType));
     setOutcome("accepted");
     setEncounterId("");
     setAcceptedByPatient(true);
@@ -243,7 +260,9 @@ export function ConsentimientosPanel({
           description={
             orgType === "medical"
               ? "Documenta la información entregada y la decisión del paciente o representante. Este registro no constituye una firma electrónica ni reemplaza los requisitos aplicables a cada procedimiento."
-              : "Registra por separado qué información se aceptó, cómo se obtuvo la aceptación y por qué canal. Este registro no constituye una firma electrónica."
+              : orgType === "dental"
+                ? "Registra la información entregada sobre el tratamiento dental y la decisión del paciente o representante. Este registro no constituye una firma electrónica."
+                : "Registra por separado qué información se aceptó, cómo se obtuvo la aceptación y por qué canal. Este registro no constituye una firma electrónica."
           }
           action={
             <Button
@@ -279,12 +298,19 @@ export function ConsentimientosPanel({
                   ))}
                 </select>
               </Field>
-              {!isMedicalConsent ? <p className="text-sm text-neutral-600 sm:col-span-2">
+              {orgType === "psychological" ? <p className="text-sm text-neutral-600 sm:col-span-2">
                 {kind === "psicoterapia"
                   ? "Registra la aceptación del proceso de atención psicológica."
                   : kind === "atencion_online"
                     ? "Registra por separado la información y aceptación asociada a la atención psicológica a distancia."
                     : "Registra por separado el aviso o consentimiento sobre tratamiento de datos personales y de salud que fue efectivamente informado y aceptado, según corresponda."}
+              </p> : null}
+              {orgType === "dental" ? <p className="text-sm text-neutral-600 sm:col-span-2">
+                {kind === "tratamiento_dental"
+                  ? "Registra la aceptación del tratamiento dental propuesto."
+                  : kind === "datos_personales"
+                    ? "Registra por separado el aviso o consentimiento sobre tratamiento de datos personales y de salud que fue efectivamente informado y aceptado, según corresponda."
+                    : "Registra el contenido aceptado y el contexto de la decisión."}
               </p> : null}
               {isMedicalConsent ? (
                 <div className="space-y-3 sm:col-span-2">
@@ -309,7 +335,7 @@ export function ConsentimientosPanel({
                   ))}
                 </div>
               ) : null}
-              {orgType === "medical" ? (
+              {orgType !== "psychological" ? (
                 <Field label="Decisión registrada" htmlFor="consent-outcome">
                   <select
                     id="consent-outcome"
@@ -317,8 +343,8 @@ export function ConsentimientosPanel({
                     value={outcome}
                     onChange={(event) => setOutcome(event.target.value as typeof outcome)}
                   >
-                    <option value="accepted">Acepta la propuesta</option>
-                    <option value="rejected">Rechaza la propuesta</option>
+                    <option value="accepted">{orgType === "medical" ? "Acepta la propuesta" : "Acepta el tratamiento"}</option>
+                    <option value="rejected">{orgType === "medical" ? "Rechaza la propuesta" : "Rechaza el tratamiento"}</option>
                   </select>
                 </Field>
               ) : null}
@@ -525,6 +551,7 @@ export function ConsentimientosPanel({
                     {[
                       ...CONSENTIMIENTOS_MEDICOS,
                       ...CONSENTIMIENTOS_PSICOLOGICOS,
+                      ...CONSENTIMIENTOS_DENTALES,
                     ].find((option) => option.value === consent.kind)?.label ?? consent.kind}
                     {consent.outcome
                       ? ` · ${consent.outcome === "accepted" ? "Aceptado" : "Rechazado"}`
