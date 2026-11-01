@@ -1,4 +1,4 @@
--- 20261030120000 · Ficha clínica: permisos por relación con la atención
+-- 20261031011210 · Ficha clínica: permisos por relación con la atención
 --
 -- Modelo:
 --   - `patients.doctor_id` es el profesional tratante principal, no el dueño

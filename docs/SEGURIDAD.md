@@ -41,11 +41,11 @@ Migraciones aplican RLS por tablas:
 - Público (anon/authenticated): lectura mínima catálogo (settings, holidays, active doctors con campos limitados, active services). No expone info sensible.
 - Autenticado (doctors): ve propio perfil, reglas/ausencias propias o admin, appointments propios (con excepciones admin/reception según políticas/migraciones), notifications propias, patients con vínculo asistencial (tratante, cita o atención propia) y recepción con datos administrativos.
 - Admin clínico: manage doctors/services/holidays/settings (según políticas 0004 y posteriores).
-- Ficha: políticas específicas (draft vs signed encounters, versiones solo lectura/alta, audit lectura restringida). Ver migraciones `20260102000008_ficha_rls_roles_triggers.sql` y `20261030120000_ficha_care_link_permissions.sql`.
+- Ficha: políticas específicas (draft vs signed encounters, versiones solo lectura/alta, audit lectura restringida). Ver migraciones `20260102000008_ficha_rls_roles_triggers.sql` y `20261031011210_ficha_care_link_permissions.sql`.
 
 ### Permisos de ficha por relación con la atención
 
-`patients.doctor_id` identifica al **profesional tratante principal**, no al dueño de la ficha (la ficha pertenece al prestador). La migración `20261030120000_ficha_care_link_permissions.sql` aplica:
+`patients.doctor_id` identifica al **profesional tratante principal**, no al dueño de la ficha (la ficha pertenece al prestador). La migración `20261031011210_ficha_care_link_permissions.sql` aplica:
 
 | Acción | Recepción | Profesional vinculado | Admin / superadmin |
 |---|---|---|---|
