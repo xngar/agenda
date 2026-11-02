@@ -230,7 +230,7 @@ export function FichaTabs({
       ) : active === "recetas" ? (
         <RecetasPanel patientId={patient.id} />
       ) : active === "consentimientos" ? (
-        <ConsentimientosPanel patientId={patient.id} orgType={orgType} />
+        <ConsentimientosPanel patientId={patient.id} orgId={orgId} orgType={orgType} />
       ) : active === "adjuntos" ? (
         <AdjuntosPanel
           patientId={patient.id}

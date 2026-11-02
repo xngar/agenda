@@ -5,6 +5,34 @@ export interface AttachmentKindOption {
   label: string;
 }
 
+export const ATTACHMENT_MAX_BYTES = 20 * 1024 * 1024;
+
+const ATTACHMENT_MIME_BY_EXTENSION: Record<string, string> = {
+  pdf: "application/pdf",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+};
+
+const ALLOWED_ATTACHMENT_MIMES = Object.values(ATTACHMENT_MIME_BY_EXTENSION);
+
+export function resolveAttachmentMime(fileName: string, declaredType?: string | null): string | null {
+  const extension = fileName.split(".").pop()?.toLowerCase() ?? "";
+  const mime = (declaredType || ATTACHMENT_MIME_BY_EXTENSION[extension] || "").toLowerCase();
+  return ALLOWED_ATTACHMENT_MIMES.includes(mime) ? mime : null;
+}
+
+export function attachmentFileError(file: Pick<File, "name" | "size" | "type">): string | null {
+  if (file.size > ATTACHMENT_MAX_BYTES) {
+    return "El archivo supera el límite de 20 MiB";
+  }
+  if (!resolveAttachmentMime(file.name, file.type)) {
+    return "Solo se permiten archivos PDF, JPEG, PNG o WebP";
+  }
+  return null;
+}
+
 const COMMON_ATTACHMENT_KINDS: AttachmentKindOption[] = [
   { value: "document", label: "Documento" },
   { value: "consentimiento", label: "Consentimiento" },

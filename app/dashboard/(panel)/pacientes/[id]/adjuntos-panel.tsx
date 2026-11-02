@@ -3,24 +3,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { Attachment, AttachmentKind, OrganizationType } from "@/lib/ficha/types";
-import { attachmentKindLabel, attachmentKindsForOrganization } from "@/lib/ficha/attachments";
-import { supabaseBrowser } from "@/lib/supabase/browser";
+import {
+  ATTACHMENT_MAX_BYTES,
+  attachmentKindLabel,
+  attachmentKindsForOrganization,
+} from "@/lib/ficha/attachments";
 import { Card, Button, ErrorNotice, Field, Spinner, inputClasses } from "@/components/ui";
 import { Modal } from "@/components/motion/modal";
 import { FichaCardHeader } from "./panels-shared";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { uploadPatientAttachment } from "./attachment-upload";
 
 const fmtBytes = (b: number) => (b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.round(b / 1024)} KB`);
 
 const MAX_NOMBRE = 44;
-const MAX_ARCHIVO_BYTES = 20 * 1024 * 1024;
-const MIME_POR_EXTENSION: Record<string, string> = {
-  pdf: "application/pdf",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  png: "image/png",
-  webp: "image/webp",
-};
 
 function acortarTexto(valor: string, max = MAX_NOMBRE): string {
   if (valor.length <= max) return valor;
@@ -88,53 +84,16 @@ export function AdjuntosPanel({
       setError("Selecciona un archivo");
       return;
     }
-    if (file.size > MAX_ARCHIVO_BYTES) {
-      setError("El archivo supera el límite de 20 MiB");
-      return;
-    }
-    const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
-    const mime = file.type || MIME_POR_EXTENSION[extension] || "";
-    if (!Object.values(MIME_POR_EXTENSION).includes(mime)) {
-      setError("Solo se permiten archivos PDF, JPEG, PNG o WebP");
-      return;
-    }
     setSubiendo(true);
     try {
-      const cli = supabaseBrowser();
-      if (!cli) {
-        setError("Sin configuración de Storage");
-        return;
-      }
-      const safeName = file.name.replace(/[^\w.\-]+/g, "_");
-      const path = `${orgId}/${patientId}/${crypto.randomUUID()}-${safeName}`;
-      const { error: upError } = await cli.storage.from("ficha-adjuntos").upload(path, file, {
-        contentType: mime,
-        upsert: false,
+      await uploadPatientAttachment({
+        patientId,
+        orgId,
+        file,
+        kind,
+        description: description.trim() || null,
+        takenAt: takenAt || null,
       });
-      if (upError) {
-        setError(upError.message);
-        return;
-      }
-
-      const response = await fetch(`/api/ficha/patients/${patientId}/attachments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          patient_id: patientId,
-          kind,
-          description: description.trim() || null,
-          taken_at: takenAt || null,
-          storage_path: path,
-          file_name: file.name,
-          mime: file.type || null,
-          size_bytes: file.size,
-        }),
-      });
-      const data = (await response.json().catch(() => ({}))) as { error?: string };
-      if (!response.ok) {
-        setError(data.error ?? "No se pudo registrar el adjunto");
-        return;
-      }
       toast.success("Adjunto subido y registrado");
       setFile(null);
       setDescription("");
@@ -142,8 +101,8 @@ export function AdjuntosPanel({
       setKind("document");
       if (fileInputRef.current) fileInputRef.current.value = "";
       cargar();
-    } catch {
-      setError("No pudimos conectarnos. Intenta de nuevo.");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "No pudimos conectarnos. Intenta de nuevo.");
     } finally {
       setSubiendo(false);
     }
@@ -210,7 +169,7 @@ export function AdjuntosPanel({
                 className={`${inputClasses} file:mr-3 file:rounded-lg file:border-0 file:bg-action-primary file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-action-primary-foreground hover:file:bg-action-primary-hover`}
                 onChange={(e) => {
                   const selected = e.target.files?.[0] ?? null;
-                  if (selected && selected.size > MAX_ARCHIVO_BYTES) {
+                  if (selected && selected.size > ATTACHMENT_MAX_BYTES) {
                     setFile(null);
                     setError("El archivo supera el límite de 20 MiB");
                     e.currentTarget.value = "";
@@ -221,7 +180,12 @@ export function AdjuntosPanel({
                 }}
               />
             </Field>
-            <Field label="Tipo" htmlFor="kind" required={false}>
+            <Field
+              label="Tipo"
+              htmlFor="kind"
+              required={false}
+              hint="Los documentos que respaldan un consentimiento deben subirse con el tipo «Consentimiento»."
+            >
               <select id="kind" className={inputClasses} value={kind} onChange={(e) => setKind(e.target.value as AttachmentKind)}>
                 {kinds.map((k) => (
                   <option key={k.value} value={k.value}>{k.label}</option>
