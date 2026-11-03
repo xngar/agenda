@@ -47,13 +47,37 @@ export async function POST(request: Request, { params }: Params) {
   const raw = await request.json().catch(() => null);
   const body = periodontalSchema.omit({ patient_id: true }).safeParse(raw);
   if (!body.success) return bodyError(body.error);
+  if (!body.data.encounter_id) {
+    return bodyError({ issues: [{ message: "Asocia el registro a una atención en borrador" }] });
+  }
+
+  const { data: encounter, error: encounterError } = await ctx.supabase
+    .from("encounters")
+    .select("id")
+    .eq("org_id", ctx.session.orgId)
+    .eq("patient_id", id)
+    .eq("status", "draft")
+    .eq("doctor_id", ctx.session.id)
+    .eq("id", body.data.encounter_id)
+    .maybeSingle();
+  if (encounterError) return dbError(encounterError);
+  if (!encounter) {
+    return bodyError({
+      issues: [
+        {
+          message:
+            "La atención elegida no está abierta, no es tuya o no corresponde a este paciente",
+        },
+      ],
+    });
+  }
 
   const { data, error } = await ctx.supabase
     .from("periodontal_records")
     .insert({
       org_id: ctx.session.orgId,
       patient_id: id,
-      encounter_id: body.data.encounter_id ?? null,
+      encounter_id: body.data.encounter_id,
       tooth: body.data.tooth,
       depths: body.data.depths ?? {},
       bleeding_on_probing: body.data.bleeding_on_probing ?? null,

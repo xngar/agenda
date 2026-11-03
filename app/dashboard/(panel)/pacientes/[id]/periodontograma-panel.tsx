@@ -12,6 +12,8 @@ import {
 import { Card, Button, ErrorNotice, Field, Spinner, inputClasses } from "@/components/ui";
 import { todayKey } from "@/lib/dates";
 import { FichaCardHeader } from "./panels-shared";
+import { DraftEncounterField } from "./draft-encounter-field";
+import { useDraftEncounters } from "./draft-encounters";
 
 const SITIOS = [
   { key: "mv", label: "MV" },
@@ -62,8 +64,15 @@ function sitiosTexto(record: PeriodontalRecord): string {
 
 export function PeriodontogramaPanel({ patientId }: { patientId: string }) {
   const [records, setRecords] = useState<PeriodontalRecord[] | null>(null);
+  const {
+    encounters,
+    error: encountersError,
+    creando: creandoBorrador,
+    crear: crearBorradorAtencion,
+  } = useDraftEncounters(patientId);
   const [error, setError] = useState<string | null>(null);
   const [abierto, setAbierto] = useState(false);
+  const [selectedEncounterId, setSelectedEncounterId] = useState("");
   const [form, setForm] = useState<FormState>(emptyForm);
   const [guardando, setGuardando] = useState(false);
 
@@ -86,6 +95,17 @@ export function PeriodontogramaPanel({ patientId }: { patientId: string }) {
     void cargar();
   }, [cargar]);
 
+  async function crearBorrador() {
+    const creada = await crearBorradorAtencion();
+    if (creada) setSelectedEncounterId(creada.id);
+  }
+
+  function abrirFormulario() {
+    setAbierto((v) => !v);
+    setSelectedEncounterId(encounters?.length === 1 ? encounters[0].id : "");
+    setError(null);
+  }
+
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
   }
@@ -97,6 +117,10 @@ export function PeriodontogramaPanel({ patientId }: { patientId: string }) {
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!selectedEncounterId) {
+      setError("Selecciona o crea una atención en borrador para asociar el registro.");
+      return;
+    }
 
     const depths: Record<string, number[]> = {};
     for (const sitio of SITIOS) {
@@ -131,6 +155,7 @@ export function PeriodontogramaPanel({ patientId }: { patientId: string }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          encounter_id: selectedEncounterId,
           tooth: Number(form.tooth),
           depths,
           bleeding_on_probing: form.bleeding,
@@ -172,6 +197,29 @@ export function PeriodontogramaPanel({ patientId }: { patientId: string }) {
     <div className="space-y-4">
       {error ? <ErrorNotice message={error} /> : null}
 
+      {encounters !== null ? (
+        encounters.length === 0 ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning-200 bg-warning-50 px-4 py-3">
+            <p className="text-sm text-warning-700">
+              Este paciente no tiene atenciones en borrador. Las atenciones firmadas no se pueden
+              modificar: crea una nueva para registrar el sondaje.
+            </p>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => void crearBorrador()}
+              disabled={creandoBorrador}
+            >
+              {creandoBorrador ? "Creando…" : "Crear atención en borrador"}
+            </Button>
+          </div>
+        ) : (
+          <p className="rounded-xl border border-brand-sky-200 bg-brand-sky-50 px-4 py-3 text-sm text-brand-navy">
+            Los registros periodontales se asociarán a una atención en borrador propia.
+          </p>
+        )
+      ) : null}
+
       <Card>
         <FichaCardHeader
           title="Periodoncia"
@@ -180,10 +228,7 @@ export function PeriodontogramaPanel({ patientId }: { patientId: string }) {
             <Button
               size="sm"
               variant="secondary"
-              onClick={() => {
-                setAbierto((v) => !v);
-                setError(null);
-              }}
+              onClick={abrirFormulario}
             >
               {abierto ? "Cancelar" : "Registrar sondaje"}
             </Button>
@@ -192,6 +237,16 @@ export function PeriodontogramaPanel({ patientId }: { patientId: string }) {
 
         {abierto ? (
           <form onSubmit={guardar} className="space-y-4 border-t border-neutral-200 px-5 py-4">
+            <DraftEncounterField
+              id="perio-encounter"
+              encounters={encounters}
+              value={selectedEncounterId}
+              onChange={setSelectedEncounterId}
+              onCrear={() => void crearBorrador()}
+              creando={creandoBorrador}
+              error={encountersError}
+              sinBorradoresTexto="No tienes atenciones en borrador. Las atenciones firmadas no se pueden modificar; crea una nueva para asociar el sondaje."
+            />
             <div className="grid gap-3 sm:grid-cols-3">
               <Field label="Pieza (FDI)" htmlFor="perio-tooth">
                 <select
@@ -298,7 +353,7 @@ export function PeriodontogramaPanel({ patientId }: { patientId: string }) {
             </Field>
 
             <div className="flex justify-end">
-              <Button type="submit" size="sm" disabled={guardando}>
+              <Button type="submit" size="sm" disabled={guardando || !selectedEncounterId}>
                 {guardando ? "Guardando…" : "Guardar registro"}
               </Button>
             </div>

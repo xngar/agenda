@@ -7,15 +7,8 @@ import { aggregateToothState, STATE_LABEL } from "@/lib/ficha/dental";
 import { Card, FichaCardHeader, Button, ErrorNotice, Spinner } from "./panels-shared";
 import { Modal } from "@/components/motion/modal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { inputClasses } from "@/components/ui";
-
-interface EncounterOption {
-  id: string;
-  started_at: string;
-  care_type: string | null;
-  status: "draft" | "signed";
-  doctors?: { full_name: string } | null;
-}
+import { DraftEncounterField } from "./draft-encounter-field";
+import { useDraftEncounters } from "./draft-encounters";
 
 interface ChartHistoryEntry extends DentalChartEntry {
   created_by_name?: string | null;
@@ -149,7 +142,12 @@ function ToothIcon({ tooth }: { tooth: number }) {
 
 export function OdontogramaPanel({ patientId }: { patientId: string }) {
   const [chart, setChart] = useState<DentalChartEntry[] | null>(null);
-  const [encounters, setEncounters] = useState<EncounterOption[] | null>(null);
+  const {
+    encounters,
+    error: encountersError,
+    creando: creandoBorrador,
+    crear: crearBorradorAtencion,
+  } = useDraftEncounters(patientId);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [selectedEncounterId, setSelectedEncounterId] = useState("");
@@ -174,27 +172,15 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
     }
   }, [patientId]);
 
-  const cargarAtenciones = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/ficha/patients/${patientId}/encounters`);
-      const data = (await response.json()) as { encounters?: EncounterOption[]; error?: string };
-      if (!response.ok) {
-        setError(data.error ?? "No se pudieron cargar las atenciones");
-        setEncounters([]);
-        return;
-      }
-      setEncounters((data.encounters ?? []).filter((encounter) => encounter.status === "draft"));
-    } catch {
-      setError("No pudimos cargar las atenciones para vincular el registro.");
-      setEncounters([]);
-    }
-  }, [patientId]);
-
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount, setState tras await
     cargar();
-    cargarAtenciones();
-  }, [cargar, cargarAtenciones]);
+  }, [cargar]);
+
+  async function crearBorrador() {
+    const creada = await crearBorradorAtencion();
+    if (creada) setSelectedEncounterId(creada.id);
+  }
 
   if (chart === null) {
     return (
@@ -251,7 +237,7 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
       if (estado) precarga[f] = estado;
     }
     setSelected(tooth);
-    setSelectedEncounterId("");
+    setSelectedEncounterId(encounters?.length === 1 ? encounters[0].id : "");
     setHistory([]);
     setHistoryError(null);
     cargarHistoria(tooth);
@@ -279,7 +265,7 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
     e.preventDefault();
     if (!selected) return;
     if (!selectedEncounterId) {
-      setError("Selecciona una atención abierta para asociar la evolución.");
+      setError("Selecciona o crea una atención en borrador para asociar la evolución.");
       return;
     }
     setGuardando(true);
@@ -360,6 +346,30 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
     <div className="space-y-4">
       {error ? <ErrorNotice message={error} /> : null}
 
+      {encounters !== null ? (
+        encounters.length === 0 ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning-200 bg-warning-50 px-4 py-3">
+            <p className="text-sm text-warning-700">
+              Este paciente no tiene atenciones en borrador. Las atenciones firmadas no se pueden
+              modificar: crea una nueva para registrar cambios en el odontograma.
+            </p>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => void crearBorrador()}
+              disabled={creandoBorrador}
+            >
+              {creandoBorrador ? "Creando…" : "Crear atención en borrador"}
+            </Button>
+          </div>
+        ) : (
+          <p className="rounded-xl border border-brand-sky-200 bg-brand-sky-50 px-4 py-3 text-sm text-brand-navy">
+            Los cambios se asociarán a una atención en borrador propia. Las atenciones firmadas
+            quedan inmutables.
+          </p>
+        )
+      ) : null}
+
       <Card>
         <FichaCardHeader
           title="Odontograma"
@@ -398,33 +408,16 @@ export function OdontogramaPanel({ patientId }: { patientId: string }) {
             <FichaCardHeader title={`Pieza ${selected}`} description="Se muestran los valores guardados. Cambia sólo las caras a registrar; se guarda únicamente lo que difiere." />
             <form onSubmit={guardar} className="space-y-3 px-5 py-5">
               {error ? <ErrorNotice message={error} /> : null}
-              <label className="block">
-                <span className="mb-1 block text-xs font-medium text-neutral-600">
-                  Atención abierta a la que se asociará la evolución
-                </span>
-                <select
-                  className={inputClasses}
-                  value={selectedEncounterId}
-                  onChange={(event) => setSelectedEncounterId(event.target.value)}
-                  disabled={encounters === null || encounters.length === 0}
-                  required
-                >
-                  <option value="">
-                    {encounters === null ? "Cargando atenciones…" : "Selecciona una atención"}
-                  </option>
-                  {(encounters ?? []).map((encounter) => (
-                    <option key={encounter.id} value={encounter.id}>
-                      {formatDate(encounter.started_at)} · {encounter.care_type || "Atención"}
-                      {encounter.doctors?.full_name ? ` · ${encounter.doctors.full_name}` : ""}
-                    </option>
-                  ))}
-                </select>
-                {encounters?.length === 0 ? (
-                  <span className="mt-1 block text-xs text-warning-700">
-                    No hay atenciones abiertas. Registra o edita una atención en la pestaña Atenciones y vuelve para asociar los cambios.
-                  </span>
-                ) : null}
-              </label>
+              <DraftEncounterField
+                id="odontograma-encounter"
+                encounters={encounters}
+                value={selectedEncounterId}
+                onChange={setSelectedEncounterId}
+                onCrear={() => void crearBorrador()}
+                creando={creandoBorrador}
+                error={encountersError}
+                sinBorradoresTexto="No tienes atenciones en borrador. Las atenciones firmadas no se pueden modificar; crea una nueva para asociar la evolución."
+              />
               <div className="grid gap-3 sm:grid-cols-2">
                 {toothFaces(selected).map((face) => (
                   <label key={face} className="block">
