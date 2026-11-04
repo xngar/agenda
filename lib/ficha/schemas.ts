@@ -243,6 +243,8 @@ export const periodontalSchema = z.object({
   furcation: z.string().trim().max(20).nullable().optional(),
   diagnosis: z.string().trim().max(1000).nullable().optional(),
   recorded_at: dateStringSchema.optional(),
+  replaces_id: uuidSchema.nullable().optional(),
+  correction_reason: optText(3, 400),
 });
 
 export const treatmentPlanItemSchema = z.object({

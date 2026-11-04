@@ -48,6 +48,12 @@ export function dbError(error: { message?: string; code?: string }): NextRespons
   if (error.code === "EFIRM") {
     return conflictMessage("La ficha firmada es inmutable; crea una corrección", "ficha_firmada");
   }
+  if (error.code === "EPERI") {
+    return conflictMessage(
+      "El registro periodontal ya fue reemplazado o no puedes corregirlo",
+      "periodontal_correccion",
+    );
+  }
   return NextResponse.json({ error: "No se pudo completar la operación" }, { status: 500 });
 }
 

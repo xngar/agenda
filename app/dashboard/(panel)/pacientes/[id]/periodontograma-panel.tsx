@@ -42,6 +42,41 @@ interface FormState {
   diagnosis: string;
 }
 
+interface PeriodontalRecordView extends PeriodontalRecord {
+  author_id?: string | null;
+  can_correct?: boolean;
+}
+
+const ESTADO_PERIODONTAL: Record<string, { label: string; className: string }> = {
+  vigente: {
+    label: "Vigente",
+    className: "border-success-200 bg-success-50 text-success-700",
+  },
+  reemplazado: {
+    label: "Reemplazado",
+    className: "border-neutral-200 bg-neutral-100 text-neutral-600",
+  },
+};
+
+function formDesdeRegistro(record: PeriodontalRecordView): FormState {
+  return {
+    tooth: String(record.tooth),
+    recorded_at: record.recorded_at?.slice(0, 10) || todayKey(),
+    depths: Object.fromEntries(
+      SITIOS.map((s) => {
+        const valor = record.depths?.[s.key]?.[0];
+        return [s.key, valor === undefined || valor === null ? "" : String(valor)];
+      }),
+    ),
+    bleeding: Boolean(record.bleeding_on_probing),
+    recession:
+      record.recession === null || record.recession === undefined ? "" : String(record.recession),
+    mobility: String(record.mobility),
+    furcation: record.furcation ?? "",
+    diagnosis: record.diagnosis ?? "",
+  };
+}
+
 function emptyForm(): FormState {
   return {
     tooth: String(PERMANENT_UPPER[0]),
@@ -63,7 +98,7 @@ function sitiosTexto(record: PeriodontalRecord): string {
 }
 
 export function PeriodontogramaPanel({ patientId }: { patientId: string }) {
-  const [records, setRecords] = useState<PeriodontalRecord[] | null>(null);
+  const [records, setRecords] = useState<PeriodontalRecordView[] | null>(null);
   const {
     encounters,
     error: encountersError,
@@ -72,6 +107,8 @@ export function PeriodontogramaPanel({ patientId }: { patientId: string }) {
   } = useDraftEncounters(patientId);
   const [error, setError] = useState<string | null>(null);
   const [abierto, setAbierto] = useState(false);
+  const [corrigiendo, setCorrigiendo] = useState<PeriodontalRecordView | null>(null);
+  const [motivo, setMotivo] = useState("");
   const [selectedEncounterId, setSelectedEncounterId] = useState("");
   const [form, setForm] = useState<FormState>(emptyForm);
   const [guardando, setGuardando] = useState(false);
@@ -79,7 +116,10 @@ export function PeriodontogramaPanel({ patientId }: { patientId: string }) {
   const cargar = useCallback(async () => {
     try {
       const response = await fetch(`/api/ficha/patients/${patientId}/periodontal`);
-      const data = (await response.json()) as { records?: PeriodontalRecord[]; error?: string };
+      const data = (await response.json()) as {
+        records?: PeriodontalRecordView[];
+        error?: string;
+      };
       if (!response.ok) {
         setError(data.error ?? "No se pudieron cargar los registros periodontales");
         return;
@@ -102,8 +142,27 @@ export function PeriodontogramaPanel({ patientId }: { patientId: string }) {
 
   function abrirFormulario() {
     setAbierto((v) => !v);
+    setCorrigiendo(null);
+    setMotivo("");
     setSelectedEncounterId(encounters?.length === 1 ? encounters[0].id : "");
     setError(null);
+  }
+
+  function abrirCorreccion(record: PeriodontalRecordView) {
+    setAbierto(true);
+    setCorrigiendo(record);
+    setMotivo("");
+    setSelectedEncounterId(encounters?.length === 1 ? encounters[0].id : "");
+    setError(null);
+    setForm(formDesdeRegistro(record));
+  }
+
+  function cancelarEdicion() {
+    setAbierto(false);
+    setCorrigiendo(null);
+    setMotivo("");
+    setError(null);
+    setForm(emptyForm());
   }
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -119,6 +178,10 @@ export function PeriodontogramaPanel({ patientId }: { patientId: string }) {
     setError(null);
     if (!selectedEncounterId) {
       setError("Selecciona o crea una atención en borrador para asociar el registro.");
+      return;
+    }
+    if (corrigiendo && motivo.trim().length < 3) {
+      setError("Indica el motivo de la corrección (mínimo 3 caracteres).");
       return;
     }
 
@@ -164,6 +227,8 @@ export function PeriodontogramaPanel({ patientId }: { patientId: string }) {
           furcation: form.furcation.trim() || null,
           diagnosis: form.diagnosis.trim() || null,
           recorded_at: form.recorded_at || undefined,
+          replaces_id: corrigiendo?.id ?? null,
+          correction_reason: corrigiendo ? motivo.trim() : null,
         }),
       });
       const data = (await response.json().catch(() => ({}))) as { error?: string };
@@ -171,8 +236,14 @@ export function PeriodontogramaPanel({ patientId }: { patientId: string }) {
         setError(data.error ?? "No se pudo guardar el registro periodontal");
         return;
       }
-      toast.success("Registro periodontal guardado");
+      toast.success(
+        corrigiendo
+          ? "Corrección registrada. El registro anterior queda como reemplazado."
+          : "Registro periodontal guardado",
+      );
       setAbierto(false);
+      setCorrigiendo(null);
+      setMotivo("");
       setForm(emptyForm());
       await cargar();
     } catch {
@@ -228,15 +299,27 @@ export function PeriodontogramaPanel({ patientId }: { patientId: string }) {
             <Button
               size="sm"
               variant="secondary"
-              onClick={abrirFormulario}
+              onClick={corrigiendo ? cancelarEdicion : abrirFormulario}
             >
-              {abierto ? "Cancelar" : "Registrar sondaje"}
+              {corrigiendo ? "Cancelar corrección" : abierto ? "Cancelar" : "Registrar sondaje"}
             </Button>
           }
         />
 
         {abierto ? (
           <form onSubmit={guardar} className="space-y-4 border-t border-neutral-200 px-5 py-4">
+            {corrigiendo ? (
+              <div className="rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-700">
+                <p className="font-medium">
+                  Corrigiendo el registro del {corrigiendo.recorded_at?.slice(0, 10)} · pieza{" "}
+                  {corrigiendo.tooth}
+                </p>
+                <p className="mt-1">
+                  No se borra nada: el registro original quedará como <strong>reemplazado</strong> y
+                  el nuevo como vigente, con tu nombre, la fecha y el motivo de la corrección.
+                </p>
+              </div>
+            ) : null}
             <DraftEncounterField
               id="perio-encounter"
               encounters={encounters}
@@ -352,9 +435,42 @@ export function PeriodontogramaPanel({ patientId }: { patientId: string }) {
               />
             </Field>
 
-            <div className="flex justify-end">
+            {corrigiendo ? (
+              <Field
+                label="Motivo de la corrección"
+                htmlFor="perio-correction-reason"
+                hint="Obligatorio: queda registrado junto al autor y la fecha del reemplazo."
+              >
+                <textarea
+                  id="perio-correction-reason"
+                  rows={2}
+                  className={inputClasses}
+                  value={motivo}
+                  onChange={(e) => setMotivo(e.target.value)}
+                  placeholder="Ej.: profundidad de sondaje mal digitada en DV"
+                  maxLength={400}
+                />
+              </Field>
+            ) : null}
+
+            <div className="flex justify-end gap-3">
+              {corrigiendo ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={cancelarEdicion}
+                  disabled={guardando}
+                >
+                  Cancelar
+                </Button>
+              ) : null}
               <Button type="submit" size="sm" disabled={guardando || !selectedEncounterId}>
-                {guardando ? "Guardando…" : "Guardar registro"}
+                {guardando
+                  ? "Guardando…"
+                  : corrigiendo
+                    ? "Guardar corrección"
+                    : "Guardar registro"}
               </Button>
             </div>
           </form>
@@ -372,7 +488,7 @@ export function PeriodontogramaPanel({ patientId }: { patientId: string }) {
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-sm">
+            <table className="w-full min-w-[960px] text-left text-sm">
               <thead className="border-y border-neutral-200 bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
                 <tr>
                   <th className="px-4 py-2 font-semibold">Fecha</th>
@@ -382,22 +498,59 @@ export function PeriodontogramaPanel({ patientId }: { patientId: string }) {
                   <th className="px-4 py-2 font-semibold">Recesión</th>
                   <th className="px-4 py-2 font-semibold">Movilidad</th>
                   <th className="px-4 py-2 font-semibold">Diagnóstico</th>
+                  <th className="px-4 py-2 font-semibold">Estado</th>
+                  <th className="px-4 py-2 font-semibold">Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {records.map((r) => (
-                  <tr key={r.id} className="border-b border-neutral-100 last:border-0">
-                    <td className="px-4 py-2 text-neutral-600">{r.recorded_at?.slice(0, 10)}</td>
-                    <td className="px-4 py-2 font-medium">{r.tooth}</td>
-                    <td className="px-4 py-2 text-neutral-600">{sitiosTexto(r)}</td>
-                    <td className="px-4 py-2">{r.bleeding_on_probing ? "Sí" : "No"}</td>
-                    <td className="px-4 py-2">{r.recession ?? "–"}</td>
-                    <td className="px-4 py-2">{r.mobility}</td>
-                    <td className="px-4 py-2 text-neutral-600">
-                      {[r.furcation, r.diagnosis].filter(Boolean).join(" · ") || "–"}
-                    </td>
-                  </tr>
-                ))}
+                {records.map((r) => {
+                  const estado = ESTADO_PERIODONTAL[r.status] ?? ESTADO_PERIODONTAL.vigente;
+                  return (
+                    <tr key={r.id} className="border-b border-neutral-100 last:border-0 align-top">
+                      <td className="px-4 py-2 text-neutral-600">{r.recorded_at?.slice(0, 10)}</td>
+                      <td className="px-4 py-2 font-medium">{r.tooth}</td>
+                      <td className="px-4 py-2 text-neutral-600">{sitiosTexto(r)}</td>
+                      <td className="px-4 py-2">{r.bleeding_on_probing ? "Sí" : "No"}</td>
+                      <td className="px-4 py-2">{r.recession ?? "–"}</td>
+                      <td className="px-4 py-2">{r.mobility}</td>
+                      <td className="px-4 py-2 text-neutral-600">
+                        {[r.furcation, r.diagnosis].filter(Boolean).join(" · ") || "–"}
+                      </td>
+                      <td className="px-4 py-2">
+                        <span
+                          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${estado.className}`}
+                        >
+                          {estado.label}
+                        </span>
+                        {r.status === "reemplazado" && r.correction_reason ? (
+                          <p className="mt-1 max-w-[220px] text-xs text-neutral-500">
+                            {r.correction_reason}
+                            {r.corrected_at ? ` · ${r.corrected_at.slice(0, 10)}` : ""}
+                          </p>
+                        ) : null}
+                        {r.replaces_id ? (
+                          <p className="mt-1 text-xs text-neutral-500">Corrige un registro anterior</p>
+                        ) : null}
+                      </td>
+                      <td className="px-4 py-2">
+                        {r.can_correct ? (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => abrirCorreccion(r)}
+                            disabled={guardando}
+                          >
+                            Corregir
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-neutral-400">
+                            {r.status === "vigente" ? "Solo el autor" : "—"}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

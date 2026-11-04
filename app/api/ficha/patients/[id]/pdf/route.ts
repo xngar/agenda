@@ -62,6 +62,11 @@ const PLAN_ESTADO: Record<string, string> = {
   rechazado: "Rechazado",
 };
 
+const PERIODONTAL_ESTADO: Record<string, string> = {
+  vigente: "Vigente",
+  reemplazado: "Reemplazado",
+};
+
 const CONSENT_TIPO: Record<string, string> = {
   datos_personales: "Información sobre tratamiento de datos",
   tratamiento_dental: "Tratamiento dental",
@@ -326,6 +331,13 @@ async function buildPdf(
       field("Diente", p.tooth);
       field("Movilidad", p.mobility);
       field("Diagnóstico", p.diagnosis);
+      field("Estado", etiqueta(PERIODONTAL_ESTADO, p.status ?? "vigente"));
+      if (p.status === "reemplazado") {
+        field("Motivo de la corrección", p.correction_reason);
+        field("Fecha de la corrección", fecha(p.corrected_at));
+      } else if (p.replaces_id) {
+        field("Corrección", "Reemplaza un registro periodontal anterior");
+      }
       doc.moveDown(0.3);
     }
   }

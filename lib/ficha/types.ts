@@ -270,6 +270,12 @@ export interface PeriodontalRecord {
   recorded_at: string;
   created_by: string | null;
   created_at: string;
+  status: "vigente" | "reemplazado";
+  replaces_id: string | null;
+  superseded_by: string | null;
+  correction_reason: string | null;
+  corrected_by: string | null;
+  corrected_at: string | null;
 }
 
 export interface DentalTreatmentPlanItem {
