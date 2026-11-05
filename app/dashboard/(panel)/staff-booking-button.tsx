@@ -8,6 +8,7 @@ import { AsyncButton } from "@/components/motion/async-button";
 import { formatTime, todayKey } from "@/lib/dates";
 import { formatRutPartial, isValidRut } from "@/lib/rut";
 import { formatPhonePartial } from "@/lib/phone";
+import { Plus } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { Modal } from "@/components/motion/modal";
 
@@ -48,8 +49,15 @@ export function StaffBookingButton({
 
   return (
     <>
-      <Button variant="flat" size="md" shape="pill" onClick={() => setOpen(true)}>
-        + Nueva reserva
+      <Button
+        variant="flat"
+        size="md"
+        shape="pill"
+        onClick={() => setOpen(true)}
+        className="group shadow-xs transition-all duration-element hover:shadow-md hover:scale-[1.02] active:scale-95 gap-1.5"
+      >
+        <Plus className="h-4 w-4 btn-icon-plus shrink-0" aria-hidden="true" />
+        <span>Nueva reserva</span>
       </Button>
       <AnimatePresence>
         {open ? (

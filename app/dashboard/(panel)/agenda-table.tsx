@@ -50,14 +50,14 @@ export function Accion({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-lg border font-medium transition-[color,background-color,border-color,box-shadow] duration-micro ease-out-soft disabled:cursor-not-allowed disabled:opacity-50 ${
+      className={`rounded-lg border font-medium transition-all duration-micro ease-out-soft hover:scale-[1.03] active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 ${
         compacto ? "px-2.5 py-1 text-[13px]" : "px-3 py-1.5 text-sm"
       } ${
         destacado
-          ? "border-action-primary bg-action-primary text-action-primary-foreground hover:bg-action-primary-hover"
+          ? "border-action-primary bg-action-primary text-action-primary-foreground shadow-2xs hover:bg-action-primary-hover hover:shadow-xs"
           : tono === "peligro"
-            ? "border-danger-200 text-danger-700 hover:bg-danger-50"
-            : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"
+            ? "border-danger-200 text-danger-700 hover:bg-danger-50 hover:border-danger-300"
+            : "border-neutral-300 text-neutral-700 hover:bg-neutral-100 hover:border-neutral-400"
       }`}
     >
       {etiqueta}

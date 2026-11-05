@@ -37,10 +37,10 @@ export function WeekNav({ dayKey, today }: { dayKey: string; today: string }) {
           type="button"
           onClick={() => irA(addDaysToKey(semana.from, -7))}
           disabled={pending}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-action-primary/5 hover:text-action-primary disabled:pointer-events-none disabled:opacity-50"
+          className="group inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-600 transition-all duration-micro hover:bg-action-primary/5 hover:text-action-primary active:scale-90 disabled:pointer-events-none disabled:opacity-50"
           aria-label="Semana anterior"
         >
-          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+          <ChevronLeft className="h-4 w-4 btn-icon-left" aria-hidden="true" />
         </button>
 
         <label htmlFor="filtro-dia" className="sr-only">
@@ -61,10 +61,10 @@ export function WeekNav({ dayKey, today }: { dayKey: string; today: string }) {
           type="button"
           onClick={() => irA(addDaysToKey(semana.from, 7))}
           disabled={pending}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-action-primary/5 hover:text-action-primary disabled:pointer-events-none disabled:opacity-50"
+          className="group inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-600 transition-all duration-micro hover:bg-action-primary/5 hover:text-action-primary active:scale-90 disabled:pointer-events-none disabled:opacity-50"
           aria-label="Semana siguiente"
         >
-          <ChevronRight className="h-4 w-4" aria-hidden="true" />
+          <ChevronRight className="h-4 w-4 btn-icon-right" aria-hidden="true" />
         </button>
       </div>
 

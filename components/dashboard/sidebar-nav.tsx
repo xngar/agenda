@@ -143,7 +143,7 @@ function navButtonClasses(active: boolean): string {
     ? "bg-panel-active text-action-primary shadow-[inset_0_0_0_1px_var(--action-primary-line)]"
     : "text-panel-muted hover:bg-panel-hover hover:text-action-primary";
 
-  return `flex min-h-11 w-full items-center gap-3 rounded-control px-3 text-sm font-medium transition-colors duration-micro ease-out-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary ${tone}`;
+  return `group flex min-h-11 w-full items-center gap-3 rounded-control px-3 text-sm font-medium transition-all duration-micro ease-out-soft active:scale-[0.98] [&>svg]:shrink-0 [&>svg]:transition-transform [&>svg]:duration-micro [&>svg]:ease-out-soft group-hover:[&>svg]:scale-115 group-hover:[&>svg]:text-action-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary ${tone}`;
 }
 
 function NavItems({

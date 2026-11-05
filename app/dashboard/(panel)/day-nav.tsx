@@ -58,10 +58,10 @@ export function DayNav({
           type="button"
           onClick={() => irA(mover(dayKey, -1))}
           disabled={pending}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-action-primary/5 hover:text-action-primary disabled:pointer-events-none disabled:opacity-50"
+          className="group inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-600 transition-all duration-micro hover:bg-action-primary/5 hover:text-action-primary active:scale-90 disabled:pointer-events-none disabled:opacity-50"
           aria-label="Día anterior"
         >
-          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+          <ChevronLeft className="h-4 w-4 btn-icon-left" aria-hidden="true" />
         </button>
 
         <label htmlFor="filtro-dia" className="sr-only">
@@ -82,10 +82,10 @@ export function DayNav({
           type="button"
           onClick={() => irA(mover(dayKey, 1))}
           disabled={pending}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-action-primary/5 hover:text-action-primary disabled:pointer-events-none disabled:opacity-50"
+          className="group inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-600 transition-all duration-micro hover:bg-action-primary/5 hover:text-action-primary active:scale-90 disabled:pointer-events-none disabled:opacity-50"
           aria-label="Día siguiente"
         >
-          <ChevronRight className="h-4 w-4" aria-hidden="true" />
+          <ChevronRight className="h-4 w-4 btn-icon-right" aria-hidden="true" />
         </button>
       </div>
 

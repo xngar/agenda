@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { siteConfig } from "@/lib/site-config";
 
@@ -34,15 +34,16 @@ export default function Navbar() {
           ))}
           <Link
             href="#demo"
-            className="rounded-full bg-[var(--lp-navy)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--lp-blue)]"
+            className="group inline-flex items-center gap-1.5 rounded-full bg-[var(--lp-navy)] px-4 py-2 text-sm font-semibold text-white shadow-xs transition-all duration-micro hover:scale-105 hover:bg-[var(--lp-blue)] hover:shadow-sm active:scale-95"
           >
-            Solicitar demo
+            <span>Solicitar demo</span>
+            <ArrowRight className="h-4 w-4 btn-icon-right" aria-hidden="true" />
           </Link>
         </div>
         <button
           type="button"
           aria-label="Abrir menú"
-          className="md:hidden"
+          className="rounded-lg p-1.5 text-action-primary transition-transform duration-micro hover:scale-110 active:scale-90 md:hidden"
           onClick={() => setOpen((v) => !v)}
         >
           {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
