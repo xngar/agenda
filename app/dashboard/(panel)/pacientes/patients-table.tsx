@@ -108,10 +108,10 @@ export function PatientsTable({
         <AnimatedNumber value={total} /> {total === 1 ? "paciente" : "pacientes"}
       </p>
 
-      <div className="hidden overflow-x-auto rounded-card border border-neutral-200 bg-white md:block">
+      <div className="hidden overflow-x-auto rounded-card bg-white shadow-card md:block">
         <table className="w-full min-w-[720px] text-sm" data-testid="patients-table">
           <caption className="sr-only">Pacientes de la organización</caption>
-          <thead className="border-b border-neutral-200 bg-neutral-50">
+          <thead className="border-b border-neutral-100 bg-neutral-50/60">
             <tr>
               {COLUMNS.map((col) => {
                 const key = col.sort;
@@ -270,7 +270,7 @@ export function PatientsTable({
         {patients.map((p, indice) => (
           <li
             key={p.id}
-            className="anim-row-in rounded-card border border-neutral-200 bg-white p-4"
+            className="anim-row-in rounded-card bg-white p-4 shadow-card"
             style={{ animationDelay: `${Math.min(indice, 12) * 35}ms` }}
           >
             <div className="flex items-start justify-between gap-3">

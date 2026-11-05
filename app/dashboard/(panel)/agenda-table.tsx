@@ -107,10 +107,10 @@ export function AgendaTable({
           Cancelada / No asistió
         </span>
       </div>
-      <div className="overflow-x-auto rounded-card border border-neutral-200 bg-white">
+      <div className="overflow-x-auto rounded-card bg-white shadow-card">
         <table className="w-full min-w-[760px] text-sm" data-testid="agenda-table">
           <caption className="sr-only">Citas del día</caption>
-          <thead className="border-b border-neutral-200 bg-neutral-50/80">
+          <thead className="border-b border-neutral-100 bg-neutral-50/60">
             <tr>
               <th
                 scope="col"
