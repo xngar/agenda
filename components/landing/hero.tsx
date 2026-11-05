@@ -14,9 +14,19 @@ export default function Hero() {
   return (
     <section
       id="top"
-      className="relative overflow-hidden bg-gradient-to-b from-[var(--lp-sky-100)] via-white to-white pt-24"
+      className="relative h-screen w-full overflow-hidden"
     >
-      <div className="mx-auto grid w-full max-w-7xl items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:px-8">
+      {/* Imagen de fondo a pantalla completa */}
+      <img
+        src="/hero_pac.webp"
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full object-cover object-center"
+      />
+      {/* Overlay degradado para legibilidad del texto */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/35 to-black/10" />
+
+      <div className="relative z-10 mx-auto grid h-full w-full max-w-7xl items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:px-8">
         {/* Columna Izquierda: Mensajes con entrada escalonada */}
         <div>
           <motion.div
@@ -34,7 +44,7 @@ export default function Hero() {
             initial={reduce ? { opacity: 1 } : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.08, ease: easeCustom }}
-            className="mt-5 text-4xl font-bold leading-tight tracking-tight text-action-primary sm:text-5xl lg:text-6xl"
+            className="mt-5 text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl"
           >
             Agenda, fichas clínicas y pacientes en un solo lugar.
           </motion.h1>
@@ -43,7 +53,7 @@ export default function Hero() {
             initial={reduce ? { opacity: 1 } : { opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, delay: 0.16, ease: easeCustom }}
-            className="mt-5 max-w-2xl text-lg text-action-primary/90"
+            className="mt-5 max-w-2xl text-lg text-white/90"
           >
             {siteConfig.name} es la plataforma para clínicas y profesionales de la salud que quieren ordenar su consulta: reservas online, ficha clínica adaptada a su especialidad y recordatorios automáticos para sus pacientes.
           </motion.p>
@@ -69,9 +79,9 @@ export default function Hero() {
                   delay: 0.28 + idx * 0.05,
                   ease: easeCustom,
                 }}
-                className="flex items-center gap-2 text-sm font-medium text-action-primary"
+                className="flex items-center gap-2 text-sm font-medium text-white"
               >
-                <CheckCircle2 className="h-5 w-5 shrink-0 text-action-primary" />
+                <CheckCircle2 className="h-5 w-5 shrink-0 text-white" />
                 <span>{item}</span>
               </motion.li>
             ))}
