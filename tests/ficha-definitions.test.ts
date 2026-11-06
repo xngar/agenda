@@ -240,6 +240,35 @@ describe("fase 3: campos por especialidad", () => {
     ).toBe(false);
   });
 
+  it("el encuentro psicológico trata escalas y selects vacíos como nulos", () => {
+    const vacio = validateEncounterData("psychological", { phq9: "", gad7: "" });
+    expect(vacio.success).toBe(true);
+    if (vacio.success) {
+      expect((vacio.data as Record<string, unknown>).phq9).toBeNull();
+      expect((vacio.data as Record<string, unknown>).gad7).toBeNull();
+    }
+
+    const limpiado = validateEncounterData("psychological", { modality: "", attendance: "" });
+    expect(limpiado.success).toBe(true);
+    if (limpiado.success) {
+      expect((limpiado.data as Record<string, unknown>).modality).toBeNull();
+      expect((limpiado.data as Record<string, unknown>).attendance).toBeNull();
+    }
+  });
+
+  it("el consentimiento dental acepta el tipo de tratamiento dental", () => {
+    const dental = {
+      kind: "tratamiento_dental",
+      accepted_text: "Acepto el plan de tratamiento dental informado por el profesional.",
+      accepted_by_patient: true,
+      accepted_by_name: "Nombre Paciente",
+      acceptance_method: "verbal",
+      acceptance_channel: "presencial",
+      decisionConfirmed: true,
+    };
+    expect(consentAcceptanceSchema.safeParse(dental).success).toBe(true);
+  });
+
   it("interpreta PHQ-9 y GAD-7 en los rangos estándar", () => {
     expect(interpretarPHQ9(2)).toBe("Mínima");
     expect(interpretarPHQ9(7)).toBe("Leve");

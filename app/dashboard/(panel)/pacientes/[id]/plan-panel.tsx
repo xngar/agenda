@@ -6,6 +6,8 @@ import type { DentalPayment, DentalPaymentMethod, DentalTreatmentCatalogItem, De
 import { Card, Button, ErrorNotice, Field, Spinner, inputClasses, buttonClasses } from "@/components/ui";
 import { Modal } from "@/components/motion/modal";
 import { FichaCardHeader } from "./panels-shared";
+import { DraftEncounterField } from "./draft-encounter-field";
+import { useDraftEncounters } from "./draft-encounters";
 import { formatMiles, parseMiles } from "@/lib/clp";
 
 interface PlanItem extends DentalTreatmentPlanItem {
@@ -54,10 +56,17 @@ export function PlanPanel({
   const [items, setItems] = useState<PlanItem[] | null>(null);
   const [catalog, setCatalog] = useState<DentalTreatmentCatalogItem[]>([]);
   const [pagos, setPagos] = useState<DentalPayment[] | null>(null);
+  const {
+    encounters,
+    error: encountersError,
+    creando: creandoBorrador,
+    crear: crearBorradorAtencion,
+  } = useDraftEncounters(patientId);
   const [error, setError] = useState<string | null>(null);
   const [nuevoPago, setNuevoPago] = useState(false);
   const [pagoForm, setPagoForm] = useState({ amount: "", paid_at: "", method: "efectivo", note: "" });
   const [nuevo, setNuevo] = useState(false);
+  const [selectedEncounterId, setSelectedEncounterId] = useState("");
   const [form, setForm] = useState({
     treatment_id: "",
     tooth: "",
@@ -108,9 +117,24 @@ export function PlanPanel({
     cargar();
   }, [cargar]);
 
+  async function crearBorrador() {
+    const creada = await crearBorradorAtencion();
+    if (creada) setSelectedEncounterId(creada.id);
+  }
+
+  function alternarNuevo() {
+    setNuevo((v) => !v);
+    setSelectedEncounterId(encounters?.length === 1 ? encounters[0].id : "");
+    setError(null);
+  }
+
   async function agregar(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!selectedEncounterId) {
+      setError("Selecciona o crea una atención en borrador para asociar el tratamiento.");
+      return;
+    }
     setGuardando(true);
     try {
       const treatment = catalog.find((c) => c.id === form.treatment_id);
@@ -120,6 +144,7 @@ export function PlanPanel({
         body: JSON.stringify([
           {
             patient_id: patientId,
+            encounter_id: selectedEncounterId,
             treatment_id: form.treatment_id || null,
             tooth: form.tooth ? Number(form.tooth) : null,
             description: form.description.trim() || undefined,
@@ -329,14 +354,47 @@ export function PlanPanel({
     <div className="space-y-4">
       {error ? <ErrorNotice message={error} /> : null}
 
+      {encounters !== null ? (
+        encounters.length === 0 ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning-200 bg-warning-50 px-4 py-3">
+            <p className="text-sm text-warning-700">
+              Este paciente no tiene atenciones en borrador. Las atenciones firmadas no se pueden
+              modificar: crea una nueva para agregar tratamientos al plan.
+            </p>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => void crearBorrador()}
+              disabled={creandoBorrador}
+            >
+              {creandoBorrador ? "Creando…" : "Crear atención en borrador"}
+            </Button>
+          </div>
+        ) : (
+          <p className="rounded-xl border border-brand-sky-200 bg-brand-sky-50 px-4 py-3 text-sm text-brand-navy">
+            Los tratamientos del plan se asociarán a una atención en borrador propia.
+          </p>
+        )
+      ) : null}
+
       <Card>
         <FichaCardHeader
           title="Plan de tratamiento"
           description="Propuesta de tratamientos con valor, aceptación y avance."
-          action={<Button size="sm" variant="secondary" onClick={() => setNuevo(!nuevo)}>{nuevo ? "Cancelar" : "Agregar tratamiento"}</Button>}
+          action={<Button size="sm" variant="secondary" onClick={alternarNuevo}>{nuevo ? "Cancelar" : "Agregar tratamiento"}</Button>}
         />
         {nuevo ? (
           <form onSubmit={agregar} className="space-y-4 border-t border-neutral-200 px-5 py-4">
+            <DraftEncounterField
+              id="plan-encounter"
+              encounters={encounters}
+              value={selectedEncounterId}
+              onChange={setSelectedEncounterId}
+              onCrear={() => void crearBorrador()}
+              creando={creandoBorrador}
+              error={encountersError}
+              sinBorradoresTexto="No tienes atenciones en borrador. Las atenciones firmadas no se pueden modificar; crea una nueva para asociar el tratamiento."
+            />
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Tratamiento del catálogo" htmlFor="treatment" required={false}>
                 <select
@@ -402,7 +460,7 @@ export function PlanPanel({
                 </Field>
               </div>
             </div>
-            <Button type="submit" disabled={guardando}>{guardando ? "Guardando…" : "Agregar al plan"}</Button>
+            <Button type="submit" disabled={guardando || !selectedEncounterId}>{guardando ? "Guardando…" : "Agregar al plan"}</Button>
           </form>
         ) : null}
 

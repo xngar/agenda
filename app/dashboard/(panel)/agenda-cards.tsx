@@ -92,54 +92,56 @@ export function AgendaCards({
                 <p className="mt-2 text-sm text-neutral-500">Motivo: {cita.cancel_reason}</p>
               ) : null}
 
-              <div className="mt-3 flex flex-wrap gap-2">
-                {cancelada ? (
-                  <Accion
-                    etiqueta="Reabrir"
-                    onClick={() => onCambiar(cita.id, "reopen")}
-                    disabled={ocupado}
-                  />
-                ) : (
-                  <>
-                    {/*
-                      Una cita recién creada queda en `pending`. Mientras
-                      no se confirme, el paciente no tiene garantía de que el
-                      espacio siga reservado para él, así que el botón
-                      va primero cuando corresponde.
-                    */}
-                    {cita.status === "pending" ? (
-                      <Accion
-                        etiqueta="Confirmar"
-                        onClick={() => onCambiar(cita.id, "confirmed")}
-                        disabled={ocupado}
-                        destacado
-                      />
-                    ) : null}
+              <div className="mt-3 flex flex-nowrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
+                  {cancelada ? (
                     <Accion
-                      etiqueta="Atendida"
-                      onClick={() => onCambiar(cita.id, "completed")}
+                      etiqueta="Reabrir"
+                      onClick={() => onCambiar(cita.id, "reopen")}
                       disabled={ocupado}
                     />
-                    <Accion
-                      etiqueta="No asistió"
-                      onClick={() => onCambiar(cita.id, "no_show")}
-                      disabled={ocupado}
-                    />
-                    {reprogramable(cita) ? (
+                  ) : (
+                    <>
+                      {/*
+                        Una cita recién creada queda en `pending`. Mientras
+                        no se confirme, el paciente no tiene garantía de que el
+                        espacio siga reservado para él, así que el botón
+                        va primero cuando corresponde.
+                      */}
+                      {cita.status === "pending" ? (
+                        <Accion
+                          etiqueta="Confirmar"
+                          onClick={() => onCambiar(cita.id, "confirmed")}
+                          disabled={ocupado}
+                          destacado
+                        />
+                      ) : null}
                       <Accion
-                        etiqueta="Reagendar"
-                        onClick={() => onReagendar(cita)}
+                        etiqueta="Atendida"
+                        onClick={() => onCambiar(cita.id, "completed")}
                         disabled={ocupado}
                       />
-                    ) : null}
-                    <Accion
-                      etiqueta="Cancelar"
-                      onClick={() => onCambiar(cita.id, "cancelled")}
-                      disabled={ocupado}
-                      tono="peligro"
-                    />
-                  </>
-                )}
+                      <Accion
+                        etiqueta="No asistió"
+                        onClick={() => onCambiar(cita.id, "no_show")}
+                        disabled={ocupado}
+                      />
+                      {reprogramable(cita) ? (
+                        <Accion
+                          etiqueta="Reagendar"
+                          onClick={() => onReagendar(cita)}
+                          disabled={ocupado}
+                        />
+                      ) : null}
+                      <Accion
+                        etiqueta="Cancelar"
+                        onClick={() => onCambiar(cita.id, "cancelled")}
+                        disabled={ocupado}
+                        tono="peligro"
+                      />
+                    </>
+                  )}
+                </div>
                 <WhatsappButton
                   patientId={cita.patient_id}
                   fullName={cita.patient?.full_name ?? "Paciente"}

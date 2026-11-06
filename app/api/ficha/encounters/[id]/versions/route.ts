@@ -6,6 +6,7 @@ import {
   notFound,
   bodyError,
   dbError,
+  orgPatient,
   auditPatientView,
 } from "@/lib/ficha/http";
 import { versionSchema } from "@/lib/ficha/schemas";
@@ -27,6 +28,9 @@ export async function GET(_request: Request, { params }: Params) {
     .maybeSingle();
   if (encounterError) return dbError(encounterError);
   if (!encounter) return notFound("Atención no encontrada");
+
+  const { error: accessError } = await orgPatient(ctx, encounter.patient_id);
+  if (accessError) return accessError;
 
   const { data, error } = await ctx.supabase
     .from("encounter_versions")
@@ -62,6 +66,13 @@ export async function POST(request: Request, { params }: Params) {
     .maybeSingle();
   if (encError) return dbError(encError);
   if (!encounter) return notFound("Atención no encontrada");
+
+  const { error: accessError } = await orgPatient(ctx, encounter.patient_id as string);
+  if (accessError) return accessError;
+
+  if (!ctx.session.isAdmin && !ctx.session.isSuperAdmin && encounter.doctor_id !== ctx.session.id) {
+    return forbidden("Solo el autor o un administrador puede registrar una corrección");
+  }
 
   const { data, error } = await ctx.supabase
     .from("encounter_versions")

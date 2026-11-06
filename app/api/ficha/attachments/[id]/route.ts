@@ -5,6 +5,7 @@ import {
   forbidden,
   notFound,
   dbError,
+  patientAccess,
 } from "@/lib/ficha/http";
 
 type Params = { params: Promise<{ id: string }> };
@@ -36,8 +37,16 @@ export async function DELETE(_request: Request, { params }: Params) {
   if (pacienteError) return dbError(pacienteError);
   if (!paciente) return notFound("Paciente no encontrado");
 
-  if (!ctx.session.isAdmin && paciente.doctor_id !== ctx.session.id) {
-    return forbidden("Solo el administrador o el médico dueño del paciente puede eliminar adjuntos");
+  const access = await patientAccess(ctx, {
+    id: adjunto.patient_id,
+    org_id: ctx.session.orgId,
+    doctor_id: paciente.doctor_id,
+  });
+  if (!access.canViewClinical) {
+    return forbidden("No tienes relación con la atención de este paciente");
+  }
+  if (!access.canDelete) {
+    return forbidden("Solo el profesional tratante principal o el administrador puede eliminar adjuntos");
   }
 
   const { data: consentimientoVinculado, error: consentimientoError } = await ctx.supabase

@@ -23,39 +23,13 @@ function Logo({
       href="/dashboard"
       aria-label="Ir a la agenda"
       onClick={onClick}
-      className="flex min-w-0 items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+      className="flex min-w-0 items-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
     >
-      <span
-        aria-hidden="true"
-        className={`flex shrink-0 items-center justify-center rounded-control bg-gradient-to-b from-brand-navy to-brand-navy-900 text-white shadow-panel ${
-          compact ? "h-9 w-9" : "h-10 w-10"
-        }`}
-      >
-        <svg
-          viewBox="0 0 24 24"
-          className={compact ? "h-[18px] w-[18px]" : "h-5 w-5"}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={1.9}
-        >
-          <rect x="3" y="5" width="18" height="16" rx="3" />
-          <path d="M8 3v4M16 3v4M3 10h18" />
-        </svg>
-      </span>
-      <span className="min-w-0 leading-tight">
-        <span
-          className={`block truncate font-semibold text-panel-ink ${
-            compact ? "text-sm" : "text-base"
-          }`}
-        >
-          Agenda
-        </span>
-        {compact ? null : (
-          <span className="block truncate text-[11px] font-medium tracking-wide text-panel-muted">
-            Panel
-          </span>
-        )}
-      </span>
+      <img
+        src="/gethour.svg"
+        alt="GetHour"
+        className={`w-auto max-w-full ${compact ? "h-5" : "h-[25px]"}`}
+      />
     </Link>
   );
 }
@@ -122,7 +96,7 @@ export function PanelShell({
       </a>
 
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[264px] flex-col border-r border-panel-line bg-white xl:flex">
-        <div className="flex h-[72px] shrink-0 items-center px-5">
+        <div className="flex h-[72px] shrink-0 items-center justify-center px-5">
           <Logo />
         </div>
         <SidebarSections
@@ -135,7 +109,7 @@ export function PanelShell({
 
       <div className="xl:pl-[264px]">
         <header className="sticky top-0 z-30 border-b border-panel-line bg-panel-bg xl:hidden">
-          <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4">
+          <div className="mx-auto grid h-14 max-w-6xl grid-cols-[44px_1fr_44px] items-center px-4">
             <button
               ref={menuButtonRef}
               type="button"
@@ -145,12 +119,15 @@ export function PanelShell({
               aria-expanded={menuAbierto}
               aria-controls="menu-panel-movil"
               onClick={() => setMenuAbierto(true)}
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-panel-line bg-white text-panel-ink transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center justify-self-start rounded-control border border-panel-line bg-white text-panel-ink transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
             >
               <Menu className="h-5 w-5" aria-hidden="true" />
             </button>
 
-            <Logo compact />
+            <div className="justify-self-center">
+              <Logo compact />
+            </div>
+            <span aria-hidden="true" />
           </div>
         </header>
 

@@ -14,7 +14,7 @@ import { redactEncounters } from "@/lib/ficha/privacy";
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function GET(_request: Request, { params }: Params) {
+export async function GET(request: Request, { params }: Params) {
   const ctx = await fichaContext();
   if (!ctx) return unauthorized();
   if (!ctx.clinical) return forbidden();
@@ -23,12 +23,24 @@ export async function GET(_request: Request, { params }: Params) {
   const { patient, error: patientError } = await orgPatient(ctx, id);
   if (patientError) return patientError;
 
-  const { data, error } = await ctx.supabase
+  const searchParams = new URL(request.url).searchParams;
+  const status = searchParams.get("status");
+  const mine = searchParams.get("mine") === "1";
+
+  let query = ctx.supabase
     .from("encounters")
     .select("*, doctors!encounters_doctor_id_fkey (full_name)")
     .eq("org_id", ctx.session.orgId)
-    .eq("patient_id", id)
-    .order("started_at", { ascending: false });
+    .eq("patient_id", id);
+
+  if (status === "draft" || status === "signed") {
+    query = query.eq("status", status);
+  }
+  if (mine) {
+    query = query.eq("doctor_id", ctx.session.id);
+  }
+
+  const { data, error } = await query.order("started_at", { ascending: false });
 
   if (error) return dbError(error);
   const auditError = await auditPatientView(ctx, id, "encounters");

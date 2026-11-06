@@ -51,6 +51,18 @@ export function timeKey(iso: string | Date, timezone = DEFAULT_TIMEZONE): string
   return formatInTimeZone(iso, timezone, "HH:mm");
 }
 
+/**
+ * "5 oct 2026" para campos que son sólo fecha aunque se guarden con hora
+ * (p. ej. `encounters.started_at`, insertado como `YYYY-MM-DDT00:00:00Z`).
+ * Formatear ese instante con la zona de la clínica mostraría el día anterior,
+ * así que se usa la parte de fecha tal cual viene.
+ */
+export function formatDayKey(value: string): string {
+  const day = value.slice(0, 10);
+  if (!isValidDayKey(day)) return value;
+  return formatInTimeZone(`${day}T12:00:00Z`, "UTC", "d MMM yyyy", { locale: es });
+}
+
 /** ISO con offset de la zona: "2026-10-05T09:00:00-03:00" */
 export function zonedInstant(
   day: string,

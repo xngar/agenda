@@ -3,6 +3,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
+import { DatePicker } from "@/components/ui/date-picker";
 
 /**
  * Navegación por día de la agenda.
@@ -58,34 +59,25 @@ export function DayNav({
           type="button"
           onClick={() => irA(mover(dayKey, -1))}
           disabled={pending}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-action-primary/5 hover:text-action-primary disabled:pointer-events-none disabled:opacity-50"
+          className="group inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-600 transition-all duration-micro hover:bg-action-primary/5 hover:text-action-primary active:scale-90 disabled:pointer-events-none disabled:opacity-50"
           aria-label="Día anterior"
         >
-          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+          <ChevronLeft className="h-4 w-4 btn-icon-left" aria-hidden="true" />
         </button>
 
         <label htmlFor="filtro-dia" className="sr-only">
           Día
         </label>
-        <input
-          id="filtro-dia"
-          type="date"
-          value={dayKey}
-          disabled={pending}
-          onChange={(e) => {
-            if (e.target.value) irA(e.target.value);
-          }}
-          className="h-9 rounded-lg border-0 bg-transparent px-2 text-sm text-neutral-800 transition-colors hover:text-action-primary focus:outline-none focus:ring-2 focus:ring-brand-sky/40 disabled:opacity-50"
-        />
+        <DatePicker id="filtro-dia" value={dayKey} disabled={pending} onChange={irA} />
 
         <button
           type="button"
           onClick={() => irA(mover(dayKey, 1))}
           disabled={pending}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-action-primary/5 hover:text-action-primary disabled:pointer-events-none disabled:opacity-50"
+          className="group inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-600 transition-all duration-micro hover:bg-action-primary/5 hover:text-action-primary active:scale-90 disabled:pointer-events-none disabled:opacity-50"
           aria-label="Día siguiente"
         >
-          <ChevronRight className="h-4 w-4" aria-hidden="true" />
+          <ChevronRight className="h-4 w-4 btn-icon-right" aria-hidden="true" />
         </button>
       </div>
 

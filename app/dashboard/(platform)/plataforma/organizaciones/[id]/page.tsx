@@ -1,4 +1,6 @@
-import { notFound } from "next/navigation";
+﻿import { notFound } from "next/navigation";
+import Link from "next/link";
+import { buttonClasses } from "@/components/ui";
 import { requireSuperAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { RESERVED_SLUGS } from "@/lib/platform";
@@ -63,7 +65,15 @@ export default async function PlataformaOrganizacionEditarPage({
         }}
       />
 
-      <BackLink href="/dashboard/plataforma/organizaciones">Volver a organizaciones</BackLink>
+      <div className="flex items-center gap-3">
+        <Link
+          href={`/dashboard/plataforma/organizaciones/${id}/importar`}
+          className={buttonClasses("ghost", "md")}
+        >
+          Importar pacientes
+        </Link>
+        <BackLink href="/dashboard/plataforma/organizaciones">Volver a organizaciones</BackLink>
+      </div>
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Plus } from "lucide-react";
 import { Button, buttonClasses, inputClasses } from "@/components/ui";
 import { AsyncButton } from "@/components/motion/async-button";
 import { Modal } from "@/components/motion/modal";
@@ -207,7 +208,10 @@ export function AddMemberButton() {
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Agregar miembro</Button>
+      <Button onClick={() => setOpen(true)} className="anim-new-patient">
+        <Plus className="anim-new-patient-icon h-4 w-4" aria-hidden="true" />
+        <span>Agregar miembro</span>
+      </Button>
       <AddMemberModal open={open} onClose={() => setOpen(false)} />
     </>
   );

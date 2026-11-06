@@ -55,12 +55,11 @@ export function WhatsappButton({
             ? `Enviar WhatsApp a ${fullName}`
             : `Sin celular registrado para ${fullName}`
         }
-        title={numero ? "Enviar WhatsApp" : "Sin celular registrado"}
-        className={`inline-flex shrink-0 items-center justify-center rounded-full border border-success-200 bg-success-50 text-success-700 transition-colors duration-element ease-in-out-soft hover:bg-success-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success-700 disabled:cursor-not-allowed disabled:border-neutral-200 disabled:bg-neutral-100 disabled:text-neutral-400 ${
+        className={`group inline-flex shrink-0 items-center justify-center rounded-full border border-success-200 bg-success-50 text-success-700 shadow-2xs transition-all duration-element ease-out-soft hover:scale-105 hover:bg-success-100 hover:shadow-xs active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success-700 disabled:cursor-not-allowed disabled:border-neutral-200 disabled:bg-neutral-100 disabled:text-neutral-400 disabled:hover:scale-100 ${
           compacto ? "h-8 w-8" : "h-9 w-9"
         }`}
       >
-        <WhatsappIcon className="h-4 w-4" />
+        <WhatsappIcon className="h-4 w-4 btn-icon-wiggle" />
       </button>
 
       <AnimatePresence>
@@ -147,9 +146,9 @@ export function WhatsappModal({
           target="_blank"
           rel="noopener noreferrer"
           onClick={registrarContacto}
-          className="inline-flex min-h-9 items-center justify-center gap-2 rounded-lg bg-success-600 px-3 text-sm font-semibold text-white transition-colors hover:bg-success-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success-700"
+          className="group inline-flex min-h-9 items-center justify-center gap-2 rounded-lg bg-success-600 px-3 text-sm font-semibold text-white shadow-xs transition-all duration-micro hover:scale-105 hover:bg-success-700 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success-700"
         >
-          <WhatsappIcon className="h-4 w-4" />
+          <WhatsappIcon className="h-4 w-4 btn-icon-wiggle" />
           Abrir WhatsApp
         </a>
       </div>

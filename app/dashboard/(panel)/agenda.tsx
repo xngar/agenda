@@ -97,7 +97,7 @@ export function Agenda({
     >
       <div className="flex flex-wrap items-center gap-2 rounded-card border border-neutral-200 bg-white p-2 shadow-card">
         <div
-          className="inline-flex items-center gap-1 rounded-xl bg-neutral-100 p-1"
+          className="inline-flex items-center gap-1 rounded-full bg-neutral-100 p-1"
           role="group"
           aria-label="Filtrar citas"
         >
@@ -107,7 +107,7 @@ export function Agenda({
               type="button"
               aria-pressed={filtro === valor}
               onClick={() => setFiltro(valor)}
-              className={`inline-flex min-h-9 items-center rounded-lg px-3 text-sm font-medium capitalize transition-colors ${
+              className={`inline-flex min-h-9 items-center rounded-full px-3 text-sm font-medium capitalize transition-colors ${
                 filtro === valor
                   ? "bg-action-primary text-action-primary-foreground shadow-2xs hover:bg-action-primary-hover"
                   : "text-neutral-600 hover:bg-white hover:text-action-primary"
@@ -137,8 +137,8 @@ export function Agenda({
         <p className="flex items-center gap-2 px-1 text-xs text-neutral-500">
           <span
             aria-hidden
-            className={`inline-block size-2 rounded-full ${
-              connected ? "bg-success-600" : realtimeError ? "bg-danger-600" : "bg-neutral-300"
+            className={`inline-block size-2 rounded-full transition-all duration-element ${
+              connected ? "bg-success-600 badge-beacon" : realtimeError ? "bg-danger-600" : "bg-neutral-300"
             }`}
           />
           {connected ? "En vivo" : realtimeError ? "Sin conexión en vivo" : "Conectando…"}
@@ -149,9 +149,9 @@ export function Agenda({
         <button
           type="button"
           onClick={refrescarAhora}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-action-primary/20 bg-action-primary/10 px-4 py-2.5 text-sm font-semibold text-action-primary transition-[color,background-color,border-color] duration-micro ease-out-soft hover:border-action-primary/30 hover:bg-action-primary/15"
+          className="btn-press anim-fade-up flex w-full items-center justify-center gap-2 rounded-xl border border-action-primary/20 bg-action-primary/10 px-4 py-2.5 text-sm font-semibold text-action-primary transition-all duration-micro ease-out-soft hover:border-action-primary/30 hover:bg-action-primary/15"
         >
-          <RefreshCw aria-hidden className="h-4 w-4" />
+          <RefreshCw aria-hidden className="h-4 w-4 animate-spin [animation-duration:3s]" />
           Hay cambios nuevos en la agenda · actualizar
         </button>
       ) : null}

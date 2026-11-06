@@ -39,10 +39,11 @@ export function buttonClasses(
   shape: ButtonShape = "default",
 ): string {
   return [
-    "inline-flex items-center justify-center font-semibold transition-colors duration-element ease-in-out-soft",
+    "group inline-flex items-center justify-center font-semibold transition-all duration-element ease-out-soft",
     "active:scale-[0.97] cursor-pointer select-none",
     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary",
     "disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:translate-y-0",
+    "[&>svg]:transition-transform [&>svg]:duration-micro [&>svg]:ease-out-soft",
     VARIANTS[variant],
     SIZES[size],
     SHAPES[shape],

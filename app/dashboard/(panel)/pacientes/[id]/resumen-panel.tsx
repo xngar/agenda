@@ -107,10 +107,14 @@ export function ResumenPanel({
   patient,
   orgType,
   canEdit = false,
+  canEditProfile = false,
+  showClinicalProfile = true,
 }: {
   patient: Patient;
   orgType: OrganizationType;
   canEdit?: boolean;
+  canEditProfile?: boolean;
+  showClinicalProfile?: boolean;
 }) {
   const router = useRouter();
   const [editando, setEditando] = useState(false);
@@ -479,12 +483,13 @@ export function ResumenPanel({
         </dl>
       </Card>
 
-      <Card className="anim-row-in" style={{ animationDelay: "160ms" }}>
+      {showClinicalProfile ? (
+        <Card className="anim-row-in" style={{ animationDelay: "160ms" }}>
         <FichaCardHeader
           title={`Perfil ${ficha.label.toLowerCase()}`}
           description="Antecedentes propios de esta especialidad"
           action={
-            canEdit && !editandoPerfil ? (
+            canEditProfile && !editandoPerfil ? (
               <Button size="sm" variant="secondary" onClick={() => setEditandoPerfil(true)}>
                 Editar perfil
               </Button>
@@ -526,6 +531,7 @@ export function ResumenPanel({
           />
         )}
       </Card>
+      ) : null}
 
     </div>
   );

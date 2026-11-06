@@ -57,11 +57,13 @@ export async function POST(request: Request, { params }: Params) {
   if (!organization) return NextResponse.json({ error: "No se encontró la organización." }, { status: 404 });
 
   const medicalKinds = ["medical_procedure", "medical_treatment", "medical_anesthesia"];
-  if (
-    (medicalKinds.includes(body.data.kind) && organization.type !== "medical") ||
-    (organization.type === "medical" && !medicalKinds.includes(body.data.kind) &&
-      !["datos_personales", "other"].includes(body.data.kind))
-  ) {
+  const allowedByType: Record<string, string[]> = {
+    medical: [...medicalKinds, "datos_personales", "other"],
+    dental: ["tratamiento_dental", "datos_personales", "other"],
+    psychological: ["psicoterapia", "atencion_online", "datos_personales", "other"],
+  };
+  const allowed = allowedByType[String(organization.type)];
+  if (allowed && !allowed.includes(body.data.kind)) {
     return NextResponse.json(
       { error: "El tipo de consentimiento no corresponde a la ficha de esta organización." },
       { status: 400 },
