@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import { addDaysToKey, weekRange } from "@/lib/dates";
+import { DatePicker } from "@/components/ui/date-picker";
 
 /**
  * Navegación por semana de la agenda.
@@ -43,18 +44,14 @@ export function WeekNav({ dayKey, today }: { dayKey: string; today: string }) {
           <ChevronLeft className="h-4 w-4 btn-icon-left" aria-hidden="true" />
         </button>
 
-        <label htmlFor="filtro-dia" className="sr-only">
+        <label htmlFor="filtro-semana" className="sr-only">
           Semana del
         </label>
-        <input
-          id="filtro-dia"
-          type="date"
+        <DatePicker
+          id="filtro-semana"
           value={semana.from}
           disabled={pending}
-          onChange={(e) => {
-            if (e.target.value) irA(e.target.value);
-          }}
-          className="h-9 rounded-lg border-0 bg-transparent px-2 text-sm text-neutral-800 transition-colors hover:text-action-primary focus:outline-none focus:ring-2 focus:ring-brand-sky/40 disabled:opacity-50"
+          onChange={irA}
         />
 
         <button

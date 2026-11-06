@@ -3,6 +3,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
+import { DatePicker } from "@/components/ui/date-picker";
 
 /**
  * Navegación por día de la agenda.
@@ -67,16 +68,7 @@ export function DayNav({
         <label htmlFor="filtro-dia" className="sr-only">
           Día
         </label>
-        <input
-          id="filtro-dia"
-          type="date"
-          value={dayKey}
-          disabled={pending}
-          onChange={(e) => {
-            if (e.target.value) irA(e.target.value);
-          }}
-          className="h-9 rounded-lg border-0 bg-transparent px-2 text-sm text-neutral-800 transition-colors hover:text-action-primary focus:outline-none focus:ring-2 focus:ring-brand-sky/40 disabled:opacity-50"
-        />
+        <DatePicker id="filtro-dia" value={dayKey} disabled={pending} onChange={irA} />
 
         <button
           type="button"
