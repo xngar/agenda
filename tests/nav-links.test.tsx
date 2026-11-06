@@ -45,14 +45,14 @@ function clic(boton: Element) {
 }
 
 describe("SidebarNav", () => {
-  it("sin admin ve Mi agenda, Pacientes, Mi Horario, Bloqueos y Estadísticas, y el activo se marca", () => {
+  it("sin admin ve Mi agenda, Pacientes, Mis Horarios, Bloqueos y Estadísticas, y el activo se marca", () => {
     act(() => {
       root.render(<SidebarNav isAdmin={false} />);
     });
 
     const links = enlaces();
     expect(links).toHaveLength(5);
-    expect(etiquetas()).toEqual(["Mi agenda", "Pacientes", "Mi Horario", "Bloqueos", "Estadísticas"]);
+    expect(etiquetas()).toEqual(["Mi agenda", "Pacientes", "Mis Horarios", "Bloqueos", "Estadísticas"]);
 
     for (const a of links) {
       expect(a.querySelector("svg")).not.toBeNull();
@@ -75,7 +75,7 @@ describe("SidebarNav", () => {
     expect(etiquetas()).toEqual([
       "Mi agenda",
       "Pacientes",
-      "Mi Horario",
+      "Mis Horarios",
       "Bloqueos",
       "Estadísticas",
       "Feriados",
@@ -125,7 +125,7 @@ describe("SidebarNav", () => {
 
     const labels = etiquetas();
     expect(labels).toContain("Estadísticas");
-    expect(labels).toContain("Mi Horario");
+    expect(labels).toContain("Mis Horarios");
     expect(labels).toContain("Bloqueos");
     expect(labels).not.toContain("Feriados");
     expect(labels).not.toContain("Equipo");
