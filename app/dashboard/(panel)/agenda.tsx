@@ -97,7 +97,7 @@ export function Agenda({
     >
       <div className="flex flex-wrap items-center gap-2 rounded-card border border-neutral-200 bg-white p-2 shadow-card">
         <div
-          className="inline-flex items-center gap-1 rounded-xl bg-neutral-100 p-1"
+          className="inline-flex items-center gap-1 rounded-full bg-neutral-100 p-1"
           role="group"
           aria-label="Filtrar citas"
         >
@@ -107,7 +107,7 @@ export function Agenda({
               type="button"
               aria-pressed={filtro === valor}
               onClick={() => setFiltro(valor)}
-              className={`inline-flex min-h-9 items-center rounded-lg px-3 text-sm font-medium capitalize transition-colors ${
+              className={`inline-flex min-h-9 items-center rounded-full px-3 text-sm font-medium capitalize transition-colors ${
                 filtro === valor
                   ? "bg-action-primary text-action-primary-foreground shadow-2xs hover:bg-action-primary-hover"
                   : "text-neutral-600 hover:bg-white hover:text-action-primary"
