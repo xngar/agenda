@@ -598,8 +598,10 @@ button:active .btn-icon-left {
 .anim-new-patient {
   background-color: var(--action-primary);
   color: var(--action-primary-foreground);
+  box-shadow: 0 4px 14px 0 color-mix(in oklab, var(--action-primary) 38%, transparent);
   transition:
     transform var(--motion-duration-micro) var(--motion-ease-out),
+    box-shadow var(--motion-duration-micro) var(--motion-ease-out),
     background-color var(--motion-duration-element) var(--motion-ease-in-out),
     color var(--motion-duration-element) var(--motion-ease-in-out);
 }
@@ -607,11 +609,13 @@ button:active .btn-icon-left {
 .anim-new-patient:hover {
   background-color: color-mix(in oklab, var(--action-primary) 92%, white);
   color: var(--action-primary-foreground);
+  box-shadow: 0 6px 20px 0 color-mix(in oklab, var(--action-primary) 50%, transparent);
   transform: scale(1.05);
 }
 
 .anim-new-patient:active {
   transform: scale(0.97);
+  box-shadow: 0 4px 14px 0 color-mix(in oklab, var(--action-primary) 38%, transparent);
 }
 
 .anim-new-patient-icon {

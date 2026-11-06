@@ -54,7 +54,7 @@ export function StaffBookingButton({
         size="md"
         shape="pill"
         onClick={() => setOpen(true)}
-        className="group shadow-xs transition-all duration-element hover:shadow-md hover:scale-[1.02] active:scale-95 gap-1.5"
+        className="group shadow-[0_4px_14px_0_color-mix(in_oklab,var(--action-primary)_38%,transparent)] transition-all duration-element hover:shadow-[0_6px_20px_0_color-mix(in_oklab,var(--action-primary)_50%,transparent)] hover:scale-[1.02] active:scale-95 gap-1.5"
       >
         <Plus className="h-4 w-4 btn-icon-plus shrink-0" aria-hidden="true" />
         <span>Nueva reserva</span>

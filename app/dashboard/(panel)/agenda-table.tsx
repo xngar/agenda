@@ -50,7 +50,7 @@ export function Accion({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-lg border font-medium transition-all duration-micro ease-out-soft hover:scale-[1.03] active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 ${
+      className={`rounded-full border font-medium transition-all duration-micro ease-out-soft hover:scale-[1.03] active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 ${
         compacto ? "px-2.5 py-1 text-[13px]" : "px-3 py-1.5 text-sm"
       } ${
         destacado
@@ -211,55 +211,57 @@ export function AgendaTable({
                       </p>
                     ) : null}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right">
-                    <span className="inline-flex flex-wrap justify-end gap-1.5">
-                      {cancelada ? (
-                        <Accion
-                          etiqueta="Reabrir"
-                          onClick={() => onAccion(cita.id, "reopen")}
-                          disabled={ocupado}
-                          compacto
-                        />
-                      ) : (
-                        <>
-                          {cita.status === "pending" ? (
-                            <Accion
-                              etiqueta="Confirmar"
-                              onClick={() => onAccion(cita.id, "confirmed")}
-                              disabled={ocupado}
-                              destacado
-                              compacto
-                            />
-                          ) : null}
+                  <td className="px-4 py-3 text-right">
+                    <span className="inline-flex items-center justify-end gap-1.5 flex-nowrap">
+                      <span className="inline-flex items-center gap-1.5 flex-nowrap">
+                        {cancelada ? (
                           <Accion
-                            etiqueta="Atendida"
-                            onClick={() => onAccion(cita.id, "completed")}
+                            etiqueta="Reabrir"
+                            onClick={() => onAccion(cita.id, "reopen")}
                             disabled={ocupado}
                             compacto
                           />
-                          <Accion
-                            etiqueta="No asistió"
-                            onClick={() => onAccion(cita.id, "no_show")}
-                            disabled={ocupado}
-                            compacto
-                          />
-                          {cita.status === "pending" || cita.status === "confirmed" ? (
+                        ) : (
+                          <>
+                            {cita.status === "pending" ? (
+                              <Accion
+                                etiqueta="Confirmar"
+                                onClick={() => onAccion(cita.id, "confirmed")}
+                                disabled={ocupado}
+                                destacado
+                                compacto
+                              />
+                            ) : null}
                             <Accion
-                              etiqueta="Reagendar"
-                              onClick={() => onAccion(cita.id, "reschedule")}
+                              etiqueta="Atendida"
+                              onClick={() => onAccion(cita.id, "completed")}
                               disabled={ocupado}
                               compacto
                             />
-                          ) : null}
-                          <Accion
-                            etiqueta="Cancelar"
-                            onClick={() => onAccion(cita.id, "cancelled")}
-                            disabled={ocupado}
-                            tono="peligro"
-                            compacto
-                          />
-                        </>
-                      )}
+                            <Accion
+                              etiqueta="No asistió"
+                              onClick={() => onAccion(cita.id, "no_show")}
+                              disabled={ocupado}
+                              compacto
+                            />
+                            {cita.status === "pending" || cita.status === "confirmed" ? (
+                              <Accion
+                                etiqueta="Reagendar"
+                                onClick={() => onAccion(cita.id, "reschedule")}
+                                disabled={ocupado}
+                                compacto
+                              />
+                            ) : null}
+                            <Accion
+                              etiqueta="Cancelar"
+                              onClick={() => onAccion(cita.id, "cancelled")}
+                              disabled={ocupado}
+                              tono="peligro"
+                              compacto
+                            />
+                          </>
+                        )}
+                      </span>
                       <WhatsappButton
                         patientId={cita.patient_id}
                         fullName={cita.patient?.full_name ?? "Paciente"}

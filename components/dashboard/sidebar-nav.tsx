@@ -110,7 +110,7 @@ const principal: NavItem[] = [
 ];
 
 const disponibilidad: NavItem[] = [
-  { href: "/dashboard/horario", label: "Mi Horario", icon: <HorarioIcon /> },
+  { href: "/dashboard/horario", label: "Mis Horarios", icon: <HorarioIcon /> },
   { href: "/dashboard/bloqueos", label: "Bloqueos", icon: <BloqueosIcon /> },
 ];
 
