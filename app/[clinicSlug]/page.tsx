@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { OrganizationNotFoundError } from "@/lib/errors";
 import { getCatalog, getPublicOrganization } from "@/lib/booking";
 import { Card, buttonClasses } from "@/components/ui";
 import { CLINIC_ADDRESS, CLINIC_PHONE } from "@/lib/clinic";
@@ -13,8 +15,19 @@ export async function generateMetadata({ params }: { params: Promise<{ clinicSlu
   };
 }
 
+async function loadHomeData(clinicSlug: string) {
+  try {
+    const [catalog, doctor] = await Promise.all([getCatalog(clinicSlug), getDoctorSession()]);
+    return { catalog, doctor };
+  } catch (error) {
+    if (error instanceof OrganizationNotFoundError) notFound();
+    throw error;
+  }
+}
+
 export default async function HomePage({ params }: { params: Promise<{ clinicSlug: string }> }) {
-  const { clinicSlug } = await params; const [catalog, doctor] = await Promise.all([getCatalog(clinicSlug), getDoctorSession()]);
+  const { clinicSlug } = await params;
+  const { catalog, doctor } = await loadHomeData(clinicSlug);
   const { settings } = catalog;
   const address = settings.address ?? CLINIC_ADDRESS;
   const phone = settings.phone ?? CLINIC_PHONE;

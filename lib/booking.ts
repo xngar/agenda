@@ -2,7 +2,7 @@ import "server-only";
 
 import { supabaseAdmin } from "./supabase/admin";
 import { serverEnv } from "./env";
-import { BusinessError, toBusinessError } from "./errors";
+import { BusinessError, OrganizationNotFoundError, toBusinessError } from "./errors";
 import { buildIcs } from "./ics";
 import { CLINIC_ADDRESS } from "./clinic";
 import { sendEmail, maskEmail } from "./email/send";
@@ -83,7 +83,8 @@ type AppointmentRow = {
 export async function getCatalog(orgSlug: string): Promise<Catalog> {
   const supabase = supabaseAdmin();
   const { data: org, error: orgErr } = await supabase.from('organizations').select('*').eq('slug', orgSlug).eq('active', true).maybeSingle();
-  if (orgErr || !org) throw new Error('Organizacion no encontrada');
+  if (orgErr) throw new Error('No se pudo leer la organización');
+  if (!org) throw new OrganizationNotFoundError();
   return loadCatalog(org as unknown as { id: string } & Record<string, unknown>);
 }
 
@@ -91,7 +92,8 @@ export async function getCatalog(orgSlug: string): Promise<Catalog> {
 export async function getCatalogById(orgId: string): Promise<Catalog> {
   const supabase = supabaseAdmin();
   const { data: org, error: orgErr } = await supabase.from('organizations').select('*').eq('id', orgId).eq('active', true).maybeSingle();
-  if (orgErr || !org) throw new Error('Organizacion no encontrada');
+  if (orgErr) throw new Error('No se pudo leer la organización');
+  if (!org) throw new OrganizationNotFoundError();
   return loadCatalog(org as unknown as { id: string } & Record<string, unknown>);
 }
 
@@ -110,7 +112,8 @@ export async function getDefaultCatalog(): Promise<Catalog> {
     .order('created_at', { ascending: true })
     .limit(1)
     .maybeSingle();
-  if (orgErr || !org) throw new Error('Organizacion no encontrada');
+  if (orgErr) throw new Error('No se pudo leer la organización');
+  if (!org) throw new OrganizationNotFoundError();
   return loadCatalog(org as unknown as { id: string } & Record<string, unknown>);
 }
 
