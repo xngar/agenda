@@ -20,14 +20,14 @@ export default function Navbar() {
     <header className="fixed top-0 z-50 w-full border-b border-[var(--lp-sky-200)] bg-white/95 backdrop-blur">
       <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         <Link href="#top" className="flex items-center gap-2">
-          <span className="text-lg font-bold text-action-primary">{siteConfig.name}</span>
+          <span className="text-lg font-bold text-neutral-800">{siteConfig.name}</span>
         </Link>
         <div className="hidden items-center gap-6 md:flex">
           {links.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className="text-sm font-medium text-action-primary transition hover:text-action-primary"
+              className="text-sm font-medium text-neutral-800 transition hover:text-[var(--lp-navy)]"
             >
               {l.label}
             </Link>
@@ -43,7 +43,7 @@ export default function Navbar() {
         <button
           type="button"
           aria-label="Abrir menú"
-          className="rounded-lg p-1.5 text-action-primary transition-transform duration-micro hover:scale-110 active:scale-90 md:hidden"
+          className="rounded-lg p-1.5 text-neutral-800 transition-transform duration-micro hover:scale-110 active:scale-90 md:hidden"
           onClick={() => setOpen((v) => !v)}
         >
           {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -56,7 +56,7 @@ export default function Navbar() {
               <Link
                 key={l.href}
                 href={l.href}
-                className="py-1 text-sm font-medium text-action-primary"
+                className="py-1 text-sm font-medium text-neutral-800"
                 onClick={() => setOpen(false)}
               >
                 {l.label}

@@ -7,7 +7,7 @@ export default function HowItWorks() {
     <section id="como-funciona" className="bg-gradient-to-b from-[var(--lp-sky-100)] to-white">
       <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <ScrollReveal yOffset={16} className="mx-auto max-w-3xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-action-primary sm:text-4xl">
+          <h2 className="text-3xl font-bold tracking-tight text-neutral-800 sm:text-4xl">
             Empezar es simple
           </h2>
         </ScrollReveal>
@@ -34,8 +34,8 @@ export default function HowItWorks() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--lp-navy)] text-sm font-bold text-white shadow-xs transition-transform duration-micro hover:scale-110">
                   {step.n}
                 </div>
-                <h3 className="mt-4 text-lg font-semibold text-action-primary">{step.title}</h3>
-                <p className="mt-2 text-sm text-action-primary/80">{step.text}</p>
+                <h3 className="mt-4 text-lg font-semibold text-neutral-800">{step.title}</h3>
+                <p className="mt-2 text-sm text-neutral-600">{step.text}</p>
               </article>
             </StaggerItem>
           ))}

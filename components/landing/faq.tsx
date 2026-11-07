@@ -33,7 +33,7 @@ export default function Faq() {
     <section id="preguntas" className="bg-white">
       <div className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-action-primary sm:text-4xl">
+          <h2 className="text-3xl font-bold tracking-tight text-neutral-800 sm:text-4xl">
             Preguntas frecuentes
           </h2>
         </div>
@@ -47,15 +47,15 @@ export default function Faq() {
                   onClick={() => setOpen(isOpen ? null : idx)}
                   aria-expanded={isOpen}
                 >
-                  <span className="text-sm font-semibold text-action-primary sm:text-base">
+                  <span className="text-sm font-semibold text-neutral-800 sm:text-base">
                     {item.q}
                   </span>
                   <ChevronDown
-                    className={`h-5 w-5 text-action-primary transition-transform ${isOpen ? "rotate-180" : ""}`}
+                    className={`h-5 w-5 text-neutral-800 transition-transform ${isOpen ? "rotate-180" : ""}`}
                   />
                 </button>
                 {isOpen ? (
-                  <div className="px-4 pb-4 text-sm text-action-primary/80 sm:px-6">
+                  <div className="px-4 pb-4 text-sm text-neutral-600 sm:px-6">
                     {item.a}
                   </div>
                 ) : null}

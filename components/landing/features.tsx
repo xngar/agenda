@@ -38,7 +38,7 @@ export default function Features() {
     <section id="funciones" className="bg-white">
       <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <ScrollReveal yOffset={16} className="mx-auto max-w-3xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-action-primary sm:text-4xl">
+          <h2 className="text-3xl font-bold tracking-tight text-neutral-800 sm:text-4xl">
             Todo lo que tu consulta necesita
           </h2>
         </ScrollReveal>
@@ -48,11 +48,11 @@ export default function Features() {
           {features.map(({ title, text, Icon }) => (
             <StaggerItem key={title} yOffset={20}>
               <article className="card-hover-lift flex h-full flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[var(--lp-sky-200)]">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--lp-sky-100)]/60 text-action-primary transition-colors duration-element group-hover:bg-[var(--lp-sky-200)]">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--lp-sky-100)]/60 text-neutral-800 transition-colors duration-element group-hover:bg-[var(--lp-sky-200)]">
                   <Icon className="h-6 w-6 text-action-primary" />
                 </div>
-                <h3 className="mt-4 text-base font-semibold text-action-primary">{title}</h3>
-                <p className="mt-2 text-sm text-action-primary/80">{text}</p>
+                <h3 className="mt-4 text-base font-semibold text-neutral-800">{title}</h3>
+                <p className="mt-2 text-sm text-neutral-600">{text}</p>
               </article>
             </StaggerItem>
           ))}
@@ -93,7 +93,7 @@ export default function Features() {
                     className={`relative z-10 flex items-center gap-2 ${
                       isActive
                         ? "text-white"
-                        : "text-action-primary hover:text-action-primary/80"
+                        : "text-neutral-800 hover:text-neutral-600"
                     }`}
                   >
                     {id === "odontologia" ? (
@@ -124,11 +124,11 @@ export default function Features() {
                   exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
                   transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  <h4 className="text-sm font-semibold text-action-primary">Ficha odontológica</h4>
-                  <p className="mt-1 text-sm text-action-primary/80">
+                  <h4 className="text-sm font-semibold text-neutral-800">Ficha odontológica</h4>
+                  <p className="mt-1 text-sm text-neutral-600">
                     Odontograma, plan de tratamiento y registro por pieza dental.
                   </p>
-                  <div className="mt-4 flex h-40 items-center justify-center rounded-lg border border-dashed border-[var(--lp-sky-200)] bg-[var(--lp-sky-100)]/40 p-3 text-xs text-action-primary/60">
+                  <div className="mt-4 flex h-40 items-center justify-center rounded-lg border border-dashed border-[var(--lp-sky-200)] bg-[var(--lp-sky-100)]/40 p-3 text-xs text-neutral-500">
                     Mockup de ficha odontológica · {siteConfig.name}
                   </div>
                 </motion.div>
@@ -141,11 +141,11 @@ export default function Features() {
                   exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
                   transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  <h4 className="text-sm font-semibold text-action-primary">Ficha médica</h4>
-                  <p className="mt-1 text-sm text-action-primary/80">
+                  <h4 className="text-sm font-semibold text-neutral-800">Ficha médica</h4>
+                  <p className="mt-1 text-sm text-neutral-600">
                     Signos vitales, examen físico, diagnósticos y recetas.
                   </p>
-                  <div className="mt-4 flex h-40 items-center justify-center rounded-lg border border-dashed border-[var(--lp-sky-200)] bg-[var(--lp-sky-100)]/40 p-3 text-xs text-action-primary/60">
+                  <div className="mt-4 flex h-40 items-center justify-center rounded-lg border border-dashed border-[var(--lp-sky-200)] bg-[var(--lp-sky-100)]/40 p-3 text-xs text-neutral-500">
                     Mockup de ficha médica · {siteConfig.name}
                   </div>
                 </motion.div>
@@ -158,11 +158,11 @@ export default function Features() {
                   exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
                   transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  <h4 className="text-sm font-semibold text-action-primary">Ficha psicológica</h4>
-                  <p className="mt-1 text-sm text-action-primary/80">
+                  <h4 className="text-sm font-semibold text-neutral-800">Ficha psicológica</h4>
+                  <p className="mt-1 text-sm text-neutral-600">
                     Historia del paciente, notas de sesión y seguimiento, con notas privadas visibles solo para el terapeuta.
                   </p>
-                  <div className="mt-4 flex h-40 items-center justify-center rounded-lg border border-dashed border-[var(--lp-sky-200)] bg-[var(--lp-sky-100)]/40 p-3 text-xs text-action-primary/60">
+                  <div className="mt-4 flex h-40 items-center justify-center rounded-lg border border-dashed border-[var(--lp-sky-200)] bg-[var(--lp-sky-100)]/40 p-3 text-xs text-neutral-500">
                     Mockup de ficha psicológica · {siteConfig.name}
                   </div>
                 </motion.div>

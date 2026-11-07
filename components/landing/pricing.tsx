@@ -10,7 +10,7 @@ export default function Pricing() {
     <section id="planes" className="bg-gradient-to-b from-[var(--lp-sky-100)] to-white">
       <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <ScrollReveal yOffset={16} className="mx-auto max-w-3xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-action-primary sm:text-4xl">
+          <h2 className="text-3xl font-bold tracking-tight text-neutral-800 sm:text-4xl">
             Un plan para cada consulta
           </h2>
         </ScrollReveal>
@@ -25,15 +25,15 @@ export default function Pricing() {
                 }`}
               >
                 {plan.highlighted ? (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full bg-[var(--lp-yellow)] px-3.5 py-1 text-xs font-semibold text-action-primary shadow-xs">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full bg-[var(--lp-yellow)] px-3.5 py-1 text-xs font-semibold text-neutral-800 shadow-xs">
                     <Sparkles className="h-3 w-3 text-action-primary" />
                     Más elegido
                   </span>
                 ) : null}
-                <h3 className="text-lg font-semibold text-action-primary">{plan.name}</h3>
-                <p className="mt-1 text-sm text-action-primary/70">{plan.title}</p>
-                <div className="mt-4 text-3xl font-bold text-action-primary">{plan.price}</div>
-                <ul className="mt-6 space-y-3 text-sm text-action-primary flex-1">
+                <h3 className="text-lg font-semibold text-neutral-800">{plan.name}</h3>
+                <p className="mt-1 text-sm text-neutral-600">{plan.title}</p>
+                <div className="mt-4 text-3xl font-bold text-neutral-800">{plan.price}</div>
+                <ul className="mt-6 space-y-3 text-sm text-neutral-800 flex-1">
                   <li className="flex items-start gap-2">
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-action-primary" />
                     <span>Profesionales: {plan.professionals}</span>
@@ -59,7 +59,7 @@ export default function Pricing() {
                   href="#demo"
                   className={`mt-8 rounded-full px-4 py-2.5 text-center text-sm font-semibold transition-all duration-micro hover:scale-105 active:scale-95 ${
                     plan.highlighted
-                      ? "bg-[var(--lp-yellow)] text-action-primary shadow-sm hover:bg-[var(--lp-yellow)]/90"
+                      ? "bg-[var(--lp-yellow)] text-neutral-800 shadow-sm hover:bg-[var(--lp-yellow)]/90"
                       : "bg-[var(--lp-navy)] text-white shadow-sm hover:bg-[var(--lp-blue)]"
                   }`}
                 >
@@ -70,7 +70,7 @@ export default function Pricing() {
           ))}
         </StaggerGroup>
         <ScrollReveal delay={0.2} yOffset={12}>
-          <p className="mt-8 text-center text-sm text-action-primary/80">
+          <p className="mt-8 text-center text-sm text-neutral-600">
             ¿Necesitas algo distinto? Escríbenos y armamos un plan a tu medida.
           </p>
         </ScrollReveal>
