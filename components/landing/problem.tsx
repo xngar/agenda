@@ -12,7 +12,7 @@ export default function Problem() {
   const { reduce } = useMotionPrefs();
 
   return (
-    <section className="bg-gradient-to-b from-white to-[var(--lp-sky-100)]">
+    <section className="bg-white">
       <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <ScrollReveal yOffset={16} className="mx-auto max-w-3xl text-center">
           <h2 className="text-3xl font-bold tracking-tight text-neutral-800 sm:text-4xl">
@@ -31,7 +31,7 @@ export default function Problem() {
           className="relative mx-auto mt-10 max-w-lg"
         >
           <div className="relative mx-auto max-w-lg rounded-2xl bg-white p-4 shadow-xl ring-1 ring-[var(--lp-sky-200)] transition-shadow duration-[300ms] hover:shadow-2xl">
-            <div className="rounded-xl border border-[var(--lp-sky-200)] bg-gradient-to-b from-white to-[var(--lp-sky-100)] p-4">
+            <div className="rounded-xl border border-[var(--lp-sky-200)] bg-white p-4">
               <div className="mb-3 flex items-center justify-between">
                 <div className="text-sm font-semibold text-neutral-800">Agenda semanal</div>
                 <div className="flex items-center gap-1.5 text-xs text-neutral-600">

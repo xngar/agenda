@@ -62,7 +62,7 @@ export default function Features() {
         <ScrollReveal
           delay={0.15}
           yOffset={24}
-          className="mt-12 rounded-2xl bg-gradient-to-b from-white to-[var(--lp-sky-100)] p-6 ring-1 ring-[var(--lp-sky-200)] sm:p-8"
+          className="mt-12 rounded-2xl bg-white p-6 ring-1 ring-[var(--lp-sky-200)] sm:p-8"
         >
           {/* Navegador de Tabs con pastilla animada (layoutId) */}
           <div className="flex flex-wrap items-center justify-center gap-2">
