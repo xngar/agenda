@@ -18,7 +18,7 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 z-50 w-full border-b border-[var(--lp-sky-200)] bg-white/95 backdrop-blur">
+    <header className="fixed top-0 z-50 w-full border-b border-white/10 bg-black/20 backdrop-blur-md">
       <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         <Link href="#top" className="flex items-center gap-2">
           <Image
@@ -26,7 +26,7 @@ export default function Navbar() {
             alt={siteConfig.name !== "[Nombre]" ? siteConfig.name : "gethour"}
             width={140}
             height={28}
-            className="h-7 w-auto"
+            className="h-7 w-auto drop-shadow-sm brightness-0 invert"
             priority
           />
         </Link>
@@ -35,7 +35,7 @@ export default function Navbar() {
             <Link
               key={l.href}
               href={l.href}
-              className="text-sm font-medium text-neutral-800 transition hover:text-[var(--lp-navy)]"
+              className="text-sm font-medium text-white/90 drop-shadow-xs transition hover:text-white"
             >
               {l.label}
             </Link>
@@ -51,7 +51,7 @@ export default function Navbar() {
         <button
           type="button"
           aria-label="Abrir menú"
-          className="rounded-lg p-1.5 text-neutral-800 transition-transform duration-micro hover:scale-110 active:scale-90 md:hidden"
+          className="rounded-lg p-1.5 text-white transition-transform duration-micro hover:scale-110 active:scale-90 md:hidden"
           onClick={() => setOpen((v) => !v)}
         >
           {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -59,12 +59,12 @@ export default function Navbar() {
       </nav>
       {open ? (
         <div className="md:hidden">
-          <div className="flex flex-col gap-2 border-t border-[var(--lp-sky-200)] bg-white px-4 py-3">
+          <div className="flex flex-col gap-2 border-t border-white/10 bg-black/80 px-4 py-3 backdrop-blur-md">
             {links.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
-                className="py-1 text-sm font-medium text-neutral-800"
+                className="py-1 text-sm font-medium text-white/90 hover:text-white"
                 onClick={() => setOpen(false)}
               >
                 {l.label}

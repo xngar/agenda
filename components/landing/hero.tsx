@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { siteConfig } from "@/lib/site-config";
-import { CheckCircle2, Sparkles, ArrowRight, Mail } from "lucide-react";
+import { CheckCircle2, ArrowRight, Mail } from "lucide-react";
 import { motion } from "motion/react";
 import { useMotionPrefs } from "@/components/motion/use-motion-prefs";
 
@@ -28,22 +28,11 @@ export default function Hero() {
 
       <div className="relative z-10 mx-auto grid h-full w-full max-w-7xl items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:px-8">
         <div>
-          <motion.div
-            initial={reduce ? { opacity: 1 } : { opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: easeCustom }}
-          >
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1 text-xs font-semibold text-neutral-800 shadow-sm ring-1 ring-[var(--lp-sky-200)] transition-transform duration-micro hover:scale-105">
-              <Sparkles className="h-3.5 w-3.5 text-action-primary" />
-              Para odontólogos, médicos y psicólogos
-            </span>
-          </motion.div>
-
           <motion.h1
             initial={reduce ? { opacity: 1 } : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.08, ease: easeCustom }}
-            className="mt-5 text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl"
+            className="text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl"
           >
             Agenda, fichas clínicas y pacientes en un solo lugar.
           </motion.h1>
@@ -101,7 +90,7 @@ export default function Hero() {
             </Link>
             <Link
               href={`mailto:${siteConfig.email}`}
-              className="group inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-neutral-800 shadow-sm ring-1 ring-[var(--lp-sky-200)] transition-all duration-micro hover:scale-105 hover:bg-[var(--lp-sky-100)] active:scale-95"
+              className="group inline-flex items-center justify-center gap-2 rounded-full bg-action-primary px-6 py-3 text-sm font-semibold text-action-primary-foreground shadow-sm transition-all duration-micro hover:scale-105 hover:bg-action-primary-hover hover:shadow-md active:scale-95"
             >
               <Mail className="h-4 w-4 btn-icon-wiggle" aria-hidden="true" />
               <span>Hablar con nuestro equipo</span>
