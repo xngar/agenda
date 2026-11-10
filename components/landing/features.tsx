@@ -1,11 +1,24 @@
 "use client";
 
-import { Calendar, FileText, Bell, Users, Sparkles, Stethoscope, Brain } from "lucide-react";
+import { Calendar, FileText, Bell, Users, Sparkles, Stethoscope, Brain, ShieldCheck, Clock, CheckCircle2, HeartPulse, UserCheck, CalendarCheck, Smartphone } from "lucide-react";
 import { useState } from "react";
 import { siteConfig } from "@/lib/site-config";
 import { motion, AnimatePresence } from "motion/react";
 import { ScrollReveal, StaggerGroup, StaggerItem } from "@/components/motion/scroll-reveal";
 import { useMotionPrefs } from "@/components/motion/use-motion-prefs";
+import { MarqueeFade } from "@/components/landing/marquee-fade";
+
+const marqueeItems = [
+  { text: "Reservas online 24/7", Icon: Clock },
+  { text: "Ficha clínica electrónica", Icon: FileText },
+  { text: "Recordatorios automáticos", Icon: Bell },
+  { text: "Odontograma interactivo", Icon: Sparkles },
+  { text: "Seguridad y privacidad", Icon: ShieldCheck },
+  { text: "Atención multidisciplinaria", Icon: HeartPulse },
+  { text: "Confirmación por WhatsApp", Icon: Smartphone },
+  { text: "Control de ausencias", Icon: CalendarCheck },
+  { text: "Gestión ágil de pacientes", Icon: UserCheck },
+];
 
 const features = [
   {
@@ -170,6 +183,21 @@ export default function Features() {
             </AnimatePresence>
           </div>
         </ScrollReveal>
+      </div>
+
+      {/* Marquesina animada con desvanecimiento (Marquee Fade) debajo de la sección */}
+      <div className="border-y border-neutral-100 bg-neutral-50/70 py-5">
+        <MarqueeFade pauseOnHover={true} className="[--marquee-duration:40s]">
+          {marqueeItems.map(({ text, Icon }) => (
+            <div
+              key={text}
+              className="flex items-center gap-2.5 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-800 shadow-2xs transition-all hover:scale-105 hover:border-[var(--lp-sky-200)] hover:shadow-xs select-none"
+            >
+              <Icon className="h-4 w-4 text-action-primary shrink-0" />
+              <span className="whitespace-nowrap">{text}</span>
+            </div>
+          ))}
+        </MarqueeFade>
       </div>
     </section>
   );

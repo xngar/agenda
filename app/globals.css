@@ -627,6 +627,22 @@ button:active .btn-icon-left {
 }
 
 /* ----------------------------------------------------------------------------
+   Marquee continuo con soporte para pausa en hover
+   -------------------------------------------------------------------------- */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee var(--marquee-duration, 35s) linear infinite;
+}
+
+/* ----------------------------------------------------------------------------
    Toasts (sonner).
    Sonner inyecta su propia hoja de estilos en runtime, así que una clase
    pasada por props no alcanza: se sobreescribe la transición con los tokens
