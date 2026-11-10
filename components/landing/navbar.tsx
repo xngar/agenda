@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Menu, X, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { siteConfig } from "@/lib/site-config";
@@ -20,7 +21,14 @@ export default function Navbar() {
     <header className="fixed top-0 z-50 w-full border-b border-[var(--lp-sky-200)] bg-white/95 backdrop-blur">
       <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         <Link href="#top" className="flex items-center gap-2">
-          <span className="text-lg font-bold text-neutral-800">{siteConfig.name}</span>
+          <Image
+            src="/gethour.svg"
+            alt={siteConfig.name !== "[Nombre]" ? siteConfig.name : "gethour"}
+            width={140}
+            height={28}
+            className="h-7 w-auto"
+            priority
+          />
         </Link>
         <div className="hidden items-center gap-6 md:flex">
           {links.map((l) => (
