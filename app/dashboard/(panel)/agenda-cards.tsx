@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, CalendarClock, UserX, XCircle } from "lucide-react";
+import { ChevronDown, CalendarClock, UserX, XCircle, UserRound } from "lucide-react";
 import { formatTime } from "@/lib/dates";
 import { parseAppointmentRange } from "@/lib/range";
 import { StatusBadge } from "@/components/ui";
@@ -9,6 +9,7 @@ import type { DoctorAppointment } from "@/lib/types";
 import { Accion, RIEL } from "./agenda-table";
 import { resaltarCita } from "./resaltar-cita";
 import { reprogramable } from "./agenda-actions";
+import { usePatientQuickView } from "@/components/dashboard/patient-quick-view";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,6 +38,8 @@ export function AgendaCards({
   /** Nombre de la clínica, para el mensaje de WhatsApp. */
   orgName: string;
 }) {
+  const { open } = usePatientQuickView();
+
   return (
     <ul className="space-y-2 md:hidden" data-testid="agenda-cards">
       {citas.map((cita, i) => {
@@ -72,9 +75,25 @@ export function AgendaCards({
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate text-[15px] font-semibold text-neutral-900">
-                    {cita.patient?.full_name ?? "Paciente"}
-                  </p>
+                  {cita.patient ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        open(cita.patient_id, {
+                          start,
+                          end,
+                          serviceName: cita.service?.name ?? null,
+                          status: cita.status,
+                        })
+                      }
+                      aria-label={`Ver perfil de ${cita.patient.full_name}`}
+                      className="block max-w-full truncate text-left text-[15px] font-semibold text-neutral-900 transition-colors hover:text-action-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+                    >
+                      {cita.patient.full_name}
+                    </button>
+                  ) : (
+                    <p className="truncate text-[15px] font-semibold text-neutral-900">Paciente</p>
+                  )}
                   {cita.service?.name ? (
                     <p className="mt-0.5 truncate text-sm text-neutral-600">{cita.service.name}</p>
                   ) : null}
@@ -150,6 +169,25 @@ export function AgendaCards({
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start" className="w-44">
+                          {cita.patient ? (
+                            <>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  open(cita.patient_id, {
+                                    start,
+                                    end,
+                                    serviceName: cita.service?.name ?? null,
+                                    status: cita.status,
+                                  })
+                                }
+                                className="cursor-pointer gap-2"
+                              >
+                                <UserRound className="h-4 w-4 text-neutral-500" />
+                                <span>Ver perfil</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                            </>
+                          ) : null}
                           {reprogramable(cita) && (
                             <DropdownMenuItem
                               onClick={() => onReagendar(cita)}

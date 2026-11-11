@@ -18,8 +18,9 @@ import { EmptyState, StatusBadge } from "@/components/ui";
 import { WhatsappIcon, WhatsappModal } from "@/components/dashboard/whatsapp-button";
 import { useRealtimeNotifications } from "../use-realtime";
 import { resaltarCita } from "./resaltar-cita";
+import { usePatientQuickView } from "@/components/dashboard/patient-quick-view";
 import { motion, AnimatePresence } from "motion/react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, UserRound } from "lucide-react";
 import { DUR, EASE } from "@/lib/motion";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -77,6 +78,7 @@ export function MonthView({
   orgName,
 }: Props) {
   const router = useRouter();
+  const { open: abrirPerfil } = usePatientQuickView();
   const [menu, setMenu] = useState<{ x: number; y: number; cita: DoctorAppointment } | null>(null);
   const [contacto, setContacto] = useState<DoctorAppointment | null>(null);
   const [pendiente, setPendiente] = useState<string | null>(null);
@@ -117,22 +119,25 @@ export function MonthView({
   }
 
   function accionesDe(cita: DoctorAppointment): Accion[] {
+    const perfil: Accion = { etiqueta: "Ver perfil", action: "perfil" };
     const whatsapp: Accion = {
       etiqueta: "Enviar mensaje",
       action: "whatsapp",
       tono: "whatsapp",
     };
     if (cita.status === "cancelled") {
-      return [{ etiqueta: "Reabrir", action: "reopen" }, whatsapp];
+      return [perfil, { etiqueta: "Reabrir", action: "reopen" }, whatsapp];
     }
     if (cita.status === "pending") {
       return [
+        perfil,
         { etiqueta: "Confirmar", action: "confirmed", tono: "primario" },
         { etiqueta: "Rechazar", action: "cancelled", tono: "peligro" },
         whatsapp,
       ];
     }
     return [
+      perfil,
       { etiqueta: "Atendida", action: "completed" },
       { etiqueta: "No asistió", action: "no_show" },
       { etiqueta: "Cancelar", action: "cancelled", tono: "peligro" },
@@ -178,6 +183,20 @@ export function MonthView({
   }, [menu]);
 
   async function ejecutar(appointmentId: string, action: string) {
+    if (action === "perfil") {
+      const cita = initial.find((c) => c.id === appointmentId);
+      if (cita) {
+        const { start, end } = parseAppointmentRange(cita.during);
+        abrirPerfil(cita.patient_id, {
+          start,
+          end,
+          serviceName: cita.service?.name ?? null,
+          status: cita.status,
+        });
+      }
+      setMenu(null);
+      return;
+    }
     if (action === "whatsapp") {
       const cita = initial.find((c) => c.id === appointmentId);
       if (cita) setContacto(cita);
@@ -472,6 +491,8 @@ export function MonthView({
                   <span className="inline-flex items-center gap-2">
                     {accion.tono === "whatsapp" ? (
                       <WhatsappIcon className="h-4 w-4" />
+                    ) : accion.action === "perfil" ? (
+                      <UserRound className="h-4 w-4" />
                     ) : null}
                     {accion.etiqueta}
                   </span>

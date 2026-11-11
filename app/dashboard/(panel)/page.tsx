@@ -32,6 +32,7 @@ import Link from "next/link";
 import { ErrorNotice } from "@/components/ui";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { AnimatedNumber } from "@/components/motion/animated-number";
+import { PatientQuickViewProvider } from "@/components/dashboard/patient-quick-view";
 
 export const dynamic = "force-dynamic";
 
@@ -248,46 +249,48 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
       {error ? <ErrorNotice message={`No pudimos cargar la agenda: ${error}`} /> : null}
 
-      {verMes ? (
-        <MonthView
-          key={mesKey}
-          initial={appointments}
-          mesKey={mesKey}
-          gridFrom={grid!.from}
-          gridTo={grid!.to}
-          hoy={todayKey(tzClinica)}
-          timezone={tzClinica}
-          currentUserId={session.id}
-          canManage={veTodoElEquipo}
-          realtimeDoctorId={onlyDoctorId}
-          orgId={session.orgId}
-          doctorFilter={filtroDoctor}
-          orgName={orgSettings.name}
-        />
-      ) : vista === "semana" ? (
-        <WeekView
-          key={week.from}
-          initial={appointments}
-          weekFrom={week.from}
-          weekTo={week.to}
-          hoy={todayKey(tzClinica)}
-          timezone={tzClinica}
-          doctorId={onlyDoctorId}
-          orgId={session.orgId}
-          doctors={bookingDoctors}
-          orgName={orgSettings.name}
-        />
-      ) : (
-        <Agenda
-          initial={appointments}
-          dayKey={dayKey}
-          doctorId={onlyDoctorId}
-          orgId={session.orgId}
-          diasConCitas={diasConCitas}
-          doctors={bookingDoctors}
-          orgName={orgSettings.name}
-        />
-      )}
+      <PatientQuickViewProvider orgName={orgSettings.name} timezone={tzClinica}>
+        {verMes ? (
+          <MonthView
+            key={mesKey}
+            initial={appointments}
+            mesKey={mesKey}
+            gridFrom={grid!.from}
+            gridTo={grid!.to}
+            hoy={todayKey(tzClinica)}
+            timezone={tzClinica}
+            currentUserId={session.id}
+            canManage={veTodoElEquipo}
+            realtimeDoctorId={onlyDoctorId}
+            orgId={session.orgId}
+            doctorFilter={filtroDoctor}
+            orgName={orgSettings.name}
+          />
+        ) : vista === "semana" ? (
+          <WeekView
+            key={week.from}
+            initial={appointments}
+            weekFrom={week.from}
+            weekTo={week.to}
+            hoy={todayKey(tzClinica)}
+            timezone={tzClinica}
+            doctorId={onlyDoctorId}
+            orgId={session.orgId}
+            doctors={bookingDoctors}
+            orgName={orgSettings.name}
+          />
+        ) : (
+          <Agenda
+            initial={appointments}
+            dayKey={dayKey}
+            doctorId={onlyDoctorId}
+            orgId={session.orgId}
+            diasConCitas={diasConCitas}
+            doctors={bookingDoctors}
+            orgName={orgSettings.name}
+          />
+        )}
+      </PatientQuickViewProvider>
 
       <p className="text-sm text-neutral-500">
         <Link className="underline underline-offset-4 hover:text-action-primary" href="/">

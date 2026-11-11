@@ -127,8 +127,15 @@ describe("AgendaTable", () => {
     });
     const primeraFila = container.querySelectorAll("tbody tr")[0];
     const botones = primeraFila?.querySelectorAll("button") ?? [];
-    expect(botones.length).toBeGreaterThan(0);
-    for (const b of botones) expect((b as HTMLButtonElement).disabled).toBe(true);
+    const acciones = [...botones].filter(
+      (b) => !b.getAttribute("aria-label")?.startsWith("Ver perfil"),
+    );
+    expect(acciones.length).toBeGreaterThan(0);
+    for (const b of acciones) expect((b as HTMLButtonElement).disabled).toBe(true);
+    const perfil = [...botones].find((b) =>
+      b.getAttribute("aria-label")?.startsWith("Ver perfil"),
+    );
+    expect((perfil as HTMLButtonElement | undefined)?.disabled).toBe(false);
   });
 
   it("ofrece WhatsApp por cita y lo deshabilita sin celular", () => {

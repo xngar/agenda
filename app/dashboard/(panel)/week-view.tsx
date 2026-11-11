@@ -16,11 +16,12 @@ import { parseAppointmentRange } from "@/lib/range";
 import { whatsappPhone } from "@/lib/phone";
 import { useAgendaAcciones } from "./agenda-actions";
 import { StaffRescheduleModal } from "./staff-reschedule-modal";
+import { usePatientQuickView } from "@/components/dashboard/patient-quick-view";
 import { WhatsappIcon, WhatsappModal } from "@/components/dashboard/whatsapp-button";
 import { resaltarCita } from "./resaltar-cita";
 import type { StaffDoctor } from "./staff-booking-button";
 import { motion, AnimatePresence } from "motion/react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, UserRound } from "lucide-react";
 import { DUR, EASE } from "@/lib/motion";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -126,6 +127,8 @@ export function WeekView({
     realtimeError,
   } = useAgendaAcciones({ doctorId, orgId, doctors });
 
+  const { open: abrirPerfil } = usePatientQuickView();
+
   const porDia = useMemo(() => appointmentsByDay(initial, timezone), [initial, timezone]);
 
   const dias = useMemo(() => {
@@ -178,6 +181,20 @@ export function WeekView({
   const router = useRouter();
 
   async function ejecutar(appointmentId: string, action: string) {
+    if (action === "perfil") {
+      const cita = initial.find((c) => c.id === appointmentId);
+      if (cita) {
+        const { start, end } = parseAppointmentRange(cita.during);
+        abrirPerfil(cita.patient_id, {
+          start,
+          end,
+          serviceName: cita.service?.name ?? null,
+          status: cita.status,
+        });
+      }
+      setMenu(null);
+      return;
+    }
     if (action === "whatsapp") {
       const cita = initial.find((c) => c.id === appointmentId);
       if (cita) setContacto(cita);
@@ -497,6 +514,8 @@ export function WeekView({
                   <span className="inline-flex items-center gap-2">
                     {accion.tono === "whatsapp" ? (
                       <WhatsappIcon className="h-4 w-4" />
+                    ) : accion.action === "perfil" ? (
+                      <UserRound className="h-4 w-4" />
                     ) : null}
                     {accion.etiqueta}
                   </span>
@@ -543,15 +562,16 @@ export function WeekView({
 type Accion = { etiqueta: string; action: string; tono?: "primario" | "peligro" | "whatsapp" };
 
 function accionesDe(cita: DoctorAppointment): Accion[] {
+  const perfil: Accion = { etiqueta: "Ver perfil", action: "perfil" };
   const whatsapp: Accion = {
     etiqueta: "Enviar mensaje",
     action: "whatsapp",
     tono: "whatsapp",
   };
   if (cita.status === "cancelled") {
-    return [{ etiqueta: "Reabrir", action: "reopen" }, whatsapp];
+    return [perfil, { etiqueta: "Reabrir", action: "reopen" }, whatsapp];
   }
-  const lista: Accion[] = [];
+  const lista: Accion[] = [perfil];
   if (cita.status === "pending") {
     lista.push({ etiqueta: "Confirmar", action: "confirmed", tono: "primario" });
   }

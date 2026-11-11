@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, CalendarClock, UserX, XCircle } from "lucide-react";
+import { ChevronDown, CalendarClock, UserX, XCircle, UserRound } from "lucide-react";
 import type { DoctorAppointment } from "@/lib/types";
 import { formatTime } from "@/lib/dates";
 import { StatusBadge } from "@/components/ui";
@@ -8,6 +8,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { WhatsappButton } from "@/components/dashboard/whatsapp-button";
 import { parseAppointmentRange } from "@/lib/range";
 import { resaltarCita } from "./resaltar-cita";
+import { usePatientQuickView } from "@/components/dashboard/patient-quick-view";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -99,6 +100,8 @@ export function AgendaTable({
   /** Ids de las citas recién modificadas: se resaltan al instante. */
   recientes?: string[];
 }) {
+  const { open } = usePatientQuickView();
+
   return (
     <div>
       <div className="mb-2 flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-xs text-neutral-600">
@@ -187,9 +190,29 @@ export function AgendaTable({
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <p className="font-medium text-neutral-900">
-                      {cita.patient?.full_name ?? "Paciente"}
-                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-medium text-neutral-900">
+                        {cita.patient?.full_name ?? "Paciente"}
+                      </p>
+                      {cita.patient ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            open(cita.patient_id, {
+                              start,
+                              end,
+                              serviceName: cita.service?.name ?? null,
+                              status: cita.status,
+                            })
+                          }
+                          aria-label={`Ver perfil de ${cita.patient.full_name}`}
+                          title="Ver perfil del paciente"
+                          className="inline-flex size-7 shrink-0 items-center justify-center rounded-full text-neutral-400 transition-colors hover:bg-action-primary/10 hover:text-action-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+                        >
+                          <UserRound className="size-4" aria-hidden />
+                        </button>
+                      ) : null}
+                    </div>
                     {cita.patient?.rut ? (
                       <p className="mt-0.5 text-xs tabular-nums text-neutral-500">
                         {cita.patient.rut}
@@ -274,6 +297,25 @@ export function AgendaTable({
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-44">
+                              {cita.patient ? (
+                                <>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      open(cita.patient_id, {
+                                        start,
+                                        end,
+                                        serviceName: cita.service?.name ?? null,
+                                        status: cita.status,
+                                      })
+                                    }
+                                    className="cursor-pointer gap-2"
+                                  >
+                                    <UserRound className="h-4 w-4 text-neutral-500" />
+                                    <span>Ver perfil</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                </>
+                              ) : null}
                               {(cita.status === "pending" || cita.status === "confirmed") && (
                                 <DropdownMenuItem
                                   onClick={() => onAccion(cita.id, "reschedule")}
