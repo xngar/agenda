@@ -41,10 +41,10 @@ export default function Navbar() {
             </Link>
           ))}
           <Link
-            href="#demo"
+            href="/dashboard/login"
             className="group inline-flex items-center gap-1.5 rounded-full bg-[var(--lp-navy)] px-4 py-2 text-sm font-semibold text-white shadow-xs transition-all duration-micro hover:scale-105 hover:bg-[var(--lp-blue)] hover:shadow-sm active:scale-95"
           >
-            <span>Solicitar demo</span>
+            <span>Acceso profesionales</span>
             <ArrowRight className="h-4 w-4 btn-icon-right" aria-hidden="true" />
           </Link>
         </div>
@@ -71,11 +71,11 @@ export default function Navbar() {
               </Link>
             ))}
             <Link
-              href="#demo"
+              href="/dashboard/login"
               className="mt-1 rounded-full bg-[var(--lp-navy)] px-4 py-2 text-center text-sm font-semibold text-white"
               onClick={() => setOpen(false)}
             >
-              Solicitar demo
+              Acceso profesionales
             </Link>
           </div>
         </div>

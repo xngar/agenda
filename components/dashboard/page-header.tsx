@@ -11,6 +11,7 @@ export function PageHeader({
   description,
   meta,
   actions,
+  className,
 }: {
   eyebrow?: ReactNode;
   title: ReactNode;
@@ -19,10 +20,11 @@ export function PageHeader({
   meta?: ReactNode;
   /** Botones y controles alineados a la derecha en pantallas anchas. */
   actions?: ReactNode;
+  className?: string;
 }) {
   return (
-    <header className="anim-fade-up flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
-      <div className="min-w-0">
+    <header className={`anim-fade-up flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between ${className ?? ""}`}>
+      <div className="min-w-0 flex-1">
         {eyebrow ? (
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-action-primary">
             {eyebrow}
@@ -37,7 +39,7 @@ export function PageHeader({
         {meta ? <div className="mt-2.5 flex flex-wrap items-center gap-2">{meta}</div> : null}
       </div>
       {actions ? (
-        <div className="flex flex-wrap items-center gap-2">{actions}</div>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>
       ) : null}
     </header>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown, CalendarClock, UserX, XCircle } from "lucide-react";
 import type { DoctorAppointment } from "@/lib/types";
 import { formatTime } from "@/lib/dates";
 import { StatusBadge } from "@/components/ui";
@@ -7,6 +8,13 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { WhatsappButton } from "@/components/dashboard/whatsapp-button";
 import { parseAppointmentRange } from "@/lib/range";
 import { resaltarCita } from "./resaltar-cita";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 /**
  * Riel y fondo por estado. Misma historia de color que `CHIP_TONO` en
@@ -213,55 +221,90 @@ export function AgendaTable({
                   </td>
                   <td className="px-4 py-3 text-right">
                     <span className="inline-flex items-center justify-end gap-1.5 flex-nowrap">
-                      <span className="inline-flex items-center gap-1.5 flex-nowrap">
-                        {cancelada ? (
-                          <Accion
-                            etiqueta="Reabrir"
-                            onClick={() => onAccion(cita.id, "reopen")}
-                            disabled={ocupado}
-                            compacto
-                          />
-                        ) : (
-                          <>
-                            {cita.status === "pending" ? (
-                              <Accion
-                                etiqueta="Confirmar"
-                                onClick={() => onAccion(cita.id, "confirmed")}
-                                disabled={ocupado}
-                                destacado
-                                compacto
-                              />
-                            ) : null}
+                      {cancelada ? (
+                        <Accion
+                          etiqueta="Reabrir"
+                          onClick={() => onAccion(cita.id, "reopen")}
+                          disabled={ocupado}
+                          compacto
+                        />
+                      ) : (
+                        <>
+                          {cita.status === "pending" ? (
+                            <Accion
+                              etiqueta="Confirmar"
+                              onClick={() => onAccion(cita.id, "confirmed")}
+                              disabled={ocupado}
+                              destacado
+                              compacto
+                            />
+                          ) : cita.status === "confirmed" ? (
                             <Accion
                               etiqueta="Atendida"
                               onClick={() => onAccion(cita.id, "completed")}
                               disabled={ocupado}
+                              destacado
                               compacto
                             />
+                          ) : cita.status === "completed" ? (
                             <Accion
-                              etiqueta="No asistió"
-                              onClick={() => onAccion(cita.id, "no_show")}
+                              etiqueta="Atendida"
+                              onClick={() => onAccion(cita.id, "completed")}
+                              disabled
+                              compacto
+                            />
+                          ) : cita.status === "no_show" ? (
+                            <Accion
+                              etiqueta="Reabrir"
+                              onClick={() => onAccion(cita.id, "reopen")}
                               disabled={ocupado}
                               compacto
                             />
-                            {cita.status === "pending" || cita.status === "confirmed" ? (
-                              <Accion
-                                etiqueta="Reagendar"
-                                onClick={() => onAccion(cita.id, "reschedule")}
+                          ) : null}
+
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
                                 disabled={ocupado}
-                                compacto
-                              />
-                            ) : null}
-                            <Accion
-                              etiqueta="Cancelar"
-                              onClick={() => onAccion(cita.id, "cancelled")}
-                              disabled={ocupado}
-                              tono="peligro"
-                              compacto
-                            />
-                          </>
-                        )}
-                      </span>
+                                className="inline-flex items-center gap-1 rounded-full border border-neutral-300 px-2.5 py-1 text-[13px] font-medium text-neutral-700 transition-all duration-micro ease-out-soft hover:border-neutral-400 hover:bg-neutral-100 hover:scale-[1.03] active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                              >
+                                <span>Opciones</span>
+                                <ChevronDown className="h-3.5 w-3.5 text-neutral-500" aria-hidden="true" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
+                              {(cita.status === "pending" || cita.status === "confirmed") && (
+                                <DropdownMenuItem
+                                  onClick={() => onAccion(cita.id, "reschedule")}
+                                  className="cursor-pointer gap-2"
+                                >
+                                  <CalendarClock className="h-4 w-4 text-neutral-500" />
+                                  <span>Reagendar</span>
+                                </DropdownMenuItem>
+                              )}
+                              {cita.status !== "no_show" && cita.status !== "completed" && (
+                                <DropdownMenuItem
+                                  onClick={() => onAccion(cita.id, "no_show")}
+                                  className="cursor-pointer gap-2"
+                                >
+                                  <UserX className="h-4 w-4 text-neutral-500" />
+                                  <span>No asistió</span>
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                variant="destructive"
+                                onClick={() => onAccion(cita.id, "cancelled")}
+                                className="cursor-pointer gap-2 text-danger-600 focus:text-danger-700"
+                              >
+                                <XCircle className="h-4 w-4" />
+                                <span>Cancelar cita</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </>
+                      )}
                       <WhatsappButton
                         patientId={cita.patient_id}
                         fullName={cita.patient?.full_name ?? "Paciente"}

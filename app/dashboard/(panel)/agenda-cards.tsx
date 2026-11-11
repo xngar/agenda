@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown, CalendarClock, UserX, XCircle } from "lucide-react";
 import { formatTime } from "@/lib/dates";
 import { parseAppointmentRange } from "@/lib/range";
 import { StatusBadge } from "@/components/ui";
@@ -8,6 +9,13 @@ import type { DoctorAppointment } from "@/lib/types";
 import { Accion, RIEL } from "./agenda-table";
 import { resaltarCita } from "./resaltar-cita";
 import { reprogramable } from "./agenda-actions";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 /**
  * Tarjetas de cita para pantallas angostas (la tabla de 5 columnas no entra).
@@ -92,8 +100,8 @@ export function AgendaCards({
                 <p className="mt-2 text-sm text-neutral-500">Motivo: {cita.cancel_reason}</p>
               ) : null}
 
-              <div className="mt-3 flex flex-nowrap items-center gap-2">
-                <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
+              <div className="mt-3 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
                   {cancelada ? (
                     <Accion
                       etiqueta="Reabrir"
@@ -102,12 +110,6 @@ export function AgendaCards({
                     />
                   ) : (
                     <>
-                      {/*
-                        Una cita recién creada queda en `pending`. Mientras
-                        no se confirme, el paciente no tiene garantía de que el
-                        espacio siga reservado para él, así que el botón
-                        va primero cuando corresponde.
-                      */}
                       {cita.status === "pending" ? (
                         <Accion
                           etiqueta="Confirmar"
@@ -115,30 +117,68 @@ export function AgendaCards({
                           disabled={ocupado}
                           destacado
                         />
-                      ) : null}
-                      <Accion
-                        etiqueta="Atendida"
-                        onClick={() => onCambiar(cita.id, "completed")}
-                        disabled={ocupado}
-                      />
-                      <Accion
-                        etiqueta="No asistió"
-                        onClick={() => onCambiar(cita.id, "no_show")}
-                        disabled={ocupado}
-                      />
-                      {reprogramable(cita) ? (
+                      ) : cita.status === "confirmed" ? (
                         <Accion
-                          etiqueta="Reagendar"
-                          onClick={() => onReagendar(cita)}
+                          etiqueta="Atendida"
+                          onClick={() => onCambiar(cita.id, "completed")}
+                          disabled={ocupado}
+                          destacado
+                        />
+                      ) : cita.status === "completed" ? (
+                        <Accion
+                          etiqueta="Atendida"
+                          onClick={() => onCambiar(cita.id, "completed")}
+                          disabled
+                        />
+                      ) : cita.status === "no_show" ? (
+                        <Accion
+                          etiqueta="Reabrir"
+                          onClick={() => onCambiar(cita.id, "reopen")}
                           disabled={ocupado}
                         />
                       ) : null}
-                      <Accion
-                        etiqueta="Cancelar"
-                        onClick={() => onCambiar(cita.id, "cancelled")}
-                        disabled={ocupado}
-                        tono="peligro"
-                      />
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            disabled={ocupado}
+                            className="inline-flex items-center gap-1 rounded-full border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-all duration-micro ease-out-soft hover:border-neutral-400 hover:bg-neutral-100 hover:scale-[1.03] active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                          >
+                            <span>Opciones</span>
+                            <ChevronDown className="h-4 w-4 text-neutral-500" aria-hidden="true" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-44">
+                          {reprogramable(cita) && (
+                            <DropdownMenuItem
+                              onClick={() => onReagendar(cita)}
+                              className="cursor-pointer gap-2"
+                            >
+                              <CalendarClock className="h-4 w-4 text-neutral-500" />
+                              <span>Reagendar</span>
+                            </DropdownMenuItem>
+                          )}
+                          {cita.status !== "no_show" && cita.status !== "completed" && (
+                            <DropdownMenuItem
+                              onClick={() => onCambiar(cita.id, "no_show")}
+                              className="cursor-pointer gap-2"
+                            >
+                              <UserX className="h-4 w-4 text-neutral-500" />
+                              <span>No asistió</span>
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onClick={() => onCambiar(cita.id, "cancelled")}
+                            className="cursor-pointer gap-2 text-danger-600 focus:text-danger-700"
+                          >
+                            <XCircle className="h-4 w-4" />
+                            <span>Cancelar cita</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </>
                   )}
                 </div>

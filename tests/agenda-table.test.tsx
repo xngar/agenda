@@ -31,6 +31,13 @@ let root: Root;
 let container: HTMLDivElement;
 
 beforeEach(() => {
+  if (typeof globalThis.ResizeObserver === "undefined") {
+    globalThis.ResizeObserver = class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    } as unknown as typeof ResizeObserver;
+  }
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -39,6 +46,7 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   container.remove();
+  document.querySelectorAll("[data-radix-portal]").forEach((el) => el.remove());
 });
 
 function renderTable(citas = CITAS, onAccion = vi.fn()) {
@@ -84,16 +92,23 @@ describe("AgendaTable", () => {
     expect(onAccion).toHaveBeenCalledWith("c1", "confirmed");
   });
 
-  it("ofrece Reagendar en citas vigentes y la delega como reschedule", () => {
+  it("ofrece Reagendar en citas vigentes a través del menú de opciones", async () => {
     const onAccion = renderTable();
     const filas = container.querySelectorAll("tbody tr");
-    expect(filas[0]?.textContent).toContain("Reagendar");
-    expect(filas[1]?.textContent).toContain("Reagendar");
-    expect(filas[2]?.textContent).not.toContain("Reagendar");
-    const reagendar = [...filas[0]?.querySelectorAll("button") ?? []].find(
-      (b) => b.textContent === "Reagendar",
+    const menuBtn = [...filas[0]?.querySelectorAll("button") ?? []].find(
+      (b) => b.textContent?.includes("Opciones"),
     );
-    act(() => {
+    expect(menuBtn).toBeDefined();
+    await act(async () => {
+      menuBtn?.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }));
+      menuBtn?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+      menuBtn?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    const reagendar = [...document.querySelectorAll('[data-slot="dropdown-menu-item"], [role="menuitem"]')].find(
+      (el) => el.textContent?.includes("Reagendar"),
+    );
+    expect(reagendar).toBeDefined();
+    await act(async () => {
       reagendar?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
     expect(onAccion).toHaveBeenCalledWith("c1", "reschedule");
