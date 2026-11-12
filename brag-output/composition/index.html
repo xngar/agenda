@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="es" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>GetHour - Video de Lanzamiento</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --ground: #071733;
+        --card-bg: rgba(15, 36, 75, 0.85);
+        --border-color: rgba(255, 255, 255, 0.16);
+        --brand-sky: #7cc7f0;
+        --brand-blue: #2563eb;
+        --action-primary: #832161;
+        --text-main: #ffffff;
+        --text-muted: #cbd5e1;
+        --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html, body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--ground);
+        font-family: var(--font-family);
+        color: var(--text-main);
+        -webkit-font-smoothing: antialiased;
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: radial-gradient(circle at 50% 20%, #0d2857 0%, #06132b 100%);
+      }
+
+      .ambient-glow {
+        position: absolute;
+        width: 1200px;
+        height: 800px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(124, 199, 240, 0.15) 0%, rgba(131, 33, 97, 0.08) 50%, transparent 70%);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+      }
+
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* First scene is visible on frame 0 */
+      #scene-1 {
+        opacity: 1;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 22px;
+        border-radius: 9999px;
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        background: rgba(124, 199, 240, 0.2);
+        color: #7cc7f0;
+        border: 1px solid rgba(124, 199, 240, 0.45);
+        margin-bottom: 24px;
+      }
+
+      /* Scene 1: The Hook */
+      #scene-1 h1 {
+        font-size: 64px;
+        font-weight: 800;
+        line-height: 1.15;
+        text-align: center;
+        max-width: 1200px;
+        letter-spacing: -0.02em;
+        margin-bottom: 50px;
+      }
+      .pain-cards {
+        display: flex;
+        gap: 28px;
+        max-width: 1400px;
+      }
+      .pain-card {
+        background: rgba(220, 38, 38, 0.16);
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        border-radius: 20px;
+        padding: 32px 36px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+      }
+      .pain-card .icon-box {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        background: rgba(239, 68, 68, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+      }
+      .pain-card .text {
+        font-size: 28px;
+        font-weight: 700;
+        color: #ffffff;
+      }
+
+      /* Scene 2: Booking Wizard */
+      #scene-2 {
+        padding: 60px 100px;
+      }
+      .split-layout {
+        display: grid;
+        grid-template-columns: 1fr 1.25fr;
+        gap: 70px;
+        width: 100%;
+        max-width: 1600px;
+        align-items: center;
+      }
+      .scene-info h2 {
+        font-size: 56px;
+        font-weight: 800;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        margin-bottom: 24px;
+      }
+      .scene-info p {
+        font-size: 28px;
+        color: #cbd5e1;
+        line-height: 1.45;
+        margin-bottom: 32px;
+      }
+      .feature-bullet {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-size: 24px;
+        color: #f1f5f9;
+        margin-bottom: 18px;
+        font-weight: 600;
+      }
+      .bullet-check {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #10b981;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 800;
+      }
+
+      .browser-card {
+        background: #0b1f40;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(124, 199, 240, 0.15);
+      }
+      .browser-bar {
+        background: #07152c;
+        padding: 16px 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+      }
+      .dot-red { background: #ef4444; }
+      .dot-yellow { background: #f59e0b; }
+      .dot-green { background: #10b981; }
+      .url-bar {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        padding: 8px 18px;
+        font-size: 15px;
+        color: #cbd5e1;
+        margin-left: 16px;
+        flex: 1;
+      }
+      .wizard-content {
+        padding: 36px 40px;
+      }
+      .wizard-steps {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 30px;
+      }
+      .wizard-step {
+        flex: 1;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 999px;
+      }
+      .wizard-step.active {
+        background: #7cc7f0;
+      }
+      .doctor-selection {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 16px;
+        padding: 20px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+      }
+      .doc-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .doc-avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: #2563eb;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 20px;
+      }
+      .slots-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 28px;
+      }
+      .slot-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        padding: 16px 8px;
+        text-align: center;
+        font-size: 20px;
+        font-weight: 700;
+        color: #ffffff;
+      }
+      .slot-btn.selected {
+        background: #7cc7f0;
+        color: #071733;
+        font-weight: 800;
+        border-color: #7cc7f0;
+        transform: scale(1.05);
+        box-shadow: 0 0 25px rgba(124, 199, 240, 0.6);
+      }
+      .confirm-btn {
+        width: 100%;
+        background: var(--action-primary);
+        color: white;
+        border: none;
+        border-radius: 14px;
+        padding: 20px;
+        font-size: 22px;
+        font-weight: 800;
+        text-align: center;
+        box-shadow: 0 10px 25px rgba(131, 33, 97, 0.45);
+      }
+      .success-badge {
+        background: rgba(16, 185, 129, 0.2);
+        border: 1px solid #10b981;
+        color: #ffffff;
+        padding: 16px 22px;
+        border-radius: 14px;
+        font-size: 20px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 20px;
+      }
+
+      /* Scene 3: Doctor EHR & Realtime Dashboard */
+      #scene-3 {
+        padding: 60px 100px;
+      }
+      .dashboard-mockup {
+        width: 100%;
+        max-width: 1600px;
+        background: #091c3d;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.65);
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        height: 680px;
+      }
+      .dash-sidebar {
+        background: #06142e;
+        border-right: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 30px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .sidebar-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 22px;
+        font-weight: 800;
+        margin-bottom: 30px;
+        color: white;
+      }
+      .nav-item {
+        padding: 14px 18px;
+        border-radius: 12px;
+        font-size: 18px;
+        font-weight: 600;
+        color: #cbd5e1;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .nav-item.active {
+        background: rgba(124, 199, 240, 0.2);
+        color: #7cc7f0;
+        font-weight: 700;
+      }
+      .dash-main {
+        padding: 36px 44px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        overflow: hidden;
+      }
+      .dash-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .dash-header h3 {
+        font-size: 32px;
+        font-weight: 800;
+      }
+      .live-tag {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 16px;
+        font-weight: 800;
+        color: #10b981;
+        background: rgba(16, 185, 129, 0.2);
+        padding: 8px 18px;
+        border-radius: 999px;
+      }
+      .live-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #10b981;
+        box-shadow: 0 0 12px #10b981;
+      }
+      .ehr-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        height: 100%;
+      }
+      .ehr-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 18px;
+        padding: 26px;
+      }
+      .ehr-card h4 {
+        font-size: 22px;
+        font-weight: 800;
+        color: #7cc7f0;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .patient-row {
+        background: rgba(255, 255, 255, 0.08);
+        border-left: 5px solid #10b981;
+        border-radius: 12px;
+        padding: 18px 24px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .odontogram-visual {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 24px;
+      }
+      .tooth {
+        width: 48px;
+        height: 56px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.12);
+        border: 2px solid rgba(255, 255, 255, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        font-weight: 800;
+        color: #ffffff;
+      }
+      .tooth.treated {
+        background: rgba(124, 199, 240, 0.35);
+        border-color: #7cc7f0;
+        color: #7cc7f0;
+      }
+
+      /* Scene 4: Outro */
+      #scene-4 {
+        text-align: center;
+      }
+      .outro-logo-box {
+        margin-bottom: 30px;
+      }
+      .outro-logo-box img {
+        height: 100px;
+        width: auto;
+        filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.6));
+      }
+      #scene-4 h2 {
+        font-size: 58px;
+        font-weight: 800;
+        max-width: 1000px;
+        line-height: 1.2;
+        margin-bottom: 24px;
+        letter-spacing: -0.02em;
+      }
+      #scene-4 p.sub {
+        font-size: 30px;
+        color: #cbd5e1;
+        margin-bottom: 44px;
+      }
+      .cta-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 16px;
+        background: var(--action-primary);
+        color: white;
+        padding: 24px 56px;
+        border-radius: 9999px;
+        font-size: 28px;
+        font-weight: 800;
+        box-shadow: 0 15px 45px rgba(131, 33, 97, 0.55);
+      }
+      .domain-badge {
+        margin-top: 36px;
+        font-size: 26px;
+        color: #7cc7f0;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="23"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div class="ambient-glow"></div>
+
+      <!-- AUDIO TRACKS -->
+      <audio
+        id="bg-music"
+        data-start="0"
+        data-duration="23"
+        data-track-index="10"
+        data-volume="0.22"
+        src="assets/music/music.mp3"
+      ></audio>
+
+      <!-- Voiceovers -->
+      <audio
+        id="voice-scene-1"
+        data-start="0.1"
+        data-duration="4.6"
+        data-track-index="20"
+        data-volume="1.0"
+        src="assets/voice/scene1.wav"
+      ></audio>
+      <audio
+        id="voice-scene-2"
+        data-start="4.9"
+        data-duration="5.8"
+        data-track-index="21"
+        data-volume="1.0"
+        src="assets/voice/scene2.wav"
+      ></audio>
+      <audio
+        id="voice-scene-3"
+        data-start="10.9"
+        data-duration="7.6"
+        data-track-index="22"
+        data-volume="1.0"
+        src="assets/voice/scene3.wav"
+      ></audio>
+      <audio
+        id="voice-scene-4"
+        data-start="18.6"
+        data-duration="4.0"
+        data-track-index="23"
+        data-volume="1.0"
+        src="assets/voice/scene4.wav"
+      ></audio>
+
+      <!-- SFX -->
+      <audio
+        id="sfx-click"
+        data-start="7.4"
+        data-duration="0.5"
+        data-track-index="30"
+        data-volume="0.65"
+        src="assets/sfx/click_001.ogg"
+      ></audio>
+      <audio
+        id="sfx-chime"
+        data-start="8.3"
+        data-duration="0.8"
+        data-track-index="31"
+        data-volume="0.75"
+        src="assets/sfx/bong_001.ogg"
+      ></audio>
+      <audio
+        id="sfx-switch"
+        data-start="11.4"
+        data-duration="0.6"
+        data-track-index="32"
+        data-volume="0.6"
+        src="assets/sfx/switch_001.ogg"
+      ></audio>
+
+      <!-- ================= SCENE 1: THE HOOK ================= -->
+      <div id="scene-1" class="scene" data-start="0" data-duration="4.8">
+        <div class="pill">El problema de siempre</div>
+        <h1 id="s1-title">Gestionar tu consulta médica o dental no tiene por qué ser un dolor de cabeza</h1>
+        <div class="pain-cards">
+          <div class="pain-card" id="pain-1">
+            <div class="icon-box">⚠️</div>
+            <div class="text">Citas duplicadas y horas perdidas</div>
+          </div>
+          <div class="pain-card" id="pain-2">
+            <div class="icon-box">📞</div>
+            <div class="text">Llamadas y WhatsApps interminables</div>
+          </div>
+          <div class="pain-card" id="pain-3">
+            <div class="icon-box">📄</div>
+            <div class="text">Fichas en papel extraviadas</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= SCENE 2: PATIENT BOOKING ================= -->
+      <div id="scene-2" class="scene" data-start="4.8" data-duration="6.0">
+        <div class="split-layout">
+          <div class="scene-info">
+            <div class="pill">Experiencia del Paciente</div>
+            <h2>Tus pacientes reservan en 30 segundos</h2>
+            <p>Directo desde cualquier dispositivo, 24/7 y sin esperas telefónicas.</p>
+            <div class="feature-bullet">
+              <div class="bullet-check">✓</div>
+              <span>Disponibilidad en tiempo real</span>
+            </div>
+            <div class="feature-bullet">
+              <div class="bullet-check">✓</div>
+              <span>Recordatorios automáticos por correo</span>
+            </div>
+            <div class="feature-bullet">
+              <div class="bullet-check">✓</div>
+              <span>Validación de RUT y anti-bot seguro</span>
+            </div>
+          </div>
+
+          <div class="browser-card" id="s2-browser">
+            <div class="browser-bar">
+              <div class="dot dot-red"></div>
+              <div class="dot dot-yellow"></div>
+              <div class="dot dot-green"></div>
+              <div class="url-bar" data-layout-ignore="true">gethour.mindara.cl/clinica-odonto/reservar</div>
+            </div>
+            <div class="wizard-content">
+              <div class="wizard-steps">
+                <div class="wizard-step active"></div>
+                <div class="wizard-step active"></div>
+                <div class="wizard-step active"></div>
+                <div class="wizard-step"></div>
+              </div>
+
+              <div class="doctor-selection">
+                <div class="doc-info">
+                  <div class="doc-avatar" data-layout-ignore="true">VM</div>
+                  <div>
+                    <div style="font-weight: 800; font-size: 22px;">Dra. Valentina Morales</div>
+                    <div style="font-size: 16px; color: #cbd5e1;" data-layout-ignore="true">Evaluación Odontológica Integral • 30 min</div>
+                  </div>
+                </div>
+                <span style="color: #7cc7f0; font-weight: 700; font-size: 16px;" data-layout-ignore="true">Cambiar</span>
+              </div>
+
+              <div style="font-size: 18px; font-weight: 700; color: #cbd5e1; margin-bottom: 14px;">Horas disponibles para hoy:</div>
+              <div class="slots-grid">
+                <div class="slot-btn" data-layout-ignore="true">09:30</div>
+                <div class="slot-btn" data-layout-ignore="true">10:00</div>
+                <div class="slot-btn selected" id="s2-slot" data-layout-ignore="true">10:30</div>
+                <div class="slot-btn" data-layout-ignore="true">11:00</div>
+              </div>
+
+              <div class="confirm-btn" id="s2-btn">Confirmar hora con un clic</div>
+
+              <div class="success-badge" id="s2-success">
+                <span>✓</span>
+                <span>¡Cita confirmada! Notificación enviada al paciente</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= SCENE 3: DOCTOR DASHBOARD & EHR ================= -->
+      <div id="scene-3" class="scene" data-start="10.8" data-duration="7.7">
+        <div class="dashboard-mockup" id="s3-dash">
+          <div class="dash-sidebar">
+            <div class="sidebar-brand">
+              <span style="font-size: 24px;">🩺</span>
+              <span>GetHour Clínico</span>
+            </div>
+            <div class="nav-item" data-layout-ignore="true">📅 Agenda del Día</div>
+            <div class="nav-item active" data-layout-ignore="true">📋 Ficha Clínica</div>
+            <div class="nav-item" data-layout-ignore="true">👥 Pacientes</div>
+            <div class="nav-item" data-layout-ignore="true">📊 Estadísticas</div>
+          </div>
+
+          <div class="dash-main">
+            <div class="dash-header">
+              <div>
+                <h3>Atención Clínica en Tiempo Real</h3>
+                <p style="font-size: 20px; color: #cbd5e1; margin-top: 6px;">Ficha Médica Electrónica adaptada a tu especialidad</p>
+              </div>
+              <div class="live-tag">
+                <div class="live-dot"></div>
+                <span data-layout-ignore="true">Sincronizado vía Realtime</span>
+              </div>
+            </div>
+
+            <div class="patient-row" id="s3-patient">
+              <div>
+                <span style="font-weight: 800; font-size: 22px;">10:30 hrs</span>
+                <span style="color: #cbd5e1; margin: 0 10px;">•</span>
+                <span style="font-weight: 800; font-size: 22px;">Camilo Sotomayor</span>
+                <span style="color: #cbd5e1; font-size: 18px; margin-left: 10px;">(RUT: 18.234.567-K)</span>
+              </div>
+              <div style="background: rgba(124, 199, 240, 0.25); color: #7cc7f0; padding: 8px 18px; border-radius: 8px; font-weight: 800; font-size: 16px;" data-layout-ignore="true">
+                En Consulta
+              </div>
+            </div>
+
+            <div class="ehr-grid">
+              <div class="ehr-card">
+                <h4>
+                  <span>Odontograma & Diagnósticos</span>
+                  <span style="font-size: 14px; color: #10b981;" data-layout-ignore="true">✓ Actualizado</span>
+                </h4>
+                <p style="font-size: 17px; color: #cbd5e1; line-height: 1.4;">Registro visual de piezas dentales, hallazgos y plan de tratamiento.</p>
+                <div class="odontogram-visual">
+                  <div class="tooth" data-layout-ignore="true">1.1</div>
+                  <div class="tooth treated" data-layout-ignore="true">1.2</div>
+                  <div class="tooth" data-layout-ignore="true">1.3</div>
+                  <div class="tooth treated" data-layout-ignore="true">1.4</div>
+                  <div class="tooth" data-layout-ignore="true">1.5</div>
+                  <div class="tooth" data-layout-ignore="true">1.6</div>
+                </div>
+              </div>
+
+              <div class="ehr-card" id="s3-presc">
+                <h4>
+                  <span>Prescripciones & Recetas</span>
+                  <span style="font-size: 15px; color: #7cc7f0;" data-layout-ignore="true">Exportar PDF</span>
+                </h4>
+                <div style="background: rgba(255, 255, 255, 0.08); padding: 14px; border-radius: 8px; font-size: 16px; margin-bottom: 10px; font-weight: 600;">
+                  Amoxicilina 875mg / c 8 horas x 7 días
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.08); padding: 14px; border-radius: 8px; font-size: 16px; font-weight: 600;">
+                  Ibuprofeno 400mg / SOS dolor
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= SCENE 4: OUTRO ================= -->
+      <div id="scene-4" class="scene" data-start="18.5" data-duration="4.5">
+        <div class="outro-logo-box" id="s4-logo">
+          <img src="assets/gethour.svg" alt="GetHour" />
+        </div>
+        <h2 id="s4-title">Más tiempo para tus pacientes,<br>cero desorden en tu clínica.</h2>
+        <p class="sub" id="s4-sub">Agenda, fichas clínicas y pacientes en un solo lugar.</p>
+        <div class="cta-button" id="s4-cta">
+          <span>Comenzar Ahora</span>
+          <span>→</span>
+        </div>
+        <div class="domain-badge" id="s4-domain">gethour.mindara.cl</div>
+      </div>
+
+    </div>
+
+    <!-- GSAP ANIMATION LOGIC -->
+    <script>
+      const tl = gsap.timeline({ paused: true });
+
+      // ================= SCENE 1 (0.0s -> 4.8s) =================
+      // Scene 1 is visible from frame 0
+      tl.set("#scene-1", { opacity: 1 }, 0);
+      tl.from("#s1-title", { y: 20, opacity: 0.9, duration: 0.5, ease: "power3.out" }, 0.0);
+      tl.from("#pain-1", { y: 25, opacity: 0, scale: 0.95, duration: 0.5, ease: "back.out(1.5)" }, 0.6);
+      tl.from("#pain-2", { y: 25, opacity: 0, scale: 0.95, duration: 0.5, ease: "back.out(1.5)" }, 1.2);
+      tl.from("#pain-3", { y: 25, opacity: 0, scale: 0.95, duration: 0.5, ease: "back.out(1.5)" }, 1.8);
+      
+      // Transition Out Scene 1
+      tl.to("#scene-1", { opacity: 0, scale: 0.98, y: -20, duration: 0.4, ease: "power2.in" }, 4.4);
+
+      // ================= SCENE 2 (4.8s -> 10.8s) =================
+      tl.to("#scene-2", { opacity: 1, duration: 0.4, ease: "power2.out" }, 4.8);
+      tl.from(".scene-info h2", { x: -40, opacity: 0, duration: 0.6, ease: "power3.out" }, 5.0);
+      tl.from("#s2-browser", { y: 40, opacity: 0, duration: 0.7, ease: "power3.out" }, 5.2);
+      
+      // Click simulation on slot 10:30
+      tl.fromTo("#s2-slot", 
+        { scale: 1 }, 
+        { scale: 1.1, duration: 0.2, yoyo: true, repeat: 1, ease: "power2.inOut" }, 
+        7.3
+      );
+      
+      // Click simulation on confirm button
+      tl.fromTo("#s2-btn",
+        { scale: 1 },
+        { scale: 0.96, duration: 0.15, yoyo: true, repeat: 1, ease: "power2.inOut" },
+        8.0
+      );
+
+      // Success badge pops up
+      tl.from("#s2-success", { scale: 0.8, opacity: 0, y: 15, duration: 0.45, ease: "back.out(2)" }, 8.3);
+
+      // Transition Out Scene 2
+      tl.to("#scene-2", { opacity: 0, scale: 0.98, y: -20, duration: 0.4, ease: "power2.in" }, 10.4);
+
+      // ================= SCENE 3 (10.8s -> 18.5s) =================
+      tl.to("#scene-3", { opacity: 1, duration: 0.4, ease: "power2.out" }, 10.8);
+      tl.from("#s3-dash", { scale: 0.94, opacity: 0, y: 30, duration: 0.7, ease: "power3.out" }, 11.0);
+      tl.from("#s3-patient", { x: 30, opacity: 0, duration: 0.5, ease: "power3.out" }, 12.0);
+      tl.from(".ehr-card", { y: 20, opacity: 0, stagger: 0.2, duration: 0.6, ease: "power3.out" }, 12.8);
+      tl.from(".tooth.treated", { scale: 0, opacity: 0, stagger: 0.15, duration: 0.4, ease: "back.out(2)" }, 14.2);
+      
+      // Keep motion alive between 15.0 and 17.5s (prevent dead stretch)
+      tl.to("#s3-presc", { borderColor: "#7cc7f0", boxShadow: "0 0 25px rgba(124, 199, 240, 0.3)", duration: 0.6, ease: "power2.out" }, 15.6);
+      tl.to("#s3-patient", { scale: 1.02, duration: 0.5, yoyo: true, repeat: 1, ease: "power1.inOut" }, 16.5);
+
+      // Transition Out Scene 3
+      tl.to("#scene-3", { opacity: 0, scale: 0.98, y: -20, duration: 0.4, ease: "power2.in" }, 18.1);
+
+      // ================= SCENE 4 (18.5s -> 23.0s) =================
+      tl.to("#scene-4", { opacity: 1, duration: 0.4, ease: "power2.out" }, 18.5);
+      tl.from("#s4-logo", { scale: 0.85, opacity: 0, duration: 0.6, ease: "back.out(1.7)" }, 18.7);
+      tl.from("#s4-title", { y: 25, opacity: 0, duration: 0.6, ease: "power3.out" }, 19.1);
+      tl.from("#s4-sub", { y: 20, opacity: 0, duration: 0.5, ease: "power3.out" }, 19.5);
+      tl.from("#s4-cta", { scale: 0.9, opacity: 0, duration: 0.5, ease: "back.out(2)" }, 20.0);
+      tl.from("#s4-domain", { opacity: 0, duration: 0.4, ease: "power2.out" }, 20.5);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

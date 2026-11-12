@@ -1,0 +1,1071 @@
+{
+  "ok": false,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 9,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "composition_file_too_large",
+        "severity": "warning",
+        "message": "This HTML composition file has 331 lines. Smaller sub-compositions are easier to read, iterate on, and diff.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "C:\\Users\\xngar\\OneDrive\\Desktop\\agenda-online\\agenda\\brag-output\\composition\\index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Split coherent scenes or layers into separate .html files under compositions/, then mount them from the parent with data-composition-src so each file stays small enough to inspect, revise, and validate independently."
+      },
+      {
+        "code": "timed_element_missing_clip_class",
+        "severity": "warning",
+        "message": "<div id=\"scene-1\"> has timing attributes but no class=\"clip\". The runtime still hides it outside its time range, but Studio and the GSAP clip-ownership rules use .clip to recognise a clip, so leaving it off makes the element harder to edit and to lint.",
+        "selector": "#scene-1",
+        "dataAttributes": {},
+        "sourceFile": "C:\\Users\\xngar\\OneDrive\\Desktop\\agenda-online\\agenda\\brag-output\\composition\\index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Add class=\"clip\" to the element so Studio and the linter can recognise it as a clip."
+      },
+      {
+        "code": "timed_element_missing_clip_class",
+        "severity": "warning",
+        "message": "<div id=\"scene-2\"> has timing attributes but no class=\"clip\". The runtime still hides it outside its time range, but Studio and the GSAP clip-ownership rules use .clip to recognise a clip, so leaving it off makes the element harder to edit and to lint.",
+        "selector": "#scene-2",
+        "dataAttributes": {},
+        "sourceFile": "C:\\Users\\xngar\\OneDrive\\Desktop\\agenda-online\\agenda\\brag-output\\composition\\index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Add class=\"clip\" to the element so Studio and the linter can recognise it as a clip."
+      },
+      {
+        "code": "timed_element_missing_clip_class",
+        "severity": "warning",
+        "message": "<div id=\"scene-3\"> has timing attributes but no class=\"clip\". The runtime still hides it outside its time range, but Studio and the GSAP clip-ownership rules use .clip to recognise a clip, so leaving it off makes the element harder to edit and to lint.",
+        "selector": "#scene-3",
+        "dataAttributes": {},
+        "sourceFile": "C:\\Users\\xngar\\OneDrive\\Desktop\\agenda-online\\agenda\\brag-output\\composition\\index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Add class=\"clip\" to the element so Studio and the linter can recognise it as a clip."
+      },
+      {
+        "code": "timed_element_missing_clip_class",
+        "severity": "warning",
+        "message": "<div id=\"scene-4\"> has timing attributes but no class=\"clip\". The runtime still hides it outside its time range, but Studio and the GSAP clip-ownership rules use .clip to recognise a clip, so leaving it off makes the element harder to edit and to lint.",
+        "selector": "#scene-4",
+        "dataAttributes": {},
+        "sourceFile": "C:\\Users\\xngar\\OneDrive\\Desktop\\agenda-online\\agenda\\brag-output\\composition\\index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Add class=\"clip\" to the element so Studio and the linter can recognise it as a clip."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"scene-1\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#scene-1",
+        "dataAttributes": {},
+        "sourceFile": "C:\\Users\\xngar\\OneDrive\\Desktop\\agenda-online\\agenda\\brag-output\\composition\\index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"scene-1\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"scene-2\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#scene-2",
+        "dataAttributes": {},
+        "sourceFile": "C:\\Users\\xngar\\OneDrive\\Desktop\\agenda-online\\agenda\\brag-output\\composition\\index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"scene-2\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"scene-3\"> is a timeline element that contains nested <div id=\"s3-dash\">. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#scene-3",
+        "dataAttributes": {},
+        "sourceFile": "C:\\Users\\xngar\\OneDrive\\Desktop\\agenda-online\\agenda\\brag-output\\composition\\index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"scene-3\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"scene-4\"> is a timeline element that contains nested <div id=\"s4-logo\">. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#scene-4",
+        "dataAttributes": {},
+        "sourceFile": "C:\\Users\\xngar\\OneDrive\\Desktop\\agenda-online\\agenda\\brag-output\\composition\\index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"scene-4\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      }
+    ],
+    "filesScanned": 1
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 2,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "clip_media_fit",
+        "severity": "warning",
+        "message": "Audio \"sfx-click\" is 0.10s but its slot (data-duration) is 0.50s — the slot is shortened to the media length when rendered. Set data-duration to ~0.10s if that isn't intended.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {
+          "data-composition-id": "main",
+          "data-start": "0",
+          "data-duration": "23",
+          "data-width": "1920",
+          "data-height": "1080"
+        },
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 1920,
+          "height": 1080
+        },
+        "time": 0
+      },
+      {
+        "code": "clip_media_fit",
+        "severity": "warning",
+        "message": "Audio \"sfx-chime\" is 0.13s but its slot (data-duration) is 0.80s — the slot is shortened to the media length when rendered. Set data-duration to ~0.13s if that isn't intended.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {
+          "data-composition-id": "main",
+          "data-start": "0",
+          "data-duration": "23",
+          "data-width": "1920",
+          "data-height": "1080"
+        },
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 1920,
+          "height": 1080
+        },
+        "time": 0
+      }
+    ]
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "duration": 23,
+    "samples": [
+      1.278,
+      3.833,
+      6.389,
+      8.944,
+      11.5,
+      14.056,
+      16.611,
+      19.167,
+      21.722
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 0,
+    "truncated": false
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 7,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "contrast_aa_failure",
+        "severity": "warning",
+        "message": "Contrast is 2.06:1; WCAG AA requires 4.5:1.",
+        "text": "✓",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(16,185,129)",
+        "ratio": 2.06,
+        "requiredRatio": 4.5,
+        "suggestedColor": "rgb(56,57,59)",
+        "large": false,
+        "selector": "div > div:nth-of-type(3) > div > div:nth-of-type(1) > div:nth-of-type(2) > div",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 160,
+          "y": 629.890625,
+          "width": 28,
+          "height": 28
+        },
+        "time": 6.389,
+        "times": [
+          6.389
+        ]
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "warning",
+        "message": "Contrast is 2.06:1; WCAG AA requires 4.5:1.",
+        "text": "✓",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(16,185,129)",
+        "ratio": 2.06,
+        "requiredRatio": 4.5,
+        "suggestedColor": "rgb(56,57,59)",
+        "large": false,
+        "selector": "div > div:nth-of-type(3) > div > div:nth-of-type(1) > div:nth-of-type(3) > div",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 160,
+          "y": 673.890625,
+          "width": 28,
+          "height": 28
+        },
+        "time": 6.389,
+        "times": [
+          6.389
+        ]
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "warning",
+        "message": "Contrast is 2.06:1; WCAG AA requires 4.5:1.",
+        "text": "✓",
+        "fg": "rgb(226,232,240)",
+        "bg": "rgb(16,185,129)",
+        "ratio": 2.06,
+        "requiredRatio": 4.5,
+        "suggestedColor": "rgb(56,57,59)",
+        "large": false,
+        "selector": "div > div:nth-of-type(3) > div > div:nth-of-type(1) > div:nth-of-type(4) > div",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 160,
+          "y": 717.890625,
+          "width": 28,
+          "height": 28
+        },
+        "time": 6.389,
+        "times": [
+          6.389
+        ]
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "warning",
+        "message": "Contrast is 4.38:1; WCAG AA requires 4.5:1.",
+        "text": "1.1",
+        "fg": "rgb(148,163,184)",
+        "bg": "rgb(43,59,88)",
+        "ratio": 4.38,
+        "requiredRatio": 4.5,
+        "suggestedColor": "rgb(151,166,186)",
+        "large": false,
+        "selector": "div > div:nth-of-type(4) > div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > div > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 634.5,
+          "y": 521,
+          "width": 44,
+          "height": 52
+        },
+        "time": 16.611,
+        "times": [
+          16.611
+        ]
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "warning",
+        "message": "Contrast is 4.38:1; WCAG AA requires 4.5:1.",
+        "text": "1.3",
+        "fg": "rgb(148,163,184)",
+        "bg": "rgb(43,59,88)",
+        "ratio": 4.38,
+        "requiredRatio": 4.5,
+        "suggestedColor": "rgb(151,166,186)",
+        "large": false,
+        "selector": "div > div:nth-of-type(4) > div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > div > div:nth-of-type(3)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 738.5,
+          "y": 521,
+          "width": 44,
+          "height": 52
+        },
+        "time": 16.611,
+        "times": [
+          16.611
+        ]
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "warning",
+        "message": "Contrast is 4.38:1; WCAG AA requires 4.5:1.",
+        "text": "1.5",
+        "fg": "rgb(148,163,184)",
+        "bg": "rgb(43,59,88)",
+        "ratio": 4.38,
+        "requiredRatio": 4.5,
+        "suggestedColor": "rgb(151,166,186)",
+        "large": false,
+        "selector": "div > div:nth-of-type(4) > div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > div > div:nth-of-type(5)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 842.5,
+          "y": 521,
+          "width": 44,
+          "height": 52
+        },
+        "time": 16.611,
+        "times": [
+          16.611
+        ]
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "warning",
+        "message": "Contrast is 4.38:1; WCAG AA requires 4.5:1.",
+        "text": "1.6",
+        "fg": "rgb(148,163,184)",
+        "bg": "rgb(43,59,88)",
+        "ratio": 4.38,
+        "requiredRatio": 4.5,
+        "suggestedColor": "rgb(151,166,186)",
+        "large": false,
+        "selector": "div > div:nth-of-type(4) > div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > div > div:nth-of-type(6)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 894.5,
+          "y": 521,
+          "width": 44,
+          "height": 52
+        },
+        "time": 16.611,
+        "times": [
+          16.611
+        ]
+      }
+    ],
+    "enabled": true,
+    "samples": [
+      1.278,
+      6.389,
+      11.5,
+      16.611,
+      21.722
+    ],
+    "checked": 65,
+    "passed": 58
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 3,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "first_frame_empty",
+        "severity": "warning",
+        "message": "Frame 0 shows only the background, and the first frame is the thumbnail on social players: have the title or key image already on screen at 0 s instead of entering from nothing; see references/review.md.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and 49 text elements stay under it for 0.5 s or more, the smallest \"✓ Actualizado\" at 12 px: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "✓ Actualizado",
+        "selector": "div.ehr-grid > div:nth-of-type(1) > h4:nth-of-type(1) > span:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 982.56,
+          "y": 452.45,
+          "width": 80.44,
+          "height": 15
+        },
+        "time": 13,
+        "times": [
+          0.125,
+          0.875,
+          0.875,
+          1.375,
+          1.875,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5.375,
+          5.375,
+          5.375,
+          5.375,
+          5.375,
+          5.375,
+          5.375,
+          5.375,
+          5.375,
+          5.375,
+          5.375,
+          8.375,
+          11.25,
+          11.25,
+          11.25,
+          11.25,
+          11.25,
+          11.25,
+          11.25,
+          12.125,
+          12.125,
+          12.125,
+          12.125,
+          13,
+          13,
+          13,
+          13,
+          13,
+          13,
+          13,
+          13.125,
+          13.125,
+          13.125,
+          13.125,
+          14.375,
+          14.5,
+          19.625,
+          20.125,
+          20.625
+        ],
+        "fontPx": 11.93,
+        "floorPx": 28,
+        "seconds": 5.5,
+        "elements": [
+          {
+            "selector": "div.ehr-grid > div:nth-of-type(1) > h4:nth-of-type(1) > span:nth-of-type(2)",
+            "text": "✓ Actualizado",
+            "fontPx": 11.93,
+            "time": 13,
+            "seconds": 5.5
+          },
+          {
+            "selector": "div.odontogram-visual > div:nth-of-type(1)",
+            "text": "1.1",
+            "fontPx": 12.92,
+            "time": 13,
+            "seconds": 5.5
+          },
+          {
+            "selector": "div.odontogram-visual > div:nth-of-type(3)",
+            "text": "1.3",
+            "fontPx": 12.92,
+            "time": 13,
+            "seconds": 5.5
+          },
+          {
+            "selector": "div.odontogram-visual > div:nth-of-type(5)",
+            "text": "1.5",
+            "fontPx": 12.92,
+            "time": 13,
+            "seconds": 5.5
+          },
+          {
+            "selector": "div.odontogram-visual > div:nth-of-type(6)",
+            "text": "1.6",
+            "fontPx": 12.92,
+            "time": 13,
+            "seconds": 5.5
+          },
+          {
+            "selector": "div.ehr-grid > div:nth-of-type(2) > h4:nth-of-type(1) > span:nth-of-type(2)",
+            "text": "Exportar PDF",
+            "fontPx": 12.92,
+            "time": 13.125,
+            "seconds": 5.375
+          },
+          {
+            "selector": "div.odontogram-visual > div:nth-of-type(2)",
+            "text": "1.2",
+            "fontPx": 12.92,
+            "time": 14.375,
+            "seconds": 4.125
+          },
+          {
+            "selector": "div.odontogram-visual > div:nth-of-type(4)",
+            "text": "1.4",
+            "fontPx": 12.92,
+            "time": 14.5,
+            "seconds": 4
+          },
+          {
+            "selector": "div.live-tag > span:nth-of-type(1)",
+            "text": "Sincronizado vía Realtime",
+            "fontPx": 13.83,
+            "time": 11.25,
+            "seconds": 7.25
+          },
+          {
+            "selector": "#s3-patient > div:nth-of-type(2)",
+            "text": "En Consulta",
+            "fontPx": 13.92,
+            "time": 12.125,
+            "seconds": 6.375
+          },
+          {
+            "selector": "div.ehr-card > p:nth-of-type(1)",
+            "text": "Registro visual de piezas dentales, hallazgos y plan de tratamiento.",
+            "fontPx": 13.92,
+            "time": 13,
+            "seconds": 5.5
+          },
+          {
+            "selector": "div.ehr-grid > div:nth-of-type(2) > div:nth-of-type(1)",
+            "text": "Amoxicilina 875mg / c 8 horas x 7 días",
+            "fontPx": 13.92,
+            "time": 13.125,
+            "seconds": 5.375
+          },
+          {
+            "selector": "div.ehr-card > div:nth-of-type(2)",
+            "text": "Ibuprofeno 400mg / SOS dolor",
+            "fontPx": 13.92,
+            "time": 13.125,
+            "seconds": 5.375
+          },
+          {
+            "selector": "div.url-bar",
+            "text": "gethour.mindara.cl/clinica-odonto/reservar",
+            "fontPx": 13.97,
+            "time": 5.375,
+            "seconds": 5.375
+          },
+          {
+            "selector": "div.doc-info > div:nth-of-type(2) > div:nth-of-type(2)",
+            "text": "Evaluación Odontológica Integral • 30 min",
+            "fontPx": 13.97,
+            "time": 5.375,
+            "seconds": 5.375
+          },
+          {
+            "selector": "div.doctor-selection > span:nth-of-type(1)",
+            "text": "Cambiar",
+            "fontPx": 13.97,
+            "time": 5.375,
+            "seconds": 5.375
+          },
+          {
+            "selector": "#s3-patient > div:nth-of-type(1) > span:nth-of-type(4)",
+            "text": "(RUT: 18.234.567-K)",
+            "fontPx": 14.91,
+            "time": 12.125,
+            "seconds": 6.375
+          },
+          {
+            "selector": "#scene-1 > div:nth-of-type(1)",
+            "text": "El problema de siempre",
+            "fontPx": 14.96,
+            "time": 0.125,
+            "seconds": 4.625
+          },
+          {
+            "selector": "div.scene-info > div:nth-of-type(1)",
+            "text": "Experiencia del Paciente",
+            "fontPx": 14.96,
+            "time": 5,
+            "seconds": 5.75
+          },
+          {
+            "selector": "div.wizard-content > div:nth-of-type(3)",
+            "text": "Horas disponibles para hoy:",
+            "fontPx": 14.96,
+            "time": 5.375,
+            "seconds": 5.375
+          },
+          {
+            "selector": "#s2-success > span:nth-of-type(2)",
+            "text": "¡Cita confirmada! Notificación enviada al paciente",
+            "fontPx": 15.63,
+            "time": 8.375,
+            "seconds": 2.375
+          },
+          {
+            "selector": "div.dash-sidebar > div:nth-of-type(2)",
+            "text": "📅 Agenda del Día",
+            "fontPx": 15.81,
+            "time": 11.25,
+            "seconds": 7.25
+          },
+          {
+            "selector": "div.nav-item.active",
+            "text": "📋 Ficha Clínica",
+            "fontPx": 15.81,
+            "time": 11.25,
+            "seconds": 7.25
+          },
+          {
+            "selector": "div.dash-sidebar > div:nth-of-type(4)",
+            "text": "👥 Pacientes",
+            "fontPx": 15.81,
+            "time": 11.25,
+            "seconds": 7.25
+          },
+          {
+            "selector": "div.dash-sidebar > div:nth-of-type(5)",
+            "text": "📊 Estadísticas",
+            "fontPx": 15.81,
+            "time": 11.25,
+            "seconds": 7.25
+          },
+          {
+            "selector": "div.dash-header > div:nth-of-type(1) > p:nth-of-type(1)",
+            "text": "Ficha Médica Electrónica adaptada a tu especialidad",
+            "fontPx": 15.81,
+            "time": 11.25,
+            "seconds": 7.25
+          },
+          {
+            "selector": "#s3-patient > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "10:30 hrs",
+            "fontPx": 17.89,
+            "time": 12.125,
+            "seconds": 6.375
+          },
+          {
+            "selector": "#s3-patient > div:nth-of-type(1) > span:nth-of-type(3)",
+            "text": "Camilo Sotomayor",
+            "fontPx": 17.89,
+            "time": 12.125,
+            "seconds": 6.375
+          },
+          {
+            "selector": "div.ehr-grid > div:nth-of-type(1) > h4:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "Odontograma & Diagnósticos",
+            "fontPx": 17.89,
+            "time": 13,
+            "seconds": 5.5
+          },
+          {
+            "selector": "div.ehr-grid > div:nth-of-type(2) > h4:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "Prescripciones & Recetas",
+            "fontPx": 17.89,
+            "time": 13.125,
+            "seconds": 5.375
+          },
+          {
+            "selector": "div.doc-info > div:nth-of-type(2) > div:nth-of-type(1)",
+            "text": "Dra. Valentina Morales",
+            "fontPx": 17.96,
+            "time": 5.375,
+            "seconds": 5.375
+          },
+          {
+            "selector": "div.slots-grid > div:nth-of-type(1)",
+            "text": "09:30",
+            "fontPx": 17.96,
+            "time": 5.375,
+            "seconds": 5.375
+          },
+          {
+            "selector": "div.slots-grid > div:nth-of-type(2)",
+            "text": "10:00",
+            "fontPx": 17.96,
+            "time": 5.375,
+            "seconds": 5.375
+          },
+          {
+            "selector": "#s2-slot",
+            "text": "10:30",
+            "fontPx": 17.96,
+            "time": 5.375,
+            "seconds": 5.375
+          },
+          {
+            "selector": "div.slots-grid > div:nth-of-type(4)",
+            "text": "11:00",
+            "fontPx": 17.96,
+            "time": 5.375,
+            "seconds": 5.375
+          },
+          {
+            "selector": "#s2-btn",
+            "text": "Confirmar hora con un clic",
+            "fontPx": 18.35,
+            "time": 5.375,
+            "seconds": 5.375
+          },
+          {
+            "selector": "div.sidebar-brand > span:nth-of-type(2)",
+            "text": "GetHour Clínico",
+            "fontPx": 19.76,
+            "time": 11.25,
+            "seconds": 7.25
+          },
+          {
+            "selector": "div.scene-info > div:nth-of-type(2) > span:nth-of-type(1)",
+            "text": "Disponibilidad en tiempo real",
+            "fontPx": 19.95,
+            "time": 5,
+            "seconds": 5.75
+          },
+          {
+            "selector": "div.scene-info > div:nth-of-type(3) > span:nth-of-type(1)",
+            "text": "Recordatorios automáticos por correo",
+            "fontPx": 19.95,
+            "time": 5,
+            "seconds": 5.75
+          },
+          {
+            "selector": "div.scene-info > div:nth-of-type(4) > span:nth-of-type(1)",
+            "text": "Validación de RUT y anti-bot seguro",
+            "fontPx": 19.95,
+            "time": 5,
+            "seconds": 5.75
+          },
+          {
+            "selector": "div.doc-avatar",
+            "text": "VM",
+            "fontPx": 19.95,
+            "time": 5.375,
+            "seconds": 5.375
+          },
+          {
+            "selector": "#s4-domain",
+            "text": "gethour.mindara.cl",
+            "fontPx": 20,
+            "time": 20.625,
+            "seconds": 2.375
+          },
+          {
+            "selector": "#pain-1 > div:nth-of-type(2)",
+            "text": "Citas duplicadas y horas perdidas",
+            "fontPx": 21.45,
+            "time": 0.875,
+            "seconds": 3.875
+          },
+          {
+            "selector": "#pain-2 > div:nth-of-type(2)",
+            "text": "Llamadas y WhatsApps interminables",
+            "fontPx": 21.45,
+            "time": 1.375,
+            "seconds": 3.375
+          },
+          {
+            "selector": "#pain-3 > div:nth-of-type(2)",
+            "text": "Fichas en papel extraviadas",
+            "fontPx": 21.45,
+            "time": 1.875,
+            "seconds": 2.875
+          },
+          {
+            "selector": "div.scene-info > p:nth-of-type(1)",
+            "text": "Directo desde cualquier dispositivo, 24/7 y sin esperas telefónicas.",
+            "fontPx": 21.95,
+            "time": 5,
+            "seconds": 5.75
+          },
+          {
+            "selector": "#s4-cta > span:nth-of-type(1)",
+            "text": "Comenzar Ahora",
+            "fontPx": 23.39,
+            "time": 20.125,
+            "seconds": 2.875
+          },
+          {
+            "selector": "#s4-sub",
+            "text": "Agenda, fichas clínicas y pacientes en un solo lugar.",
+            "fontPx": 24,
+            "time": 19.625,
+            "seconds": 3.375
+          },
+          {
+            "selector": "#pain-1 > div:nth-of-type(1)",
+            "text": "⚠️",
+            "fontPx": 25.35,
+            "time": 0.875,
+            "seconds": 3.875
+          }
+        ]
+      },
+      {
+        "code": "dead_stretch",
+        "severity": "warning",
+        "message": "Nothing on screen changes for 3.25 s (14.88–18.13 s): start the next move within 3 s, or put data-hold on the element whose stillness is deliberate; see references/motion.md.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 14.875,
+        "seconds": 3.25,
+        "floorSeconds": 3,
+        "until": 18.125
+      }
+    ],
+    "enabled": true,
+    "step": 0.125,
+    "samples": 184
+  },
+  "audio": {
+    "ok": false,
+    "errorCount": 8,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "audio_source_unreadable",
+        "severity": "error",
+        "message": "assets/music/music.mp3 cannot be read as audio ([FFmpeg] ffprobe not found. Please install FFmpeg.), so the render's audio mix fails and the render stops.",
+        "selector": "#bg-music",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "timeRange": [
+          0,
+          23
+        ],
+        "fixHint": "Point src at a file with an audio track, or re-export this one."
+      },
+      {
+        "code": "audio_source_unreadable",
+        "severity": "error",
+        "message": "assets/voice/scene1.wav cannot be read as audio ([FFmpeg] ffprobe not found. Please install FFmpeg.), so the render's audio mix fails and the render stops.",
+        "selector": "#voice-scene-1",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0.1,
+        "timeRange": [
+          0.1,
+          4.699999999999999
+        ],
+        "fixHint": "Point src at a file with an audio track, or re-export this one."
+      },
+      {
+        "code": "audio_source_unreadable",
+        "severity": "error",
+        "message": "assets/voice/scene2.wav cannot be read as audio ([FFmpeg] ffprobe not found. Please install FFmpeg.), so the render's audio mix fails and the render stops.",
+        "selector": "#voice-scene-2",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 4.9,
+        "timeRange": [
+          4.9,
+          10.7
+        ],
+        "fixHint": "Point src at a file with an audio track, or re-export this one."
+      },
+      {
+        "code": "audio_source_unreadable",
+        "severity": "error",
+        "message": "assets/voice/scene3.wav cannot be read as audio ([FFmpeg] ffprobe not found. Please install FFmpeg.), so the render's audio mix fails and the render stops.",
+        "selector": "#voice-scene-3",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 10.9,
+        "timeRange": [
+          10.9,
+          18.5
+        ],
+        "fixHint": "Point src at a file with an audio track, or re-export this one."
+      },
+      {
+        "code": "audio_source_unreadable",
+        "severity": "error",
+        "message": "assets/voice/scene4.wav cannot be read as audio ([FFmpeg] ffprobe not found. Please install FFmpeg.), so the render's audio mix fails and the render stops.",
+        "selector": "#voice-scene-4",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 18.6,
+        "timeRange": [
+          18.6,
+          22.6
+        ],
+        "fixHint": "Point src at a file with an audio track, or re-export this one."
+      },
+      {
+        "code": "audio_source_unreadable",
+        "severity": "error",
+        "message": "assets/sfx/click_001.ogg cannot be read as audio ([FFmpeg] ffprobe not found. Please install FFmpeg.), so the render's audio mix fails and the render stops.",
+        "selector": "#sfx-click",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 7.4,
+        "timeRange": [
+          7.4,
+          7.9
+        ],
+        "fixHint": "Point src at a file with an audio track, or re-export this one."
+      },
+      {
+        "code": "audio_source_unreadable",
+        "severity": "error",
+        "message": "assets/sfx/bong_001.ogg cannot be read as audio ([FFmpeg] ffprobe not found. Please install FFmpeg.), so the render's audio mix fails and the render stops.",
+        "selector": "#sfx-chime",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 8.3,
+        "timeRange": [
+          8.3,
+          9.100000000000001
+        ],
+        "fixHint": "Point src at a file with an audio track, or re-export this one."
+      },
+      {
+        "code": "audio_source_unreadable",
+        "severity": "error",
+        "message": "assets/sfx/switch_001.ogg cannot be read as audio ([FFmpeg] ffprobe not found. Please install FFmpeg.), so the render's audio mix fails and the render stops.",
+        "selector": "#sfx-switch",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 11.4,
+        "timeRange": [
+          11.4,
+          12
+        ],
+        "fixHint": "Point src at a file with an audio track, or re-export this one."
+      }
+    ]
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}

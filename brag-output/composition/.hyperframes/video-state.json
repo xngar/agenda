@@ -1,0 +1,179 @@
+{
+  "version": 1,
+  "historyId": "04ef4a42-49a2-4e98-8434-1938a519bf2c",
+  "currentRevision": "be9b6732-643e-492e-9b6d-d65ef43e8e35",
+  "pendingChanges": false,
+  "files": {
+    "AGENTS.md": {
+      "hash": "268ff46777938da818baa92a718571785e9acf2cef2d3ffbacbb93483dcba37a",
+      "content": "C:\\Users\\xngar\\.cache\\hyperframes\\history\\04ef4a42-49a2-4e98-8434-1938a519bf2c\\blobs\\26\\268ff46777938da818baa92a718571785e9acf2cef2d3ffbacbb93483dcba37a"
+    },
+    "CLAUDE.md": {
+      "hash": "268ff46777938da818baa92a718571785e9acf2cef2d3ffbacbb93483dcba37a",
+      "content": "C:\\Users\\xngar\\.cache\\hyperframes\\history\\04ef4a42-49a2-4e98-8434-1938a519bf2c\\blobs\\26\\268ff46777938da818baa92a718571785e9acf2cef2d3ffbacbb93483dcba37a"
+    },
+    "assets/gethour.svg": {
+      "hash": "f6580170d68ddd0c5363b00ad7b6111cce01ec0a11efa4f1b7f4ab0c370963ca",
+      "content": "C:\\Users\\xngar\\.cache\\hyperframes\\history\\04ef4a42-49a2-4e98-8434-1938a519bf2c\\blobs\\f6\\f6580170d68ddd0c5363b00ad7b6111cce01ec0a11efa4f1b7f4ab0c370963ca"
+    },
+    "assets/sfx/bong_001.ogg": {
+      "hash": "d21d0f0b782445db579d11e2506b24cd1ac9d664ee33aeaf807761aa7b6fd710",
+      "content": "C:\\Users\\xngar\\.cache\\hyperframes\\history\\04ef4a42-49a2-4e98-8434-1938a519bf2c\\blobs\\d2\\d21d0f0b782445db579d11e2506b24cd1ac9d664ee33aeaf807761aa7b6fd710"
+    },
+    "assets/sfx/click_001.ogg": {
+      "hash": "ccfb7fa0cccdd9faec0eb16033c732b1e308d139d80f799161495d58f7adcdb9",
+      "content": "C:\\Users\\xngar\\.cache\\hyperframes\\history\\04ef4a42-49a2-4e98-8434-1938a519bf2c\\blobs\\cc\\ccfb7fa0cccdd9faec0eb16033c732b1e308d139d80f799161495d58f7adcdb9"
+    },
+    "assets/sfx/drop_001.ogg": {
+      "hash": "692ee3a6f1821402ca649ff735bee9591dc4846c8098fc7d6a90fd15fa57c1af",
+      "content": "C:\\Users\\xngar\\.cache\\hyperframes\\history\\04ef4a42-49a2-4e98-8434-1938a519bf2c\\blobs\\69\\692ee3a6f1821402ca649ff735bee9591dc4846c8098fc7d6a90fd15fa57c1af"
+    },
+    "assets/sfx/switch_001.ogg": {
+      "hash": "3b74efad87f1e69dbd1d05c5ad952ab90859b5a3d11da6ec5bd79b4f03b42afa",
+      "content": "C:\\Users\\xngar\\.cache\\hyperframes\\history\\04ef4a42-49a2-4e98-8434-1938a519bf2c\\blobs\\3b\\3b74efad87f1e69dbd1d05c5ad952ab90859b5a3d11da6ec5bd79b4f03b42afa"
+    },
+    "assets/voice/scene1.wav": {
+      "hash": "b6aa5eb19ad0bee3ad6d465ad88cf3ab9adaa65ed2c4025884f022114cbe6d1e",
+      "content": "C:\\Users\\xngar\\.cache\\hyperframes\\history\\04ef4a42-49a2-4e98-8434-1938a519bf2c\\blobs\\b6\\b6aa5eb19ad0bee3ad6d465ad88cf3ab9adaa65ed2c4025884f022114cbe6d1e"
+    },
+    "assets/voice/scene2.wav": {
+      "hash": "feff71c2fb09645ec8071b420fc39767eee4a6d8c43ee8abce35666b2d9374ab",
+      "content": "C:\\Users\\xngar\\.cache\\hyperframes\\history\\04ef4a42-49a2-4e98-8434-1938a519bf2c\\blobs\\fe\\feff71c2fb09645ec8071b420fc39767eee4a6d8c43ee8abce35666b2d9374ab"
+    },
+    "assets/voice/scene3.wav": {
+      "hash": "4ba10a61410b8f73d1eab811546317335bfa872bf8d804d2d6166dc6129d0ebd",
+      "content": "C:\\Users\\xngar\\.cache\\hyperframes\\history\\04ef4a42-49a2-4e98-8434-1938a519bf2c\\blobs\\4b\\4ba10a61410b8f73d1eab811546317335bfa872bf8d804d2d6166dc6129d0ebd"
+    },
+    "assets/voice/scene4.wav": {
+      "hash": "be8d8210d352a46402ec12fbe49d2418f5be8032aba4e876fe4ff325d243989c",
+      "content": "C:\\Users\\xngar\\.cache\\hyperframes\\history\\04ef4a42-49a2-4e98-8434-1938a519bf2c\\blobs\\be\\be8d8210d352a46402ec12fbe49d2418f5be8032aba4e876fe4ff325d243989c"
+    },
+    "hyperframes.json": {
+      "hash": "53dbce1e19aa713cbb12ee0bc4d206143b45ab15e6ffbfcaa8f69572d4d24d50",
+      "content": "C:\\Users\\xngar\\.cache\\hyperframes\\history\\04ef4a42-49a2-4e98-8434-1938a519bf2c\\blobs\\53\\53dbce1e19aa713cbb12ee0bc4d206143b45ab15e6ffbfcaa8f69572d4d24d50"
+    },
+    "index.html": {
+      "hash": "fb6c865d25e1c95555db976ccff1cf0ef6bbd76f503445a645ec159e514eb7b3",
+      "content": "C:\\Users\\xngar\\.cache\\hyperframes\\history\\04ef4a42-49a2-4e98-8434-1938a519bf2c\\blobs\\fb\\fb6c865d25e1c95555db976ccff1cf0ef6bbd76f503445a645ec159e514eb7b3"
+    },
+    "meta.json": {
+      "hash": "f2330260863201e467f888aee407523b83f65241fcc919b12500eea9eaccc6f6",
+      "content": "C:\\Users\\xngar\\.cache\\hyperframes\\history\\04ef4a42-49a2-4e98-8434-1938a519bf2c\\blobs\\f2\\f2330260863201e467f888aee407523b83f65241fcc919b12500eea9eaccc6f6"
+    },
+    "package.json": {
+      "hash": "9cb24abf6958547ba1ddc65285a4396334bad81ab8f5c84f21b2fa5014baa425",
+      "content": "C:\\Users\\xngar\\.cache\\hyperframes\\history\\04ef4a42-49a2-4e98-8434-1938a519bf2c\\blobs\\9c\\9cb24abf6958547ba1ddc65285a4396334bad81ab8f5c84f21b2fa5014baa425"
+    },
+    "assets/music/music.mp3": {
+      "hash": "364a546834db4c0c2e3b3240eb6df03e98b7362230154b04c5c614442f6660d7",
+      "content": "C:\\Users\\xngar\\.cache\\hyperframes\\history\\04ef4a42-49a2-4e98-8434-1938a519bf2c\\blobs\\36\\364a546834db4c0c2e3b3240eb6df03e98b7362230154b04c5c614442f6660d7"
+    }
+  },
+  "revisions": {
+    "be9b6732-643e-492e-9b6d-d65ef43e8e35": {
+      "actor": {
+        "kind": "outside",
+        "name": "Outside"
+      },
+      "label": "Changed outside the app",
+      "startedAt": 1794495893177,
+      "endedAt": 1794495893179,
+      "files": {
+        "index.html": {
+          "before": "C:\\Users\\xngar\\.cache\\hyperframes\\history\\04ef4a42-49a2-4e98-8434-1938a519bf2c\\blobs\\a2\\a257c2dd2a3da965317032cd64e5ac71b469ea483e06d35dcd05d90345db5ff0",
+          "after": "C:\\Users\\xngar\\.cache\\hyperframes\\history\\04ef4a42-49a2-4e98-8434-1938a519bf2c\\blobs\\fb\\fb6c865d25e1c95555db976ccff1cf0ef6bbd76f503445a645ec159e514eb7b3"
+        }
+      }
+    }
+  },
+  "checks": {
+    "latest": {
+      "revision": "be9b6732-643e-492e-9b6d-d65ef43e8e35",
+      "id": "70d96d84-3a0e-4352-acfe-438eb406be41"
+    },
+    "revisions": {
+      "be9b6732-643e-492e-9b6d-d65ef43e8e35": [
+        {
+          "id": "70d96d84-3a0e-4352-acfe-438eb406be41",
+          "scope": "project",
+          "report": "C:\\Users\\xngar\\OneDrive\\Desktop\\agenda-online\\agenda\\brag-output\\composition\\.hyperframes\\artifacts\\checks\\70d96d84-3a0e-4352-acfe-438eb406be41.json",
+          "metadata": {
+            "ok": true,
+            "browserSkipped": false,
+            "options": {
+              "samples": 9,
+              "atTransitions": false,
+              "maxIssues": 80,
+              "collapseStatic": true,
+              "tolerance": 2,
+              "timeout": 45000,
+              "cache": true,
+              "contrast": true,
+              "craft": true,
+              "strict": false,
+              "snapshots": false,
+              "browserGpuMode": "auto",
+              "includeUnmounted": false
+            }
+          },
+          "createdAt": 1794495901474,
+          "contentHash": "1fec78159585cdd127107213d4fc3c3ef075137fd59052c75cb8bfada1677d1e",
+          "revision": "be9b6732-643e-492e-9b6d-d65ef43e8e35",
+          "inputFingerprint": "c8df24d91443f481e8f27d27068b39b1ec50b17a8cb1e2a5a67c6aaf667cd941",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        }
+      ]
+    },
+    "unversioned": [
+      {
+        "id": "4ad98802-5819-41d6-991c-c0607376b1ac",
+        "scope": "project",
+        "report": "C:\\Users\\xngar\\OneDrive\\Desktop\\agenda-online\\agenda\\brag-output\\composition\\.hyperframes\\artifacts\\checks\\4ad98802-5819-41d6-991c-c0607376b1ac.json",
+        "metadata": {
+          "ok": false,
+          "browserSkipped": false,
+          "options": {
+            "samples": 9,
+            "atTransitions": false,
+            "maxIssues": 80,
+            "collapseStatic": true,
+            "tolerance": 2,
+            "timeout": 45000,
+            "cache": true,
+            "contrast": true,
+            "craft": true,
+            "strict": false,
+            "snapshots": false,
+            "browserGpuMode": "auto",
+            "includeUnmounted": false
+          }
+        },
+        "createdAt": 1794495762792,
+        "contentHash": "f635fb009b4a4b45a2d1dd704bc1206a81aa18bbaa3dfe64eda658d09e0cbed1",
+        "revision": null,
+        "inputFingerprint": "11cd8e7bf00fb00c593a55663f1dcd3ab69f4e18a7260b4b0802e37471124290",
+        "inputScope": "local-project-files",
+        "attribution": "unversioned"
+      }
+    ]
+  },
+  "snapshots": {
+    "latest": null,
+    "revisions": {},
+    "unversioned": []
+  },
+  "renders": {
+    "latest": {
+      "id": "c56f64ea-abfd-4e93-9fab-b940af689b3a",
+      "completedAt": 1794495960504,
+      "output": "C:\\Users\\xngar\\OneDrive\\Desktop\\agenda-online\\agenda\\brag-output\\brag.mp4",
+      "status": "completed",
+      "revision": "be9b6732-643e-492e-9b6d-d65ef43e8e35"
+    },
+    "retainedRevisions": [
+      "be9b6732-643e-492e-9b6d-d65ef43e8e35"
+    ]
+  },
+  "pendingArtifactCleanup": []
+}
