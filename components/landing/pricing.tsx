@@ -15,11 +15,11 @@ export default function Pricing() {
         {/* Encabezado */}
         <ScrollReveal yOffset={16} className="mx-auto max-w-4xl text-center">
           <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl [text-wrap:balance]">
-            Un plan pensado para la escala de tu consulta
+            Planes simples, sin letra chica
           </h2>
 
           <p className="mt-5 text-base sm:text-lg text-neutral-600 [text-wrap:balance]">
-            Sin costos de instalación ocultos ni contratos que te aten. Activa tu consulta y escala cuando tu equipo crezca.
+            Sin costo de instalación ni permanencia.
           </p>
 
           {/* Toggle Mensual / Anual */}
@@ -70,7 +70,7 @@ export default function Pricing() {
                   {plan.highlighted && (
                     <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-[var(--lp-blue)] px-4 py-1 text-xs font-bold text-white shadow-md">
                       <Sparkles className="h-3 w-3 text-cyan-200" />
-                      Más elegido por clínicas
+                      Recomendado
                     </span>
                   )}
 
@@ -90,21 +90,11 @@ export default function Pricing() {
                     </div>
 
                     <div className="mt-6 border-t border-slate-100 pt-6">
-                      <div className="text-xs font-bold uppercase tracking-wider text-neutral-500 mb-3">
-                        Capacidad & Servicios
-                      </div>
+                      <p className="mb-3 text-xs text-neutral-500">Incluye agenda online y ficha clínica.</p>
                       <ul className="space-y-3 text-sm text-neutral-700">
                         <li className="flex items-start gap-2.5">
                           <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
                           <span className="font-semibold text-neutral-900">{plan.professionals}</span>
-                        </li>
-                        <li className="flex items-start gap-2.5">
-                          <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                          <span>Agenda y reservas online 24/7</span>
-                        </li>
-                        <li className="flex items-start gap-2.5">
-                          <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                          <span>Ficha clínica electrónica adaptada</span>
                         </li>
                         <li className="flex items-start gap-2.5">
                           <Check
@@ -113,7 +103,7 @@ export default function Pricing() {
                             }`}
                           />
                           <span className={plan.features.recordatoriosWhatsApp ? "text-neutral-900" : "text-neutral-400"}>
-                            Recordatorios automáticos WhatsApp y email
+                            Recordatorios por WhatsApp
                           </span>
                         </li>
                         <li className="flex items-start gap-2.5">
@@ -123,7 +113,7 @@ export default function Pricing() {
                             }`}
                           />
                           <span className={plan.features.multiRol ? "text-neutral-900" : "text-neutral-400"}>
-                            Accesos multi-rol (Recepción y Profesional)
+                            Accesos por rol (recepción y profesional)
                           </span>
                         </li>
                         <li className="flex items-start gap-2.5">
@@ -143,7 +133,7 @@ export default function Pricing() {
                           : "bg-slate-100 text-neutral-800 hover:bg-slate-200"
                       }`}
                     >
-                      <span>Solicitar demo guiada</span>
+                      <span>Solicitar demo</span>
                       <ArrowRight className="h-4 w-4" />
                     </Link>
                   </div>
@@ -155,9 +145,9 @@ export default function Pricing() {
 
         <ScrollReveal delay={0.2} yOffset={12}>
           <div className="mt-12 text-center text-xs sm:text-sm text-neutral-600">
-            ¿Tu centro de salud cuenta con múltiples sucursales o más de 20 especialistas?{" "}
+            ¿Más de 20 especialistas o varias sucursales?{" "}
             <Link href="#demo" className="font-bold text-[var(--lp-blue)] underline hover:text-[var(--lp-navy)]">
-              Escríbenos para un plan corporativo a la medida
+              Escríbenos
             </Link>
           </div>
         </ScrollReveal>

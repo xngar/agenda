@@ -10,34 +10,26 @@ import { ScrollReveal } from "@/components/motion/scroll-reveal";
 
 const faqs = [
   {
-    q: "¿Para qué especialidades médicas o de salud sirve?",
-    a: "Está especialmente optimizada para odontología, medicina general y psicología, contando con odontograma interactivo, registro de signos vitales y notas de evolución protegidas. También se adapta fluidamente a consultas de kinesiología, nutrición y fonoaudiología.",
+    q: "¿Para qué especialidades sirve?",
+    a: "Odontología, medicina general y psicología, con odontograma, signos vitales y notas de evolución. También se adapta a kinesiología, nutrición y fonoaudiología.",
   },
   {
-    q: "¿Mis pacientes necesitan descargar alguna aplicación?",
-    a: "No. Tus pacientes reservan directamente desde cualquier navegador móvil o de escritorio a través de un enlace web seguro y rápido, sin descargas obligatorias, sin publicidad y sin crear contraseñas engorrosas.",
+    q: "¿Mis pacientes necesitan descargar una app?",
+    a: "No. Reservan desde el navegador con un enlace, sin descargas ni contraseñas.",
   },
   {
-    q: "¿Puedo exportar y llevarme mis datos si dejo de usar el servicio?",
-    a: "Sí, absolutamente. La información de tu clínica y de tus pacientes te pertenece en un 100%. Puedes descargar las historias clínicas en formato PDF y exportar pacientes y citas en CSV en cualquier momento.",
+    q: "¿Puedo llevarme mis datos si dejo el servicio?",
+    a: "Sí. Puedes descargar las fichas en PDF y exportar pacientes y citas en CSV cuando quieras.",
   },
   {
-    q: "¿Cuánto tiempo demora poner la plataforma en marcha?",
-    a: "Menos de 24 horas. Nuestro equipo te entrega la cuenta completamente configurada con tus profesionales, horarios, boxes y fichas adaptadas para que puedas comenzar a agendar inmediatamente.",
-  },
-  {
-    q: "¿Cómo se contrata el servicio?",
-    a: "Solo debes solicitar una demo en el formulario inferior. Coordinaremos una breve sesión demostrativa de 15 minutos para resolver tus dudas y habilitar tu acceso con acompañamiento personalizado.",
-  },
-  {
-    q: "¿Ofrecen capacitación al equipo y soporte técnico continuo?",
-    a: "Sí. Incluimos inducción guiada tanto para los profesionales de salud como para el personal de recepción, además de soporte prioritario vía WhatsApp y correo electrónico para resolver cualquier consulta en tu jornada.",
+    q: "¿Ofrecen capacitación y soporte?",
+    a: "Sí. Capacitamos a tu equipo y damos soporte por WhatsApp y correo.",
   },
 ];
 
 export default function Faq() {
-  const col1 = faqs.slice(0, 3);
-  const col2 = faqs.slice(3, 6);
+  const col1 = faqs.slice(0, 2);
+  const col2 = faqs.slice(2, 4);
 
   return (
     <section id="preguntas" className="relative bg-white py-16 sm:py-24">
@@ -47,10 +39,6 @@ export default function Faq() {
           <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl [text-wrap:balance]">
             Preguntas frecuentes
           </h2>
-
-          <p className="mt-5 text-base sm:text-lg text-neutral-600 [text-wrap:balance]">
-            Todo lo que necesitas saber antes de dar el paso hacia una consulta moderna y ordenada.
-          </p>
         </ScrollReveal>
 
         {/* Acordeón en 2 Columnas */}

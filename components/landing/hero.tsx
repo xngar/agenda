@@ -43,7 +43,7 @@ export default function Hero() {
             transition={{ duration: 0.45, delay: 0.16, ease: easeCustom }}
             className="mt-5 max-w-2xl text-lg text-white/90"
           >
-            {siteConfig.name} es la plataforma para clínicas y profesionales de la salud que quieren ordenar su consulta: reservas online, ficha clínica adaptada a su especialidad y recordatorios automáticos para sus pacientes.
+            Para clínicas y profesionales de la salud que quieren ordenar su consulta.
           </motion.p>
 
           <motion.ul
@@ -55,7 +55,7 @@ export default function Hero() {
             {[
               "Reservas online",
               "Ficha clínica por especialidad",
-              "Recordatorios automáticos",
+              "Recordatorios por WhatsApp",
               "Panel para tu equipo",
             ].map((item, idx) => (
               <motion.li
@@ -85,7 +85,7 @@ export default function Hero() {
               href="#demo"
               className="group inline-flex items-center justify-center gap-2 rounded-full bg-[var(--lp-navy)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-micro hover:scale-105 hover:bg-[var(--lp-blue)] hover:shadow-md active:scale-95"
             >
-              <span>Solicitar una demo</span>
+              <span>Solicitar demo</span>
               <ArrowRight className="h-4 w-4 btn-icon-right" aria-hidden="true" />
             </Link>
             <Link
@@ -93,7 +93,7 @@ export default function Hero() {
               className="group inline-flex items-center justify-center gap-2 rounded-full bg-action-primary px-6 py-3 text-sm font-semibold text-action-primary-foreground shadow-sm transition-all duration-micro hover:scale-105 hover:bg-action-primary-hover hover:shadow-md active:scale-95"
             >
               <Mail className="h-4 w-4 btn-icon-wiggle" aria-hidden="true" />
-              <span>Hablar con nuestro equipo</span>
+              <span>Hablar con el equipo</span>
             </Link>
           </motion.div>
         </div>

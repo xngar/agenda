@@ -1,33 +1,30 @@
 "use client";
 
 import { ScrollReveal, StaggerGroup, StaggerItem } from "@/components/motion/scroll-reveal";
-import { Calendar, Settings, Rocket, ArrowRight, CheckCircle } from "lucide-react";
+import { Calendar, Settings, Rocket, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default function HowItWorks() {
   const steps = [
     {
       n: "01",
-      title: "Solicita tu demo guiada",
+      title: "Demo de 15 minutos",
       time: "15 minutos",
-      desc: "Nos reunimos por videollamada, revisamos el flujo de tu clínica y resolvemos todas tus dudas.",
-      badge: "Sin costo ni compromiso",
+      desc: "Revisamos el flujo de tu clínica por videollamada.",
       Icon: Calendar,
     },
     {
       n: "02",
-      title: "Configuramos tu consulta",
+      title: "Configuramos tu cuenta",
       time: "Menos de 24 hrs",
-      desc: "Personalizamos los tipos de fichas (dental, médica, psicología), horarios, profesionales y boxes de atención.",
-      badge: "Soporte 1 a 1 incluido",
+      desc: "Profesionales, horarios, boxes y fichas por especialidad.",
       Icon: Settings,
     },
     {
       n: "03",
-      title: "Tu consulta en marcha",
+      title: "Comparte tu enlace",
       time: "Inmediato",
-      desc: "Comparte tu enlace de reservas por WhatsApp o redes, activa recordatorios y atiende con ficha clínica ordenada.",
-      badge: "Control total de tu día",
+      desc: "Tus pacientes ya pueden reservar.",
       Icon: Rocket,
     },
   ];
@@ -38,12 +35,8 @@ export default function HowItWorks() {
         {/* Encabezado */}
         <ScrollReveal yOffset={16} className="mx-auto max-w-4xl text-center">
           <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl [text-wrap:balance]">
-            Tu consulta funcionando en 3 simples pasos
+            Empieza en menos de 24 horas
           </h2>
-
-          <p className="mt-5 text-base sm:text-lg text-neutral-600 [text-wrap:balance]">
-            Sin manuales engorrosos ni instalaciones difíciles. Nuestro equipo te entrega todo listo para agendar desde el primer día.
-          </p>
         </ScrollReveal>
 
         {/* Timeline con tarjetas conectadas */}
@@ -80,13 +73,6 @@ export default function HowItWorks() {
                         {step.desc}
                       </p>
                     </div>
-
-                    <div className="mt-6 border-t border-slate-100 pt-4">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
-                        <CheckCircle className="h-3.5 w-3.5" />
-                        {step.badge}
-                      </span>
-                    </div>
                   </article>
                 </StaggerItem>
               );
@@ -100,7 +86,7 @@ export default function HowItWorks() {
             href="#demo"
             className="inline-flex items-center gap-2 rounded-full bg-[var(--lp-navy)] px-6 py-3 text-sm font-bold text-white shadow-sm transition-all duration-micro hover:scale-105 hover:bg-[var(--lp-blue)]"
           >
-            <span>Quiero ver la demo para mi clínica</span>
+            <span>Solicitar demo</span>
             <ArrowRight className="h-4 w-4" />
           </Link>
         </ScrollReveal>

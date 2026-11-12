@@ -6,8 +6,6 @@ import {
   CalendarCheck,
   LayoutDashboard,
   CheckCircle2,
-  ShieldCheck,
-  CalendarClock,
   Calendar,
   Lock,
   ArrowRight,
@@ -38,11 +36,11 @@ export default function Problem() {
         {/* Encabezado Principal */}
         <ScrollReveal yOffset={16} className="mx-auto max-w-4xl text-center">
           <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl [text-wrap:balance]">
-            Del enlace web a tu box de atención: un flujo simple que nunca topa horarios
+            Tus pacientes reservan solos. Tú solo confirmas.
           </h2>
 
           <p className="mt-5 text-base sm:text-lg text-neutral-600 [text-wrap:balance]">
-            Tus pacientes reservan en menos de un minuto desde su celular o computador. El sistema valida la disponibilidad en vivo, asigna la hora en tu agenda y te deja el control total para confirmar y atender con ficha clínica integrada.
+            Reserva online en menos de un minuto, sin apps ni cuentas.
           </p>
         </ScrollReveal>
 
@@ -50,41 +48,33 @@ export default function Problem() {
         <div className="mt-14 grid gap-8 lg:grid-cols-12 lg:items-center">
           {/* Columna Izquierda: Los 3 Pasos del Flujo Simplificado */}
           <div className="space-y-4 lg:col-span-5">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-sky-700">
-              <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
-              El flujo inteligente en 3 pasos
-            </div>
-
             <StaggerGroup className="space-y-3" staggerDelay={0.08}>
               {[
                 {
                   step: "01",
                   Icon: Globe,
-                  title: "1. El paciente reserva en tu web 24/7",
-                  desc: "Comparte tu enlace en tu web, redes o recepción. El paciente elige servicio, profesional y hora en 40 segundos, sin descargar apps ni recordar contraseñas.",
-                  pill: "Sin apps ni esperas de chat",
+                  title: "Reserva desde tu enlace",
+                  desc: "Elige servicio, profesional y hora. Sin apps ni contraseñas.",
                   color: "border-sky-100 bg-sky-50/40 text-neutral-800",
                   iconBg: "bg-sky-100 text-[var(--lp-navy)]",
                 },
                 {
                   step: "02",
                   Icon: CalendarCheck,
-                  title: "2. Asignación inmediata anti-topes (Get Hour)",
-                  desc: "El motor valida la disponibilidad en milisegundos contra feriados, horarios y bloqueos médicos. El cupo queda asignado de inmediato y nadie más puede tomarlo.",
-                  pill: "Validación matemática en tiempo real",
+                  title: "Sin horas duplicadas",
+                  desc: "Revisamos horarios, feriados y bloqueos. Una hora tomada no se ofrece a nadie más.",
                   color: "border-emerald-100 bg-emerald-50/30 text-neutral-800",
                   iconBg: "bg-emerald-100 text-emerald-800",
                 },
                 {
                   step: "03",
                   Icon: LayoutDashboard,
-                  title: "3. Confirmación médica y ficha lista",
-                  desc: "La cita entra a tu agenda en estado 'por confirmar'. Tu equipo la valida en 1 clic, emite el calendario .ics para el paciente y accede a su historial clínico.",
-                  pill: "Control total y ficha electrónica",
+                  title: "Confirmas en 1 clic",
+                  desc: "La cita llega como 'por confirmar'. Al confirmarla, el paciente recibe su evento de calendario.",
                   color: "border-slate-200 bg-white text-neutral-800",
                   iconBg: "bg-neutral-100 text-neutral-800",
                 },
-              ].map(({ step, Icon, title, desc, pill, color, iconBg }) => (
+              ].map(({ step, Icon, title, desc, color, iconBg }) => (
                 <StaggerItem key={step} yOffset={16}>
                   <div
                     className={`rounded-2xl border p-4.5 transition-all duration-element hover:translate-x-1 hover:shadow-xs sm:p-5 ${color}`}
@@ -99,10 +89,6 @@ export default function Problem() {
                           <span className="font-mono text-xs font-bold text-neutral-400">{step}</span>
                         </div>
                         <p className="mt-1 text-xs sm:text-sm text-neutral-600 leading-relaxed">{desc}</p>
-                        <div className="mt-2.5 inline-flex items-center gap-1 rounded-md bg-white/80 px-2 py-0.5 text-[11px] font-medium text-neutral-700 border border-neutral-200/60 shadow-2xs">
-                          <CheckCircle2 className="h-3 w-3 text-emerald-600" aria-hidden="true" />
-                          <span>{pill}</span>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -132,7 +118,7 @@ export default function Problem() {
                   }`}
                 >
                   <Globe className="h-3.5 w-3.5 text-sky-600" aria-hidden="true" />
-                  <span>1. Lo que ve el Paciente</span>
+                  <span>Paciente</span>
                 </button>
                 <button
                   type="button"
@@ -146,13 +132,9 @@ export default function Problem() {
                   }`}
                 >
                   <LayoutDashboard className="h-3.5 w-3.5 text-emerald-600" aria-hidden="true" />
-                  <span>2. Lo que recibe la Clínica</span>
+                  <span>Clínica</span>
                 </button>
               </div>
-
-              <span className="hidden sm:inline-block text-xs font-medium text-neutral-500">
-                {activeTab === "patient" ? "Asistente web autónomo" : "Panel en tiempo real"}
-              </span>
             </div>
 
             {/* Contenedor del Mockup */}
@@ -203,11 +185,11 @@ export default function Problem() {
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-bold uppercase tracking-wider text-neutral-700">
-                          Horarios libres verificados en vivo:
+                          Horas disponibles
                         </span>
                         <span className="text-[11px] font-medium text-emerald-600 flex items-center gap-1">
                           <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                          Cupos sin colisión
+                          En vivo
                         </span>
                       </div>
 
@@ -243,14 +225,6 @@ export default function Problem() {
                       </div>
                     </div>
 
-                    {/* Banner explicativo del Get Hour */}
-                    <div className="rounded-xl border border-sky-100 bg-sky-50/60 p-3 flex items-start gap-2.5">
-                      <ShieldCheck className="h-4 w-4 shrink-0 text-sky-600 mt-0.5" aria-hidden="true" />
-                      <p className="text-xs text-sky-900 leading-relaxed">
-                        <strong>Asignación inmediata:</strong> al confirmar a las <strong>{selectedSlot} hrs</strong>, el sistema bloquea el cupo al instante en la base de datos de la clínica. Nadie más podrá tomar tu horario.
-                      </p>
-                    </div>
-
                     {/* Botón de acción simulada */}
                     <div className="pt-1">
                       <button
@@ -258,7 +232,7 @@ export default function Problem() {
                         onClick={() => setActiveTab("clinic")}
                         className="w-full flex items-center justify-center gap-2 rounded-xl bg-[var(--lp-navy)] py-3 px-4 text-sm font-bold text-white shadow-sm hover:bg-[var(--lp-navy-deep)] transition-all cursor-pointer active:scale-[0.99]"
                       >
-                        <span>Confirmar solicitud de hora en la web</span>
+                        <span>Reservar hora</span>
                         <ArrowRight className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </div>
@@ -315,7 +289,7 @@ export default function Problem() {
                             {simulatedConfirmed ? (
                               <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
                                 <Check className="h-3 w-3" />
-                                Confirmada (.ics enviado)
+                                Confirmada
                               </span>
                             ) : (
                               <button
@@ -383,60 +357,6 @@ export default function Problem() {
                   </motion.div>
                 )}
               </AnimatePresence>
-
-              {/* Tarjetas flotantes contextuales corregidas (Sin falsas menciones a bots) */}
-              <motion.div
-                initial={reduce ? { opacity: 1 } : { opacity: 0, x: 20 }}
-                animate={
-                  reduce
-                    ? { opacity: 1 }
-                    : { opacity: 1, x: 0, y: [-3, 3, -3] }
-                }
-                transition={
-                  reduce
-                    ? { duration: 0.3 }
-                    : {
-                        opacity: { duration: 0.4, delay: 0.3 },
-                        x: { duration: 0.4, delay: 0.3 },
-                        y: { duration: 4.8, repeat: Infinity, ease: "easeInOut" },
-                      }
-                }
-                className="absolute -right-3 -top-5 hidden rounded-2xl border border-[var(--lp-sky-200)] bg-white px-3.5 py-2.5 text-xs font-medium shadow-lg sm:flex sm:items-center sm:gap-2.5 text-neutral-800"
-              >
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                </div>
-                <div>
-                  <div className="text-[11px] font-bold text-neutral-900">Asignación 100% en vivo</div>
-                  <div className="text-[10px] text-neutral-500">Cupo bloqueado sin cruce de horas</div>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={reduce ? { opacity: 1 } : { opacity: 0, y: 15 }}
-                animate={
-                  reduce
-                    ? { opacity: 1 }
-                    : { opacity: 1, y: [3, -3, 3] }
-                }
-                transition={
-                  reduce
-                    ? { duration: 0.3 }
-                    : {
-                        opacity: { duration: 0.4, delay: 0.4 },
-                        y: { duration: 5.2, repeat: Infinity, ease: "easeInOut" },
-                      }
-                }
-                className="absolute -bottom-4 -left-3 hidden rounded-2xl border border-sky-100 bg-white px-3.5 py-2.5 text-xs font-medium shadow-lg sm:flex sm:items-center sm:gap-2.5 text-neutral-800"
-              >
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--lp-sky-100)] text-[var(--lp-navy)]">
-                  <CalendarClock className="h-4 w-4" aria-hidden="true" />
-                </div>
-                <div>
-                  <div className="text-[11px] font-bold text-neutral-900">Confirmación en 1 clic</div>
-                  <div className="text-[10px] text-neutral-500">Dispara evento .ics y ficha lista</div>
-                </div>
-              </motion.div>
             </motion.div>
           </div>
         </div>

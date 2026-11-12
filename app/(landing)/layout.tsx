@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     template: `%s · ${siteConfig.name}`,
   },
   description:
-    `${siteConfig.name} es la plataforma para clínicas y profesionales de la salud que quieren ordenar su consulta: reservas online, ficha clínica adaptada a su especialidad y recordatorios automáticos para sus pacientes.`,
+    `${siteConfig.name}: reservas online, ficha clínica por especialidad y recordatorios por WhatsApp para clínicas y profesionales de la salud.`,
   applicationName: siteConfig.name,
   openGraph: {
     type: "website",
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     title: `${siteConfig.name} · Agenda, fichas clínicas y pacientes en un solo lugar`,
     description:
-      `${siteConfig.name} es la plataforma para clínicas y profesionales de la salud que quieren ordenar su consulta: reservas online, ficha clínica adaptada a su especialidad y recordatorios automáticos para sus pacientes.`,
+      `${siteConfig.name}: reservas online, ficha clínica por especialidad y recordatorios por WhatsApp para clínicas y profesionales de la salud.`,
   },
   robots: { index: true, follow: true },
 };

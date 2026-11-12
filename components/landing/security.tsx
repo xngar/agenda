@@ -1,34 +1,29 @@
 "use client";
 
-import { ShieldCheck, Lock, Database, Download, FileCheck, CheckCircle2 } from "lucide-react";
-import { siteConfig } from "@/lib/site-config";
+import { Lock, Database, Download, FileCheck } from "lucide-react";
 import { StaggerGroup, StaggerItem } from "@/components/motion/scroll-reveal";
 
 export default function Security() {
   const securityPillars = [
     {
       Icon: Lock,
-      title: "Control de acceso estricto por roles",
-      desc: "El profesional atiende con su ficha, recepción solo administra la agenda y citas, y el administrador gestiona el equipo.",
-      badge: "RLS a nivel de BD",
+      title: "Permisos por rol",
+      desc: "Cada persona ve solo lo que necesita: profesional, recepción o administrador.",
     },
     {
       Icon: FileCheck,
-      title: "Registro de auditoría inmutable",
-      desc: "Trazabilidad completa: queda registrado quién, cuándo y desde dónde se consultó o modificó cada ficha médica.",
-      badge: "Auditoría activa",
+      title: "Registro de accesos",
+      desc: "Queda registrado quién consultó o modificó cada ficha.",
     },
     {
       Icon: Database,
-      title: "Cifrado y copias de seguridad",
-      desc: "Toda la información se transmite bajo TLS 1.3 y se almacena cifrada con respaldos automáticos diarios.",
-      badge: "Cifrado AES-256",
+      title: "Cifrado y respaldos",
+      desc: "Tus datos viajan y se guardan cifrados, con copias de seguridad.",
     },
     {
       Icon: Download,
-      title: "Tus datos te pertenecen al 100%",
-      desc: "Sin amarras ni bloqueos. Puedes exportar fichas, historiales y contactos en formatos estándar (PDF, CSV) cuando lo desees.",
-      badge: "Exportación 1 clic",
+      title: "Tus datos son tuyos",
+      desc: "Exporta fichas y contactos en PDF o CSV cuando quieras.",
     },
   ];
 
@@ -49,11 +44,11 @@ export default function Security() {
 
           <div className="relative z-10 mx-auto max-w-4xl text-center">
             <h2 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl [text-wrap:balance]">
-              La información clínica de tus pacientes, con estándar de máxima seguridad
+              Los datos de tus pacientes, protegidos
             </h2>
 
             <p className="mt-5 text-base sm:text-lg text-slate-300 [text-wrap:balance]">
-              Sabemos que los datos de salud son los más sensibles. Por eso {siteConfig.name} está construida cumpliendo con la <strong>Ley 20.584 de Derechos y Deberes del Paciente</strong> y las directrices del <strong>MINSAL</strong> para fichas médicas electrónicas.
+              Cumplimos la <strong>Ley 20.584</strong> y las directrices del <strong>MINSAL</strong> para fichas electrónicas.
             </p>
           </div>
 
@@ -74,33 +69,11 @@ export default function Security() {
                         {pillar.desc}
                       </p>
                     </div>
-
-                    <div className="mt-5 border-t border-white/10 pt-3">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-cyan-400">
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        {pillar.badge}
-                      </span>
-                    </div>
                   </article>
                 </StaggerItem>
               );
             })}
           </StaggerGroup>
-
-          {/* Footer de la tarjeta con resumen de garantía */}
-          <div className="relative z-10 mt-12 flex flex-wrap items-center justify-center gap-6 border-t border-white/10 pt-8 text-xs text-slate-300">
-            <span className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-emerald-400" /> Ley 20.584 y Ficha Clínica
-            </span>
-            <span>·</span>
-            <span className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-emerald-400" /> Infraestructura Cloud con 99.9% de uptime
-            </span>
-            <span>·</span>
-            <span className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-emerald-400" /> Aislamiento de base de datos multi-tenant
-            </span>
-          </div>
         </div>
       </div>
     </section>

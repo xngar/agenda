@@ -53,41 +53,26 @@ export default function DemoForm() {
           <div className="space-y-6 lg:col-span-5">
             <ScrollReveal yOffset={16}>
               <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl [text-wrap:balance]">
-                Lleva tu consulta al siguiente nivel
+                Agenda una demo de 15 minutos
               </h2>
 
               <p className="mt-5 text-base sm:text-lg text-neutral-600 [text-wrap:balance]">
-                Agenda una demo personalizada y descubre cómo {siteConfig.name} elimina el desorden en tu día a día, reduce las inasistencias y protege los datos de tus pacientes.
+                Te mostramos {siteConfig.name} con el flujo de tu consulta.
               </p>
             </ScrollReveal>
 
             {/* Tarjetas de Beneficios */}
-            <div className="space-y-3.5 pt-2">
+            <div className="space-y-3 pt-2">
               {[
-                {
-                  icon: Clock,
-                  title: "Respuesta en menos de 2 horas",
-                  desc: "Te contactamos de inmediato en horario hábil para coordinar tu demostración.",
-                },
-                {
-                  icon: ShieldCheck,
-                  title: "Sin compromiso ni costo inicial",
-                  desc: "Revisas la plataforma en vivo antes de tomar cualquier decisión para tu consulta.",
-                },
-                {
-                  icon: CheckCircle2,
-                  title: "Puesta en marcha guiada en 24h",
-                  desc: "Te entregamos la clínica configurada con tus profesionales y fichas listas.",
-                },
-              ].map(({ icon: Icon, title, desc }) => (
-                <div key={title} className="flex items-start gap-3.5 rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-2xs">
+                { icon: Clock, title: "Te respondemos en horario hábil" },
+                { icon: ShieldCheck, title: "Sin costo ni compromiso" },
+                { icon: CheckCircle2, title: "Puesta en marcha en 24 h" },
+              ].map(({ icon: Icon, title }) => (
+                <div key={title} className="flex items-center gap-3.5 rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-2xs">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-[var(--lp-navy)]">
                     <Icon className="h-4.5 w-4.5 text-action-primary" />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-neutral-900">{title}</h3>
-                    <p className="mt-0.5 text-xs text-neutral-600 leading-relaxed">{desc}</p>
-                  </div>
+                  <h3 className="text-sm font-bold text-neutral-900">{title}</h3>
                 </div>
               ))}
             </div>
@@ -119,8 +104,8 @@ export default function DemoForm() {
             <ScrollReveal yOffset={20}>
               <div className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xl sm:p-8">
                 <div className="border-b border-slate-100 pb-4 mb-6">
-                  <h3 className="text-lg font-bold text-neutral-900">Solicitar demostración sin compromiso</h3>
-                  <p className="text-xs text-neutral-500 mt-1">Completa estos datos y te responderemos a la brevedad</p>
+                  <h3 className="text-lg font-bold text-neutral-900">Solicitar demo</h3>
+                  <p className="text-xs text-neutral-500 mt-1">Completa tus datos y te contactamos.</p>
                 </div>
 
                 <form onSubmit={onSubmit} className="space-y-4">
@@ -225,7 +210,7 @@ export default function DemoForm() {
                       </>
                     ) : (
                       <>
-                        <span>Solicitar demo guiada gratuita</span>
+                        <span>Solicitar demo</span>
                         <ArrowRight className="h-4 w-4" />
                       </>
                     )}
@@ -234,7 +219,7 @@ export default function DemoForm() {
                   {status === "success" && (
                     <div className="flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs font-medium text-emerald-800">
                       <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                      <span>¡Solicitud recibida con éxito! Te contactaremos a la brevedad para coordinar la demo.</span>
+                      <span>¡Listo! Te contactaremos pronto para coordinar la demo.</span>
                     </div>
                   )}
 

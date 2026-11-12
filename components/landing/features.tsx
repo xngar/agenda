@@ -25,16 +25,15 @@ import { motion, AnimatePresence } from "motion/react";
 import { ScrollReveal } from "@/components/motion/scroll-reveal";
 import { useMotionPrefs } from "@/components/motion/use-motion-prefs";
 import { MarqueeFade } from "@/components/landing/marquee-fade";
-import { AnimatedNumber } from "@/components/motion/animated-number";
 
 const marqueeItems = [
   { text: "Reservas online 24/7", Icon: Clock },
   { text: "Ficha clínica electrónica", Icon: FileText },
-  { text: "Recordatorios automáticos", Icon: Bell },
+  { text: "Recordatorios por WhatsApp", Icon: Bell },
   { text: "Odontograma interactivo", Icon: Sparkles },
   { text: "Seguridad y privacidad Ley 20.584", Icon: ShieldCheck },
   { text: "Atención multidisciplinaria", Icon: HeartPulse },
-  { text: "Confirmación por WhatsApp", Icon: Smartphone },
+  { text: "Confirmación de citas", Icon: Smartphone },
   { text: "Control de ausencias", Icon: CalendarCheck },
   { text: "Gestión ágil de pacientes", Icon: UserCheck },
 ];
@@ -60,11 +59,11 @@ export default function Features() {
         {/* Encabezado Principal */}
         <ScrollReveal yOffset={16} className="mx-auto max-w-4xl text-center">
           <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl [text-wrap:balance]">
-            Diseñada para el flujo real de tu consulta médica o dental
+            Hecha para tu especialidad
           </h2>
 
           <p className="mt-5 text-base sm:text-lg text-neutral-600 [text-wrap:balance]">
-            Cada especialidad tiene necesidades distintas. Por eso {siteConfig.name} unifica agenda pública, ficha clínica especializada y recordatorios inteligentes sin saturar a tu equipo.
+            Agenda, ficha clínica y recordatorios, adaptados a cómo trabajas.
           </p>
         </ScrollReveal>
 
@@ -257,9 +256,8 @@ export default function Features() {
               </div>
             </div>
 
-            <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-neutral-500">
-              <span>Cumple con el estándar MINSAL de Ficha Médica</span>
-              <span className="font-semibold text-neutral-700">Exportable en PDF y CSV</span>
+            <div className="mt-4 border-t border-slate-100 pt-3 text-xs font-semibold text-neutral-700">
+              Exportable en PDF y CSV
             </div>
           </div>
 
@@ -293,10 +291,7 @@ export default function Features() {
                   {/* Mensaje enviado por la clínica */}
                   <div className="rounded-xl rounded-tl-xs bg-white p-3 text-neutral-800 shadow-2xs max-w-[90%]">
                     <p className="leading-snug">
-                      Hola <strong>Matías</strong> 👋 Le recordamos su cita médica para mañana a las <strong>11:30 hrs</strong> con la <strong>Dra. Soto</strong>.
-                    </p>
-                    <p className="mt-1 text-[11px] text-neutral-500">
-                      ¿Nos confirma su asistencia para coordinar la consulta?
+                      Hola <strong>Matías</strong> 👋 Le recordamos su cita mañana a las <strong>11:30 hrs</strong> con la <strong>Dra. Soto</strong>. ¿Nos confirma su asistencia?
                     </p>
                     <div className="mt-1 flex items-center justify-end gap-1 text-[10px] text-neutral-400">
                       <span>10:00</span>
@@ -315,23 +310,18 @@ export default function Features() {
                   </div>
                 </div>
 
-                <div className="mt-3 flex items-center justify-between border-t border-emerald-900/10 pt-2.5 text-[11px] text-neutral-600">
+                <div className="mt-3 flex items-center border-t border-emerald-900/10 pt-2.5 text-[11px] text-neutral-600">
                   <span className="inline-flex items-center gap-1 font-medium text-emerald-800">
                     <Check className="h-3.5 w-3.5 text-emerald-600" /> Mensaje prellenado en 1 clic
                   </span>
-                  <span className="font-mono text-[10px] text-neutral-500">Sin tipear a mano</span>
                 </div>
               </div>
             </div>
-
-            <div className="mt-4 border-t border-slate-100 pt-3 text-xs text-neutral-500">
-              Abre WhatsApp con el mensaje prellenado en 1 clic y reduce las inasistencias sin perder tiempo copiando números.
-            </div>
           </div>
 
-          {/* Tarjeta 3 (Bento 5 columnas): Agenda Online 24/7 sin Topes */}
-          <div className="rounded-3xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/70 p-6 shadow-sm ring-1 ring-slate-100 transition-all duration-element hover:shadow-md lg:col-span-5 flex flex-col justify-between">
-            <div>
+          {/* Tarjeta 3 (Bento 12 columnas): Reserva online 24/7 */}
+          <div className="rounded-3xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/70 p-6 shadow-sm ring-1 ring-slate-100 transition-all duration-element hover:shadow-md lg:col-span-12 flex flex-col justify-between">
+            <div className="lg:grid lg:grid-cols-2 lg:items-center lg:gap-10">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--lp-sky-100)] text-[var(--lp-navy)]">
                   <Calendar className="h-5 w-5 text-action-primary" />
@@ -343,7 +333,7 @@ export default function Features() {
               </div>
 
               {/* Selector interactivo de slots */}
-              <div className="mt-5 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs space-y-3">
+              <div className="mt-5 lg:mt-0 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs space-y-3">
                 <div className="flex items-center justify-between text-xs font-semibold text-neutral-800">
                   <span>Horas disponibles para hoy</span>
                   <span className="text-[11px] text-emerald-600 font-bold">Tiempo real</span>
@@ -382,56 +372,6 @@ export default function Features() {
                   </span>
                 </div>
               </div>
-            </div>
-
-            <div className="mt-4 border-t border-slate-100 pt-3 text-xs text-neutral-500">
-              Evita doble reserva de forma estricta a nivel de base de datos.
-            </div>
-          </div>
-
-          {/* Tarjeta 4 (Bento 7 columnas): Métricas de Impacto con Contadores Animados */}
-          <div className="rounded-3xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/70 p-6 shadow-sm ring-1 ring-slate-100 transition-all duration-element hover:shadow-md lg:col-span-7 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100 text-amber-800">
-                  <Activity className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-neutral-900">Impacto en la operación clínica</h3>
-                  <p className="text-xs text-neutral-500">Resultados promedio en consultas activas</p>
-                </div>
-              </div>
-
-              {/* 3 Métricas con AnimatedNumber */}
-              <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-4 text-center shadow-2xs">
-                  <div className="text-3xl sm:text-4xl font-extrabold text-emerald-600 font-mono">
-                    <AnimatedNumber value={65} format={(n) => `-${n}%`} />
-                  </div>
-                  <div className="mt-2 text-xs font-bold text-neutral-900">Menos ausencias</div>
-                  <div className="mt-0.5 text-[11px] text-neutral-500">con aviso preventivo</div>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-4 text-center shadow-2xs">
-                  <div className="text-3xl sm:text-4xl font-extrabold text-[var(--lp-navy)] font-mono">
-                    <AnimatedNumber value={12} format={(n) => `+${n}h`} />
-                  </div>
-                  <div className="mt-2 text-xs font-bold text-neutral-900">Horas semanales</div>
-                  <div className="mt-0.5 text-[11px] text-neutral-500">liberadas en recepción</div>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-4 text-center shadow-2xs">
-                  <div className="text-3xl sm:text-4xl font-extrabold text-action-primary font-mono">
-                    <AnimatedNumber value={100} format={(n) => `${n}%`} />
-                  </div>
-                  <div className="mt-2 text-xs font-bold text-neutral-900">Ley 20.584</div>
-                  <div className="mt-0.5 text-[11px] text-neutral-500">seguridad de datos</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 border-t border-slate-100 pt-3 text-xs text-neutral-500">
-              Datos auditables y trazabilidad completa de cada acción de tu equipo.
             </div>
           </div>
         </div>
