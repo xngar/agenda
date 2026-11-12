@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/ui";
 import { WhatsappButton } from "@/components/dashboard/whatsapp-button";
 import type { DoctorAppointment } from "@/lib/types";
 import { Accion, RIEL } from "./agenda-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { resaltarCita } from "./resaltar-cita";
 import { reprogramable } from "./agenda-actions";
 import { usePatientQuickView } from "@/components/dashboard/patient-quick-view";
@@ -119,7 +120,10 @@ export function AgendaCards({
               </div>
 
               {cita.status === "cancelled" && cita.cancel_reason ? (
-                <p className="mt-2 text-sm text-neutral-500">Motivo: {cita.cancel_reason}</p>
+                <TruncatedText
+                  text={`Motivo: ${cita.cancel_reason}`}
+                  className="mt-2 text-sm text-neutral-500"
+                />
               ) : null}
 
               <div className="mt-3 flex items-center justify-between gap-2">

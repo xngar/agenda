@@ -240,9 +240,12 @@ export function AgendaTable({
                   <td className="whitespace-nowrap px-4 py-3">
                     <StatusBadge status={cita.status} />
                     {cita.status === "cancelled" && cita.cancel_reason ? (
-                      <p className="mt-1 max-w-44 truncate text-xs text-neutral-500">
-                        Motivo: {cita.cancel_reason}
-                      </p>
+                      <div className="mt-1 max-w-44">
+                        <TruncatedText
+                          text={`Motivo: ${cita.cancel_reason}`}
+                          className="max-w-44 text-xs text-neutral-500"
+                        />
+                      </div>
                     ) : null}
                   </td>
                   <td className="px-4 py-3 text-right">

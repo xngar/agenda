@@ -451,6 +451,11 @@ export function WeekView({
                             <p className="font-normal">{cita.service.name}</p>
                           ) : null}
                           <p className="font-normal">{STATUS_LABEL[cita.status]}</p>
+                          {cita.status === "cancelled" && cita.cancel_reason ? (
+                            <p className="font-normal text-xs opacity-90">
+                              Motivo: {cita.cancel_reason}
+                            </p>
+                          ) : null}
                         </TooltipContent>
                       </Tooltip>
                     );

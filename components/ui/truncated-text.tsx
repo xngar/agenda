@@ -53,7 +53,7 @@ export function TruncatedText({
         </span>
       </TooltipTrigger>
       {hayTooltip ? (
-        <TooltipContent className="break-all">{completo}</TooltipContent>
+        <TooltipContent className="max-w-xs break-words">{completo}</TooltipContent>
       ) : null}
     </Tooltip>
   );
