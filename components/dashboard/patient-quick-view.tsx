@@ -47,19 +47,83 @@ import { formatRut } from "@/lib/rut";
 import type { PatientSummary } from "@/lib/ficha/summary-types";
 import type { AppointmentStatus } from "@/lib/types";
 
+export interface QuickViewPatientInfo {
+  id?: string;
+  full_name: string;
+  phone?: string | null;
+  email?: string | null;
+  rut?: string | null;
+}
+
 export interface QuickViewAppointment {
   start: string | null;
   end: string | null;
   serviceName: string | null;
   status: AppointmentStatus;
+  patient?: QuickViewPatientInfo | null;
 }
 
 interface PatientQuickViewContextValue {
   open: (patientId: string, appointment?: QuickViewAppointment) => void;
+  prefetch: (patientId: string) => void;
+}
+
+const CACHE_TTL_MS = 2 * 60 * 1000;
+
+interface CacheEntry {
+  summary: PatientSummary;
+  timestamp: number;
+}
+
+const summaryCache = new Map<string, CacheEntry>();
+const inFlightRequests = new Map<string, Promise<PatientSummary | null>>();
+
+export async function prefetchPatientSummary(patientId: string): Promise<PatientSummary | null> {
+  if (!patientId) return null;
+  const cached = summaryCache.get(patientId);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.summary;
+  }
+
+  const existing = inFlightRequests.get(patientId);
+  if (existing) {
+    return existing;
+  }
+
+  const req = fetch(`/api/dashboard/patients/${patientId}/summary`, {
+    headers: { Accept: "application/json" },
+  })
+    .then(async (response) => {
+      const data = (await response.json().catch(() => ({}))) as {
+        summary?: PatientSummary;
+        error?: string;
+      };
+      if (response.ok && data.summary) {
+        summaryCache.set(patientId, { summary: data.summary, timestamp: Date.now() });
+        return data.summary;
+      }
+      return null;
+    })
+    .catch(() => null)
+    .finally(() => {
+      inFlightRequests.delete(patientId);
+    });
+
+  inFlightRequests.set(patientId, req);
+  return req;
+}
+
+export function clearPatientSummaryCache(patientId?: string) {
+  if (patientId) {
+    summaryCache.delete(patientId);
+  } else {
+    summaryCache.clear();
+  }
 }
 
 const PatientQuickViewContext = createContext<PatientQuickViewContextValue>({
   open: () => {},
+  prefetch: () => {},
 });
 
 export function usePatientQuickView(): PatientQuickViewContextValue {
@@ -84,7 +148,13 @@ export function PatientQuickViewProvider({
     setTarget({ patientId, appointment: appointment ?? null });
   }, []);
 
-  const value = useMemo(() => ({ open }), [open]);
+  const prefetch = useCallback((patientId: string) => {
+    if (patientId) {
+      void prefetchPatientSummary(patientId);
+    }
+  }, []);
+
+  const value = useMemo(() => ({ open, prefetch }), [open, prefetch]);
 
   return (
     <PatientQuickViewContext.Provider value={value}>
@@ -127,7 +197,7 @@ function PatientQuickViewSheet({
         if (!next) onClose();
       }}
     >
-      <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-md">
+      <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-md border-0 bg-white shadow-2xl">
         {target ? (
           <PatientQuickViewBody
             key={target.patientId}
@@ -154,48 +224,59 @@ function PatientQuickViewBody({
   onClose: () => void;
 }) {
   const { patientId, appointment } = target;
-  const [state, setState] = useState<LoadState>({ status: "loading" });
+  const initialPatient = appointment?.patient;
+
+  const [state, setState] = useState<LoadState>(() => {
+    const cached = summaryCache.get(patientId);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      return { status: "ready", summary: cached.summary };
+    }
+    return { status: "loading" };
+  });
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    const controller = new AbortController();
+    let isMounted = true;
+    const cached = summaryCache.get(patientId);
+    const isFresh = cached && Date.now() - cached.timestamp < CACHE_TTL_MS;
 
-    fetch(`/api/dashboard/patients/${patientId}/summary`, {
-      signal: controller.signal,
-      headers: { Accept: "application/json" },
-    })
-      .then(async (response) => {
-        const data = (await response.json().catch(() => ({}))) as {
-          summary?: PatientSummary;
-          error?: string;
-        };
-        if (!response.ok || !data.summary) {
+    if (isFresh && state.status === "ready") {
+      return;
+    }
+
+    prefetchPatientSummary(patientId)
+      .then((summary) => {
+        if (!isMounted) return;
+        if (summary) {
+          setState({ status: "ready", summary });
+        } else {
           setState({
             status: "error",
-            message: data.error ?? "No se pudo cargar el perfil del paciente",
+            message: "No se pudo cargar el perfil del paciente",
           });
-          return;
         }
-        setState({ status: "ready", summary: data.summary });
       })
-      .catch((error: unknown) => {
-        if ((error as Error).name === "AbortError") return;
+      .catch(() => {
+        if (!isMounted) return;
         setState({
           status: "error",
           message: "No pudimos conectarnos. Intenta de nuevo.",
         });
       });
 
-    return () => controller.abort();
-  }, [patientId, attempt]);
+    return () => {
+      isMounted = false;
+    };
+  }, [patientId, attempt, state.status]);
 
   const paciente = state.status === "ready" ? state.summary.patient : null;
+  const nombrePaciente = paciente?.full_name ?? initialPatient?.full_name ?? "Perfil del paciente";
 
   return (
     <>
       <SheetHeader className="px-6 pt-6 pb-4">
         <SheetTitle className="flex flex-wrap items-center gap-2 pr-12 text-lg text-action-primary">
-          <span>{paciente?.full_name ?? "Perfil del paciente"}</span>
+          <span>{nombrePaciente}</span>
           {paciente ? (
             <span
               className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
@@ -210,16 +291,60 @@ function PatientQuickViewBody({
         <SheetDescription>
           {paciente
             ? descripcionPaciente(paciente)
-            : "Información rápida para poner en contexto la atención."}
+            : initialPatient?.rut
+              ? (formatRut(initialPatient.rut) ?? initialPatient.rut)
+              : "Información rápida para poner en contexto la atención."}
         </SheetDescription>
       </SheetHeader>
 
       <SheetMain className="px-6 pb-4">
         {state.status === "loading" ? (
-          <div className="space-y-3" aria-label="Cargando perfil del paciente">
-            <SkeletonBlock className="h-20" />
-            <SkeletonBlock className="h-32" />
-            <SkeletonBlock className="h-24" />
+          <div className="space-y-4" aria-label="Cargando perfil del paciente">
+            {appointment ? (
+              <CitaActual appointment={appointment} timezone={timezone} />
+            ) : null}
+            {initialPatient?.phone || initialPatient?.email ? (
+              <Seccion title="Contacto" icon={<Phone className="size-4" />}>
+                <dl className="grid gap-3 sm:grid-cols-2">
+                  <Dato label="Teléfono">
+                    {initialPatient.phone ? (
+                      <span className="inline-flex items-center gap-2">
+                        <a
+                          className="hover:text-action-primary hover:underline"
+                          href={`tel:${initialPatient.phone}`}
+                        >
+                          {formatPhonePartial(initialPatient.phone)}
+                        </a>
+                        <WhatsappButton
+                          patientId={patientId}
+                          fullName={initialPatient.full_name}
+                          phone={initialPatient.phone}
+                          orgName={orgName}
+                          compacto
+                        />
+                      </span>
+                    ) : null}
+                  </Dato>
+                  <Dato label="Correo">
+                    {initialPatient.email ? (
+                      <a
+                        className="break-all hover:text-action-primary hover:underline"
+                        href={`mailto:${initialPatient.email}`}
+                      >
+                        {initialPatient.email}
+                      </a>
+                    ) : null}
+                  </Dato>
+                  <Dato label="RUT">
+                    {initialPatient.rut ? (formatRut(initialPatient.rut) ?? initialPatient.rut) : null}
+                  </Dato>
+                </dl>
+              </Seccion>
+            ) : null}
+            <div className="space-y-3 pt-1">
+              <SkeletonBlock className="h-24" />
+              <SkeletonBlock className="h-28" />
+            </div>
           </div>
         ) : state.status === "error" ? (
           <ErrorNotice
@@ -230,6 +355,7 @@ function PatientQuickViewBody({
                 size="sm"
                 variant="ghost"
                 onClick={() => {
+                  summaryCache.delete(patientId);
                   setState({ status: "loading" });
                   setAttempt((value) => value + 1);
                 }}

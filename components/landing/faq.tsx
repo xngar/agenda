@@ -6,7 +6,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { HelpCircle, MessageSquare } from "lucide-react";
+import { HelpCircle } from "lucide-react";
 import { ScrollReveal } from "@/components/motion/scroll-reveal";
 
 const faqs = [

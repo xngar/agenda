@@ -3,7 +3,6 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { motion, type HTMLMotionProps, type Variants } from "motion/react";
 import { useMotionPrefs } from "@/components/motion/use-motion-prefs";
-import { cn } from "cn";
 
 interface ScrollRevealProps extends HTMLMotionProps<"div"> {
   children: ReactNode;

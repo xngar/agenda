@@ -127,7 +127,7 @@ export function WeekView({
     realtimeError,
   } = useAgendaAcciones({ doctorId, orgId, doctors });
 
-  const { open: abrirPerfil } = usePatientQuickView();
+  const { open: abrirPerfil, prefetch: prefetchPerfil } = usePatientQuickView();
 
   const porDia = useMemo(() => appointmentsByDay(initial, timezone), [initial, timezone]);
 
@@ -190,6 +190,7 @@ export function WeekView({
           end,
           serviceName: cita.service?.name ?? null,
           status: cita.status,
+          patient: cita.patient,
         });
       }
       setMenu(null);
@@ -500,6 +501,16 @@ export function WeekView({
                   role="menuitem"
                   disabled={Boolean(pendiente) || sinCelular}
                   title={sinCelular ? "Sin celular registrado" : undefined}
+                  onMouseEnter={() => {
+                    if (accion.action === "perfil" && menu?.cita) {
+                      prefetchPerfil(menu.cita.patient_id);
+                    }
+                  }}
+                  onFocus={() => {
+                    if (accion.action === "perfil" && menu?.cita) {
+                      prefetchPerfil(menu.cita.patient_id);
+                    }
+                  }}
                   onClick={() => ejecutar(menu.cita.id, accion.action)}
                   className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${
                     accion.tono === "primario"

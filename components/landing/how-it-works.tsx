@@ -1,7 +1,7 @@
 "use client";
 
 import { ScrollReveal, StaggerGroup, StaggerItem } from "@/components/motion/scroll-reveal";
-import { Sparkles, Calendar, Settings, Rocket, ArrowRight, CheckCircle } from "lucide-react";
+import { Calendar, Settings, Rocket, ArrowRight, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
 export default function HowItWorks() {

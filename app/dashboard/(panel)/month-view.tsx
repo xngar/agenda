@@ -78,7 +78,7 @@ export function MonthView({
   orgName,
 }: Props) {
   const router = useRouter();
-  const { open: abrirPerfil } = usePatientQuickView();
+  const { open: abrirPerfil, prefetch: prefetchPerfil } = usePatientQuickView();
   const [menu, setMenu] = useState<{ x: number; y: number; cita: DoctorAppointment } | null>(null);
   const [contacto, setContacto] = useState<DoctorAppointment | null>(null);
   const [pendiente, setPendiente] = useState<string | null>(null);
@@ -192,6 +192,7 @@ export function MonthView({
           end,
           serviceName: cita.service?.name ?? null,
           status: cita.status,
+          patient: cita.patient,
         });
       }
       setMenu(null);
@@ -477,6 +478,16 @@ export function MonthView({
                   role="menuitem"
                   disabled={Boolean(pendiente) || sinCelular}
                   title={sinCelular ? "Sin celular registrado" : undefined}
+                  onMouseEnter={() => {
+                    if (accion.action === "perfil" && menu?.cita) {
+                      prefetchPerfil(menu.cita.patient_id);
+                    }
+                  }}
+                  onFocus={() => {
+                    if (accion.action === "perfil" && menu?.cita) {
+                      prefetchPerfil(menu.cita.patient_id);
+                    }
+                  }}
                   onClick={() => ejecutar(menu.cita.id, accion.action)}
                   className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                     accion.tono === "primario"

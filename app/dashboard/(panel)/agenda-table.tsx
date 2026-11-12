@@ -100,7 +100,7 @@ export function AgendaTable({
   /** Ids de las citas recién modificadas: se resaltan al instante. */
   recientes?: string[];
 }) {
-  const { open } = usePatientQuickView();
+  const { open, prefetch } = usePatientQuickView();
 
   return (
     <div>
@@ -203,8 +203,11 @@ export function AgendaTable({
                               end,
                               serviceName: cita.service?.name ?? null,
                               status: cita.status,
+                              patient: cita.patient,
                             })
                           }
+                          onMouseEnter={() => prefetch(cita.patient_id)}
+                          onFocus={() => prefetch(cita.patient_id)}
                           aria-label={`Ver perfil de ${cita.patient.full_name}`}
                           title="Ver perfil del paciente"
                           className="inline-flex size-7 shrink-0 items-center justify-center rounded-full text-neutral-400 transition-colors hover:bg-action-primary/10 hover:text-action-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
@@ -306,8 +309,11 @@ export function AgendaTable({
                                         end,
                                         serviceName: cita.service?.name ?? null,
                                         status: cita.status,
+                                        patient: cita.patient,
                                       })
                                     }
+                                    onMouseEnter={() => prefetch(cita.patient_id)}
+                                    onFocus={() => prefetch(cita.patient_id)}
                                     className="cursor-pointer gap-2"
                                   >
                                     <UserRound className="h-4 w-4 text-neutral-500" />

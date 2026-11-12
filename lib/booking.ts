@@ -464,7 +464,7 @@ export async function toPatientView(
     supportEmail: settings.support_email ?? null,
     clinicTimezone: settings.timezone || DEFAULT_TIMEZONE,
     patientName: row.patients?.full_name ?? "",
-    canModify: active && new Date(endsAt).getTime() > Date.now(),
+    canModify: active && new Date(startsAt).getTime() > Date.now(),
     cancelReason: row.cancel_reason,
     cancelledBy: row.cancelled_by,
   };

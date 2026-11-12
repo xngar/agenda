@@ -38,7 +38,7 @@ export function AgendaCards({
   /** Nombre de la clínica, para el mensaje de WhatsApp. */
   orgName: string;
 }) {
-  const { open } = usePatientQuickView();
+  const { open, prefetch } = usePatientQuickView();
 
   return (
     <ul className="space-y-2 md:hidden" data-testid="agenda-cards">
@@ -84,8 +84,11 @@ export function AgendaCards({
                           end,
                           serviceName: cita.service?.name ?? null,
                           status: cita.status,
+                          patient: cita.patient,
                         })
                       }
+                      onMouseEnter={() => prefetch(cita.patient_id)}
+                      onFocus={() => prefetch(cita.patient_id)}
                       aria-label={`Ver perfil de ${cita.patient.full_name}`}
                       className="block max-w-full truncate text-left text-[15px] font-semibold text-neutral-900 transition-colors hover:text-action-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
                     >
@@ -178,8 +181,11 @@ export function AgendaCards({
                                     end,
                                     serviceName: cita.service?.name ?? null,
                                     status: cita.status,
+                                    patient: cita.patient,
                                   })
                                 }
+                                onMouseEnter={() => prefetch(cita.patient_id)}
+                                onFocus={() => prefetch(cita.patient_id)}
                                 className="cursor-pointer gap-2"
                               >
                                 <UserRound className="h-4 w-4 text-neutral-500" />

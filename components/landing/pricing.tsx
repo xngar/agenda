@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Sparkles, ArrowRight, ShieldCheck, HelpCircle } from "lucide-react";
+import { Check, Sparkles, ArrowRight } from "lucide-react";
 import { landingPlans } from "@/lib/landing-plans";
 import { ScrollReveal, StaggerGroup, StaggerItem } from "@/components/motion/scroll-reveal";
 

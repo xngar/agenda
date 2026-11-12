@@ -4,34 +4,28 @@ import {
   Calendar,
   FileText,
   Bell,
-  Users,
   Sparkles,
   Stethoscope,
   Brain,
   ShieldCheck,
   Clock,
-  CheckCircle2,
   HeartPulse,
   UserCheck,
   CalendarCheck,
   Smartphone,
   Lock,
-  ChevronRight,
   Activity,
   Smile,
   Pencil,
-  Eye,
   Check,
 } from "lucide-react";
 import { useState } from "react";
 import { siteConfig } from "@/lib/site-config";
 import { motion, AnimatePresence } from "motion/react";
-import { ScrollReveal, StaggerGroup, StaggerItem } from "@/components/motion/scroll-reveal";
+import { ScrollReveal } from "@/components/motion/scroll-reveal";
 import { useMotionPrefs } from "@/components/motion/use-motion-prefs";
 import { MarqueeFade } from "@/components/landing/marquee-fade";
 import { AnimatedNumber } from "@/components/motion/animated-number";
-
-const easeCustom = [0.16, 1, 0.3, 1] as const;
 
 const marqueeItems = [
   { text: "Reservas online 24/7", Icon: Clock },

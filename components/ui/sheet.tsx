@@ -35,23 +35,23 @@ function SheetOverlay({ className, ...props }: React.ComponentProps<typeof Dialo
 
 const SIDE_CLASSES = {
   right: {
-    base: "inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm",
-    floating: "sm:inset-y-3 sm:right-3 sm:h-[calc(100%-1.5rem)] sm:rounded-2xl sm:border",
+    base: "inset-y-0 right-0 h-full w-3/4 sm:max-w-sm",
+    floating: "sm:inset-y-3 sm:right-3 sm:h-[calc(100%-1.5rem)] sm:rounded-2xl",
     slide: "data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
   },
   left: {
-    base: "inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm",
-    floating: "sm:inset-y-3 sm:left-3 sm:h-[calc(100%-1.5rem)] sm:rounded-2xl sm:border",
+    base: "inset-y-0 left-0 h-full w-3/4 sm:max-w-sm",
+    floating: "sm:inset-y-3 sm:left-3 sm:h-[calc(100%-1.5rem)] sm:rounded-2xl",
     slide: "data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
   },
   top: {
-    base: "inset-x-0 top-0 h-auto rounded-b-2xl border-b",
-    floating: "sm:inset-x-3 sm:top-3 sm:w-[calc(100%-1.5rem)] sm:rounded-2xl sm:border",
+    base: "inset-x-0 top-0 h-auto rounded-b-2xl",
+    floating: "sm:inset-x-3 sm:top-3 sm:w-[calc(100%-1.5rem)] sm:rounded-2xl",
     slide: "data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
   },
   bottom: {
-    base: "inset-x-0 bottom-0 h-auto rounded-t-2xl border-t",
-    floating: "sm:inset-x-3 sm:bottom-3 sm:w-[calc(100%-1.5rem)] sm:rounded-2xl sm:border",
+    base: "inset-x-0 bottom-0 h-auto rounded-t-2xl",
+    floating: "sm:inset-x-3 sm:bottom-3 sm:w-[calc(100%-1.5rem)] sm:rounded-2xl",
     slide: "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
   },
 } as const
@@ -77,7 +77,7 @@ function SheetContent({
         data-slot="sheet-content"
         data-side={side}
         className={cn(
-          "fixed z-50 flex flex-col gap-4 overflow-hidden border bg-background p-6 shadow-lift transition ease-out-soft duration-element will-change-transform data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
+          "fixed z-50 flex flex-col gap-4 overflow-hidden border-0 bg-background p-6 shadow-2xl transition ease-out-soft duration-element will-change-transform data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
           classes.base,
           floating && classes.floating,
           classes.slide,

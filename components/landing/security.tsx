@@ -1,8 +1,8 @@
 "use client";
 
-import { ShieldCheck, Lock, Database, Download, FileCheck, CheckCircle2, ShieldAlert, Award } from "lucide-react";
+import { ShieldCheck, Lock, Database, Download, FileCheck, CheckCircle2, Award } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
-import { ScrollReveal, StaggerGroup, StaggerItem } from "@/components/motion/scroll-reveal";
+import { StaggerGroup, StaggerItem } from "@/components/motion/scroll-reveal";
 
 export default function Security() {
   const securityPillars = [

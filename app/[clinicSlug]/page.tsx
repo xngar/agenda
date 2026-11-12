@@ -132,7 +132,12 @@ export default async function HomePage({ params }: { params: Promise<{ clinicSlu
                 { k: "Dirección", v: address },
                 { k: "Teléfono", v: phone },
                 { k: "Anticipación mínima", v: `${settings.min_notice_hours} horas` },
-                { k: "Cancelación", v: `hasta ${settings.cancel_min_hours} horas antes` },
+                {
+                  k: "Cancelación",
+                  v: settings.cancel_min_hours > 0
+                    ? `hasta ${settings.cancel_min_hours} horas antes`
+                    : "Hasta antes del inicio de la cita",
+                },
               ].map((row) => (
                 <div key={row.k} className="flex flex-col gap-0.5 px-4 py-3 sm:flex-row sm:gap-4">
                   <dt className="text-sm font-medium text-neutral-600 sm:w-44 sm:shrink-0">{row.k}</dt>

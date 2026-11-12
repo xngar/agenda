@@ -1,7 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { PatientQuickViewDetails } from "@/components/dashboard/patient-quick-view";
+import {
+  PatientQuickViewDetails,
+  clearPatientSummaryCache,
+  prefetchPatientSummary,
+} from "@/components/dashboard/patient-quick-view";
 import type { PatientSummary } from "@/lib/ficha/summary-types";
 
 const PACIENTE: PatientSummary["patient"] = {
@@ -131,5 +135,26 @@ describe("perfil rápido en la agenda", () => {
 
     expect(texto).toContain("Sin antecedentes registrados.");
     expect(texto).toContain("Sin atenciones registradas.");
+  });
+
+  it("prefetch y caché en memoria evitan llamadas de red duplicadas", async () => {
+    clearPatientSummaryCache();
+
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ summary: CLINICO }),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+
+    const res1 = await prefetchPatientSummary("pac-1");
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(res1?.patient.full_name).toBe("Ana Soto");
+
+    // La segunda consulta usa la caché en memoria inmediatamente
+    const res2 = await prefetchPatientSummary("pac-1");
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(res2?.patient.full_name).toBe("Ana Soto");
+
+    vi.unstubAllGlobals();
   });
 });

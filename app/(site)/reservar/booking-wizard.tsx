@@ -650,7 +650,9 @@ export default function BookingWizard(props: BookingWizardProps) {
                   <SummaryRow label="Fecha y hora" value={slotSummary(slotStart, day, props.timezone)} />
                 </dl>
                 <p className="mt-3 text-xs text-neutral-600">
-                  Puedes cancelar sin costo hasta {props.cancelMinHours} horas antes de tu cita.
+                  {props.cancelMinHours > 0
+                    ? `Puedes cancelar sin costo hasta ${props.cancelMinHours} horas antes de tu cita.`
+                    : "Puedes cancelar sin costo en cualquier momento antes de tu cita."}
                 </p>
               </div>
 

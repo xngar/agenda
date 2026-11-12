@@ -7,9 +7,6 @@ import {
   Bell,
   Calendar,
   CheckCircle2,
-  Sparkles,
-  ArrowRight,
-  Clock,
   AlertCircle,
   ShieldCheck,
 } from "lucide-react";
