@@ -44,10 +44,19 @@ export default function Footer() {
           <div className="text-sm font-semibold">Contacto</div>
           <ul className="mt-2 space-y-1.5 text-sm text-white/80">
             <li>
-              <a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a>
+              <a href={`mailto:${siteConfig.email}`} className="transition hover:text-white">
+                {siteConfig.email}
+              </a>
             </li>
             <li>
-              <a href={`https://wa.me/${siteConfig.whatsapp.replace(/\D/g, "")}`}>WhatsApp</a>
+              <a
+                href={`https://wa.me/${siteConfig.whatsapp.replace(/\D/g, "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition hover:text-white"
+              >
+                WhatsApp: {siteConfig.whatsapp}
+              </a>
             </li>
           </ul>
         </div>
