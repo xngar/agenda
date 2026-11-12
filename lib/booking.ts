@@ -10,6 +10,7 @@ import {
   bookingCancelledHtml,
   bookingConfirmedHtml,
   bookingManageLinkHtml,
+  bookingPendingHtml,
   bookingReminderHtml,
   bookingRescheduledHtml,
   doctorChangeHtml,
@@ -258,7 +259,10 @@ export interface BookResult {
   specialty: string | null;
 }
 
-export async function bookAppointment(input: PatientDetailsInput & { clinicSlug?: string }): Promise<BookResult> {
+export async function bookAppointment(
+  input: PatientDetailsInput & { clinicSlug?: string },
+  options?: { confirmedImmediately?: boolean },
+): Promise<BookResult> {
   const supabase = supabaseAdmin();
 
   // Defensa en profundidad: el esquema de Zod ya valida el dígito
@@ -320,8 +324,10 @@ const settings = await getSettings(orgId);
   const startsAt = lowerBound(row?.during);
   const endsAt = upperBound(row?.during);
 
+  const sendPatientEmail = options?.confirmedImmediately ? sendConfirmationEmail : sendPendingEmail;
+
   await Promise.all([
-    sendConfirmationEmail({
+    sendPatientEmail({
       to: input.email,
       patientName: input.fullName,
       clinicName: settings.name,
@@ -518,7 +524,7 @@ export async function rescheduleByToken(
 export async function bookAppointmentByStaff(
   input: PatientDetailsInput & { clinicSlug?: string },
 ): Promise<BookResult> {
-  const result = await bookAppointment(input);
+  const result = await bookAppointment(input, { confirmedImmediately: true });
   const { error } = await supabaseAdmin()
     .from("appointments")
     .update({ status: "confirmed" })
@@ -666,6 +672,35 @@ export async function notifyAppointmentCancelled(
   });
 }
 
+/**
+ * Notifica al paciente cuando su cita es confirmada por el equipo desde el dashboard.
+ */
+export async function notifyAppointmentConfirmed(
+  appointmentId: string,
+): Promise<void> {
+  const row = await loadAppointmentRow(appointmentId);
+  if (!row || !row.patients?.email) return;
+
+  const settings = await getSettings(row.org_id);
+  const view = await toPatientView(row);
+  const token = await openToken(appointmentId);
+  const manageUrl = token ? manageAbsoluteUrl(token) : `${serverEnv().NEXT_PUBLIC_APP_URL}`;
+
+  await sendConfirmationEmail({
+    to: row.patients.email,
+    patientName: row.patients.full_name ?? "Paciente",
+    clinicName: settings.name,
+    doctorName: view.doctorName,
+    specialty: view.specialty,
+    serviceName: view.serviceName,
+    startsAt: view.startsAt,
+    endsAt: view.endsAt,
+    timezone: settings.timezone,
+    manageUrl,
+    appointmentId: row.id,
+  });
+}
+
 /* ------------------------------------------------------------------ */
 /* Correos                                                              */
 /* ------------------------------------------------------------------ */
@@ -737,6 +772,44 @@ async function sendConfirmationEmail(args: {
   });
 
   if (!result.ok) console.warn("[correo] no se pudo confirmar la cita de", maskEmail(args.to));
+}
+
+async function sendPendingEmail(args: {
+  to: string;
+  patientName: string;
+  clinicName: string;
+  doctorName: string;
+  specialty: string | null;
+  serviceName: string;
+  startsAt: string;
+  endsAt: string;
+  timezone: string;
+  manageUrl: string;
+  appointmentId: string;
+}): Promise<void> {
+  if (!args.to) return;
+
+  const result = await sendEmail({
+    to: args.to,
+    subject: `Hora agendada (por confirmar) · ${args.clinicName}`,
+    html: bookingPendingHtml({
+      patientName: args.patientName,
+      clinicName: args.clinicName,
+      doctorName: args.doctorName,
+      specialty: args.specialty,
+      serviceName: args.serviceName,
+      dateLabel: formatDateLong(args.startsAt, args.timezone),
+      timeLabel: formatRange(args.startsAt, args.endsAt, args.timezone),
+      clinicAddress: CLINIC_ADDRESS,
+      manageUrl: args.manageUrl,
+    }),
+    text: `Hora agendada (por confirmar): ${args.serviceName} con ${args.doctorName} el ${formatDateLong(
+      args.startsAt,
+      args.timezone,
+    )}. Tu hora será confirmada próximamente por nuestro equipo. Gestiona tu cita en ${args.manageUrl}`,
+  });
+
+  if (!result.ok) console.warn("[correo] no se pudo enviar el aviso de hora agendada a", maskEmail(args.to));
 }
 
 async function sendRescheduleEmail(args: {

@@ -675,10 +675,10 @@ export default function BookingWizard(props: BookingWizardProps) {
                 <path d="m5 13 4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </span>
-            <h2 className="mt-4 text-xl font-bold text-action-primary">¡Cita reservada!</h2>
+            <h2 className="mt-4 text-xl font-bold text-action-primary">¡Hora agendada!</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-neutral-700">
-              Te enviamos la confirmación a <strong>{form.email}</strong> con un archivo para tu
-              calendario y un enlace para ver, reprogramar o cancelar.
+              Te enviamos el comprobante a <strong>{form.email}</strong>. Tu hora será confirmada a
+              la brevedad por nuestro equipo y te enviaremos un correo apenas esté confirmada.
             </p>
 
             <dl className="mx-auto mt-5 max-w-sm space-y-1.5 rounded-card bg-neutral-50 p-4 text-left text-sm">
