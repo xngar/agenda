@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getDoctorSession } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { toBusinessError } from "@/lib/errors";
+import { notifyAppointmentCancelled } from "@/lib/booking";
 
 /**
  * Los valores coinciden EXACTAMENTE con el CHECK
@@ -94,6 +95,12 @@ export async function POST(request: Request) {
       { error: business.message, code: business.code },
       { status: business.status },
     );
+  }
+
+  if (action === "cancelled") {
+    void notifyAppointmentCancelled(appointmentId, patch.cancel_reason).catch((err) => {
+      console.warn("[appointments] no se pudo notificar la cancelación al paciente:", err);
+    });
   }
 
   return NextResponse.json({ ok: true, status: action });

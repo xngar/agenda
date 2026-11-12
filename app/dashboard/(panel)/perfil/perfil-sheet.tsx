@@ -99,7 +99,7 @@ export function PerfilSheet({
       }}
     >
       <SheetContent side="right" className="w-full p-0 sm:max-w-lg">
-        <SheetHeader className="px-6 pt-6 pb-4">
+        <SheetHeader className="px-6 pt-6 pb-4 pr-12">
           <SheetTitle>Mi perfil</SheetTitle>
           <SheetDescription>{profile.roleLabel}. Estos datos identifican tu cuenta dentro de la clínica.</SheetDescription>
         </SheetHeader>

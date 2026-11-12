@@ -144,8 +144,9 @@ export function PanelShell({
         <SheetContent
           side="left"
           showCloseButton={false}
+          floating={false}
           id="menu-panel-movil"
-          className="panel-sheet w-[280px] max-w-[86vw] gap-0 border-panel-line bg-white p-0 shadow-[var(--panel-shadow-lift)]"
+          className="panel-sheet w-[280px] max-w-[86vw] gap-0 border-panel-line bg-white p-0"
           onCloseAutoFocus={(event) => {
             event.preventDefault();
             menuButtonRef.current?.focus();

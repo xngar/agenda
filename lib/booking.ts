@@ -633,6 +633,39 @@ export async function cancelByToken(
   return view;
 }
 
+/**
+ * Notifica al paciente cuando una cita es cancelada por el equipo desde el dashboard.
+ */
+export async function notifyAppointmentCancelled(
+  appointmentId: string,
+  reason?: string | null,
+): Promise<void> {
+  const row = await loadAppointmentRow(appointmentId);
+  if (!row || !row.patients?.email) return;
+
+  const settings = await getSettings(row.org_id);
+  const view = await toPatientView(row);
+  const token = await openToken(appointmentId);
+  const manageUrl = token ? manageAbsoluteUrl(token) : undefined;
+
+  await sendEmail({
+    to: row.patients.email,
+    subject: `Cita cancelada · ${settings.name}`,
+    html: bookingCancelledHtml({
+      patientName: row.patients.full_name ?? "",
+      clinicName: settings.name,
+      doctorName: view.doctorName,
+      specialty: view.specialty,
+      serviceName: view.serviceName,
+      dateLabel: formatDateLong(view.startsAt, settings.timezone),
+      timeLabel: formatRange(view.startsAt, view.endsAt, settings.timezone),
+      clinicAddress: CLINIC_ADDRESS,
+      reason: reason ?? null,
+      manageUrl,
+    }),
+  });
+}
+
 /* ------------------------------------------------------------------ */
 /* Correos                                                              */
 /* ------------------------------------------------------------------ */

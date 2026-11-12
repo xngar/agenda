@@ -194,7 +194,7 @@ function PatientQuickViewBody({
   return (
     <>
       <SheetHeader className="px-6 pt-6 pb-4">
-        <SheetTitle className="flex flex-wrap items-center gap-2 pr-8 text-lg text-action-primary">
+        <SheetTitle className="flex flex-wrap items-center gap-2 pr-12 text-lg text-action-primary">
           <span>{paciente?.full_name ?? "Perfil del paciente"}</span>
           {paciente ? (
             <span
