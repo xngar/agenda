@@ -36,17 +36,12 @@ export default function HowItWorks() {
     <section id="como-funciona" className="relative overflow-hidden bg-slate-50/70 py-16 sm:py-24 border-y border-slate-200/60">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Encabezado */}
-        <ScrollReveal yOffset={16} className="mx-auto max-w-3xl text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--lp-sky-200)] bg-white px-3.5 py-1 text-xs font-semibold text-[var(--lp-navy)] shadow-2xs">
-            <Rocket className="h-3.5 w-3.5 text-action-primary" />
-            <span>Puesta en marcha ágil</span>
-          </div>
-
-          <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-neutral-900 sm:text-4xl lg:text-5xl [text-wrap:balance]">
+        <ScrollReveal yOffset={16} className="mx-auto max-w-4xl text-center">
+          <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl [text-wrap:balance]">
             Tu consulta funcionando en 3 simples pasos
           </h2>
 
-          <p className="mt-4 text-base sm:text-lg text-neutral-600 [text-wrap:balance]">
+          <p className="mt-5 text-base sm:text-lg text-neutral-600 [text-wrap:balance]">
             Sin manuales engorrosos ni instalaciones difíciles. Nuestro equipo te entrega todo listo para agendar desde el primer día.
           </p>
         </ScrollReveal>

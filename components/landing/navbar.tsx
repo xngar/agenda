@@ -7,11 +7,11 @@ import { useState } from "react";
 import { siteConfig } from "@/lib/site-config";
 
 const links = [
-  { href: "#funciones", label: "Funciones" },
-  { href: "#como-funciona", label: "Cómo funciona" },
-  { href: "#seguridad", label: "Seguridad" },
-  { href: "#planes", label: "Planes" },
-  { href: "#preguntas", label: "Preguntas" },
+  { href: "/#funciones", label: "Funciones" },
+  { href: "/#como-funciona", label: "Cómo funciona" },
+  { href: "/#seguridad", label: "Seguridad" },
+  { href: "/#planes", label: "Planes" },
+  { href: "/#preguntas", label: "Preguntas" },
 ];
 
 export default function Navbar() {
@@ -20,7 +20,7 @@ export default function Navbar() {
   return (
     <header className="fixed top-0 z-50 w-full border-b border-white/10 bg-black/20 backdrop-blur-md">
       <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-        <Link href="#top" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <Image
             src="/gethour.svg"
             alt={siteConfig.name !== "[Nombre]" ? siteConfig.name : "gethour"}

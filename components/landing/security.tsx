@@ -1,6 +1,6 @@
 "use client";
 
-import { ShieldCheck, Lock, Database, Download, FileCheck, CheckCircle2, Award } from "lucide-react";
+import { ShieldCheck, Lock, Database, Download, FileCheck, CheckCircle2 } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 import { StaggerGroup, StaggerItem } from "@/components/motion/scroll-reveal";
 
@@ -47,18 +47,12 @@ export default function Security() {
             aria-hidden="true"
           />
 
-          <div className="relative z-10 mx-auto max-w-3xl text-center">
-            {/* Badge de Seguridad y Normativa */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-4 py-1.5 text-xs font-semibold text-cyan-300 backdrop-blur-md">
-              <Award className="h-4 w-4 text-cyan-400" />
-              <span>Normativa Chilena de Salud</span>
-            </div>
-
-            <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl [text-wrap:balance]">
+          <div className="relative z-10 mx-auto max-w-4xl text-center">
+            <h2 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl [text-wrap:balance]">
               La información clínica de tus pacientes, con estándar de máxima seguridad
             </h2>
 
-            <p className="mt-4 text-base sm:text-lg text-slate-300 [text-wrap:balance]">
+            <p className="mt-5 text-base sm:text-lg text-slate-300 [text-wrap:balance]">
               Sabemos que los datos de salud son los más sensibles. Por eso {siteConfig.name} está construida cumpliendo con la <strong>Ley 20.584 de Derechos y Deberes del Paciente</strong> y las directrices del <strong>MINSAL</strong> para fichas médicas electrónicas.
             </p>
           </div>

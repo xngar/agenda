@@ -78,6 +78,12 @@ export default function NotFound() {
           >
             Términos
           </Link>
+          <Link
+            href="/politica-cookies"
+            className="transition-colors duration-micro ease-out-soft hover:text-action-primary"
+          >
+            Cookies
+          </Link>
         </nav>
       </footer>
     </div>

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { siteConfig } from "@/lib/site-config";
 import {
-  Sparkles,
   ArrowRight,
   Clock,
   CheckCircle2,
@@ -53,16 +52,11 @@ export default function DemoForm() {
           {/* Columna Izquierda: Propuesta de Valor y Garantías */}
           <div className="space-y-6 lg:col-span-5">
             <ScrollReveal yOffset={16}>
-              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--lp-sky-200)] bg-white px-3.5 py-1 text-xs font-semibold text-[var(--lp-navy)] shadow-2xs">
-                <Sparkles className="h-3.5 w-3.5 text-action-primary" />
-                <span>Paso final a la modernización</span>
-              </div>
-
-              <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-neutral-900 sm:text-4xl lg:text-5xl [text-wrap:balance]">
+              <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl [text-wrap:balance]">
                 Lleva tu consulta al siguiente nivel
               </h2>
 
-              <p className="mt-4 text-base sm:text-lg text-neutral-600 [text-wrap:balance]">
+              <p className="mt-5 text-base sm:text-lg text-neutral-600 [text-wrap:balance]">
                 Agenda una demo personalizada y descubre cómo {siteConfig.name} elimina el desorden en tu día a día, reduce las inasistencias y protege los datos de tus pacientes.
               </p>
             </ScrollReveal>

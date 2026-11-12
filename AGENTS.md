@@ -82,6 +82,7 @@ docs/                       Documentación (este directorio)
 - Estilo: Sin comentarios a menos que sean estrictamente necesarios. Seguir patrones de código existentes en el repositorio.
 - Mimic código existente, seguir convenciones del proyecto.
 - Encoding UTF-8 respetado.
+- UI/Diseño: No colocar badges, pastillas ni chips encima de los títulos de sección. Los títulos de las secciones (`<h2>` / `<h3>`) deben presentarse limpios y directos, sin badges flotando arriba.
 
 ## Comandos para correr, probar y migrar
 

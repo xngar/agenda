@@ -6,7 +6,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { HelpCircle } from "lucide-react";
 import { ScrollReveal } from "@/components/motion/scroll-reveal";
 
 const faqs = [
@@ -44,17 +43,12 @@ export default function Faq() {
     <section id="preguntas" className="relative bg-white py-16 sm:py-24">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
         {/* Encabezado */}
-        <ScrollReveal yOffset={16} className="mx-auto max-w-3xl text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--lp-sky-200)] bg-[var(--lp-sky-100)]/60 px-3.5 py-1 text-xs font-semibold text-[var(--lp-navy)]">
-            <HelpCircle className="h-3.5 w-3.5 text-action-primary" />
-            <span>Respuestas claras</span>
-          </div>
-
-          <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-neutral-900 sm:text-4xl lg:text-5xl [text-wrap:balance]">
+        <ScrollReveal yOffset={16} className="mx-auto max-w-4xl text-center">
+          <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl [text-wrap:balance]">
             Preguntas frecuentes
           </h2>
 
-          <p className="mt-4 text-base sm:text-lg text-neutral-600 [text-wrap:balance]">
+          <p className="mt-5 text-base sm:text-lg text-neutral-600 [text-wrap:balance]">
             Todo lo que necesitas saber antes de dar el paso hacia una consulta moderna y ordenada.
           </p>
         </ScrollReveal>

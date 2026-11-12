@@ -42,7 +42,6 @@ const marqueeItems = [
 export default function Features() {
   const [tab, setTab] = useState<"odontologia" | "medicina" | "psicologia">("odontologia");
   const [selectedTooth, setSelectedTooth] = useState<number>(18);
-  const [isConfirmed, setIsConfirmed] = useState<boolean>(false);
   const [selectedSlot, setSelectedSlot] = useState<string>("11:30");
   const { reduce } = useMotionPrefs();
 
@@ -59,17 +58,12 @@ export default function Features() {
     <section id="funciones" className="relative bg-white py-16 sm:py-24">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Encabezado Principal */}
-        <ScrollReveal yOffset={16} className="mx-auto max-w-3xl text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--lp-sky-200)] bg-[var(--lp-sky-100)]/60 px-3.5 py-1 text-xs font-semibold text-[var(--lp-navy)]">
-            <Sparkles className="h-3.5 w-3.5 text-action-primary" />
-            <span>Capacidades de la plataforma</span>
-          </div>
-
-          <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-neutral-900 sm:text-4xl lg:text-5xl [text-wrap:balance]">
+        <ScrollReveal yOffset={16} className="mx-auto max-w-4xl text-center">
+          <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl [text-wrap:balance]">
             Diseñada para el flujo real de tu consulta médica o dental
           </h2>
 
-          <p className="mt-4 text-base sm:text-lg text-neutral-600 [text-wrap:balance]">
+          <p className="mt-5 text-base sm:text-lg text-neutral-600 [text-wrap:balance]">
             Cada especialidad tiene necesidades distintas. Por eso {siteConfig.name} unifica agenda pública, ficha clínica especializada y recordatorios inteligentes sin saturar a tu equipo.
           </p>
         </ScrollReveal>
@@ -277,60 +271,61 @@ export default function Features() {
                   <Smartphone className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-neutral-900">Recordatorios WhatsApp</h3>
-                  <p className="text-xs text-neutral-500">Confirmación directa sin costo de llamadas</p>
+                  <h3 className="text-lg font-bold text-neutral-900">Recordatorios por WhatsApp</h3>
+                  <p className="text-xs text-neutral-500">Contacto directo en 1 clic desde tu agenda</p>
                 </div>
               </div>
 
-              {/* Simulación del Chat de WhatsApp Interactivo */}
+              {/* Simulación del Chat de WhatsApp */}
               <div className="mt-5 rounded-2xl border border-emerald-100 bg-[#EFEAE2] p-4 shadow-inner">
                 <div className="flex items-center gap-2 border-b border-emerald-900/10 pb-2.5 mb-3 text-xs">
                   <div className="h-6 w-6 rounded-full bg-emerald-700 flex items-center justify-center text-white text-[10px] font-bold">
                     AO
                   </div>
                   <div className="flex-1 truncate">
-                    <div className="font-bold text-neutral-900 text-[11px]">{siteConfig.name} · Notificaciones</div>
-                    <div className="text-[9px] text-neutral-600">Verificado · Automatizado</div>
+                    <div className="font-bold text-neutral-900 text-[11px]">{siteConfig.name} · Recepción</div>
+                    <div className="text-[9px] text-emerald-700 font-medium">En línea</div>
                   </div>
                   <span className="h-2 w-2 rounded-full bg-emerald-500" />
                 </div>
 
-                <div className="rounded-xl bg-white p-3 text-xs text-neutral-800 shadow-2xs space-y-2">
-                  <p className="leading-snug">
-                    Hola <strong>Matías</strong> 👋 Te recordamos tu cita médica para mañana a las <strong>11:30 hrs</strong> con la <strong>Dra. Soto</strong>.
-                  </p>
-                  <p className="text-[11px] text-neutral-500">
-                    ¿Confirmas tu asistencia para reservar tu box de atención?
-                  </p>
+                <div className="space-y-2 text-xs">
+                  {/* Mensaje enviado por la clínica */}
+                  <div className="rounded-xl rounded-tl-xs bg-white p-3 text-neutral-800 shadow-2xs max-w-[90%]">
+                    <p className="leading-snug">
+                      Hola <strong>Matías</strong> 👋 Le recordamos su cita médica para mañana a las <strong>11:30 hrs</strong> con la <strong>Dra. Soto</strong>.
+                    </p>
+                    <p className="mt-1 text-[11px] text-neutral-500">
+                      ¿Nos confirma su asistencia para coordinar la consulta?
+                    </p>
+                    <div className="mt-1 flex items-center justify-end gap-1 text-[10px] text-neutral-400">
+                      <span>10:00</span>
+                      <span className="text-sky-500 font-bold">✓✓</span>
+                    </div>
+                  </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setIsConfirmed(!isConfirmed)}
-                    className={`w-full rounded-lg py-2 px-3 text-xs font-bold transition-all duration-micro flex items-center justify-center gap-1.5 ${
-                      isConfirmed
-                        ? "bg-emerald-600 text-white shadow-xs"
-                        : "bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100"
-                    }`}
-                  >
-                    {isConfirmed ? (
-                      <>
-                        <Check className="h-3.5 w-3.5" />
-                        <span>¡Cita confirmada! (Sincronizado)</span>
-                      </>
-                    ) : (
-                      <span>Toca aquí para confirmar cita</span>
-                    )}
-                  </button>
+                  {/* Respuesta del paciente */}
+                  <div className="ml-auto rounded-xl rounded-tr-xs bg-[#D9FDD3] p-2.5 text-neutral-800 shadow-2xs max-w-[85%]">
+                    <p className="leading-snug">
+                      ¡Hola! Sí, confirmadísima mi asistencia. Nos vemos mañana 👍
+                    </p>
+                    <div className="mt-1 flex items-center justify-end text-[10px] text-neutral-500">
+                      <span>10:02</span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="mt-2 text-right text-[10px] font-mono text-neutral-500">
-                  Entregado 10:00 · Leído 10:01
+                <div className="mt-3 flex items-center justify-between border-t border-emerald-900/10 pt-2.5 text-[11px] text-neutral-600">
+                  <span className="inline-flex items-center gap-1 font-medium text-emerald-800">
+                    <Check className="h-3.5 w-3.5 text-emerald-600" /> Mensaje prellenado en 1 clic
+                  </span>
+                  <span className="font-mono text-[10px] text-neutral-500">Sin tipear a mano</span>
                 </div>
               </div>
             </div>
 
             <div className="mt-4 border-t border-slate-100 pt-3 text-xs text-neutral-500">
-              Reduce hasta un <strong>65% las inasistencias</strong> sin que recepción gaste horas llamando.
+              Abre WhatsApp con el mensaje prellenado en 1 clic y reduce las inasistencias sin perder tiempo copiando números.
             </div>
           </div>
 

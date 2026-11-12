@@ -32,7 +32,7 @@ export default function Hero() {
             initial={reduce ? { opacity: 1 } : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.08, ease: easeCustom }}
-            className="text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl"
+            className="text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl"
           >
             Agenda, fichas clínicas y pacientes en un solo lugar.
           </motion.h1>

@@ -1,27 +1,33 @@
 "use client";
 
+import { useState } from "react";
 import {
-  MessageCircle,
-  CalendarX2,
-  FileText,
-  Bell,
-  Calendar,
+  Globe,
+  CalendarCheck,
+  LayoutDashboard,
   CheckCircle2,
-  AlertCircle,
   ShieldCheck,
+  CalendarClock,
+  Calendar,
+  Lock,
+  ArrowRight,
+  User,
+  Check,
 } from "lucide-react";
-import { siteConfig } from "@/lib/site-config";
 import { ScrollReveal, StaggerGroup, StaggerItem } from "@/components/motion/scroll-reveal";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { useMotionPrefs } from "@/components/motion/use-motion-prefs";
 
 const easeCustom = [0.16, 1, 0.3, 1] as const;
 
 export default function Problem() {
   const { reduce } = useMotionPrefs();
+  const [activeTab, setActiveTab] = useState<"patient" | "clinic">("patient");
+  const [selectedSlot, setSelectedSlot] = useState<string>("09:45");
+  const [simulatedConfirmed, setSimulatedConfirmed] = useState(false);
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-white via-sky-50/30 to-white py-16 sm:py-24">
+    <section className="relative overflow-hidden bg-gradient-to-b from-white via-sky-50/25 to-white py-16 sm:py-24">
       {/* Luz ambiental sutil de fondo */}
       <div
         className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-96 w-[48rem] -translate-x-1/2 rounded-full bg-gradient-to-tr from-sky-200/40 via-sky-100/20 to-transparent blur-3xl"
@@ -29,66 +35,74 @@ export default function Problem() {
       />
 
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Encabezado con Eyebrow Badge y Tipografía de Alto Impacto */}
-        <ScrollReveal yOffset={16} className="mx-auto max-w-3xl text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--lp-sky-200)] bg-white/90 px-3.5 py-1 text-xs font-semibold text-[var(--lp-navy)] shadow-2xs backdrop-blur-sm">
-            <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
-            <span>El diagnóstico de tu consulta</span>
-          </div>
-
-          <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-neutral-900 sm:text-4xl lg:text-5xl [text-wrap:balance]">
-            ¿Tu consulta todavía depende de libretas, planillas y mensajes sueltos?
+        {/* Encabezado Principal */}
+        <ScrollReveal yOffset={16} className="mx-auto max-w-4xl text-center">
+          <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl [text-wrap:balance]">
+            Del enlace web a tu box de atención: un flujo simple que nunca topa horarios
           </h2>
 
           <p className="mt-5 text-base sm:text-lg text-neutral-600 [text-wrap:balance]">
-            Coordinar horas por WhatsApp, perder pacientes por inasistencias y buscar historiales clínicos en papel no solo desgasta a tu equipo: <strong>frena el crecimiento de tu clínica</strong>.
+            Tus pacientes reservan en menos de un minuto desde su celular o computador. El sistema valida la disponibilidad en vivo, asigna la hora en tu agenda y te deja el control total para confirmar y atender con ficha clínica integrada.
           </p>
         </ScrollReveal>
 
-        {/* Comparativa Dinámica: Caos Tradicional vs. Control con Agenda Online */}
+        {/* Estructura en 2 Columnas: Los 3 Pasos del Flujo (Izq) + Simulación Interactiva Dual (Der) */}
         <div className="mt-14 grid gap-8 lg:grid-cols-12 lg:items-center">
-          {/* Columna Izquierda: Los 3 Puntos de Dolor de la Consulta Tradicional */}
+          {/* Columna Izquierda: Los 3 Pasos del Flujo Simplificado */}
           <div className="space-y-4 lg:col-span-5">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-rose-600">
-              <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-              La consulta tradicional sin sistema
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-sky-700">
+              <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
+              El flujo inteligente en 3 pasos
             </div>
 
             <StaggerGroup className="space-y-3" staggerDelay={0.08}>
               {[
                 {
-                  Icon: MessageCircle,
-                  title: "WhatsApp desordenado y sin registro",
-                  desc: "Mensajes fuera de horario, horas perdidas y cero trazabilidad entre lo que habla recepción y lo que ve el profesional.",
-                  color: "border-rose-100 bg-rose-50/40 text-rose-700",
-                  iconBg: "bg-rose-100/80 text-rose-600",
+                  step: "01",
+                  Icon: Globe,
+                  title: "1. El paciente reserva en tu web 24/7",
+                  desc: "Comparte tu enlace en tu web, redes o recepción. El paciente elige servicio, profesional y hora en 40 segundos, sin descargar apps ni recordar contraseñas.",
+                  pill: "Sin apps ni esperas de chat",
+                  color: "border-sky-100 bg-sky-50/40 text-neutral-800",
+                  iconBg: "bg-sky-100 text-[var(--lp-navy)]",
                 },
                 {
-                  Icon: CalendarX2,
-                  title: "Ausencias y horas muertas",
-                  desc: "Pacientes que olvidan su cita a último minuto sin confirmación previa, dejando boxes o sillones vacíos.",
-                  color: "border-amber-100 bg-amber-50/40 text-amber-700",
-                  iconBg: "bg-amber-100/80 text-amber-600",
+                  step: "02",
+                  Icon: CalendarCheck,
+                  title: "2. Asignación inmediata anti-topes (Get Hour)",
+                  desc: "El motor valida la disponibilidad en milisegundos contra feriados, horarios y bloqueos médicos. El cupo queda asignado de inmediato y nadie más puede tomarlo.",
+                  pill: "Validación matemática en tiempo real",
+                  color: "border-emerald-100 bg-emerald-50/30 text-neutral-800",
+                  iconBg: "bg-emerald-100 text-emerald-800",
                 },
                 {
-                  Icon: FileText,
-                  title: "Fichas dispersas en papel o carpetas",
-                  desc: "Información médica fragmentada, riesgo de extravío y falta de cumplimiento de la normativa de respaldo.",
-                  color: "border-slate-200 bg-white text-neutral-700",
-                  iconBg: "bg-slate-100 text-neutral-700",
+                  step: "03",
+                  Icon: LayoutDashboard,
+                  title: "3. Confirmación médica y ficha lista",
+                  desc: "La cita entra a tu agenda en estado 'por confirmar'. Tu equipo la valida en 1 clic, emite el calendario .ics para el paciente y accede a su historial clínico.",
+                  pill: "Control total y ficha electrónica",
+                  color: "border-slate-200 bg-white text-neutral-800",
+                  iconBg: "bg-neutral-100 text-neutral-800",
                 },
-              ].map(({ Icon, title, desc, color, iconBg }) => (
-                <StaggerItem key={title} yOffset={16}>
+              ].map(({ step, Icon, title, desc, pill, color, iconBg }) => (
+                <StaggerItem key={step} yOffset={16}>
                   <div
                     className={`rounded-2xl border p-4.5 transition-all duration-element hover:translate-x-1 hover:shadow-xs sm:p-5 ${color}`}
                   >
                     <div className="flex items-start gap-3.5">
-                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
-                        <Icon className="h-5 w-5" />
+                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-bold ${iconBg}`}>
+                        <Icon className="h-5 w-5" aria-hidden="true" />
                       </div>
-                      <div>
-                        <h3 className="text-sm font-semibold text-neutral-900">{title}</h3>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="text-sm font-semibold text-neutral-900">{title}</h3>
+                          <span className="font-mono text-xs font-bold text-neutral-400">{step}</span>
+                        </div>
                         <p className="mt-1 text-xs sm:text-sm text-neutral-600 leading-relaxed">{desc}</p>
+                        <div className="mt-2.5 inline-flex items-center gap-1 rounded-md bg-white/80 px-2 py-0.5 text-[11px] font-medium text-neutral-700 border border-neutral-200/60 shadow-2xs">
+                          <CheckCircle2 className="h-3 w-3 text-emerald-600" aria-hidden="true" />
+                          <span>{pill}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -97,112 +111,280 @@ export default function Problem() {
             </StaggerGroup>
           </div>
 
-          {/* Columna Derecha: Interfaz Viva y Activa de Agenda Online */}
+          {/* Columna Derecha: Mockup Interactivo Dual (Paciente vs Clínica) */}
           <div className="lg:col-span-7">
-            <div className="mb-2 flex items-center justify-between px-1">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-600">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Con {siteConfig.name}
+            {/* Selector de Pestañas Interactivas */}
+            <div className="mb-3 flex items-center justify-between px-1">
+              <div
+                role="tablist"
+                aria-label="Selector de simulación de flujo"
+                className="inline-flex rounded-xl bg-neutral-100 p-1 text-xs font-semibold text-neutral-600 shadow-inner"
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === "patient"}
+                  onClick={() => setActiveTab("patient")}
+                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all duration-micro cursor-pointer ${
+                    activeTab === "patient"
+                      ? "bg-white text-[var(--lp-navy)] shadow-xs font-bold"
+                      : "hover:text-neutral-900"
+                  }`}
+                >
+                  <Globe className="h-3.5 w-3.5 text-sky-600" aria-hidden="true" />
+                  <span>1. Lo que ve el Paciente</span>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === "clinic"}
+                  onClick={() => setActiveTab("clinic")}
+                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all duration-micro cursor-pointer ${
+                    activeTab === "clinic"
+                      ? "bg-white text-[var(--lp-navy)] shadow-xs font-bold"
+                      : "hover:text-neutral-900"
+                  }`}
+                >
+                  <LayoutDashboard className="h-3.5 w-3.5 text-emerald-600" aria-hidden="true" />
+                  <span>2. Lo que recibe la Clínica</span>
+                </button>
               </div>
-              <span className="text-xs font-medium text-neutral-500">Vista en vivo del panel</span>
+
+              <span className="hidden sm:inline-block text-xs font-medium text-neutral-500">
+                {activeTab === "patient" ? "Asistente web autónomo" : "Panel en tiempo real"}
+              </span>
             </div>
 
+            {/* Contenedor del Mockup */}
             <motion.div
-              initial={reduce ? { opacity: 1 } : { opacity: 0, scale: 0.97, y: 16 }}
+              initial={reduce ? { opacity: 1 } : { opacity: 0, scale: 0.98, y: 16 }}
               whileInView={{ opacity: 1, scale: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, ease: easeCustom }}
-              className="relative rounded-3xl border border-[var(--lp-sky-200)]/80 bg-white/95 p-5 shadow-xl shadow-sky-900/5 backdrop-blur-md sm:p-7"
+              className="relative rounded-3xl border border-[var(--lp-sky-200)]/80 bg-white/95 p-5 shadow-xl shadow-sky-900/5 backdrop-blur-md sm:p-7 min-h-[460px] flex flex-col justify-between"
             >
-              {/* Header de la agenda simulada */}
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-100 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--lp-navy)] text-white shadow-xs">
-                    <Calendar className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-neutral-900">Agenda Médica y Dental</div>
-                    <div className="flex items-center gap-1.5 text-xs text-neutral-500">
-                      <span>Hoy, en consulta</span>
-                      <span>·</span>
-                      <span className="font-semibold text-emerald-600">4 de 5 horas confirmadas</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200/70">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500 badge-beacon" />
-                  <span>Sincronización activa</span>
-                </div>
-              </div>
-
-              {/* Lista interactiva de citas de la jornada */}
-              <div className="mt-5 space-y-2.5">
-                {[
-                  {
-                    time: "09:00",
-                    patient: "Camila Morales R.",
-                    specialty: "Odontología · Limpieza & Evaluación",
-                    doctor: "Dr. Silva",
-                    status: "Confirmada",
-                    badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
-                  },
-                  {
-                    time: "10:15",
-                    patient: "Rodrigo Valenzuela T.",
-                    specialty: "Medicina General · Control anual",
-                    doctor: "Dra. Soto",
-                    status: "En atención",
-                    badgeColor: "bg-sky-50 text-sky-700 border-sky-200",
-                  },
-                  {
-                    time: "11:30",
-                    patient: "Sofía Cárdenas P.",
-                    specialty: "Psicología · Sesión de avance",
-                    doctor: "Ps. Morales",
-                    status: "Recordatorio visto",
-                    badgeColor: "bg-amber-50 text-amber-700 border-amber-200",
-                  },
-                  {
-                    time: "12:45",
-                    patient: "Ignacio Herrera B.",
-                    specialty: "Odontología · Restauración pieza 19",
-                    doctor: "Dr. Silva",
-                    status: "Confirmada vía WhatsApp",
-                    badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
-                  },
-                ].map((item, idx) => (
+              <AnimatePresence mode="wait">
+                {activeTab === "patient" ? (
+                  /* VISTA 1: El paciente reservando en la web */
                   <motion.div
-                    key={item.time}
-                    initial={reduce ? { opacity: 1 } : { opacity: 0, y: 8 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.3, delay: 0.05 * idx }}
-                    className="flex flex-col gap-2 rounded-xl border border-neutral-100 bg-neutral-50/60 p-3 transition-all duration-micro hover:border-sky-200 hover:bg-white hover:shadow-xs sm:flex-row sm:items-center sm:justify-between"
+                    key="tab-patient"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.25 }}
+                    className="space-y-4"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-12 items-center justify-center rounded-lg bg-white font-mono text-xs font-bold text-neutral-800 shadow-2xs border border-neutral-200/80">
-                        {item.time}
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold text-neutral-900">{item.patient}</div>
-                        <div className="text-xs text-neutral-500">
-                          {item.specialty} · <span className="font-medium text-neutral-700">{item.doctor}</span>
+                    {/* Barra de Navegación del Asistente */}
+                    <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 ring-1 ring-emerald-200/60">
+                          <Lock className="h-3 w-3 text-emerald-600" aria-hidden="true" />
+                          <span>agendaonline.cl/clinica-sonrisa/reservar</span>
                         </div>
                       </div>
+                      <span className="text-xs font-semibold text-neutral-500">Paso 3 de 3</span>
                     </div>
 
-                    <div className="flex items-center gap-2 self-start sm:self-center">
-                      <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${item.badgeColor}`}>
-                        <CheckCircle2 className="h-3 w-3" />
-                        {item.status}
-                      </span>
+                    {/* Resumen de Selección */}
+                    <div className="rounded-xl border border-neutral-100 bg-neutral-50/70 p-3.5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-xs font-medium text-neutral-500">Profesional & Servicio</div>
+                          <div className="text-sm font-bold text-neutral-900">Dra. Valentina Soto</div>
+                          <div className="text-xs text-neutral-600">Odontología · Evaluación & Limpieza (45 min)</div>
+                        </div>
+                        <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-sky-700 border border-neutral-200/80 shadow-2xs">
+                          Miércoles 14 Nov
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Selector interactivo de horas disponibles en vivo */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-bold uppercase tracking-wider text-neutral-700">
+                          Horarios libres verificados en vivo:
+                        </span>
+                        <span className="text-[11px] font-medium text-emerald-600 flex items-center gap-1">
+                          <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                          Cupos sin colisión
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        {[
+                          { time: "09:00", available: false, label: "Ocupada" },
+                          { time: "09:45", available: true, label: "Disponible" },
+                          { time: "10:30", available: true, label: "Disponible" },
+                          { time: "11:15", available: true, label: "Disponible" },
+                        ].map((slot) => {
+                          const isSelected = selectedSlot === slot.time;
+                          return (
+                            <button
+                              key={slot.time}
+                              type="button"
+                              disabled={!slot.available}
+                              onClick={() => setSelectedSlot(slot.time)}
+                              className={`group relative flex flex-col items-center justify-center rounded-xl p-2.5 text-center transition-all duration-micro ${
+                                !slot.available
+                                  ? "border border-neutral-200/60 bg-neutral-100/60 text-neutral-400 cursor-not-allowed opacity-60"
+                                  : isSelected
+                                    ? "border-2 border-[var(--lp-navy)] bg-sky-50 text-[var(--lp-navy)] shadow-xs font-bold"
+                                    : "border border-neutral-200 bg-white text-neutral-700 hover:border-sky-300 hover:bg-sky-50/40 cursor-pointer"
+                              }`}
+                            >
+                              <div className="font-mono text-sm font-bold">{slot.time}</div>
+                              <div className="text-[10px] mt-0.5">
+                                {isSelected ? "Seleccionada" : slot.label}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Banner explicativo del Get Hour */}
+                    <div className="rounded-xl border border-sky-100 bg-sky-50/60 p-3 flex items-start gap-2.5">
+                      <ShieldCheck className="h-4 w-4 shrink-0 text-sky-600 mt-0.5" aria-hidden="true" />
+                      <p className="text-xs text-sky-900 leading-relaxed">
+                        <strong>Asignación inmediata:</strong> al confirmar a las <strong>{selectedSlot} hrs</strong>, el sistema bloquea el cupo al instante en la base de datos de la clínica. Nadie más podrá tomar tu horario.
+                      </p>
+                    </div>
+
+                    {/* Botón de acción simulada */}
+                    <div className="pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("clinic")}
+                        className="w-full flex items-center justify-center gap-2 rounded-xl bg-[var(--lp-navy)] py-3 px-4 text-sm font-bold text-white shadow-sm hover:bg-[var(--lp-navy-deep)] transition-all cursor-pointer active:scale-[0.99]"
+                      >
+                        <span>Confirmar solicitud de hora en la web</span>
+                        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                      </button>
                     </div>
                   </motion.div>
-                ))}
-              </div>
+                ) : (
+                  /* VISTA 2: El profesional gestionando la cita en la agenda */
+                  <motion.div
+                    key="tab-clinic"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.25 }}
+                    className="space-y-4"
+                  >
+                    {/* Header de la agenda médica */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-100 pb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--lp-navy)] text-white shadow-xs">
+                          <Calendar className="h-4 w-4" aria-hidden="true" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-neutral-900">Agenda · Miércoles 14 Nov</div>
+                          <div className="text-xs text-neutral-500">Dra. Valentina Soto (Sillón 1)</div>
+                        </div>
+                      </div>
 
-              {/* Tarjetas flotantes contextuales */}
+                      <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200/70">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>Sincronización en vivo</span>
+                      </div>
+                    </div>
+
+                    {/* Lista interactiva de citas en el panel */}
+                    <div className="space-y-2.5">
+                      {/* Cita asignada desde la web */}
+                      <div className="rounded-xl border border-amber-200/80 bg-amber-50/40 p-3 transition-all">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-9 w-12 items-center justify-center rounded-lg bg-white font-mono text-xs font-bold text-[var(--lp-navy)] shadow-2xs border border-amber-200">
+                              {selectedSlot}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-bold text-neutral-900">Camila Morales R.</span>
+                                <span className="text-xs text-neutral-500">· 11.234.567-8</span>
+                              </div>
+                              <div className="text-xs text-neutral-600">
+                                Odontología · Evaluación & Limpieza (Entró vía Web)
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 self-end sm:self-center">
+                            {simulatedConfirmed ? (
+                              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                                <Check className="h-3 w-3" />
+                                Confirmada (.ics enviado)
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setSimulatedConfirmed(true)}
+                                className="inline-flex items-center gap-1.5 rounded-full bg-[var(--lp-navy)] px-3 py-1 text-xs font-bold text-white shadow-2xs hover:bg-[var(--lp-navy-deep)] transition-all cursor-pointer"
+                              >
+                                <span>Confirmar cita</span>
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Cita 2 (Preexistente confirmada) */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl border border-neutral-100 bg-neutral-50/60 p-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-9 w-12 items-center justify-center rounded-lg bg-white font-mono text-xs font-bold text-neutral-800 shadow-2xs border border-neutral-200/80">
+                            10:30
+                          </div>
+                          <div>
+                            <div className="text-sm font-semibold text-neutral-900">Rodrigo Valenzuela T.</div>
+                            <div className="text-xs text-neutral-500">Medicina General · Control anual</div>
+                          </div>
+                        </div>
+                        <span className="self-start sm:self-center inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700">
+                          <CheckCircle2 className="h-3 w-3" />
+                          Confirmada
+                        </span>
+                      </div>
+
+                      {/* Cita 3 (En atención) */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl border border-neutral-100 bg-neutral-50/60 p-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-9 w-12 items-center justify-center rounded-lg bg-white font-mono text-xs font-bold text-neutral-800 shadow-2xs border border-neutral-200/80">
+                            11:15
+                          </div>
+                          <div>
+                            <div className="text-sm font-semibold text-neutral-900">Sofía Cárdenas P.</div>
+                            <div className="text-xs text-neutral-500">Psicología · Sesión de avance</div>
+                          </div>
+                        </div>
+                        <span className="self-start sm:self-center inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-[11px] font-semibold text-sky-700">
+                          <User className="h-3 w-3" />
+                          En atención
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Resumen de gestión */}
+                    <div className="pt-2 flex items-center justify-between text-xs text-neutral-500 border-t border-neutral-100">
+                      <span>3 citas agendadas hoy</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSimulatedConfirmed(false);
+                          setActiveTab("patient");
+                        }}
+                        className="text-sky-700 font-semibold hover:underline cursor-pointer"
+                      >
+                        ← Volver a simular reserva web
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Tarjetas flotantes contextuales corregidas (Sin falsas menciones a bots) */}
               <motion.div
                 initial={reduce ? { opacity: 1 } : { opacity: 0, x: 20 }}
                 animate={
@@ -221,12 +403,12 @@ export default function Problem() {
                 }
                 className="absolute -right-3 -top-5 hidden rounded-2xl border border-[var(--lp-sky-200)] bg-white px-3.5 py-2.5 text-xs font-medium shadow-lg sm:flex sm:items-center sm:gap-2.5 text-neutral-800"
               >
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                  <Bell className="h-3.5 w-3.5" />
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />
                 </div>
                 <div>
-                  <div className="text-[11px] font-bold text-neutral-900">WhatsApp automático</div>
-                  <div className="text-[10px] text-neutral-500">Cita confirmada en 1 toque</div>
+                  <div className="text-[11px] font-bold text-neutral-900">Asignación 100% en vivo</div>
+                  <div className="text-[10px] text-neutral-500">Cupo bloqueado sin cruce de horas</div>
                 </div>
               </motion.div>
 
@@ -248,11 +430,11 @@ export default function Problem() {
                 className="absolute -bottom-4 -left-3 hidden rounded-2xl border border-sky-100 bg-white px-3.5 py-2.5 text-xs font-medium shadow-lg sm:flex sm:items-center sm:gap-2.5 text-neutral-800"
               >
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--lp-sky-100)] text-[var(--lp-navy)]">
-                  <ShieldCheck className="h-4 w-4" />
+                  <CalendarClock className="h-4 w-4" aria-hidden="true" />
                 </div>
                 <div>
-                  <div className="text-[11px] font-bold text-neutral-900">Ficha clínica lista</div>
-                  <div className="text-[10px] text-neutral-500">Antecedentes precargados</div>
+                  <div className="text-[11px] font-bold text-neutral-900">Confirmación en 1 clic</div>
+                  <div className="text-[10px] text-neutral-500">Dispara evento .ics y ficha lista</div>
                 </div>
               </motion.div>
             </motion.div>
