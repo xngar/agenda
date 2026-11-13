@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
+import { ChevronDown } from "lucide-react";
 
 function CalendarioIcon() {
   return (
@@ -28,6 +29,15 @@ function EstadisticasIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
       <path d="M4 20V10M10 20V5M16 20v-7M21 20H3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function NotificacionesIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+      <path d="M15 17H5l1.4-1.4A2 2 0 0 0 7 14.2V10a5 5 0 0 1 10 0v4.2a2 2 0 0 0 .6 1.4L19 17h-4Z" strokeLinejoin="round" />
+      <path d="M10 17a2 2 0 0 0 4 0" strokeLinecap="round" />
     </svg>
   );
 }
@@ -87,6 +97,16 @@ function OrganizacionesIcon() {
   );
 }
 
+function AdministracionIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+      <path d="M4 7h9M19 7h1M4 17h3M13 17h7" strokeLinecap="round" />
+      <circle cx="16" cy="7" r="2.2" />
+      <circle cx="9" cy="17" r="2.2" />
+    </svg>
+  );
+}
+
 interface NavItem {
   href: string;
   label: string;
@@ -96,13 +116,24 @@ interface NavItem {
 const principal: NavItem[] = [
   { href: "/dashboard", label: "Mi agenda", icon: <CalendarioIcon /> },
   { href: "/dashboard/pacientes", label: "Pacientes", icon: <PacientesIcon /> },
-  { href: "/dashboard/estadisticas", label: "Estadísticas", icon: <EstadisticasIcon /> },
 ];
 
-const disponibilidadBase: NavItem[] = [
-  { href: "/dashboard/horario", label: "Mi Horario", icon: <HorarioIcon /> },
+const disponibilidad: NavItem[] = [
+  { href: "/dashboard/horario", label: "Mis Horarios", icon: <HorarioIcon /> },
   { href: "/dashboard/bloqueos", label: "Bloqueos", icon: <BloqueosIcon /> },
 ];
+
+const estadisticasItem: NavItem = {
+  href: "/dashboard/estadisticas",
+  label: "Estadísticas",
+  icon: <EstadisticasIcon />,
+};
+
+const notificacionesItem: NavItem = {
+  href: "/dashboard/notificaciones",
+  label: "Notificaciones",
+  icon: <NotificacionesIcon />,
+};
 
 const feriadosItem: NavItem = { href: "/dashboard/feriados", label: "Feriados", icon: <FeriadosIcon /> };
 
@@ -110,6 +141,9 @@ const soloAdmin: NavItem[] = [
   { href: "/dashboard/admin", label: "Equipo", icon: <EquipoIcon /> },
   { href: "/dashboard/servicios", label: "Servicios", icon: <ServiciosIcon /> },
 ];
+
+/** Feriados, Equipo y Servicios son solo-admin: viven juntos en "Administración". */
+const grupoAdministracion: NavItem[] = [feriadosItem, ...soloAdmin];
 
 const soloSuperAdmin: NavItem[] = [
   { href: "/dashboard/plataforma/organizaciones", label: "Organizaciones", icon: <OrganizacionesIcon /> },
@@ -119,21 +153,24 @@ function esActivo(pathname: string, href: string): boolean {
   return href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
 }
 
-function navButtonClasses(active: boolean): string {
+function navButtonClasses(active: boolean, collapsed = false): string {
   const tone = active
     ? "bg-panel-active text-action-primary shadow-[inset_0_0_0_1px_var(--action-primary-line)]"
     : "text-panel-muted hover:bg-panel-hover hover:text-action-primary";
+  const layout = collapsed ? "justify-center px-0" : "gap-3 px-3";
 
-  return `flex min-h-11 w-full items-center gap-3 rounded-control px-3 text-sm font-medium transition-colors duration-micro ease-out-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary ${tone}`;
+  return `group flex min-h-11 w-full items-center ${layout} rounded-control text-sm font-medium transition-all duration-micro ease-out-soft active:scale-[0.98] [&>svg]:shrink-0 [&>svg]:transition-transform [&>svg]:duration-micro [&>svg]:ease-out-soft group-hover:[&>svg]:scale-115 group-hover:[&>svg]:text-action-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary ${tone}`;
 }
 
 function NavItems({
   items,
   pathname,
+  collapsed = false,
   onNavigate,
 }: {
   items: NavItem[];
   pathname: string;
+  collapsed?: boolean;
   onNavigate?: () => void;
 }) {
   return (
@@ -144,12 +181,13 @@ function NavItems({
           <li key={item.href}>
             <Link
               href={item.href}
+              title={collapsed ? item.label : undefined}
               aria-current={active ? "page" : undefined}
               onClick={onNavigate}
-              className={navButtonClasses(active)}
+              className={navButtonClasses(active, collapsed)}
             >
               {item.icon}
-              {item.label}
+              <span className={collapsed ? "sr-only" : "truncate"}>{item.label}</span>
             </Link>
           </li>
         );
@@ -158,26 +196,79 @@ function NavItems({
   );
 }
 
+function NavGroup({
+  label,
+  icon,
+  items,
+  pathname,
+  collapsed = false,
+  onNavigate,
+}: {
+  label: string;
+  icon: ReactNode;
+  items: NavItem[];
+  pathname: string;
+  collapsed?: boolean;
+  onNavigate?: () => void;
+}) {
+  const panelId = useId();
+  const activo = items.some((item) => esActivo(pathname, item.href));
+  const [open, setOpen] = useState(activo);
+
+  return (
+    <li>
+      <button
+        type="button"
+        title={collapsed ? label : undefined}
+        aria-expanded={open}
+        aria-controls={panelId}
+        onClick={() => setOpen((prev) => !prev)}
+        className={`${navButtonClasses(!open && activo, collapsed)} ${collapsed ? "" : "justify-between"}`}
+      >
+        <span className={`flex items-center ${collapsed ? "justify-center" : "gap-3"}`}>
+          {icon}
+          <span className={collapsed ? "sr-only" : "truncate"}>{label}</span>
+        </span>
+        <ChevronDown
+          aria-hidden="true"
+          className={`h-4 w-4 shrink-0 transition-transform duration-micro ease-out-soft ${open ? "rotate-180" : ""} ${collapsed ? "hidden" : ""}`}
+        />
+      </button>
+
+      <div
+        id={panelId}
+        className="grid transition-[grid-template-rows] duration-element ease-out-soft"
+        style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
+      >
+        <ul inert={!open} className={`space-y-1 overflow-hidden pb-0.5 pr-0.5 pt-0.5 ${collapsed ? "pl-0" : "pl-3"}`}>
+          <NavItems items={items} pathname={pathname} collapsed={collapsed} onNavigate={onNavigate} />
+        </ul>
+      </div>
+    </li>
+  );
+}
+
 export function SidebarNav({
   isAdmin,
   isSuperAdmin = false,
+  collapsed = false,
   onNavigate,
   className,
 }: {
   isAdmin: boolean;
   isSuperAdmin?: boolean;
+  collapsed?: boolean;
   onNavigate?: () => void;
   className?: string;
 }) {
   const pathname = usePathname();
-  const disponibilidad = isAdmin ? [...disponibilidadBase, feriadosItem] : disponibilidadBase;
-  const enlacesAdmin = isAdmin ? soloAdmin : [];
+  const administracion = isAdmin ? grupoAdministracion : [];
 
   if (isSuperAdmin) {
     return (
       <nav aria-label="Secciones del panel" className={className}>
         <ul className="space-y-1">
-          <NavItems items={soloSuperAdmin} pathname={pathname} onNavigate={onNavigate} />
+          <NavItems items={soloSuperAdmin} pathname={pathname} collapsed={collapsed} onNavigate={onNavigate} />
         </ul>
       </nav>
     );
@@ -186,14 +277,24 @@ export function SidebarNav({
   return (
     <nav aria-label="Secciones del panel" className={className}>
       <ul className="space-y-1">
-        <NavItems items={principal} pathname={pathname} onNavigate={onNavigate} />
-        <NavItems items={disponibilidad} pathname={pathname} onNavigate={onNavigate} />
+        <NavItems items={principal} pathname={pathname} collapsed={collapsed} onNavigate={onNavigate} />
+        <NavItems items={disponibilidad} pathname={pathname} collapsed={collapsed} onNavigate={onNavigate} />
+        <NavItems items={[estadisticasItem, notificacionesItem]} pathname={pathname} collapsed={collapsed} onNavigate={onNavigate} />
 
-        {enlacesAdmin.length > 0 ? (
-          <li aria-hidden="true" className="my-3 h-px bg-panel-line" />
+        {administracion.length > 0 ? (
+          <>
+            <li aria-hidden="true" className="my-3 h-px bg-panel-line" />
+            <NavGroup
+              key={pathname}
+              label="Administración"
+              icon={<AdministracionIcon />}
+              items={administracion}
+              pathname={pathname}
+              collapsed={collapsed}
+              onNavigate={onNavigate}
+            />
+          </>
         ) : null}
-
-        <NavItems items={enlacesAdmin} pathname={pathname} onNavigate={onNavigate} />
       </ul>
     </nav>
   );

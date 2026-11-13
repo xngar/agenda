@@ -1,10 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { Attachment, Consent, ConsentKind, Encounter, OrganizationType } from "@/lib/ficha/types";
+import { attachmentFileError } from "@/lib/ficha/attachments";
 import { Card, Button, ErrorNotice, Field, Spinner, inputClasses } from "@/components/ui";
+import { formatDayKey } from "@/lib/dates";
 import { FichaCardHeader } from "./panels-shared";
+import { uploadPatientAttachment } from "./attachment-upload";
 
 interface ConsentRecord extends Consent {
   evidence_attachment?: Pick<Attachment, "id" | "file_name"> | null;
@@ -16,6 +19,12 @@ const CONSENTIMIENTOS_PSICOLOGICOS = [
   { value: "psicoterapia", label: "Psicoterapia" },
   { value: "atencion_online", label: "Atención psicológica a distancia" },
   { value: "datos_personales", label: "Información sobre tratamiento de datos" },
+] as const;
+
+const CONSENTIMIENTOS_DENTALES = [
+  { value: "tratamiento_dental", label: "Tratamiento dental" },
+  { value: "datos_personales", label: "Información sobre tratamiento de datos" },
+  { value: "other", label: "Otro" },
 ] as const;
 
 const CONSENTIMIENTOS_MEDICOS = [
@@ -50,6 +59,20 @@ const CANALES_ACEPTACION = [
   { value: "plataforma_digital", label: "Plataforma digital" },
 ] as const;
 
+type ConsentOrgType = Extract<OrganizationType, "medical" | "psychological" | "dental">;
+
+function tipoInicial(orgType: ConsentOrgType): ConsentKind {
+  if (orgType === "medical") return "medical_procedure";
+  if (orgType === "dental") return "tratamiento_dental";
+  return "psicoterapia";
+}
+
+function tiposDeConsentimiento(orgType: ConsentOrgType) {
+  if (orgType === "medical") return CONSENTIMIENTOS_MEDICOS;
+  if (orgType === "dental") return CONSENTIMIENTOS_DENTALES;
+  return CONSENTIMIENTOS_PSICOLOGICOS;
+}
+
 function fechaHora(value: string): string {
   return new Date(value).toLocaleString("es-CL", {
     dateStyle: "medium",
@@ -60,10 +83,12 @@ function fechaHora(value: string): string {
 
 export function ConsentimientosPanel({
   patientId,
+  orgId,
   orgType,
 }: {
   patientId: string;
-  orgType: Extract<OrganizationType, "medical" | "psychological">;
+  orgId: string;
+  orgType: ConsentOrgType;
 }) {
   const [consents, setConsents] = useState<ConsentRecord[] | null>(null);
   const [attachments, setAttachments] = useState<Attachment[] | null>(null);
@@ -73,9 +98,7 @@ export function ConsentimientosPanel({
   const [error, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [kind, setKind] = useState<ConsentKind>(
-    orgType === "medical" ? "medical_procedure" : "psicoterapia",
-  );
+  const [kind, setKind] = useState<ConsentKind>(tipoInicial(orgType));
   const [encounterId, setEncounterId] = useState("");
   const [outcome, setOutcome] = useState<"accepted" | "rejected">("accepted");
   const [acceptedByPatient, setAcceptedByPatient] = useState(true);
@@ -86,6 +109,10 @@ export function ConsentimientosPanel({
   const [acceptanceChannel, setAcceptanceChannel] =
     useState<(typeof CANALES_ACEPTACION)[number]["value"]>("presencial");
   const [evidenceAttachmentId, setEvidenceAttachmentId] = useState("");
+  const [documentoFile, setDocumentoFile] = useState<File | null>(null);
+  const [subiendoDocumento, setSubiendoDocumento] = useState(false);
+  const [errorDocumento, setErrorDocumento] = useState<string | null>(null);
+  const documentoInputRef = useRef<HTMLInputElement>(null);
   const [version, setVersion] = useState("1");
   const [acceptedText, setAcceptedText] = useState("");
   const [decisionConfirmed, setDecisionConfirmed] = useState(false);
@@ -97,10 +124,11 @@ export function ConsentimientosPanel({
     alternatives: "",
     refusal_consequences: "",
   });
-  const tiposConsentimiento =
-    orgType === "medical" ? CONSENTIMIENTOS_MEDICOS : CONSENTIMIENTOS_PSICOLOGICOS;
+  const tiposConsentimiento = tiposDeConsentimiento(orgType);
   const isMedicalConsent = kind.startsWith("medical_");
   const consentAttachments = attachments?.filter((attachment) => attachment.kind === "consentimiento") ?? null;
+  const otrosAdjuntos =
+    attachments?.filter((attachment) => attachment.kind !== "consentimiento") ?? null;
 
   const cargar = useCallback(async () => {
     setError(null);
@@ -151,10 +179,11 @@ export function ConsentimientosPanel({
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount, setState tras await
     void cargar();
-  }, [cargar]);
+    void cargarAdjuntos();
+  }, [cargar, cargarAdjuntos]);
 
   function resetForm() {
-    setKind(orgType === "medical" ? "medical_procedure" : "psicoterapia");
+    setKind(tipoInicial(orgType));
     setOutcome("accepted");
     setEncounterId("");
     setAcceptedByPatient(true);
@@ -163,6 +192,9 @@ export function ConsentimientosPanel({
     setAcceptanceMethod("verbal");
     setAcceptanceChannel("presencial");
     setEvidenceAttachmentId("");
+    setDocumentoFile(null);
+    setErrorDocumento(null);
+    if (documentoInputRef.current) documentoInputRef.current.value = "";
     setVersion("1");
     setAcceptedText("");
     setDecisionConfirmed(false);
@@ -174,6 +206,39 @@ export function ConsentimientosPanel({
       alternatives: "",
       refusal_consequences: "",
     });
+  }
+
+  async function subirDocumento() {
+    if (!documentoFile) return;
+    const fileError = attachmentFileError(documentoFile);
+    if (fileError) {
+      setErrorDocumento(fileError);
+      return;
+    }
+
+    setErrorDocumento(null);
+    setSubiendoDocumento(true);
+    try {
+      const attachment = await uploadPatientAttachment({
+        patientId,
+        orgId,
+        file: documentoFile,
+        kind: "consentimiento",
+      });
+      setAttachments((prev) => [attachment, ...(prev ?? [])]);
+      setEvidenceAttachmentId(attachment.id);
+      setDocumentoFile(null);
+      if (documentoInputRef.current) documentoInputRef.current.value = "";
+      toast.success("Documento de consentimiento subido y vinculado");
+    } catch (error) {
+      setErrorDocumento(
+        error instanceof Error
+          ? error.message
+          : "No pudimos subir el documento. Intenta de nuevo.",
+      );
+    } finally {
+      setSubiendoDocumento(false);
+    }
   }
 
   async function guardar(event: React.FormEvent<HTMLFormElement>) {
@@ -242,7 +307,9 @@ export function ConsentimientosPanel({
           description={
             orgType === "medical"
               ? "Documenta la información entregada y la decisión del paciente o representante. Este registro no constituye una firma electrónica ni reemplaza los requisitos aplicables a cada procedimiento."
-              : "Registra por separado qué información se aceptó, cómo se obtuvo la aceptación y por qué canal. Este registro no constituye una firma electrónica."
+              : orgType === "dental"
+                ? "Registra la información entregada sobre el tratamiento dental y la decisión del paciente o representante. Este registro no constituye una firma electrónica."
+                : "Registra por separado qué información se aceptó, cómo se obtuvo la aceptación y por qué canal. Este registro no constituye una firma electrónica."
           }
           action={
             <Button
@@ -254,6 +321,8 @@ export function ConsentimientosPanel({
                 if (shouldOpen) {
                   void cargarAdjuntos();
                   void cargarAtenciones();
+                } else {
+                  resetForm();
                 }
               }}
             >
@@ -276,12 +345,19 @@ export function ConsentimientosPanel({
                   ))}
                 </select>
               </Field>
-              {!isMedicalConsent ? <p className="text-sm text-neutral-600 sm:col-span-2">
+              {orgType === "psychological" ? <p className="text-sm text-neutral-600 sm:col-span-2">
                 {kind === "psicoterapia"
                   ? "Registra la aceptación del proceso de atención psicológica."
                   : kind === "atencion_online"
                     ? "Registra por separado la información y aceptación asociada a la atención psicológica a distancia."
                     : "Registra por separado el aviso o consentimiento sobre tratamiento de datos personales y de salud que fue efectivamente informado y aceptado, según corresponda."}
+              </p> : null}
+              {orgType === "dental" ? <p className="text-sm text-neutral-600 sm:col-span-2">
+                {kind === "tratamiento_dental"
+                  ? "Registra la aceptación del tratamiento dental propuesto."
+                  : kind === "datos_personales"
+                    ? "Registra por separado el aviso o consentimiento sobre tratamiento de datos personales y de salud que fue efectivamente informado y aceptado, según corresponda."
+                    : "Registra el contenido aceptado y el contexto de la decisión."}
               </p> : null}
               {isMedicalConsent ? (
                 <div className="space-y-3 sm:col-span-2">
@@ -306,7 +382,7 @@ export function ConsentimientosPanel({
                   ))}
                 </div>
               ) : null}
-              {orgType === "medical" ? (
+              {orgType !== "psychological" ? (
                 <Field label="Decisión registrada" htmlFor="consent-outcome">
                   <select
                     id="consent-outcome"
@@ -314,8 +390,8 @@ export function ConsentimientosPanel({
                     value={outcome}
                     onChange={(event) => setOutcome(event.target.value as typeof outcome)}
                   >
-                    <option value="accepted">Acepta la propuesta</option>
-                    <option value="rejected">Rechaza la propuesta</option>
+                    <option value="accepted">{orgType === "medical" ? "Acepta la propuesta" : "Acepta el tratamiento"}</option>
+                    <option value="rejected">{orgType === "medical" ? "Rechaza la propuesta" : "Rechaza el tratamiento"}</option>
                   </select>
                 </Field>
               ) : null}
@@ -330,7 +406,7 @@ export function ConsentimientosPanel({
                   <option value="">Sin vincular a una atención</option>
                   {(encounters ?? []).map((encounter) => (
                     <option key={encounter.id} value={encounter.id}>
-                      {fechaHora(encounter.started_at)}
+                      {formatDayKey(encounter.started_at)}
                       {encounter.care_type ? ` · ${encounter.care_type}` : ""}
                     </option>
                   ))}
@@ -450,42 +526,128 @@ export function ConsentimientosPanel({
                 </select>
               </Field>
             </div>
-            <Field
-              label={acceptanceMethod === "documento" ? "Documento firmado (obligatorio)" : "Documento de respaldo (opcional)"}
-              htmlFor="consent-evidence"
-              hint="Selecciona un archivo de tipo Consentimiento ya cargado en la pestaña Adjuntos. Para aceptación verbal a distancia, puedes adjuntar respaldo si está disponible."
-            >
-              <select
-                id="consent-evidence"
-                className={inputClasses}
-                value={evidenceAttachmentId}
-                required={acceptanceMethod === "documento"}
-                onChange={(event) => setEvidenceAttachmentId(event.target.value)}
-                disabled={attachments === null}
-              >
-                <option value="">Sin documento adjunto</option>
-                {(consentAttachments ?? [])
-                  .map((attachment) => (
-                    <option key={attachment.id} value={attachment.id}>
-                      {attachment.file_name ?? attachment.description ?? "Documento sin nombre"}
-                    </option>
-                  ))}
-              </select>
-            </Field>
-            {attachmentsError ? (
-              <div className="space-y-2">
-                <ErrorNotice message={attachmentsError} />
-                <Button type="button" size="sm" variant="secondary" onClick={() => void cargarAdjuntos()}>
-                  Reintentar carga de adjuntos
-                </Button>
+            <div className="space-y-3 rounded-xl border border-neutral-200 p-4">
+              <div>
+                <p className="text-sm font-medium text-neutral-800">
+                  Documento de respaldo
+                  {acceptanceMethod === "documento" ? (
+                    <span className="ml-1 text-action-primary" aria-hidden="true">*</span>
+                  ) : (
+                    <span className="ml-1 text-xs font-normal text-neutral-500">(opcional)</span>
+                  )}
+                </p>
+                <p className="mt-1 text-sm text-neutral-600">
+                  {acceptanceMethod === "documento"
+                    ? "Para la forma «Documento firmado» debes vincular un archivo de tipo Consentimiento."
+                    : "Puedes vincular un respaldo si está disponible. Para aceptación verbal a distancia es opcional."}
+                </p>
               </div>
-            ) : consentAttachments === null ? (
-              <p className="text-sm text-neutral-500">Cargando documentos de respaldo…</p>
-            ) : consentAttachments.length === 0 ? (
-              <p className="rounded-xl bg-neutral-50 p-3 text-sm text-neutral-600">
-                Aún no hay documentos de consentimiento adjuntos. Para registrar uno firmado, cárgalo primero en Adjuntos con el tipo “Consentimiento”.
-              </p>
-            ) : null}
+
+              <Field
+                label="Documentos de consentimiento ya cargados"
+                htmlFor="consent-evidence"
+                required={false}
+                hint="Solo aparecen los archivos subidos con el tipo «Consentimiento»."
+              >
+                <select
+                  id="consent-evidence"
+                  className={inputClasses}
+                  value={evidenceAttachmentId}
+                  required={acceptanceMethod === "documento"}
+                  onChange={(event) => setEvidenceAttachmentId(event.target.value)}
+                  disabled={attachments === null}
+                >
+                  <option value="">Sin documento adjunto</option>
+                  {(consentAttachments ?? [])
+                    .map((attachment) => (
+                      <option key={attachment.id} value={attachment.id}>
+                        {attachment.file_name ?? attachment.description ?? "Documento sin nombre"}
+                      </option>
+                    ))}
+                </select>
+              </Field>
+
+              <div className="space-y-1.5">
+                <label htmlFor="consent-document-file" className="block text-sm font-medium text-neutral-800">
+                  Subir un documento nuevo
+                  <span className="ml-1 text-xs font-normal text-neutral-500">(opcional)</span>
+                </label>
+                <input
+                  id="consent-document-file"
+                  ref={documentoInputRef}
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+                  aria-describedby="consent-document-file-hint"
+                  className={`${inputClasses} file:mr-3 file:rounded-lg file:border-0 file:bg-action-primary file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-action-primary-foreground hover:file:bg-action-primary-hover`}
+                  onChange={(event) => {
+                    const selected = event.target.files?.[0] ?? null;
+                    setErrorDocumento(null);
+                    if (selected) {
+                      const fileError = attachmentFileError(selected);
+                      if (fileError) {
+                        setDocumentoFile(null);
+                        setErrorDocumento(fileError);
+                        event.currentTarget.value = "";
+                        return;
+                      }
+                    }
+                    setDocumentoFile(selected);
+                  }}
+                />
+                <p id="consent-document-file-hint" className="text-xs text-neutral-600">
+                  PDF, JPEG, PNG o WebP, hasta 20 MiB. Quedará guardado también en Adjuntos como «Consentimiento».
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => void subirDocumento()}
+                  disabled={!documentoFile || subiendoDocumento}
+                >
+                  {subiendoDocumento ? "Subiendo…" : "Subir y vincular documento"}
+                </Button>
+                {documentoFile ? (
+                  <span className="min-w-0 truncate text-xs text-neutral-600">{documentoFile.name}</span>
+                ) : null}
+              </div>
+
+              {errorDocumento ? <ErrorNotice message={errorDocumento} /> : null}
+
+              {attachmentsError ? (
+                <div className="space-y-2">
+                  <ErrorNotice message={attachmentsError} />
+                  <Button type="button" size="sm" variant="secondary" onClick={() => void cargarAdjuntos()}>
+                    Reintentar carga de adjuntos
+                  </Button>
+                </div>
+              ) : consentAttachments === null ? (
+                <p className="text-sm text-neutral-500">Cargando documentos de respaldo…</p>
+              ) : consentAttachments.length === 0 ? (
+                <p className="rounded-xl bg-neutral-50 p-3 text-sm text-neutral-600">
+                  Aún no hay documentos de consentimiento cargados.
+                  {otrosAdjuntos && otrosAdjuntos.length > 0
+                    ? ` Hay ${otrosAdjuntos.length} ${otrosAdjuntos.length === 1 ? "archivo" : "archivos"} en Adjuntos que no son de tipo «Consentimiento» y no se pueden vincular.`
+                    : " Sube el documento firmado aquí para vincularlo."}
+                </p>
+              ) : otrosAdjuntos && otrosAdjuntos.length > 0 ? (
+                <p className="rounded-xl bg-neutral-50 p-3 text-sm text-neutral-600">
+                  Solo se pueden vincular documentos de tipo «Consentimiento». Hay {otrosAdjuntos.length}{" "}
+                  {otrosAdjuntos.length === 1 ? "archivo" : "archivos"} en Adjuntos que no aparecen en la lista.
+                </p>
+              ) : null}
+
+              {acceptanceMethod === "documento" && !evidenceAttachmentId ? (
+                <p
+                  role="status"
+                  className="rounded-xl border border-warning-200 bg-warning-50 p-3 text-sm font-medium text-warning-800"
+                >
+                  Falta subir o seleccionar el documento firmado para poder guardar.
+                </p>
+              ) : null}
+            </div>
             <label className="flex items-start gap-3 rounded-xl border border-neutral-200 p-3 text-sm text-neutral-700">
               <input
                 type="checkbox"
@@ -503,6 +665,7 @@ export function ConsentimientosPanel({
               type="submit"
               disabled={
                 saving ||
+                subiendoDocumento ||
                 !decisionConfirmed ||
                 (acceptanceMethod === "documento" && !evidenceAttachmentId)
               }
@@ -522,6 +685,7 @@ export function ConsentimientosPanel({
                     {[
                       ...CONSENTIMIENTOS_MEDICOS,
                       ...CONSENTIMIENTOS_PSICOLOGICOS,
+                      ...CONSENTIMIENTOS_DENTALES,
                     ].find((option) => option.value === consent.kind)?.label ?? consent.kind}
                     {consent.outcome
                       ? ` · ${consent.outcome === "accepted" ? "Aceptado" : "Rechazado"}`

@@ -12,6 +12,7 @@ import { ResumenPanel } from "./resumen-panel";
 import { AntecedentesPanel } from "./antecedentes-panel";
 import { AtencionesPanel } from "./atenciones-panel";
 import { OdontogramaPanel } from "./odontograma-panel";
+import { PeriodontogramaPanel } from "./periodontograma-panel";
 import { PlanPanel } from "./plan-panel";
 import { RecetasPanel } from "./recetas-panel";
 import { AdjuntosPanel } from "./adjuntos-panel";
@@ -32,7 +33,9 @@ const TABS_DENTAL = [
   { id: "antecedentes", label: "Antecedentes" },
   { id: "atenciones", label: "Atenciones" },
   { id: "odontograma", label: "Odontograma" },
+  { id: "periodoncia", label: "Periodoncia" },
   { id: "plan", label: "Plan" },
+  { id: "consentimientos", label: "Consentimientos" },
   { id: "recetas", label: "Recetas" },
   { id: "adjuntos", label: "Adjuntos" },
 ];
@@ -71,7 +74,11 @@ export function FichaTabs({
   orgId,
   isAdmin,
   canEdit = false,
+  canEditProfile = false,
+  canDelete = false,
   canViewAudit = false,
+  canExport = true,
+  administrative = false,
 }: {
   patient: Patient;
   background: PatientMedicalBackground | null;
@@ -79,11 +86,17 @@ export function FichaTabs({
   orgId: string;
   isAdmin: boolean;
   canEdit?: boolean;
-  /** El dueño del paciente también ve su historial, no sólo el admin. */
+  canEditProfile?: boolean;
+  canDelete?: boolean;
+  /** El profesional tratante también ve su historial, no sólo el admin. */
   canViewAudit?: boolean;
+  canExport?: boolean;
+  /** La recepción ve sólo los datos administrativos del paciente. */
+  administrative?: boolean;
 }) {
-  const tabs =
-    orgType === "dental"
+  const tabs = administrative
+    ? [{ id: "resumen", label: "Datos del paciente" }]
+    : orgType === "dental"
       ? TABS_DENTAL
       : orgType === "psychological"
         ? TABS_PSYCHOLOGICAL
@@ -146,16 +159,18 @@ export function FichaTabs({
           </span>
         }
         actions={
-          <>
-            <a
-              className={buttonClasses("primary", "sm")}
-              href={`/api/ficha/patients/${patient.id}/pdf`}
-              title="Descargar ficha en PDF"
-            >
-              <Download className="size-4" aria-hidden />
-              Exportar ficha
-            </a>
-          </>
+          canExport ? (
+            <>
+              <a
+                className={buttonClasses("primary", "sm")}
+                href={`/api/ficha/patients/${patient.id}/pdf`}
+                title="Descargar ficha en PDF"
+              >
+                <Download className="size-4" aria-hidden />
+                Exportar ficha
+              </a>
+            </>
+          ) : undefined
         }
       />
 
@@ -186,7 +201,13 @@ export function FichaTabs({
 
       <div key={active} className="anim-view-fade">
       {active === "resumen" ? (
-        <ResumenPanel patient={patient} orgType={orgType} canEdit={canEdit} />
+        <ResumenPanel
+          patient={patient}
+          orgType={orgType}
+          canEdit={canEdit}
+          canEditProfile={canEditProfile}
+          showClinicalProfile={!administrative}
+        />
       ) : active === "antecedentes" ? (
         <AntecedentesPanel patientId={patient.id} initial={background} />
       ) : active === "atenciones" ? (
@@ -202,25 +223,27 @@ export function FichaTabs({
         />
       ) : active === "odontograma" ? (
         <OdontogramaPanel patientId={patient.id} />
+      ) : active === "periodoncia" ? (
+        <PeriodontogramaPanel patientId={patient.id} />
       ) : active === "plan" ? (
         <PlanPanel patientId={patient.id} isAdmin={isAdmin} />
       ) : active === "recetas" ? (
         <RecetasPanel patientId={patient.id} />
-      ) : active === "consentimientos" && (orgType === "psychological" || orgType === "medical") ? (
-        <ConsentimientosPanel patientId={patient.id} orgType={orgType} />
+      ) : active === "consentimientos" ? (
+        <ConsentimientosPanel patientId={patient.id} orgId={orgId} orgType={orgType} />
       ) : active === "adjuntos" ? (
         <AdjuntosPanel
           patientId={patient.id}
           orgId={orgId}
           orgType={orgType}
-          puedeEliminar={canEdit}
+          puedeEliminar={canDelete}
         />
       ) : active === "auditoria" ? (
-        <AuditoriaPanel patientId={patient.id} isAdmin={isAdmin} puedeExportar={canEdit} />
+        <AuditoriaPanel patientId={patient.id} isAdmin={isAdmin} puedeExportar={canDelete} />
       ) : null}
       </div>
 
-      {active === "resumen" && canEdit ? (
+      {active === "resumen" && canDelete ? (
         <section
           aria-labelledby="zona-peligrosa-paciente"
           className="rounded-card border border-red-200 bg-red-50/40 px-5 py-4"

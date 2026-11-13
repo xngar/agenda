@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { OrganizationNotFoundError } from "@/lib/errors";
 import { getCatalog, getPublicOrganization } from "@/lib/booking";
 import { Card, buttonClasses } from "@/components/ui";
 import { CLINIC_ADDRESS, CLINIC_PHONE } from "@/lib/clinic";
@@ -13,8 +15,19 @@ export async function generateMetadata({ params }: { params: Promise<{ clinicSlu
   };
 }
 
+async function loadHomeData(clinicSlug: string) {
+  try {
+    const [catalog, doctor] = await Promise.all([getCatalog(clinicSlug), getDoctorSession()]);
+    return { catalog, doctor };
+  } catch (error) {
+    if (error instanceof OrganizationNotFoundError) notFound();
+    throw error;
+  }
+}
+
 export default async function HomePage({ params }: { params: Promise<{ clinicSlug: string }> }) {
-  const { clinicSlug } = await params; const [catalog, doctor] = await Promise.all([getCatalog(clinicSlug), getDoctorSession()]);
+  const { clinicSlug } = await params;
+  const { catalog, doctor } = await loadHomeData(clinicSlug);
   const { settings } = catalog;
   const address = settings.address ?? CLINIC_ADDRESS;
   const phone = settings.phone ?? CLINIC_PHONE;
@@ -119,7 +132,12 @@ export default async function HomePage({ params }: { params: Promise<{ clinicSlu
                 { k: "Dirección", v: address },
                 { k: "Teléfono", v: phone },
                 { k: "Anticipación mínima", v: `${settings.min_notice_hours} horas` },
-                { k: "Cancelación", v: `hasta ${settings.cancel_min_hours} horas antes` },
+                {
+                  k: "Cancelación",
+                  v: settings.cancel_min_hours > 0
+                    ? `hasta ${settings.cancel_min_hours} horas antes`
+                    : "Hasta antes del inicio de la cita",
+                },
               ].map((row) => (
                 <div key={row.k} className="flex flex-col gap-0.5 px-4 py-3 sm:flex-row sm:gap-4">
                   <dt className="text-sm font-medium text-neutral-600 sm:w-44 sm:shrink-0">{row.k}</dt>

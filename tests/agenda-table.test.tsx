@@ -31,6 +31,13 @@ let root: Root;
 let container: HTMLDivElement;
 
 beforeEach(() => {
+  if (typeof globalThis.ResizeObserver === "undefined") {
+    globalThis.ResizeObserver = class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    } as unknown as typeof ResizeObserver;
+  }
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -39,6 +46,7 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   container.remove();
+  document.querySelectorAll("[data-radix-portal]").forEach((el) => el.remove());
 });
 
 function renderTable(citas = CITAS, onAccion = vi.fn()) {
@@ -84,16 +92,23 @@ describe("AgendaTable", () => {
     expect(onAccion).toHaveBeenCalledWith("c1", "confirmed");
   });
 
-  it("ofrece Reagendar en citas vigentes y la delega como reschedule", () => {
+  it("ofrece Reagendar en citas vigentes a través del menú de opciones", async () => {
     const onAccion = renderTable();
     const filas = container.querySelectorAll("tbody tr");
-    expect(filas[0]?.textContent).toContain("Reagendar");
-    expect(filas[1]?.textContent).toContain("Reagendar");
-    expect(filas[2]?.textContent).not.toContain("Reagendar");
-    const reagendar = [...filas[0]?.querySelectorAll("button") ?? []].find(
-      (b) => b.textContent === "Reagendar",
+    const menuBtn = [...filas[0]?.querySelectorAll("button") ?? []].find(
+      (b) => b.textContent?.includes("Opciones"),
     );
-    act(() => {
+    expect(menuBtn).toBeDefined();
+    await act(async () => {
+      menuBtn?.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }));
+      menuBtn?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+      menuBtn?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    const reagendar = [...document.querySelectorAll('[data-slot="dropdown-menu-item"], [role="menuitem"]')].find(
+      (el) => el.textContent?.includes("Reagendar"),
+    );
+    expect(reagendar).toBeDefined();
+    await act(async () => {
       reagendar?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
     expect(onAccion).toHaveBeenCalledWith("c1", "reschedule");
@@ -112,8 +127,15 @@ describe("AgendaTable", () => {
     });
     const primeraFila = container.querySelectorAll("tbody tr")[0];
     const botones = primeraFila?.querySelectorAll("button") ?? [];
-    expect(botones.length).toBeGreaterThan(0);
-    for (const b of botones) expect((b as HTMLButtonElement).disabled).toBe(true);
+    const acciones = [...botones].filter(
+      (b) => !b.getAttribute("aria-label")?.startsWith("Ver perfil"),
+    );
+    expect(acciones.length).toBeGreaterThan(0);
+    for (const b of acciones) expect((b as HTMLButtonElement).disabled).toBe(true);
+    const perfil = [...botones].find((b) =>
+      b.getAttribute("aria-label")?.startsWith("Ver perfil"),
+    );
+    expect((perfil as HTMLButtonElement | undefined)?.disabled).toBe(false);
   });
 
   it("ofrece WhatsApp por cita y lo deshabilita sin celular", () => {
@@ -197,5 +219,38 @@ describe("AgendaTable", () => {
     const fila = container.querySelector("tbody tr");
     expect(fila?.className).toContain("bg-brand-sky-100");
     expect(fila?.className).not.toContain("bg-success-100");
+  });
+
+  it("ofrece botón Recordatorio en citas activas, delega remind y lo deshabilita sin correo", () => {
+    const conYsinCorreo = [
+      cita({
+        id: "c40",
+        status: "confirmed",
+        patient: { full_name: "Ana Soto", phone: null, email: "ana@x.cl", rut: null },
+      }),
+      cita({
+        id: "c41",
+        status: "pending",
+        patient: { full_name: "Beto Díaz", phone: null, email: "", rut: null },
+      }),
+      cita({
+        id: "c42",
+        status: "cancelled",
+        patient: { full_name: "Ceci Ruiz", phone: null, email: "ceci@x.cl", rut: null },
+      }),
+    ];
+    const onAccion = renderTable(conYsinCorreo);
+
+    const botonesRecordatorio = container.querySelectorAll(
+      'button[aria-label^="Enviar recordatorio a"], button[aria-label^="Sin correo registrado"]',
+    );
+    expect(botonesRecordatorio).toHaveLength(2);
+    expect((botonesRecordatorio[0] as HTMLButtonElement).disabled).toBe(false);
+    expect((botonesRecordatorio[1] as HTMLButtonElement).disabled).toBe(true);
+
+    act(() => {
+      botonesRecordatorio[0]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(onAccion).toHaveBeenCalledWith("c40", "remind");
   });
 });

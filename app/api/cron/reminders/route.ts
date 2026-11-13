@@ -7,14 +7,14 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 /**
- * Recordatorios de cita (24 h antes).
+ * Recordatorios de cita automáticos según configuración por clínica.
  *
  * Alternativas de disparo, todas con la misma función:
- *  - pg_cron con `net.http_post` (ver supabase/README-cron.md)
- *  - Vercel Cron (`vercel.json` -> `crons`)
+ *  - Vercel Cron (`vercel.json` -> `crons`, usa GET con Bearer CRON_SECRET)
+ *  - pg_cron con `net.http_post` (usa POST)
  *  - llamada manual con `curl -H "Authorization: Bearer $CRON_SECRET"`
  */
-export async function POST(request: Request) {
+async function handleReminders(request: Request) {
   const secret = serverEnv().CRON_SECRET;
   if (!secret) {
     return NextResponse.json({ error: "CRON_SECRET no configurado" }, { status: 503 });
@@ -31,4 +31,12 @@ export async function POST(request: Request) {
 
   const summary = await sendDueReminders();
   return NextResponse.json(summary);
+}
+
+export async function GET(request: Request) {
+  return handleReminders(request);
+}
+
+export async function POST(request: Request) {
+  return handleReminders(request);
 }

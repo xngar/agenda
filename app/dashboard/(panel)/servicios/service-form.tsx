@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Plus } from "lucide-react";
 import { Button, buttonClasses, inputClasses } from "@/components/ui";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AsyncButton } from "@/components/motion/async-button";
@@ -168,7 +169,10 @@ export function NewServiceButton() {
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Nuevo servicio</Button>
+      <Button onClick={() => setOpen(true)} className="anim-new-patient">
+        <Plus className="anim-new-patient-icon h-4 w-4" aria-hidden="true" />
+        <span>Nuevo servicio</span>
+      </Button>
       <ServiceFormModal open={open} onClose={() => setOpen(false)} />
     </>
   );

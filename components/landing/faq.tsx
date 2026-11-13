@@ -1,67 +1,85 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { ScrollReveal } from "@/components/motion/scroll-reveal";
 
 const faqs = [
   {
     q: "¿Para qué especialidades sirve?",
-    a: "Hoy está pensada para odontología, medicina y psicología, con una ficha clínica adaptada a cada una.",
+    a: "Odontología, medicina general y psicología, con odontograma, signos vitales y notas de evolución. También se adapta a kinesiología, nutrición y fonoaudiología.",
   },
   {
     q: "¿Mis pacientes necesitan descargar una app?",
-    a: "[Completar]",
+    a: "No. Reservan desde el navegador con un enlace, sin descargas ni contraseñas.",
   },
   {
-    q: "¿Puedo llevarme mis datos si dejo de usar el servicio?",
-    a: "Sí. Puedes exportar la información de tu consulta.",
+    q: "¿Puedo llevarme mis datos si dejo el servicio?",
+    a: "Sí. Puedes descargar las fichas en PDF y exportar pacientes y citas en CSV cuando quieras.",
   },
   {
-    q: "¿Cuánto demora ponerla en marcha?",
-    a: "[Completar]",
-  },
-  {
-    q: "¿Cómo contrato el servicio?",
-    a: "Solicita una demo y nuestro equipo te contactará para explicarte los pasos.",
+    q: "¿Ofrecen capacitación y soporte?",
+    a: "Sí. Capacitamos a tu equipo y damos soporte por WhatsApp y correo.",
   },
 ];
 
 export default function Faq() {
-  const [open, setOpen] = useState<number | null>(null);
+  const col1 = faqs.slice(0, 2);
+  const col2 = faqs.slice(2, 4);
 
   return (
-    <section id="preguntas" className="bg-white">
-      <div className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-action-primary sm:text-4xl">
+    <section id="preguntas" className="relative bg-white py-16 sm:py-24">
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+        {/* Encabezado */}
+        <ScrollReveal yOffset={16} className="mx-auto max-w-4xl text-center">
+          <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl [text-wrap:balance]">
             Preguntas frecuentes
           </h2>
-        </div>
-        <div className="mt-8 divide-y divide-[var(--lp-sky-200)] rounded-2xl bg-white ring-1 ring-[var(--lp-sky-200)]">
-          {faqs.map((item, idx) => {
-            const isOpen = open === idx;
-            return (
-              <div key={item.q}>
-                <button
-                  className="flex w-full items-center justify-between px-4 py-4 text-left sm:px-6"
-                  onClick={() => setOpen(isOpen ? null : idx)}
-                  aria-expanded={isOpen}
+        </ScrollReveal>
+
+        {/* Acordeón en 2 Columnas */}
+        <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
+          <div className="space-y-4">
+            <Accordion type="single" collapsible className="w-full space-y-3">
+              {col1.map((item, idx) => (
+                <AccordionItem
+                  key={item.q}
+                  value={`col1-${idx}`}
+                  className="rounded-2xl border border-slate-200/90 bg-slate-50/50 px-5 py-1 transition-all duration-micro hover:bg-slate-50/90 hover:border-slate-300"
                 >
-                  <span className="text-sm font-semibold text-action-primary sm:text-base">
+                  <AccordionTrigger className="text-left text-sm sm:text-base font-bold text-neutral-900 hover:no-underline">
                     {item.q}
-                  </span>
-                  <ChevronDown
-                    className={`h-5 w-5 text-action-primary transition-transform ${isOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
-                {isOpen ? (
-                  <div className="px-4 pb-4 text-sm text-action-primary/80 sm:px-6">
+                  </AccordionTrigger>
+                  <AccordionContent className="text-xs sm:text-sm text-neutral-600 leading-relaxed pt-1 pb-3">
                     {item.a}
-                  </div>
-                ) : null}
-              </div>
-            );
-          })}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+
+          <div className="space-y-4">
+            <Accordion type="single" collapsible className="w-full space-y-3">
+              {col2.map((item, idx) => (
+                <AccordionItem
+                  key={item.q}
+                  value={`col2-${idx}`}
+                  className="rounded-2xl border border-slate-200/90 bg-slate-50/50 px-5 py-1 transition-all duration-micro hover:bg-slate-50/90 hover:border-slate-300"
+                >
+                  <AccordionTrigger className="text-left text-sm sm:text-base font-bold text-neutral-900 hover:no-underline">
+                    {item.q}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-xs sm:text-sm text-neutral-600 leading-relaxed pt-1 pb-3">
+                    {item.a}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
         </div>
       </div>
     </section>

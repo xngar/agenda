@@ -55,6 +55,33 @@ export async function POST(request: Request, { params }: Params) {
 
   if (!items.length) return bodyError({ issues: [{ message: "Indica al menos un ítem del plan" }] });
 
+  const encounterIds = [...new Set(items.flatMap((item) => (item.encounter_id ? [item.encounter_id] : [])))];
+  if (items.some((item) => !item.encounter_id)) {
+    return bodyError({
+      issues: [{ message: "Asocia cada tratamiento a una atención en borrador" }],
+    });
+  }
+
+  const { data: encounters, error: encounterError } = await ctx.supabase
+    .from("encounters")
+    .select("id")
+    .eq("org_id", ctx.session.orgId)
+    .eq("patient_id", id)
+    .eq("status", "draft")
+    .eq("doctor_id", ctx.session.id)
+    .in("id", encounterIds);
+  if (encounterError) return dbError(encounterError);
+  if ((encounters ?? []).length !== encounterIds.length) {
+    return bodyError({
+      issues: [
+        {
+          message:
+            "La atención elegida no está abierta, no es tuya o no corresponde a este paciente",
+        },
+      ],
+    });
+  }
+
   const rows = items.map((item) => ({
     org_id: ctx.session.orgId,
     patient_id: id,

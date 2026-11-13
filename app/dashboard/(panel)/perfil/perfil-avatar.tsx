@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 import { usePerfilAvatar } from "./perfil-sheet-provider";
 
 export function PerfilAvatar({
@@ -14,24 +15,30 @@ export function PerfilAvatar({
 }) {
   const avatar = usePerfilAvatar();
   const avatarVersion = avatar?.avatarVersion ?? 0;
+  const avatarToken = avatar?.avatarToken ?? "0";
+  const shouldShowImage = avatar ? avatar.hasAvatar : true;
+  const srcKey = `${profileId}:${avatarToken}-${avatarVersion}`;
+  const [failedKey, setFailedKey] = useState<string | null>(null);
+  const showImage = shouldShowImage && failedKey !== srcKey;
 
   return (
     <span
       aria-hidden="true"
-      className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-navy-50 text-2xl font-bold text-action-primary"
+      className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-navy-50 text-2xl font-bold text-action-primary transition-all duration-element ease-out-soft group-data-[collapsed=true]/sidebar:h-10 group-data-[collapsed=true]/sidebar:w-10 group-data-[collapsed=true]/sidebar:text-sm"
     >
-      <Image
-        key={`${profileId}:${avatarVersion}`}
-        src={`/api/dashboard/profile/avatar?profile=${encodeURIComponent(profileId)}&v=${avatarVersion}`}
-        alt=""
-        fill
-        sizes="96px"
-        unoptimized
-        className="object-cover"
-        onError={(event) => {
-          event.currentTarget.style.display = "none";
-        }}
-      />
+      {showImage ? (
+        <Image
+          key={srcKey}
+          src={`/api/dashboard/profile/avatar?profile=${encodeURIComponent(profileId)}&v=${encodeURIComponent(`${avatarToken}-${avatarVersion}`)}`}
+          alt=""
+          fill
+          sizes="96px"
+          priority
+          unoptimized
+          className="object-cover"
+          onError={() => setFailedKey(srcKey)}
+        />
+      ) : null}
       <span>{initials || fullName.charAt(0).toUpperCase() || "?"}</span>
     </span>
   );

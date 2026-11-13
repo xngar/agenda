@@ -16,11 +16,12 @@ import { parseAppointmentRange } from "@/lib/range";
 import { whatsappPhone } from "@/lib/phone";
 import { useAgendaAcciones } from "./agenda-actions";
 import { StaffRescheduleModal } from "./staff-reschedule-modal";
+import { usePatientQuickView } from "@/components/dashboard/patient-quick-view";
 import { WhatsappIcon, WhatsappModal } from "@/components/dashboard/whatsapp-button";
 import { resaltarCita } from "./resaltar-cita";
 import type { StaffDoctor } from "./staff-booking-button";
 import { motion, AnimatePresence } from "motion/react";
-import { RefreshCw } from "lucide-react";
+import { Mail, RefreshCw, UserRound } from "lucide-react";
 import { DUR, EASE } from "@/lib/motion";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -126,6 +127,8 @@ export function WeekView({
     realtimeError,
   } = useAgendaAcciones({ doctorId, orgId, doctors });
 
+  const { open: abrirPerfil, prefetch: prefetchPerfil } = usePatientQuickView();
+
   const porDia = useMemo(() => appointmentsByDay(initial, timezone), [initial, timezone]);
 
   const dias = useMemo(() => {
@@ -178,6 +181,21 @@ export function WeekView({
   const router = useRouter();
 
   async function ejecutar(appointmentId: string, action: string) {
+    if (action === "perfil") {
+      const cita = initial.find((c) => c.id === appointmentId);
+      if (cita) {
+        const { start, end } = parseAppointmentRange(cita.during);
+        abrirPerfil(cita.patient_id, {
+          start,
+          end,
+          serviceName: cita.service?.name ?? null,
+          status: cita.status,
+          patient: cita.patient,
+        });
+      }
+      setMenu(null);
+      return;
+    }
     if (action === "whatsapp") {
       const cita = initial.find((c) => c.id === appointmentId);
       if (cita) setContacto(cita);
@@ -433,6 +451,11 @@ export function WeekView({
                             <p className="font-normal">{cita.service.name}</p>
                           ) : null}
                           <p className="font-normal">{STATUS_LABEL[cita.status]}</p>
+                          {cita.status === "cancelled" && cita.cancel_reason ? (
+                            <p className="font-normal text-xs opacity-90">
+                              Motivo: {cita.cancel_reason}
+                            </p>
+                          ) : null}
                         </TooltipContent>
                       </Tooltip>
                     );
@@ -476,13 +499,31 @@ export function WeekView({
               const sinCelular =
                 accion.action === "whatsapp" &&
                 !whatsappPhone(menu.cita.patient?.phone ?? null);
+              const sinCorreo =
+                accion.action === "remind" && !menu.cita.patient?.email;
               return (
                 <button
                   key={accion.action}
                   type="button"
                   role="menuitem"
-                  disabled={Boolean(pendiente) || sinCelular}
-                  title={sinCelular ? "Sin celular registrado" : undefined}
+                  disabled={Boolean(pendiente) || sinCelular || sinCorreo}
+                  title={
+                    sinCelular
+                      ? "Sin celular registrado"
+                      : sinCorreo
+                        ? "Sin correo registrado"
+                        : undefined
+                  }
+                  onMouseEnter={() => {
+                    if (accion.action === "perfil" && menu?.cita) {
+                      prefetchPerfil(menu.cita.patient_id);
+                    }
+                  }}
+                  onFocus={() => {
+                    if (accion.action === "perfil" && menu?.cita) {
+                      prefetchPerfil(menu.cita.patient_id);
+                    }
+                  }}
                   onClick={() => ejecutar(menu.cita.id, accion.action)}
                   className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-micro ease-out-soft active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${
                     accion.tono === "primario"
@@ -497,6 +538,10 @@ export function WeekView({
                   <span className="inline-flex items-center gap-2">
                     {accion.tono === "whatsapp" ? (
                       <WhatsappIcon className="h-4 w-4" />
+                    ) : accion.action === "perfil" ? (
+                      <UserRound className="h-4 w-4" />
+                    ) : accion.action === "remind" ? (
+                      <Mail className="h-4 w-4" />
                     ) : null}
                     {accion.etiqueta}
                   </span>
@@ -543,21 +588,23 @@ export function WeekView({
 type Accion = { etiqueta: string; action: string; tono?: "primario" | "peligro" | "whatsapp" };
 
 function accionesDe(cita: DoctorAppointment): Accion[] {
+  const perfil: Accion = { etiqueta: "Ver perfil", action: "perfil" };
   const whatsapp: Accion = {
     etiqueta: "Enviar mensaje",
     action: "whatsapp",
     tono: "whatsapp",
   };
   if (cita.status === "cancelled") {
-    return [{ etiqueta: "Reabrir", action: "reopen" }, whatsapp];
+    return [perfil, { etiqueta: "Reabrir", action: "reopen" }, whatsapp];
   }
-  const lista: Accion[] = [];
+  const lista: Accion[] = [perfil];
   if (cita.status === "pending") {
     lista.push({ etiqueta: "Confirmar", action: "confirmed", tono: "primario" });
   }
   lista.push({ etiqueta: "Atendida", action: "completed" });
   lista.push({ etiqueta: "No asistió", action: "no_show" });
   if (cita.status === "pending" || cita.status === "confirmed") {
+    lista.push({ etiqueta: "Enviar recordatorio", action: "remind" });
     lista.push({ etiqueta: "Reagendar", action: "reschedule" });
   }
   lista.push({ etiqueta: "Cancelar", action: "cancelled", tono: "peligro" });

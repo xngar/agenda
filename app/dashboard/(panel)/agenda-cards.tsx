@@ -1,13 +1,24 @@
 "use client";
 
+import { Mail, ChevronDown, CalendarClock, UserX, XCircle, UserRound } from "lucide-react";
 import { formatTime } from "@/lib/dates";
 import { parseAppointmentRange } from "@/lib/range";
 import { StatusBadge } from "@/components/ui";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WhatsappButton } from "@/components/dashboard/whatsapp-button";
 import type { DoctorAppointment } from "@/lib/types";
 import { Accion, RIEL } from "./agenda-table";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { resaltarCita } from "./resaltar-cita";
 import { reprogramable } from "./agenda-actions";
+import { usePatientQuickView } from "@/components/dashboard/patient-quick-view";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 /**
  * Tarjetas de cita para pantallas angostas (la tabla de 5 columnas no entra).
@@ -29,6 +40,8 @@ export function AgendaCards({
   /** Nombre de la clínica, para el mensaje de WhatsApp. */
   orgName: string;
 }) {
+  const { open, prefetch } = usePatientQuickView();
+
   return (
     <ul className="space-y-2 md:hidden" data-testid="agenda-cards">
       {citas.map((cita, i) => {
@@ -64,9 +77,28 @@ export function AgendaCards({
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate text-[15px] font-semibold text-neutral-900">
-                    {cita.patient?.full_name ?? "Paciente"}
-                  </p>
+                  {cita.patient ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        open(cita.patient_id, {
+                          start,
+                          end,
+                          serviceName: cita.service?.name ?? null,
+                          status: cita.status,
+                          patient: cita.patient,
+                        })
+                      }
+                      onMouseEnter={() => prefetch(cita.patient_id)}
+                      onFocus={() => prefetch(cita.patient_id)}
+                      aria-label={`Ver perfil de ${cita.patient.full_name}`}
+                      className="block max-w-full truncate text-left text-[15px] font-semibold text-neutral-900 transition-colors hover:text-action-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+                    >
+                      {cita.patient.full_name}
+                    </button>
+                  ) : (
+                    <p className="truncate text-[15px] font-semibold text-neutral-900">Paciente</p>
+                  )}
                   {cita.service?.name ? (
                     <p className="mt-0.5 truncate text-sm text-neutral-600">{cita.service.name}</p>
                   ) : null}
@@ -89,57 +121,144 @@ export function AgendaCards({
               </div>
 
               {cita.status === "cancelled" && cita.cancel_reason ? (
-                <p className="mt-2 text-sm text-neutral-500">Motivo: {cita.cancel_reason}</p>
+                <TruncatedText
+                  text={`Motivo: ${cita.cancel_reason}`}
+                  className="mt-2 text-sm text-neutral-500"
+                />
               ) : null}
 
-              <div className="mt-3 flex flex-wrap gap-2">
-                {cancelada ? (
-                  <Accion
-                    etiqueta="Reabrir"
-                    onClick={() => onCambiar(cita.id, "reopen")}
-                    disabled={ocupado}
-                  />
-                ) : (
-                  <>
-                    {/*
-                      Una cita recién creada queda en `pending`. Mientras
-                      no se confirme, el paciente no tiene garantía de que el
-                      espacio siga reservado para él, así que el botón
-                      va primero cuando corresponde.
-                    */}
-                    {cita.status === "pending" ? (
-                      <Accion
-                        etiqueta="Confirmar"
-                        onClick={() => onCambiar(cita.id, "confirmed")}
-                        disabled={ocupado}
-                        destacado
-                      />
-                    ) : null}
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  {cancelada ? (
                     <Accion
-                      etiqueta="Atendida"
-                      onClick={() => onCambiar(cita.id, "completed")}
+                      etiqueta="Reabrir"
+                      onClick={() => onCambiar(cita.id, "reopen")}
                       disabled={ocupado}
                     />
-                    <Accion
-                      etiqueta="No asistió"
-                      onClick={() => onCambiar(cita.id, "no_show")}
-                      disabled={ocupado}
-                    />
-                    {reprogramable(cita) ? (
-                      <Accion
-                        etiqueta="Reagendar"
-                        onClick={() => onReagendar(cita)}
-                        disabled={ocupado}
-                      />
-                    ) : null}
-                    <Accion
-                      etiqueta="Cancelar"
-                      onClick={() => onCambiar(cita.id, "cancelled")}
-                      disabled={ocupado}
-                      tono="peligro"
-                    />
-                  </>
-                )}
+                  ) : (
+                    <>
+                      {cita.status === "pending" ? (
+                        <Accion
+                          etiqueta="Confirmar"
+                          onClick={() => onCambiar(cita.id, "confirmed")}
+                          disabled={ocupado}
+                          destacado
+                        />
+                      ) : cita.status === "confirmed" ? (
+                        <Accion
+                          etiqueta="Atendida"
+                          onClick={() => onCambiar(cita.id, "completed")}
+                          disabled={ocupado}
+                          destacado
+                        />
+                      ) : cita.status === "completed" ? (
+                        <Accion
+                          etiqueta="Atendida"
+                          onClick={() => onCambiar(cita.id, "completed")}
+                          disabled
+                        />
+                      ) : cita.status === "no_show" ? (
+                        <Accion
+                          etiqueta="Reabrir"
+                          onClick={() => onCambiar(cita.id, "reopen")}
+                          disabled={ocupado}
+                        />
+                      ) : null}
+
+                      {cita.status === "pending" || cita.status === "confirmed" ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="inline-flex">
+                              <button
+                                type="button"
+                                onClick={() => onCambiar(cita.id, "remind")}
+                                disabled={ocupado || !cita.patient?.email}
+                                aria-label={
+                                  cita.patient?.email
+                                    ? `Enviar recordatorio a ${cita.patient.full_name}`
+                                    : `Sin correo registrado para ${cita.patient?.full_name ?? "el paciente"}`
+                                }
+                                className="inline-flex items-center gap-1.5 rounded-full border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-all duration-micro ease-out-soft hover:scale-[1.03] hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                              >
+                                <Mail className="h-4 w-4" aria-hidden="true" />
+                                <span>Recordatorio</span>
+                              </button>
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {cita.patient?.email
+                              ? "Enviar recordatorio por correo"
+                              : "Sin correo registrado"}
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : null}
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            disabled={ocupado}
+                            className="inline-flex items-center gap-1 rounded-full border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-all duration-micro ease-out-soft hover:border-neutral-400 hover:bg-neutral-100 hover:scale-[1.03] active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                          >
+                            <span>Opciones</span>
+                            <ChevronDown className="h-4 w-4 text-neutral-500" aria-hidden="true" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-44">
+                          {cita.patient ? (
+                            <>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  open(cita.patient_id, {
+                                    start,
+                                    end,
+                                    serviceName: cita.service?.name ?? null,
+                                    status: cita.status,
+                                    patient: cita.patient,
+                                  })
+                                }
+                                onMouseEnter={() => prefetch(cita.patient_id)}
+                                onFocus={() => prefetch(cita.patient_id)}
+                                className="cursor-pointer gap-2"
+                              >
+                                <UserRound className="h-4 w-4 text-neutral-500" />
+                                <span>Ver perfil</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                            </>
+                          ) : null}
+                          {reprogramable(cita) && (
+                            <DropdownMenuItem
+                              onClick={() => onReagendar(cita)}
+                              className="cursor-pointer gap-2"
+                            >
+                              <CalendarClock className="h-4 w-4 text-neutral-500" />
+                              <span>Reagendar</span>
+                            </DropdownMenuItem>
+                          )}
+                          {cita.status !== "no_show" && cita.status !== "completed" && (
+                            <DropdownMenuItem
+                              onClick={() => onCambiar(cita.id, "no_show")}
+                              className="cursor-pointer gap-2"
+                            >
+                              <UserX className="h-4 w-4 text-neutral-500" />
+                              <span>No asistió</span>
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onClick={() => onCambiar(cita.id, "cancelled")}
+                            className="cursor-pointer gap-2 text-danger-600 focus:text-danger-700"
+                          >
+                            <XCircle className="h-4 w-4" />
+                            <span>Cancelar cita</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </>
+                  )}
+                </div>
                 <WhatsappButton
                   patientId={cita.patient_id}
                   fullName={cita.patient?.full_name ?? "Paciente"}

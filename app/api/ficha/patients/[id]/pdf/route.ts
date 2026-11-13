@@ -8,9 +8,11 @@ import {
   forbidden,
   notFound,
   dbError,
+  orgPatient,
   auditPatientView,
 } from "@/lib/ficha/http";
 import { FACE_LABEL, STATE_LABEL } from "@/lib/ficha/dental";
+import { calcularIMC, etiquetaIMC } from "@/lib/ficha/medical";
 import { redactEncountersForExport } from "@/lib/ficha/privacy";
 import { fichaFor } from "@/lib/ficha/definitions";
 import type { OrganizationType } from "@/lib/ficha/types";
@@ -60,6 +62,11 @@ const PLAN_ESTADO: Record<string, string> = {
   rechazado: "Rechazado",
 };
 
+const PERIODONTAL_ESTADO: Record<string, string> = {
+  vigente: "Vigente",
+  reemplazado: "Reemplazado",
+};
+
 const CONSENT_TIPO: Record<string, string> = {
   datos_personales: "Información sobre tratamiento de datos",
   tratamiento_dental: "Tratamiento dental",
@@ -89,6 +96,17 @@ const ADJUNTO_TIPO: Record<string, string> = {
   informe: "Informe",
   other: "Otro",
 };
+
+const VITAL_LABELS: readonly [string, string, string][] = [
+  ["temperatureC", "Temperatura", "°C"],
+  ["systolicMmHg", "PA sistólica", "mmHg"],
+  ["diastolicMmHg", "PA diastólica", "mmHg"],
+  ["heartRateBpm", "Frecuencia cardíaca", "lpm"],
+  ["respiratoryRate", "Frecuencia respiratoria", "rpm"],
+  ["spo2", "SpO₂", "%"],
+  ["weightKg", "Peso", "kg"],
+  ["heightCm", "Talla", "cm"],
+];
 
 const text = (value: unknown): string => String(value ?? "");
 const fecha = (value: unknown): string => text(value).slice(0, 10);
@@ -204,6 +222,27 @@ async function buildPdf(
     field("Antecedentes familiares", background.antecedentes_familiares);
   }
 
+  const specialtyProfile = patient.specialty_profile;
+  if (specialtyProfile && typeof specialtyProfile === "object" && !Array.isArray(specialtyProfile)) {
+    const fields = fichaFor(ctx.orgType).profileFields.flatMap((group) => group.fields);
+    const visibles = fields.filter((definition) => {
+      const value = (specialtyProfile as Record<string, unknown>)[definition.key];
+      return value !== null && value !== undefined && value !== "" && value !== false;
+    });
+    if (visibles.length) {
+      section("Perfil de especialidad");
+      for (const definition of visibles) {
+        const value = (specialtyProfile as Record<string, unknown>)[definition.key];
+        field(
+          definition.label,
+          typeof value === "string"
+            ? definition.options?.find((option) => option.value === value)?.label ?? value
+            : value,
+        );
+      }
+    }
+  }
+
   const encounters = ordenar(
     (patient.encounters as Record<string, unknown>[] | null) ?? [],
     "started_at",
@@ -235,6 +274,21 @@ async function buildPdf(
           definition.label,
           displayValue,
         );
+      }
+      if (ctx.orgType === "medical") {
+        const vitals = (specialtyData as Record<string, unknown>).vitals;
+        if (vitals && typeof vitals === "object" && !Array.isArray(vitals)) {
+          const v = vitals as Record<string, unknown>;
+          const signos = VITAL_LABELS.flatMap(([key, label, unidad]) => {
+            const valor = v[key];
+            return typeof valor === "number" && Number.isFinite(valor)
+              ? [`${label}: ${valor}${unidad ? ` ${unidad}` : ""}`]
+              : [];
+          });
+          if (signos.length) field("Signos vitales", signos.join(" · "));
+          const imc = calcularIMC(v.weightKg, v.heightCm);
+          if (imc !== null) field("IMC", `${imc} (${etiquetaIMC(imc)})`);
+        }
       }
     }
     field(
@@ -277,6 +331,13 @@ async function buildPdf(
       field("Diente", p.tooth);
       field("Movilidad", p.mobility);
       field("Diagnóstico", p.diagnosis);
+      field("Estado", etiqueta(PERIODONTAL_ESTADO, p.status ?? "vigente"));
+      if (p.status === "reemplazado") {
+        field("Motivo de la corrección", p.correction_reason);
+        field("Fecha de la corrección", fecha(p.corrected_at));
+      } else if (p.replaces_id) {
+        field("Corrección", "Reemplaza un registro periodontal anterior");
+      }
       doc.moveDown(0.3);
     }
   }
@@ -401,6 +462,9 @@ export async function GET(_request: Request, { params }: Params) {
   if (!ctx.clinical) return forbidden();
 
   const { id } = await params;
+  const { error: accessError } = await orgPatient(ctx, id);
+  if (accessError) return accessError;
+
   const { data: org, error: orgError } = await ctx.supabase
     .from("organizations")
     .select("name, type")

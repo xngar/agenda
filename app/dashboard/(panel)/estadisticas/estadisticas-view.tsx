@@ -66,12 +66,13 @@ function deltaChip(kpi: StatsKpi): { texto: string; positivo: boolean } | null {
 function KpiCards({ kpis }: { kpis: StatsKpi[] }) {
   return (
     <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {kpis.map((kpi) => {
+      {kpis.map((kpi, idx) => {
         const delta = deltaChip(kpi);
         return (
           <div
             key={kpi.key}
-            className="rounded-card border border-neutral-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)]"
+            style={{ animationDelay: `${idx * 40}ms` }}
+            className="anim-fade-up card-hover-lift rounded-card border border-neutral-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)] transition-all duration-element"
           >
             <div className="flex items-baseline justify-between gap-2">
               <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
@@ -80,7 +81,7 @@ function KpiCards({ kpis }: { kpis: StatsKpi[] }) {
               {delta ? (
                 <span
                   className={cn(
-                    "rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums",
+                    "rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums transition-transform duration-micro hover:scale-105",
                     delta.positivo ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700",
                   )}
                 >
@@ -115,7 +116,7 @@ function CitasChart({ daily }: { daily: StatsSnapshot["daily"] }) {
   const conDatos = data.some((row) => row.total > 0);
 
   return (
-    <section className="rounded-card border border-neutral-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+    <section className="anim-fade-up rounded-card border border-neutral-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)] transition-all duration-element hover:shadow-card">
       <h2 className="text-sm font-semibold text-neutral-800">Citas por día</h2>
       <p className="mb-4 text-xs text-neutral-500">
         Total (barras), atendidas, no-show y canceladas del periodo.
@@ -187,7 +188,7 @@ function OcupacionChart({ snapshot }: { snapshot: StatsSnapshot }) {
   }
 
   return (
-    <section className="rounded-card border border-neutral-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+    <section className="anim-fade-up rounded-card border border-neutral-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)] transition-all duration-element hover:shadow-card">
       <h2 className="text-sm font-semibold text-neutral-800">Ocupación de la agenda</h2>
       <p className="mb-4 text-xs text-neutral-500">
         Horas agendadas ÷ horas disponibles según el horario configurado.
@@ -195,7 +196,7 @@ function OcupacionChart({ snapshot }: { snapshot: StatsSnapshot }) {
       <div className="flex h-8 overflow-hidden rounded-lg bg-neutral-100" role="img">
         <div
           style={{ width: `${Math.min(100, Math.max(0, ocupacion))}%` }}
-          className="flex items-center justify-end bg-brand-navy pr-2 text-[11px] font-semibold text-white"
+          className="flex items-center justify-end bg-brand-navy pr-2 text-[11px] font-semibold text-white transition-all duration-section ease-out-soft"
         >
           {formatearCorto(ocupacion, 1)}%
         </div>
@@ -232,7 +233,7 @@ function PacientesChart({
   const conDatos = data.some((row) => row.nuevos > 0 || row.recurrentes > 0);
 
   return (
-    <section className="rounded-card border border-neutral-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+    <section className="anim-fade-up rounded-card border border-neutral-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)] transition-all duration-element hover:shadow-card">
       <h2 className="text-sm font-semibold text-neutral-800">Pacientes por mes</h2>
       <p className="mb-4 text-xs text-neutral-500">
         Nuevos: su primera cita. Recurrentes: más de una cita dentro del mes.
@@ -287,7 +288,7 @@ function ServiciosChart({ services }: { services: StatsSnapshot["services"] }) {
   const top = useMemo(() => services.slice(0, 10), [services]);
 
   return (
-    <section className="rounded-card border border-neutral-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+    <section className="anim-fade-up rounded-card border border-neutral-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)] transition-all duration-element hover:shadow-card">
       <h2 className="text-sm font-semibold text-neutral-800">Servicios más agendados</h2>
       <p className="mb-4 text-xs text-neutral-500">
         Conteo de citas e ingreso estimado (sólo atenciones no canceladas).
@@ -352,7 +353,7 @@ function Heatmap({ heatmap }: { heatmap: StatsSnapshot["heatmap"] }) {
   );
 
   return (
-    <section className="rounded-card border border-neutral-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+    <section className="anim-fade-up rounded-card border border-neutral-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)] transition-all duration-element hover:shadow-card">
       <h2 className="text-sm font-semibold text-neutral-800">Distribución de citas</h2>
       <p className="mb-4 text-xs text-neutral-500">Densidad por día de la semana y hora local.</p>
       {horas.length > 0 ? (
@@ -383,7 +384,7 @@ function Heatmap({ heatmap }: { heatmap: StatsSnapshot["heatmap"] }) {
                       return (
                         <td
                           key={hora}
-                          className="h-7 w-10 rounded"
+                          className="h-7 w-10 rounded transition-transform duration-micro hover:scale-110 hover:shadow-xs"
                           style={{ backgroundColor: `rgba(58,111,184,${0.06 + 0.85 * intensidad})` }}
                           title={`${nombre} ${hora}:00 — ${valor} ${valor === 1 ? "cita" : "citas"}`}
                         />

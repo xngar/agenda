@@ -2,7 +2,7 @@ import "server-only";
 
 import { supabaseAdmin } from "./supabase/admin";
 import { serverEnv } from "./env";
-import { BusinessError, toBusinessError } from "./errors";
+import { BusinessError, OrganizationNotFoundError, toBusinessError } from "./errors";
 import { buildIcs } from "./ics";
 import { CLINIC_ADDRESS } from "./clinic";
 import { sendEmail, maskEmail } from "./email/send";
@@ -10,6 +10,7 @@ import {
   bookingCancelledHtml,
   bookingConfirmedHtml,
   bookingManageLinkHtml,
+  bookingPendingHtml,
   bookingReminderHtml,
   bookingRescheduledHtml,
   doctorChangeHtml,
@@ -83,7 +84,8 @@ type AppointmentRow = {
 export async function getCatalog(orgSlug: string): Promise<Catalog> {
   const supabase = supabaseAdmin();
   const { data: org, error: orgErr } = await supabase.from('organizations').select('*').eq('slug', orgSlug).eq('active', true).maybeSingle();
-  if (orgErr || !org) throw new Error('Organizacion no encontrada');
+  if (orgErr) throw new Error('No se pudo leer la organización');
+  if (!org) throw new OrganizationNotFoundError();
   return loadCatalog(org as unknown as { id: string } & Record<string, unknown>);
 }
 
@@ -91,7 +93,8 @@ export async function getCatalog(orgSlug: string): Promise<Catalog> {
 export async function getCatalogById(orgId: string): Promise<Catalog> {
   const supabase = supabaseAdmin();
   const { data: org, error: orgErr } = await supabase.from('organizations').select('*').eq('id', orgId).eq('active', true).maybeSingle();
-  if (orgErr || !org) throw new Error('Organizacion no encontrada');
+  if (orgErr) throw new Error('No se pudo leer la organización');
+  if (!org) throw new OrganizationNotFoundError();
   return loadCatalog(org as unknown as { id: string } & Record<string, unknown>);
 }
 
@@ -110,7 +113,8 @@ export async function getDefaultCatalog(): Promise<Catalog> {
     .order('created_at', { ascending: true })
     .limit(1)
     .maybeSingle();
-  if (orgErr || !org) throw new Error('Organizacion no encontrada');
+  if (orgErr) throw new Error('No se pudo leer la organización');
+  if (!org) throw new OrganizationNotFoundError();
   return loadCatalog(org as unknown as { id: string } & Record<string, unknown>);
 }
 
@@ -126,24 +130,50 @@ export async function getDefaultOrganization(): Promise<ClinicSettings | null> {
 async function loadCatalog(org: { id: string } & Record<string, unknown>): Promise<Catalog> {
   const supabase = supabaseAdmin();
   const orgId = org.id;
-  const [services, doctors, holidays] = await Promise.all([
+  const [services, doctorsWithAvatar, holidays] = await Promise.all([
     supabase.from('services').select('id,name,duration_min,active').eq('org_id', orgId).eq('active', true),
-    supabase.from('doctors').select('id,full_name,specialty,role').eq('org_id', orgId).eq('active', true),
+    supabase.from('doctors').select('id,full_name,specialty,role,avatar_path').eq('org_id', orgId).eq('active', true),
     supabase.from('clinic_holidays').select('date,name').eq('org_id', orgId),
   ]);
+
+  let doctorsData = doctorsWithAvatar.data as
+    | { id: string; full_name: string; specialty: string | null; role?: string; avatar_path?: string | null }[]
+    | null;
+  let doctorsError = doctorsWithAvatar.error;
+
+  if (
+    doctorsError &&
+    (doctorsError.code === "42703" ||
+      doctorsError.code === "PGRST204" ||
+      doctorsError.message?.toLowerCase().includes("avatar_path"))
+  ) {
+    const fallback = await supabase
+      .from('doctors')
+      .select('id,full_name,specialty,role')
+      .eq('org_id', orgId)
+      .eq('active', true);
+    doctorsData = (fallback.data ?? null) as
+      | { id: string; full_name: string; specialty: string | null; role?: string; avatar_path?: string | null }[]
+      | null;
+    doctorsError = fallback.error;
+  }
+
   if (services.error) throw new Error('No se pudieron leer los servicios');
-  if (doctors.error) throw new Error('No se pudieron leer los profesionales');
+  if (doctorsError) throw new Error('No se pudieron leer los profesionales');
   if (holidays.error) throw new Error('No se pudieron leer los feriados');
   return {
     settings: org as unknown as ClinicSettings,
     services: (services.data ?? []) as Service[],
-    doctors: ((doctors.data ?? []) as (PublicDoctor & { role?: string })[])
+    doctors: (doctorsData ?? [])
       .filter((d) => d.role === 'professional')
-      .map((rest) => {
-        const { role: _unused, ...clean } = rest as PublicDoctor & { role?: string };
-        void _unused;
-        return clean;
-      }) as PublicDoctor[],
+      .map((d) => ({
+        id: d.id,
+        full_name: d.full_name,
+        specialty: d.specialty,
+        avatar_url: d.avatar_path
+          ? `/api/doctors/${encodeURIComponent(d.id)}/avatar?v=${encodeURIComponent(d.avatar_path.slice(-16))}`
+          : null,
+      })),
     holidays: (holidays.data ?? []) as Holiday[],
   };
 }
@@ -255,7 +285,10 @@ export interface BookResult {
   specialty: string | null;
 }
 
-export async function bookAppointment(input: PatientDetailsInput & { clinicSlug?: string }): Promise<BookResult> {
+export async function bookAppointment(
+  input: PatientDetailsInput & { clinicSlug?: string },
+  options?: { confirmedImmediately?: boolean },
+): Promise<BookResult> {
   const supabase = supabaseAdmin();
 
   // Defensa en profundidad: el esquema de Zod ya valida el dígito
@@ -317,8 +350,10 @@ const settings = await getSettings(orgId);
   const startsAt = lowerBound(row?.during);
   const endsAt = upperBound(row?.during);
 
+  const sendPatientEmail = options?.confirmedImmediately ? sendConfirmationEmail : sendPendingEmail;
+
   await Promise.all([
-    sendConfirmationEmail({
+    sendPatientEmail({
       to: input.email,
       patientName: input.fullName,
       clinicName: settings.name,
@@ -455,7 +490,7 @@ export async function toPatientView(
     supportEmail: settings.support_email ?? null,
     clinicTimezone: settings.timezone || DEFAULT_TIMEZONE,
     patientName: row.patients?.full_name ?? "",
-    canModify: active && new Date(endsAt).getTime() > Date.now(),
+    canModify: active && new Date(startsAt).getTime() > Date.now(),
     cancelReason: row.cancel_reason,
     cancelledBy: row.cancelled_by,
   };
@@ -515,7 +550,7 @@ export async function rescheduleByToken(
 export async function bookAppointmentByStaff(
   input: PatientDetailsInput & { clinicSlug?: string },
 ): Promise<BookResult> {
-  const result = await bookAppointment(input);
+  const result = await bookAppointment(input, { confirmedImmediately: true });
   const { error } = await supabaseAdmin()
     .from("appointments")
     .update({ status: "confirmed" })
@@ -630,6 +665,68 @@ export async function cancelByToken(
   return view;
 }
 
+/**
+ * Notifica al paciente cuando una cita es cancelada por el equipo desde el dashboard.
+ */
+export async function notifyAppointmentCancelled(
+  appointmentId: string,
+  reason?: string | null,
+): Promise<void> {
+  const row = await loadAppointmentRow(appointmentId);
+  if (!row || !row.patients?.email) return;
+
+  const settings = await getSettings(row.org_id);
+  const view = await toPatientView(row);
+  const token = await openToken(appointmentId);
+  const manageUrl = token ? manageAbsoluteUrl(token) : undefined;
+
+  await sendEmail({
+    to: row.patients.email,
+    subject: `Cita cancelada · ${settings.name}`,
+    html: bookingCancelledHtml({
+      patientName: row.patients.full_name ?? "",
+      clinicName: settings.name,
+      doctorName: view.doctorName,
+      specialty: view.specialty,
+      serviceName: view.serviceName,
+      dateLabel: formatDateLong(view.startsAt, settings.timezone),
+      timeLabel: formatRange(view.startsAt, view.endsAt, settings.timezone),
+      clinicAddress: CLINIC_ADDRESS,
+      reason: reason ?? null,
+      manageUrl,
+    }),
+  });
+}
+
+/**
+ * Notifica al paciente cuando su cita es confirmada por el equipo desde el dashboard.
+ */
+export async function notifyAppointmentConfirmed(
+  appointmentId: string,
+): Promise<void> {
+  const row = await loadAppointmentRow(appointmentId);
+  if (!row || !row.patients?.email) return;
+
+  const settings = await getSettings(row.org_id);
+  const view = await toPatientView(row);
+  const token = await openToken(appointmentId);
+  const manageUrl = token ? manageAbsoluteUrl(token) : `${serverEnv().NEXT_PUBLIC_APP_URL}`;
+
+  await sendConfirmationEmail({
+    to: row.patients.email,
+    patientName: row.patients.full_name ?? "Paciente",
+    clinicName: settings.name,
+    doctorName: view.doctorName,
+    specialty: view.specialty,
+    serviceName: view.serviceName,
+    startsAt: view.startsAt,
+    endsAt: view.endsAt,
+    timezone: settings.timezone,
+    manageUrl,
+    appointmentId: row.id,
+  });
+}
+
 /* ------------------------------------------------------------------ */
 /* Correos                                                              */
 /* ------------------------------------------------------------------ */
@@ -701,6 +798,44 @@ async function sendConfirmationEmail(args: {
   });
 
   if (!result.ok) console.warn("[correo] no se pudo confirmar la cita de", maskEmail(args.to));
+}
+
+async function sendPendingEmail(args: {
+  to: string;
+  patientName: string;
+  clinicName: string;
+  doctorName: string;
+  specialty: string | null;
+  serviceName: string;
+  startsAt: string;
+  endsAt: string;
+  timezone: string;
+  manageUrl: string;
+  appointmentId: string;
+}): Promise<void> {
+  if (!args.to) return;
+
+  const result = await sendEmail({
+    to: args.to,
+    subject: `Hora agendada (por confirmar) · ${args.clinicName}`,
+    html: bookingPendingHtml({
+      patientName: args.patientName,
+      clinicName: args.clinicName,
+      doctorName: args.doctorName,
+      specialty: args.specialty,
+      serviceName: args.serviceName,
+      dateLabel: formatDateLong(args.startsAt, args.timezone),
+      timeLabel: formatRange(args.startsAt, args.endsAt, args.timezone),
+      clinicAddress: CLINIC_ADDRESS,
+      manageUrl: args.manageUrl,
+    }),
+    text: `Hora agendada (por confirmar): ${args.serviceName} con ${args.doctorName} el ${formatDateLong(
+      args.startsAt,
+      args.timezone,
+    )}. Tu hora será confirmada próximamente por nuestro equipo. Gestiona tu cita en ${args.manageUrl}`,
+  });
+
+  if (!result.ok) console.warn("[correo] no se pudo enviar el aviso de hora agendada a", maskEmail(args.to));
 }
 
 async function sendRescheduleEmail(args: {
@@ -812,62 +947,123 @@ export interface ReminderSummary {
  */
 export async function sendDueReminders(): Promise<ReminderSummary> {
   const supabase = supabaseAdmin();
-  const settings = await getSettings();
-
-  const { data, error } = await supabase.rpc("claim_due_reminders");
-  if (error) {
-    console.warn("[recordatorios] claim_due_reminders falló:", error.message);
-    return { sent: 0, skipped: 0, failed: 0 };
-  }
-
-  const rows = (data ?? []) as {
-    appointment_id: string;
-    doctor_id: string;
-    patient_email: string;
-    patient_name: string;
-    service_name: string | null;
-    starts_at: string;
-  }[];
-
+  const orgSettingsCache = new Map<string, ClinicSettings>();
   const summary: ReminderSummary = { sent: 0, skipped: 0, failed: 0 };
+  const batchLimit = 200;
+  const maxBatches = 5;
 
-  for (const row of rows) {
-    const token = await openToken(row.appointment_id);
-    if (!token) {
-      summary.skipped += 1;
-      continue;
+  for (let batch = 0; batch < maxBatches; batch += 1) {
+    const { data, error } = await supabase.rpc("claim_due_reminders");
+    if (error) {
+      console.warn("[recordatorios] claim_due_reminders falló:", error.message);
+      break;
     }
 
-    const appointment = await loadAppointmentRow(row.appointment_id);
-    if (!appointment) {
-      summary.skipped += 1;
-      continue;
+    const rows = (data ?? []) as {
+      appointment_id: string;
+      doctor_id: string;
+      patient_email: string;
+      patient_name: string;
+      service_name: string | null;
+      starts_at: string;
+    }[];
+
+    for (const row of rows) {
+      const token = await openToken(row.appointment_id);
+      if (!token) {
+        summary.skipped += 1;
+        continue;
+      }
+
+      const appointment = await loadAppointmentRow(row.appointment_id);
+      if (!appointment) {
+        summary.skipped += 1;
+        continue;
+      }
+
+      let orgSettings = orgSettingsCache.get(appointment.org_id);
+      if (!orgSettings) {
+        orgSettings = await getSettings(appointment.org_id);
+        orgSettingsCache.set(appointment.org_id, orgSettings);
+      }
+
+      const startsAt = lowerBound(appointment.during);
+      const endsAt = upperBound(appointment.during);
+
+      const result = await sendEmail({
+        to: row.patient_email,
+        subject: `Recordatorio de cita · ${orgSettings.name}`,
+        html: bookingReminderHtml({
+          patientName: row.patient_name,
+          clinicName: orgSettings.name,
+          doctorName: appointment.doctors?.full_name ?? "Profesional",
+          specialty: appointment.doctors?.specialty ?? null,
+          serviceName: row.service_name ?? appointment.services?.name ?? "Atención",
+          dateLabel: formatDateLong(startsAt, orgSettings.timezone),
+          timeLabel: formatRange(startsAt, endsAt, orgSettings.timezone),
+          clinicAddress: orgSettings.address ?? CLINIC_ADDRESS,
+          manageUrl: manageAbsoluteUrl(token),
+        }),
+      });
+
+      if (result.ok) summary.sent += 1;
+      else summary.failed += 1;
     }
 
-    const startsAt = lowerBound(appointment.during);
-    const endsAt = upperBound(appointment.during);
-
-    const result = await sendEmail({
-      to: row.patient_email,
-      subject: `Recordatorio de cita · ${settings.name}`,
-      html: bookingReminderHtml({
-        patientName: row.patient_name,
-        clinicName: settings.name,
-        doctorName: appointment.doctors?.full_name ?? "Profesional",
-        specialty: appointment.doctors?.specialty ?? null,
-        serviceName: row.service_name ?? appointment.services?.name ?? "Atención",
-        dateLabel: formatDateLong(startsAt, settings.timezone),
-        timeLabel: formatRange(startsAt, endsAt, settings.timezone),
-        clinicAddress: CLINIC_ADDRESS,
-        manageUrl: manageAbsoluteUrl(token),
-      }),
-    });
-
-    if (result.ok) summary.sent += 1;
-    else summary.failed += 1;
+    if (rows.length < batchLimit) break;
   }
 
   return summary;
+}
+
+/**
+ * Envía un recordatorio manual por correo para una cita puntual.
+ * Funciona de manera independiente al recordatorio automático programado.
+ */
+export async function sendManualReminder(
+  appointmentId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const row = await loadAppointmentRow(appointmentId);
+  if (!row) {
+    return { ok: false, error: "Cita no encontrada" };
+  }
+  if (row.status !== "pending" && row.status !== "confirmed") {
+    return {
+      ok: false,
+      error: "Solo se pueden enviar recordatorios para citas pendientes o confirmadas",
+    };
+  }
+  if (!row.patients?.email) {
+    return { ok: false, error: "El paciente no tiene correo electrónico registrado" };
+  }
+
+  const settings = await getSettings(row.org_id);
+  const token = await openToken(appointmentId);
+  const manageUrl = token ? manageAbsoluteUrl(token) : `${serverEnv().NEXT_PUBLIC_APP_URL}`;
+  const startsAt = lowerBound(row.during);
+  const endsAt = upperBound(row.during);
+
+  const result = await sendEmail({
+    to: row.patients.email,
+    subject: `Recordatorio de cita · ${settings.name}`,
+    html: bookingReminderHtml({
+      patientName: row.patients.full_name ?? "Paciente",
+      clinicName: settings.name,
+      doctorName: row.doctors?.full_name ?? "Profesional",
+      specialty: row.doctors?.specialty ?? null,
+      serviceName: row.services?.name ?? "Atención",
+      dateLabel: formatDateLong(startsAt, settings.timezone),
+      timeLabel: formatRange(startsAt, endsAt, settings.timezone),
+      clinicAddress: settings.address ?? CLINIC_ADDRESS,
+      manageUrl,
+    }),
+  });
+
+  if (!result.ok) {
+    return { ok: false, error: "No se pudo enviar el correo de recordatorio" };
+  }
+
+  return { ok: true };
 }
 
 async function openToken(appointmentId: string): Promise<string | null> {

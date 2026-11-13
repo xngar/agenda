@@ -125,10 +125,18 @@ export async function POST(request: Request, { params }: Params) {
     .eq("org_id", ctx.session.orgId)
     .eq("patient_id", id)
     .eq("status", "draft")
+    .eq("doctor_id", ctx.session.id)
     .in("id", encounterIds);
   if (encounterError) return dbError(encounterError);
   if ((encounters ?? []).length !== encounterIds.length) {
-    return bodyError({ issues: [{ message: "La atención elegida no está abierta o no corresponde a este paciente" }] });
+    return bodyError({
+      issues: [
+        {
+          message:
+            "La atención elegida no está abierta, no es tuya o no corresponde a este paciente",
+        },
+      ],
+    });
   }
 
   const rows = items.map((item) => ({

@@ -13,6 +13,7 @@ export interface DoctorSession {
   id: string;
   full_name: string;
   specialty: string | null;
+  avatar_path: string | null;
   role: DoctorRole;
   isAdmin: boolean;
   isSuperAdmin: boolean;
@@ -47,11 +48,42 @@ export const getDoctorSession = cache(async (): Promise<DoctorSession | null> =>
 
   if (!user) return null;
 
-  const { data: doctor, error } = await supabase
+  const withAvatar = await supabase
     .from("doctors")
-    .select("id, full_name, specialty, is_admin, is_super_admin, active, role, org_id, organizations!doctors_org_id_fkey (slug, type)")
+    .select("id, full_name, specialty, avatar_path, is_admin, is_super_admin, active, role, org_id, organizations!doctors_org_id_fkey (slug, type)")
     .eq("id", user.id)
     .maybeSingle();
+
+  let doctor = withAvatar.data as
+    | {
+        id: string;
+        full_name: string;
+        specialty: string | null;
+        avatar_path?: string | null;
+        is_admin: boolean;
+        is_super_admin: boolean;
+        active: boolean;
+        role: string;
+        org_id: string;
+        organizations: unknown;
+      }
+    | null;
+  let error = withAvatar.error;
+
+  if (
+    error &&
+    (error.code === "42703" ||
+      error.code === "PGRST204" ||
+      error.message?.toLowerCase().includes("avatar_path"))
+  ) {
+    const fallback = await supabase
+      .from("doctors")
+      .select("id, full_name, specialty, is_admin, is_super_admin, active, role, org_id, organizations!doctors_org_id_fkey (slug, type)")
+      .eq("id", user.id)
+      .maybeSingle();
+    doctor = fallback.data as typeof doctor;
+    error = fallback.error;
+  }
 
   if (error || !doctor || !doctor.active) return null;
 
@@ -59,6 +91,7 @@ export const getDoctorSession = cache(async (): Promise<DoctorSession | null> =>
     id: doctor.id,
     full_name: doctor.full_name,
     specialty: doctor.specialty,
+    avatar_path: doctor.avatar_path ?? null,
     isAdmin: doctor.is_admin,
     isSuperAdmin: doctor.is_super_admin,
     orgId: doctor.org_id,

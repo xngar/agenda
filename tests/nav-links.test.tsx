@@ -1,10 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { PanelShell } from "@/components/dashboard/panel-shell";
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 
+const ruta = vi.hoisted(() => ({ pathname: "/dashboard/pacientes" }));
+
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/dashboard/pacientes",
+  usePathname: () => ruta.pathname,
   useRouter: () => ({ push: () => {}, replace: () => {}, back: () => {} }),
 }));
 
@@ -12,6 +15,7 @@ let root: Root;
 let container: HTMLDivElement;
 
 beforeEach(() => {
+  ruta.pathname = "/dashboard/pacientes";
   (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   container = document.createElement("div");
   document.body.appendChild(container);
@@ -31,15 +35,32 @@ function etiquetas(): string[] {
   return enlaces().map((a) => a.textContent?.trim() ?? "");
 }
 
+function botonAdministracion(): HTMLButtonElement | null {
+  return container.querySelector("nav button");
+}
+
+function clic(boton: Element) {
+  act(() => {
+    boton.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  });
+}
+
 describe("SidebarNav", () => {
-  it("sin admin ve Mi agenda, Pacientes, Estadísticas, Mi Horario y Bloqueos, y el activo se marca", () => {
+  it("sin admin ve Mi agenda, Pacientes, Mis Horarios, Bloqueos, Estadísticas y Notificaciones, y el activo se marca", () => {
     act(() => {
       root.render(<SidebarNav isAdmin={false} />);
     });
 
     const links = enlaces();
-    expect(links).toHaveLength(5);
-    expect(etiquetas()).toEqual(["Mi agenda", "Pacientes", "Estadísticas", "Mi Horario", "Bloqueos"]);
+    expect(links).toHaveLength(6);
+    expect(etiquetas()).toEqual([
+      "Mi agenda",
+      "Pacientes",
+      "Mis Horarios",
+      "Bloqueos",
+      "Estadísticas",
+      "Notificaciones",
+    ]);
 
     for (const a of links) {
       expect(a.querySelector("svg")).not.toBeNull();
@@ -53,27 +74,56 @@ describe("SidebarNav", () => {
     expect(agenda?.getAttribute("aria-current")).toBeNull();
   });
 
-  it("el admin ve los ocho accesos en orden, sin el botón Disponibilidad", () => {
+  it("el admin ve los nueve accesos en orden, con Administración cerrado", () => {
     act(() => {
       root.render(<SidebarNav isAdmin={true} />);
     });
 
-    expect(enlaces()).toHaveLength(8);
+    expect(enlaces()).toHaveLength(9);
     expect(etiquetas()).toEqual([
       "Mi agenda",
       "Pacientes",
-      "Estadísticas",
-      "Mi Horario",
+      "Mis Horarios",
       "Bloqueos",
+      "Estadísticas",
+      "Notificaciones",
       "Feriados",
       "Equipo",
       "Servicios",
     ]);
-    expect(container.querySelector("nav button")).toBeNull();
+
+    const grupo = botonAdministracion();
+    expect(grupo?.textContent).toContain("Administración");
+    expect(grupo?.getAttribute("aria-expanded")).toBe("false");
     expect(container.textContent).not.toContain("Disponibilidad");
 
     for (const a of enlaces()) {
       expect(a.querySelector("svg")).not.toBeNull();
+    }
+  });
+
+  it("Administración despliega y repliega Feriados, Equipo y Servicios", () => {
+    act(() => {
+      root.render(<SidebarNav isAdmin={true} />);
+    });
+
+    const grupo = botonAdministracion();
+    expect(grupo).not.toBeNull();
+
+    clic(grupo!);
+    expect(grupo?.getAttribute("aria-expanded")).toBe("true");
+
+    clic(grupo!);
+    expect(grupo?.getAttribute("aria-expanded")).toBe("false");
+  });
+
+  it("Administración arranca abierto en las rutas que contiene", () => {
+    for (const pathname of ["/dashboard/feriados", "/dashboard/admin", "/dashboard/servicios"]) {
+      ruta.pathname = pathname;
+      act(() => {
+        root.render(<SidebarNav isAdmin={true} />);
+      });
+      expect(botonAdministracion()?.getAttribute("aria-expanded")).toBe("true");
     }
   });
 
@@ -84,11 +134,12 @@ describe("SidebarNav", () => {
 
     const labels = etiquetas();
     expect(labels).toContain("Estadísticas");
-    expect(labels).toContain("Mi Horario");
+    expect(labels).toContain("Mis Horarios");
     expect(labels).toContain("Bloqueos");
     expect(labels).not.toContain("Feriados");
     expect(labels).not.toContain("Equipo");
     expect(labels).not.toContain("Servicios");
+    expect(botonAdministracion()).toBeNull();
   });
 
   it("los accesos conservan sus rutas", () => {
@@ -99,9 +150,10 @@ describe("SidebarNav", () => {
     expect(enlaces().map((a) => a.getAttribute("href"))).toEqual([
       "/dashboard",
       "/dashboard/pacientes",
-      "/dashboard/estadisticas",
       "/dashboard/horario",
       "/dashboard/bloqueos",
+      "/dashboard/estadisticas",
+      "/dashboard/notificaciones",
       "/dashboard/feriados",
       "/dashboard/admin",
       "/dashboard/servicios",
@@ -114,5 +166,99 @@ describe("SidebarNav", () => {
     });
 
     expect(etiquetas()).toEqual(["Organizaciones"]);
+  });
+
+  it("en modo colapsado conserva etiquetas accesibles en sr-only, agrega title y mantiene Administración operativo", () => {
+    act(() => {
+      root.render(<SidebarNav isAdmin={true} collapsed={true} />);
+    });
+
+    const links = enlaces();
+    expect(links).toHaveLength(9);
+
+    for (const a of links) {
+      const span = a.querySelector("span");
+      expect(span?.className).toContain("sr-only");
+      expect(a.getAttribute("title")).toBe(span?.textContent?.trim());
+      expect(a.querySelector("svg")).not.toBeNull();
+    }
+
+    const grupo = botonAdministracion();
+    expect(grupo).not.toBeNull();
+    expect(grupo?.getAttribute("title")).toBe("Administración");
+    expect(grupo?.getAttribute("aria-expanded")).toBe("false");
+
+    clic(grupo!);
+    expect(grupo?.getAttribute("aria-expanded")).toBe("true");
+  });
+});
+
+describe("PanelShell", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  it("alterna el menú lateral entre expandido y colapsado, expande el contenido y persiste en localStorage", () => {
+    act(() => {
+      root.render(
+        <PanelShell
+          isAdmin={false}
+          profileTrigger={<span>Perfil</span>}
+          logout={<button type="button">Salir</button>}
+        >
+          <div>Contenido</div>
+        </PanelShell>,
+      );
+    });
+
+    const aside = container.querySelector("aside");
+    const contenido = container.querySelector("#contenido-panel");
+    expect(aside?.getAttribute("data-collapsed")).toBe("false");
+    expect(aside?.className).toContain("w-[264px]");
+    expect(contenido?.className).toContain("max-w-6xl");
+
+    const botonColapsar = container.querySelector('button[aria-label="Colapsar menú lateral"]');
+    expect(botonColapsar).not.toBeNull();
+    expect(botonColapsar?.getAttribute("aria-expanded")).toBe("true");
+
+    clic(botonColapsar!);
+
+    expect(aside?.getAttribute("data-collapsed")).toBe("true");
+    expect(aside?.className).toContain("w-[72px]");
+    expect(contenido?.className).toContain("max-w-none");
+    expect(window.localStorage.getItem("panel:sidebar-collapsed")).toBe("1");
+
+    const botonExpandir = container.querySelector('button[aria-label="Expandir menú lateral"]');
+    expect(botonExpandir).not.toBeNull();
+    expect(botonExpandir?.getAttribute("aria-expanded")).toBe("false");
+
+    clic(botonExpandir!);
+
+    expect(aside?.getAttribute("data-collapsed")).toBe("false");
+    expect(aside?.className).toContain("w-[264px]");
+    expect(contenido?.className).toContain("max-w-6xl");
+    expect(window.localStorage.getItem("panel:sidebar-collapsed")).toBe("0");
+  });
+
+  it("restaura el estado colapsado desde localStorage al montar", () => {
+    window.localStorage.setItem("panel:sidebar-collapsed", "1");
+
+    act(() => {
+      root.render(
+        <PanelShell
+          isAdmin={false}
+          profileTrigger={<span>Perfil</span>}
+          logout={<button type="button">Salir</button>}
+        >
+          <div>Contenido</div>
+        </PanelShell>,
+      );
+    });
+
+    const aside = container.querySelector("aside");
+    const contenido = container.querySelector("#contenido-panel");
+    expect(aside?.getAttribute("data-collapsed")).toBe("true");
+    expect(aside?.className).toContain("w-[72px]");
+    expect(contenido?.className).toContain("max-w-none");
   });
 });

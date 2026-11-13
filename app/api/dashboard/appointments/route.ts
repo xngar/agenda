@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getDoctorSession } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { toBusinessError } from "@/lib/errors";
+import { notifyAppointmentCancelled, notifyAppointmentConfirmed } from "@/lib/booking";
 
 /**
  * Los valores coinciden EXACTAMENTE con el CHECK
@@ -77,6 +78,11 @@ export async function POST(request: Request) {
       .update({ status: "confirmed", cancelled_by: null, cancel_reason: null })
       .eq("id", appointmentId);
     if (error) return NextResponse.json({ error: "No se pudo actualizar" }, { status: 500 });
+
+    void notifyAppointmentConfirmed(appointmentId).catch((err) => {
+      console.warn("[appointments] no se pudo notificar la confirmación al paciente:", err);
+    });
+
     return NextResponse.json({ ok: true, status: "confirmed" });
   }
 
@@ -94,6 +100,18 @@ export async function POST(request: Request) {
       { error: business.message, code: business.code },
       { status: business.status },
     );
+  }
+
+  if (action === "cancelled") {
+    void notifyAppointmentCancelled(appointmentId, patch.cancel_reason).catch((err) => {
+      console.warn("[appointments] no se pudo notificar la cancelación al paciente:", err);
+    });
+  }
+
+  if (action === "confirmed" && appointment.status !== "confirmed") {
+    void notifyAppointmentConfirmed(appointmentId).catch((err) => {
+      console.warn("[appointments] no se pudo notificar la confirmación al paciente:", err);
+    });
   }
 
   return NextResponse.json({ ok: true, status: action });

@@ -16,6 +16,14 @@ export class BusinessError extends Error {
   }
 }
 
+/** La organización pedida no existe o está inactiva. */
+export class OrganizationNotFoundError extends Error {
+  constructor() {
+    super("Organizacion no encontrada");
+    this.name = "OrganizationNotFoundError";
+  }
+}
+
 const STATUS_BY_CODE: Record<BusinessErrorCode, number> = {
   A0001: 409,
   A0002: 409,

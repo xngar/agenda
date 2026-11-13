@@ -68,6 +68,31 @@ export function useAgendaAcciones({
   );
 
   async function cambiar(appointmentId: string, action: string) {
+    if (action === "remind") {
+      setPendiente(appointmentId + action);
+      try {
+        const response = await fetch("/api/dashboard/appointments/reminder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ appointmentId }),
+        });
+
+        const data = (await response.json().catch(() => ({}))) as { error?: string };
+
+        if (!response.ok) {
+          toast.error(data.error ?? "No se pudo enviar el recordatorio");
+          return;
+        }
+
+        toast.success("Recordatorio enviado al paciente");
+      } catch {
+        toast.error("No pudimos conectarnos. Intenta de nuevo.");
+      } finally {
+        setPendiente(null);
+      }
+      return;
+    }
+
     setPendiente(appointmentId + action);
     marcarReciente(appointmentId);
 

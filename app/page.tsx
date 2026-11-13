@@ -1,6 +1,5 @@
 import Navbar from "@/components/landing/navbar";
 import Hero from "@/components/landing/hero";
-import Specialties from "@/components/landing/specialties";
 import Problem from "@/components/landing/problem";
 import Features from "@/components/landing/features";
 import HowItWorks from "@/components/landing/how-it-works";
@@ -16,7 +15,6 @@ export default function LandingPage() {
       <Navbar />
       <main>
         <Hero />
-        <Specialties />
         <Problem />
         <Features />
         <HowItWorks />

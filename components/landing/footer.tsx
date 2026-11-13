@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { siteConfig } from "@/lib/site-config";
 
 export default function Footer() {
@@ -6,8 +7,16 @@ export default function Footer() {
     <footer className="border-t border-[var(--lp-sky-200)] bg-[var(--lp-navy)] text-white">
       <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-4 lg:px-8">
         <div>
-          <div className="text-lg font-bold">{siteConfig.name}</div>
-          <p className="mt-2 text-sm text-white/80">
+          <Link href="/" className="inline-block">
+            <Image
+              src="/gethour.svg"
+              alt={siteConfig.name !== "[Nombre]" ? siteConfig.name : "gethour"}
+              width={140}
+              height={28}
+              className="h-7 w-auto brightness-0 invert"
+            />
+          </Link>
+          <p className="mt-3 text-sm text-white/80">
             Agenda, fichas clínicas y pacientes en un solo lugar.
           </p>
         </div>
@@ -15,19 +24,19 @@ export default function Footer() {
           <div className="text-sm font-semibold">Enlaces</div>
           <ul className="mt-2 space-y-1.5 text-sm text-white/80">
             <li>
-              <Link href="#funciones">Funciones</Link>
+              <Link href="/#funciones">Funciones</Link>
             </li>
             <li>
-              <Link href="#como-funciona">Cómo funciona</Link>
+              <Link href="/#como-funciona">Cómo funciona</Link>
             </li>
             <li>
-              <Link href="#seguridad">Seguridad</Link>
+              <Link href="/#seguridad">Seguridad</Link>
             </li>
             <li>
-              <Link href="#planes">Planes</Link>
+              <Link href="/#planes">Planes</Link>
             </li>
             <li>
-              <Link href="#preguntas">Preguntas</Link>
+              <Link href="/#preguntas">Preguntas</Link>
             </li>
           </ul>
         </div>
@@ -35,10 +44,19 @@ export default function Footer() {
           <div className="text-sm font-semibold">Contacto</div>
           <ul className="mt-2 space-y-1.5 text-sm text-white/80">
             <li>
-              <a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a>
+              <a href={`mailto:${siteConfig.email}`} className="transition hover:text-white">
+                {siteConfig.email}
+              </a>
             </li>
             <li>
-              <a href={`https://wa.me/${siteConfig.whatsapp.replace(/\D/g, "")}`}>WhatsApp</a>
+              <a
+                href={`https://wa.me/${siteConfig.whatsapp.replace(/\D/g, "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition hover:text-white"
+              >
+                WhatsApp: {siteConfig.whatsapp}
+              </a>
             </li>
           </ul>
         </div>
@@ -46,10 +64,13 @@ export default function Footer() {
           <div className="text-sm font-semibold">Legal</div>
           <ul className="mt-2 space-y-1.5 text-sm text-white/80">
             <li>
-              <Link href="/terminos">Términos</Link>
+              <Link href="/terminos">Términos y condiciones</Link>
             </li>
             <li>
               <Link href="/politica-privacidad">Política de privacidad</Link>
+            </li>
+            <li>
+              <Link href="/politica-cookies">Política de cookies</Link>
             </li>
           </ul>
         </div>

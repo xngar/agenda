@@ -1,12 +1,22 @@
 "use client";
 
+import { Mail, ChevronDown, CalendarClock, UserX, XCircle, UserRound } from "lucide-react";
 import type { DoctorAppointment } from "@/lib/types";
 import { formatTime } from "@/lib/dates";
 import { StatusBadge } from "@/components/ui";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { WhatsappButton } from "@/components/dashboard/whatsapp-button";
 import { parseAppointmentRange } from "@/lib/range";
 import { resaltarCita } from "./resaltar-cita";
+import { usePatientQuickView } from "@/components/dashboard/patient-quick-view";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 /**
  * Riel y fondo por estado. Misma historia de color que `CHIP_TONO` en
@@ -50,14 +60,14 @@ export function Accion({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-lg border font-medium transition-[color,background-color,border-color,box-shadow] duration-micro ease-out-soft disabled:cursor-not-allowed disabled:opacity-50 ${
+      className={`rounded-full border font-medium transition-all duration-micro ease-out-soft hover:scale-[1.03] active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 ${
         compacto ? "px-2.5 py-1 text-[13px]" : "px-3 py-1.5 text-sm"
       } ${
         destacado
-          ? "border-action-primary bg-action-primary text-action-primary-foreground hover:bg-action-primary-hover"
+          ? "border-action-primary bg-action-primary text-action-primary-foreground shadow-2xs hover:bg-action-primary-hover hover:shadow-xs"
           : tono === "peligro"
-            ? "border-danger-200 text-danger-700 hover:bg-danger-50"
-            : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"
+            ? "border-danger-200 text-danger-700 hover:bg-danger-50 hover:border-danger-300"
+            : "border-neutral-300 text-neutral-700 hover:bg-neutral-100 hover:border-neutral-400"
       }`}
     >
       {etiqueta}
@@ -91,6 +101,8 @@ export function AgendaTable({
   /** Ids de las citas recién modificadas: se resaltan al instante. */
   recientes?: string[];
 }) {
+  const { open, prefetch } = usePatientQuickView();
+
   return (
     <div>
       <div className="mb-2 flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-xs text-neutral-600">
@@ -107,10 +119,10 @@ export function AgendaTable({
           Cancelada / No asistió
         </span>
       </div>
-      <div className="overflow-x-auto rounded-card border border-neutral-200 bg-white">
+      <div className="overflow-x-auto rounded-card bg-white shadow-card">
         <table className="w-full min-w-[760px] text-sm" data-testid="agenda-table">
           <caption className="sr-only">Citas del día</caption>
-          <thead className="border-b border-neutral-200 bg-neutral-50/80">
+          <thead className="border-b border-neutral-100 bg-neutral-50/60">
             <tr>
               <th
                 scope="col"
@@ -179,9 +191,32 @@ export function AgendaTable({
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <p className="font-medium text-neutral-900">
-                      {cita.patient?.full_name ?? "Paciente"}
-                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-medium text-neutral-900">
+                        {cita.patient?.full_name ?? "Paciente"}
+                      </p>
+                      {cita.patient ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            open(cita.patient_id, {
+                              start,
+                              end,
+                              serviceName: cita.service?.name ?? null,
+                              status: cita.status,
+                              patient: cita.patient,
+                            })
+                          }
+                          onMouseEnter={() => prefetch(cita.patient_id)}
+                          onFocus={() => prefetch(cita.patient_id)}
+                          aria-label={`Ver perfil de ${cita.patient.full_name}`}
+                          title="Ver perfil del paciente"
+                          className="inline-flex size-7 shrink-0 items-center justify-center rounded-full text-neutral-400 transition-colors hover:bg-action-primary/10 hover:text-action-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+                        >
+                          <UserRound className="size-4" aria-hidden />
+                        </button>
+                      ) : null}
+                    </div>
                     {cita.patient?.rut ? (
                       <p className="mt-0.5 text-xs tabular-nums text-neutral-500">
                         {cita.patient.rut}
@@ -206,13 +241,16 @@ export function AgendaTable({
                   <td className="whitespace-nowrap px-4 py-3">
                     <StatusBadge status={cita.status} />
                     {cita.status === "cancelled" && cita.cancel_reason ? (
-                      <p className="mt-1 max-w-44 truncate text-xs text-neutral-500">
-                        Motivo: {cita.cancel_reason}
-                      </p>
+                      <div className="mt-1 max-w-44">
+                        <TruncatedText
+                          text={`Motivo: ${cita.cancel_reason}`}
+                          className="max-w-44 text-xs text-neutral-500"
+                        />
+                      </div>
                     ) : null}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right">
-                    <span className="inline-flex flex-wrap justify-end gap-1.5">
+                  <td className="px-4 py-3 text-right">
+                    <span className="inline-flex items-center justify-end gap-1.5 flex-nowrap">
                       {cancelada ? (
                         <Accion
                           etiqueta="Reabrir"
@@ -230,34 +268,121 @@ export function AgendaTable({
                               destacado
                               compacto
                             />
-                          ) : null}
-                          <Accion
-                            etiqueta="Atendida"
-                            onClick={() => onAccion(cita.id, "completed")}
-                            disabled={ocupado}
-                            compacto
-                          />
-                          <Accion
-                            etiqueta="No asistió"
-                            onClick={() => onAccion(cita.id, "no_show")}
-                            disabled={ocupado}
-                            compacto
-                          />
-                          {cita.status === "pending" || cita.status === "confirmed" ? (
+                          ) : cita.status === "confirmed" ? (
                             <Accion
-                              etiqueta="Reagendar"
-                              onClick={() => onAccion(cita.id, "reschedule")}
+                              etiqueta="Atendida"
+                              onClick={() => onAccion(cita.id, "completed")}
+                              disabled={ocupado}
+                              destacado
+                              compacto
+                            />
+                          ) : cita.status === "completed" ? (
+                            <Accion
+                              etiqueta="Atendida"
+                              onClick={() => onAccion(cita.id, "completed")}
+                              disabled
+                              compacto
+                            />
+                          ) : cita.status === "no_show" ? (
+                            <Accion
+                              etiqueta="Reabrir"
+                              onClick={() => onAccion(cita.id, "reopen")}
                               disabled={ocupado}
                               compacto
                             />
                           ) : null}
-                          <Accion
-                            etiqueta="Cancelar"
-                            onClick={() => onAccion(cita.id, "cancelled")}
-                            disabled={ocupado}
-                            tono="peligro"
-                            compacto
-                          />
+
+                          {cita.status === "pending" || cita.status === "confirmed" ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="inline-flex">
+                                  <button
+                                    type="button"
+                                    onClick={() => onAccion(cita.id, "remind")}
+                                    disabled={ocupado || !cita.patient?.email}
+                                    aria-label={
+                                      cita.patient?.email
+                                        ? `Enviar recordatorio a ${cita.patient.full_name}`
+                                        : `Sin correo registrado para ${cita.patient?.full_name ?? "el paciente"}`
+                                    }
+                                    className="inline-flex items-center gap-1 rounded-full border border-neutral-300 px-2.5 py-1 text-[13px] font-medium text-neutral-700 transition-all duration-micro ease-out-soft hover:scale-[1.03] hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                                  >
+                                    <Mail className="h-3.5 w-3.5" aria-hidden="true" />
+                                    <span>Recordatorio</span>
+                                  </button>
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {cita.patient?.email
+                                  ? "Enviar recordatorio por correo"
+                                  : "Sin correo registrado"}
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : null}
+
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                disabled={ocupado}
+                                className="inline-flex items-center gap-1 rounded-full border border-neutral-300 px-2.5 py-1 text-[13px] font-medium text-neutral-700 transition-all duration-micro ease-out-soft hover:border-neutral-400 hover:bg-neutral-100 hover:scale-[1.03] active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                              >
+                                <span>Opciones</span>
+                                <ChevronDown className="h-3.5 w-3.5 text-neutral-500" aria-hidden="true" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
+                              {cita.patient ? (
+                                <>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      open(cita.patient_id, {
+                                        start,
+                                        end,
+                                        serviceName: cita.service?.name ?? null,
+                                        status: cita.status,
+                                        patient: cita.patient,
+                                      })
+                                    }
+                                    onMouseEnter={() => prefetch(cita.patient_id)}
+                                    onFocus={() => prefetch(cita.patient_id)}
+                                    className="cursor-pointer gap-2"
+                                  >
+                                    <UserRound className="h-4 w-4 text-neutral-500" />
+                                    <span>Ver perfil</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                </>
+                              ) : null}
+                              {(cita.status === "pending" || cita.status === "confirmed") && (
+                                <DropdownMenuItem
+                                  onClick={() => onAccion(cita.id, "reschedule")}
+                                  className="cursor-pointer gap-2"
+                                >
+                                  <CalendarClock className="h-4 w-4 text-neutral-500" />
+                                  <span>Reagendar</span>
+                                </DropdownMenuItem>
+                              )}
+                              {cita.status !== "no_show" && cita.status !== "completed" && (
+                                <DropdownMenuItem
+                                  onClick={() => onAccion(cita.id, "no_show")}
+                                  className="cursor-pointer gap-2"
+                                >
+                                  <UserX className="h-4 w-4 text-neutral-500" />
+                                  <span>No asistió</span>
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                variant="destructive"
+                                onClick={() => onAccion(cita.id, "cancelled")}
+                                className="cursor-pointer gap-2 text-danger-600 focus:text-danger-700"
+                              >
+                                <XCircle className="h-4 w-4" />
+                                <span>Cancelar cita</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </>
                       )}
                       <WhatsappButton

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import type { Holiday, PublicDoctor, Service, Slot, SlotWithDoctor } from "@/lib/types";
 import { CONSENT_TEXT } from "@/lib/clinic";
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui";
 import Turnstile from "@/components/turnstile";
 import WeekdayPicker, { type DayStatus } from "@/components/booking/weekday-picker";
+import { AnyDoctorAvatar, DoctorAvatar } from "@/components/booking/doctor-avatar";
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -92,6 +93,14 @@ export default function BookingWizard(props: BookingWizardProps) {
     () => props.doctors.find((d) => d.id === doctorId) ?? null,
     [props.doctors, doctorId],
   );
+
+  useEffect(() => {
+    for (const d of props.doctors) {
+      if (!d.avatar_url) continue;
+      const img = new window.Image();
+      img.src = d.avatar_url;
+    }
+  }, [props.doctors]);
 
   /* ---------------------------------------------------------------- */
   /* Carga de horarios                                                 */
@@ -428,6 +437,7 @@ export default function BookingWizard(props: BookingWizardProps) {
                       onChange={() => selectDoctor(null)}
                       className="h-4 w-4 shrink-0 accent-action-primary"
                     />
+                    <AnyDoctorAvatar />
                     <span>
                       <span className="block font-semibold text-neutral-800">
                         Cualquiera disponible
@@ -454,6 +464,7 @@ export default function BookingWizard(props: BookingWizardProps) {
                         onChange={() => selectDoctor(doc.id)}
                         className="h-4 w-4 shrink-0 accent-action-primary"
                       />
+                      <DoctorAvatar name={doc.full_name} avatarUrl={doc.avatar_url} />
                       <span>
                         <span className="block font-semibold text-neutral-800">{doc.full_name}</span>
                         {doc.specialty ? (
@@ -650,7 +661,9 @@ export default function BookingWizard(props: BookingWizardProps) {
                   <SummaryRow label="Fecha y hora" value={slotSummary(slotStart, day, props.timezone)} />
                 </dl>
                 <p className="mt-3 text-xs text-neutral-600">
-                  Puedes cancelar sin costo hasta {props.cancelMinHours} horas antes de tu cita.
+                  {props.cancelMinHours > 0
+                    ? `Puedes cancelar sin costo hasta ${props.cancelMinHours} horas antes de tu cita.`
+                    : "Puedes cancelar sin costo en cualquier momento antes de tu cita."}
                 </p>
               </div>
 
@@ -675,10 +688,10 @@ export default function BookingWizard(props: BookingWizardProps) {
                 <path d="m5 13 4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </span>
-            <h2 className="mt-4 text-xl font-bold text-action-primary">¡Cita reservada!</h2>
+            <h2 className="mt-4 text-xl font-bold text-action-primary">¡Hora agendada!</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-neutral-700">
-              Te enviamos la confirmación a <strong>{form.email}</strong> con un archivo para tu
-              calendario y un enlace para ver, reprogramar o cancelar.
+              Te enviamos el comprobante a <strong>{form.email}</strong>. Tu hora será confirmada a
+              la brevedad por nuestro equipo y te enviaremos un correo apenas esté confirmada.
             </p>
 
             <dl className="mx-auto mt-5 max-w-sm space-y-1.5 rounded-card bg-neutral-50 p-4 text-left text-sm">

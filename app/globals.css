@@ -374,6 +374,122 @@
    Todas usan los tokens de arriba y solo animan `transform` / `opacity`.
    ---------------------------------------------------------------------------- */
 
+/* Levitación sutil y continua para elementos decorativos (badges flotantes, etc) */
+@keyframes float-gentle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.anim-float-gentle {
+  animation: float-gentle 4s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Pulso vivo para indicadores de estado (en vivo, pendiente, recordatorio) */
+@keyframes beacon-pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand-sky) 70%, transparent);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--brand-sky) 0%, transparent);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand-sky) 0%, transparent);
+  }
+}
+
+.badge-beacon {
+  animation: beacon-pulse 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Microinteracciones de elevación de tarjetas en GPU */
+.card-hover-lift {
+  transition: transform var(--motion-duration-element) var(--motion-ease-out),
+    box-shadow var(--motion-duration-element) var(--motion-ease-out),
+    border-color var(--motion-duration-element) var(--motion-ease-out);
+  will-change: transform, box-shadow;
+}
+
+.card-hover-lift:hover {
+  transform: translateY(-3px) scale(1.008);
+  box-shadow: 0 10px 25px -5px color-mix(in srgb, var(--brand-navy) 12%, transparent),
+    0 8px 10px -6px color-mix(in srgb, var(--brand-navy) 8%, transparent);
+}
+
+.card-hover-lift:active {
+  transform: translateY(-1px) scale(0.995);
+}
+
+/* Microinteracción táctil / click para botones interactivos */
+.btn-press {
+  transition: transform var(--motion-duration-micro) var(--motion-ease-out),
+    box-shadow var(--motion-duration-micro) var(--motion-ease-out),
+    filter var(--motion-duration-micro) var(--motion-ease-out);
+  will-change: transform;
+}
+.btn-press:hover {
+  transform: translateY(-1px);
+}
+.btn-press:active {
+  transform: translateY(0.5px) scale(0.97);
+}
+
+/* Microinteracciones para iconos dentro de botones (Icon Motion) */
+.btn-icon-wiggle {
+  transition: transform var(--motion-duration-micro) var(--motion-ease-out);
+  will-change: transform;
+}
+.group:hover .btn-icon-wiggle,
+button:hover .btn-icon-wiggle {
+  transform: scale(1.15) rotate(-6deg);
+}
+.group:active .btn-icon-wiggle,
+button:active .btn-icon-wiggle {
+  transform: scale(0.95);
+}
+
+.btn-icon-plus {
+  transition: transform var(--motion-duration-element) var(--motion-ease-out);
+  will-change: transform;
+}
+.group:hover .btn-icon-plus,
+button:hover .btn-icon-plus {
+  transform: rotate(90deg) scale(1.1);
+}
+
+.btn-icon-right {
+  transition: transform var(--motion-duration-micro) var(--motion-ease-out);
+  will-change: transform;
+}
+.group:hover .btn-icon-right,
+button:hover .btn-icon-right {
+  transform: translateX(2.5px);
+}
+.group:active .btn-icon-right,
+button:active .btn-icon-right {
+  transform: translateX(0);
+}
+
+.btn-icon-left {
+  transition: transform var(--motion-duration-micro) var(--motion-ease-out);
+  will-change: transform;
+}
+.group:hover .btn-icon-left,
+button:hover .btn-icon-left {
+  transform: translateX(-2.5px);
+}
+.group:active .btn-icon-left,
+button:active .btn-icon-left {
+  transform: translateX(0);
+}
+
 /* Shimmer para skeletons: un barrido de luz suave sobre el bloque gris.
    Se anima `background-position` (no `transform`) porque el bloque es un
    rectángulo opaco: moverlo no daría la sensación de "carga en curso". */
@@ -458,6 +574,72 @@
 /* Icono de ordenamiento: gira al cambiar de columna o de dirección. */
 .anim-sort-icon {
   transition: transform var(--motion-duration-micro) var(--motion-ease-out);
+}
+
+/* Flecha del botón "Ver ficha": avanza y retrocede sin parar mientras el
+   contenedor con `group` está en hover. */
+@keyframes arrow-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
+
+.group:hover .anim-arrow-nudge {
+  animation: arrow-nudge 1s var(--motion-ease-in-out) infinite;
+}
+
+/* Botones de acción principal ("Nuevo paciente", "Agregar feriado"): fondo
+   morado por defecto; en hover se aclara un poco, crece y el icono `+` gira
+   una vuelta completa. */
+.anim-new-patient {
+  background-color: var(--action-primary);
+  color: var(--action-primary-foreground);
+  box-shadow: 0 4px 14px 0 color-mix(in oklab, var(--action-primary) 38%, transparent);
+  transition:
+    transform var(--motion-duration-micro) var(--motion-ease-out),
+    box-shadow var(--motion-duration-micro) var(--motion-ease-out),
+    background-color var(--motion-duration-element) var(--motion-ease-in-out),
+    color var(--motion-duration-element) var(--motion-ease-in-out);
+}
+
+.anim-new-patient:hover {
+  background-color: color-mix(in oklab, var(--action-primary) 92%, white);
+  color: var(--action-primary-foreground);
+  box-shadow: 0 6px 20px 0 color-mix(in oklab, var(--action-primary) 50%, transparent);
+  transform: scale(1.05);
+}
+
+.anim-new-patient:active {
+  transform: scale(0.97);
+  box-shadow: 0 4px 14px 0 color-mix(in oklab, var(--action-primary) 38%, transparent);
+}
+
+.anim-new-patient-icon {
+  transition: transform var(--motion-duration-section) var(--motion-ease-out);
+}
+
+.anim-new-patient:hover .anim-new-patient-icon {
+  transform: rotate(360deg);
+}
+
+/* ----------------------------------------------------------------------------
+   Marquee continuo con soporte para pausa en hover
+   -------------------------------------------------------------------------- */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee var(--marquee-duration, 35s) linear infinite;
 }
 
 /* ----------------------------------------------------------------------------

@@ -18,7 +18,7 @@ export function LogoutButton({
 
   const className =
     variant === "sidebar"
-        ? "flex min-h-11 w-full items-center gap-3 rounded-full px-3 text-sm font-medium text-panel-muted transition-colors duration-element ease-in-out-soft hover:bg-danger-50 hover:text-danger-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+        ? "flex min-h-11 w-full items-center gap-3 rounded-full px-3 text-sm font-medium text-panel-muted transition-colors duration-element ease-in-out-soft hover:bg-danger-50 hover:text-danger-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary group-data-[collapsed=true]/sidebar:justify-center group-data-[collapsed=true]/sidebar:px-0"
         : "inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-600 transition-colors duration-element ease-in-out-soft hover:border-danger-200 hover:bg-danger-50 hover:text-danger-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary";
 
   return (
@@ -30,7 +30,7 @@ export function LogoutButton({
       className={className}
     >
       <LogOut className={variant === "sidebar" ? "h-[18px] w-[18px]" : "h-4 w-4"} aria-hidden="true" />
-      {variant === "sidebar" ? <span>Cerrar sesión</span> : null}
+      {variant === "sidebar" ? <span className="group-data-[collapsed=true]/sidebar:sr-only">Cerrar sesión</span> : null}
     </button>
   );
 }

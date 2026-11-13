@@ -80,6 +80,27 @@ export interface BookingEmailData {
   manageUrl: string;
 }
 
+export function bookingPendingHtml(data: BookingEmailData): string {
+  return shell(
+    "Hora agendada · Pendiente de confirmación",
+    `Recibimos tu solicitud de hora para el ${data.dateLabel} a las ${data.timeLabel}. Será confirmada próximamente.`,
+    data.clinicName,
+    `<h1 style="margin:0 0 8px;font-size:22px;color:${PALETTE.navy};">¡Recibimos tu hora, ${escapeHtml(firstName(data.patientName))}!</h1>
+     <p style="margin:0 0 20px;color:${PALETTE.muted};">Tu hora ha sido ingresada en nuestro sistema y <strong>será confirmada próximamente</strong> por el equipo de la clínica. Te enviaremos un correo apenas esté confirmada.</p>
+     <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background:${PALETTE.skySoft};border:1px solid ${PALETTE.border};border-radius:12px;padding:8px 16px;">
+       ${detailRow("Estado", `<span style="display:inline-block;background:#E0F2FE;color:#0369A1;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;">Por confirmar</span>`)}
+       ${detailRow("Fecha", escapeHtml(data.dateLabel))}
+       ${detailRow("Hora", escapeHtml(data.timeLabel))}
+       ${detailRow("Profesional", escapeHtml(data.doctorName))}
+       ${data.specialty ? detailRow("Especialidad", escapeHtml(data.specialty)) : ""}
+       ${detailRow("Servicio", escapeHtml(data.serviceName))}
+       ${detailRow("Dirección", escapeHtml(data.clinicAddress))}
+     </table>
+     <p style="margin:20px 0 0;font-size:13px;color:${PALETTE.muted};">Si necesitas revisar los detalles de tu hora o cancelarla, puedes hacerlo desde el siguiente enlace:</p>
+     ${button(data.manageUrl, "Ver o gestionar mi cita")}`,
+  );
+}
+
 export function bookingConfirmedHtml(data: BookingEmailData): string {
   return shell(
     "Cita confirmada",

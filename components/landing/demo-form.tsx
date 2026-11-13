@@ -2,6 +2,16 @@
 
 import { useState } from "react";
 import { siteConfig } from "@/lib/site-config";
+import {
+  ArrowRight,
+  Clock,
+  CheckCircle2,
+  ShieldCheck,
+  MessageCircle,
+  Mail,
+  Loader2,
+} from "lucide-react";
+import { ScrollReveal } from "@/components/motion/scroll-reveal";
 
 export default function DemoForm() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -30,122 +40,197 @@ export default function DemoForm() {
       setStatus("success");
       form.reset();
     } catch {
-      setError("No se pudo enviar el formulario. Inténtalo de nuevo.");
+      setError("No se pudo enviar el formulario. Inténtalo de nuevo o escríbenos a WhatsApp.");
       setStatus("error");
     }
   }
 
   return (
-    <section id="demo" className="bg-gradient-to-b from-[var(--lp-sky-100)] to-white">
-      <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-action-primary sm:text-4xl">
-            Lleva tu consulta al siguiente nivel
-          </h2>
-          <p className="mt-4 text-lg text-action-primary/90">
-            Agenda una demo y mira cómo {siteConfig.name} puede ordenar tu día a día.
-          </p>
-        </div>
-        <div className="mx-auto mt-10 max-w-2xl rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[var(--lp-sky-200)] sm:p-8">
-          <form onSubmit={onSubmit} className="grid gap-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-action-primary" htmlFor="nombre">
-                  Nombre
-                </label>
-                <input
-                  id="nombre"
-                  name="nombre"
-                  required
-                  className="rounded-lg border border-[var(--lp-sky-200)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lp-blue)]/40"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-action-primary" htmlFor="correo">
-                  Correo
-                </label>
-                <input
-                  id="correo"
-                  name="correo"
-                  type="email"
-                  required
-                  className="rounded-lg border border-[var(--lp-sky-200)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lp-blue)]/40"
-                />
-              </div>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-action-primary" htmlFor="telefono">
-                  Teléfono o WhatsApp
-                </label>
-                <input
-                  id="telefono"
-                  name="telefono"
-                  required
-                  className="rounded-lg border border-[var(--lp-sky-200)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lp-blue)]/40"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-action-primary" htmlFor="tipo">
-                  Tipo de consulta
-                </label>
-                <select
-                  id="tipo"
-                  name="tipo"
-                  required
-                  className="rounded-lg border border-[var(--lp-sky-200)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lp-blue)]/40"
-                >
-                  <option value="">Selecciona</option>
-                  <option value="odontologia">Odontología</option>
-                  <option value="medicina">Medicina</option>
-                  <option value="psicologia">Psicología</option>
-                  <option value="otra">Otra</option>
-                </select>
-              </div>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-action-primary" htmlFor="profesionales">
-                Cantidad de profesionales
-              </label>
-              <input
-                id="profesionales"
-                name="profesionales"
-                required
-                className="rounded-lg border border-[var(--lp-sky-200)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lp-blue)]/40"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-action-primary" htmlFor="mensaje">
-                Mensaje (opcional)
-              </label>
-              <textarea
-                id="mensaje"
-                name="mensaje"
-                rows={4}
-                className="rounded-lg border border-[var(--lp-sky-200)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lp-blue)]/40"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={status === "loading"}
-              className="mt-2 rounded-full bg-[var(--lp-navy)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--lp-blue)] disabled:opacity-60"
-            >
-              {status === "loading" ? "Enviando..." : "Solicitar demo"}
-            </button>
-            {status === "success" ? (
-              <p className="text-sm font-medium text-action-primary">
-                Gracias. Te contactaremos pronto.
+    <section id="demo" className="relative overflow-hidden bg-gradient-to-b from-white via-sky-50/40 to-white py-16 sm:py-24 border-t border-slate-200/60">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
+          {/* Columna Izquierda: Propuesta de Valor y Garantías */}
+          <div className="space-y-6 lg:col-span-5">
+            <ScrollReveal yOffset={16}>
+              <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl [text-wrap:balance]">
+                Agenda una demo de 15 minutos
+              </h2>
+
+              <p className="mt-5 text-base sm:text-lg text-neutral-600 [text-wrap:balance]">
+                Te mostramos {siteConfig.name} con el flujo de tu consulta.
               </p>
-            ) : null}
-            {status === "error" ? (
-              <p className="text-sm font-medium text-red-600">{error}</p>
-            ) : null}
-          </form>
-          <div className="mt-6 border-t border-[var(--lp-sky-200)] pt-4 text-sm text-action-primary/80">
-            <p>
-              Contacto: <a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a> ·{" "}
-              <a href={`https://wa.me/${siteConfig.whatsapp.replace(/\D/g, "")}`}>WhatsApp</a>
-            </p>
+            </ScrollReveal>
+
+            {/* Tarjetas de Beneficios */}
+            <div className="space-y-3 pt-2">
+              {[
+                { icon: Clock, title: "Te respondemos en horario hábil" },
+                { icon: ShieldCheck, title: "Sin costo ni compromiso" },
+                { icon: CheckCircle2, title: "Puesta en marcha en 24 h" },
+              ].map(({ icon: Icon, title }) => (
+                <div key={title} className="flex items-center gap-3.5 rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-2xs">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-[var(--lp-navy)]">
+                    <Icon className="h-4.5 w-4.5 text-action-primary" />
+                  </div>
+                  <h3 className="text-sm font-bold text-neutral-900">{title}</h3>
+                </div>
+              ))}
+            </div>
+
+            {/* Canales de Contacto Directo */}
+            <div className="flex flex-wrap items-center gap-4 pt-3 text-xs text-neutral-600">
+              <a
+                href={`https://wa.me/${siteConfig.whatsapp.replace(/\D/g, "")}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 font-bold text-emerald-700 hover:text-emerald-800 transition-colors"
+              >
+                <MessageCircle className="h-4 w-4" />
+                <span>Escríbenos a WhatsApp</span>
+              </a>
+              <span>·</span>
+              <a
+                href={`mailto:${siteConfig.email}`}
+                className="inline-flex items-center gap-1.5 font-bold text-[var(--lp-blue)] hover:text-[var(--lp-navy)] transition-colors"
+              >
+                <Mail className="h-4 w-4" />
+                <span>{siteConfig.email}</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Columna Derecha: Formulario Pulido */}
+          <div className="lg:col-span-7">
+            <ScrollReveal yOffset={20}>
+              <div className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xl sm:p-8">
+                <div className="border-b border-slate-100 pb-4 mb-6">
+                  <h3 className="text-lg font-bold text-neutral-900">Solicitar demo</h3>
+                  <p className="text-xs text-neutral-500 mt-1">Completa tus datos y te contactamos.</p>
+                </div>
+
+                <form onSubmit={onSubmit} className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-neutral-800" htmlFor="nombre">
+                        Nombre completo *
+                      </label>
+                      <input
+                        id="nombre"
+                        name="nombre"
+                        required
+                        placeholder="Dr. Juan Pérez"
+                        className="rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-[var(--lp-blue)] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[var(--lp-blue)]/15 transition-all"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-neutral-800" htmlFor="correo">
+                        Correo electrónico *
+                      </label>
+                      <input
+                        id="correo"
+                        name="correo"
+                        type="email"
+                        required
+                        placeholder="contacto@tumedico.cl"
+                        className="rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-[var(--lp-blue)] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[var(--lp-blue)]/15 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-neutral-800" htmlFor="telefono">
+                        Teléfono o WhatsApp *
+                      </label>
+                      <input
+                        id="telefono"
+                        name="telefono"
+                        required
+                        placeholder="+56 9 1234 5678"
+                        className="rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-[var(--lp-blue)] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[var(--lp-blue)]/15 transition-all"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-neutral-800" htmlFor="tipo">
+                        Tipo de consulta o clínica *
+                      </label>
+                      <select
+                        id="tipo"
+                        name="tipo"
+                        required
+                        defaultValue=""
+                        className="rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-neutral-900 focus:border-[var(--lp-blue)] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[var(--lp-blue)]/15 transition-all"
+                      >
+                        <option value="" disabled>Selecciona especialidad</option>
+                        <option value="odontologia">Odontología / Dental</option>
+                        <option value="medicina">Medicina General / Especialidad</option>
+                        <option value="psicologia">Psicología / Salud Mental</option>
+                        <option value="otra">Centro Multidisciplinario / Otra</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-neutral-800" htmlFor="profesionales">
+                      Cantidad estimada de profesionales *
+                    </label>
+                    <input
+                      id="profesionales"
+                      name="profesionales"
+                      required
+                      placeholder="Ej: 1 profesional, o 4 especialistas"
+                      className="rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-[var(--lp-blue)] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[var(--lp-blue)]/15 transition-all"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-neutral-800" htmlFor="mensaje">
+                      ¿Qué te gustaría resolver principalmente? (Opcional)
+                    </label>
+                    <textarea
+                      id="mensaje"
+                      name="mensaje"
+                      rows={3}
+                      placeholder="Ej: Reducir las ausencias por WhatsApp, digitalizar odontogramas..."
+                      className="rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-[var(--lp-blue)] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[var(--lp-blue)]/15 transition-all resize-none"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={status === "loading"}
+                    className="flex w-full items-center justify-center gap-2 rounded-full bg-[var(--lp-navy)] py-3.5 px-6 text-sm font-bold text-white shadow-md transition-all duration-micro hover:scale-[1.01] hover:bg-[var(--lp-blue)] active:scale-[0.99] disabled:opacity-60 cursor-pointer"
+                  >
+                    {status === "loading" ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Enviando solicitud...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Solicitar demo</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    )}
+                  </button>
+
+                  {status === "success" && (
+                    <div className="flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs font-medium text-emerald-800">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <span>¡Listo! Te contactaremos pronto para coordinar la demo.</span>
+                    </div>
+                  )}
+
+                  {status === "error" && (
+                    <div className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs font-medium text-rose-700">
+                      {error}
+                    </div>
+                  )}
+                </form>
+              </div>
+            </ScrollReveal>
           </div>
         </div>
       </div>

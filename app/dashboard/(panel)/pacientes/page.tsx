@@ -49,7 +49,7 @@ export default async function PacientesPage({
         title="Pacientes"
         description={
           clinical
-            ? "Fichas clínicas de tu organización. Registra los tuyos y edita los que te pertenecen."
+            ? "Fichas de los pacientes con relación asistencial contigo o con tu equipo."
             : "Datos de contacto de tu organización (agenda y atención)."
         }
         actions={clinical ? <NewPatientButton /> : undefined}

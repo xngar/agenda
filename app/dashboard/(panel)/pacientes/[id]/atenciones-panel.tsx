@@ -19,6 +19,7 @@ import {
   inputClasses,
 } from "@/components/ui";
 import { Modal } from "@/components/motion/modal";
+import { todayKey } from "@/lib/dates";
 import { FichaCardHeader } from "./panels-shared";
 import { SpecialtyForm, SpecialtyView, type SpecialtyValues } from "./specialty-section";
 
@@ -50,7 +51,7 @@ interface FormState {
 }
 
 const EMPTY_FORM: FormState = {
-  started_at: new Date().toISOString().slice(0, 10),
+  started_at: todayKey(),
   care_type: "",
   motivo: "",
   evolucion: "",
@@ -123,6 +124,7 @@ const SIGNOS_VITALES = [
     return out;
   }
   const [firmando, setFirmando] = useState<string | null>(null);
+  const [confirmandoFirma, setConfirmandoFirma] = useState<EncounterRow | null>(null);
   const [versionesDe, setVersionesDe] = useState<string | null>(null);
   const [versiones, setVersiones] = useState<VersionRow[]>([]);
   const [corrigiendo, setCorrigiendo] = useState<string | null>(null);
@@ -152,7 +154,7 @@ const SIGNOS_VITALES = [
   }
 
   function abrirNueva() {
-    setForm({ ...EMPTY_FORM, started_at: new Date().toISOString().slice(0, 10) });
+    setForm({ ...EMPTY_FORM, started_at: todayKey() });
     setEspecialidad({});
     setVitalesTxt({});
     setDialogo("nueva");
@@ -236,11 +238,28 @@ const SIGNOS_VITALES = [
       toast.success("Atención firmada. Desde ahora es inmutable; las correcciones quedan en el historial.", {
         duration: 7000,
       });
+      setConfirmandoFirma(null);
       cargar();
     } catch {
       setError("No pudimos conectarnos.");
     } finally {
       setFirmando(null);
+    }
+  }
+
+  async function cargarVersiones(encounterId: string) {
+    setError(null);
+    try {
+      const response = await fetch(`/api/ficha/encounters/${encounterId}/versions`);
+      const data = (await response.json()) as { versions?: VersionRow[]; error?: string };
+      if (!response.ok) {
+        setError(data.error ?? "No se pudieron cargar las versiones");
+        return;
+      }
+      setVersionesDe(encounterId);
+      setVersiones(data.versions ?? []);
+    } catch {
+      setError("No pudimos conectarnos.");
     }
   }
 
@@ -250,24 +269,13 @@ const SIGNOS_VITALES = [
       setVersiones([]);
       return;
     }
-    setError(null);
-    try {
-      const response = await fetch(`/api/ficha/encounters/${e.id}/versions`);
-      const data = (await response.json()) as { versions?: VersionRow[]; error?: string };
-      if (!response.ok) {
-        setError(data.error ?? "No se pudieron cargar las versiones");
-        return;
-      }
-      setVersionesDe(e.id);
-      setVersiones(data.versions ?? []);
-    } catch {
-      setError("No pudimos conectarnos.");
-    }
+    await cargarVersiones(e.id);
   }
 
   async function corregir(e: React.FormEvent) {
     e.preventDefault();
     if (!corrigiendo || razon.trim().length < 3) return;
+    const encounterId = corrigiendo;
     setGuardando(true);
     setError(null);
     try {
@@ -282,9 +290,9 @@ const SIGNOS_VITALES = [
         return;
       }
       toast.success("Corrección registrada en el historial");
+      await cargarVersiones(encounterId);
       setCorrigiendo(null);
       setRazon("");
-      verVersiones(encounters?.find((en) => en.id === corrigiendo) as EncounterRow);
     } catch {
       setError("No pudimos conectarnos.");
     } finally {
@@ -346,7 +354,7 @@ const SIGNOS_VITALES = [
                     {e.status === "draft" ? (
                       <>
                         <Button size="sm" variant="ghost" onClick={() => abrirEditar(e)}>Editar</Button>
-                        <Button size="sm" onClick={() => firmar(e)} disabled={firmando === e.id}>
+                        <Button size="sm" onClick={() => setConfirmandoFirma(e)} disabled={firmando === e.id}>
                           {firmando === e.id ? "Firmando…" : "Firmar"}
                         </Button>
                       </>
@@ -583,7 +591,7 @@ const SIGNOS_VITALES = [
               </div>
             </fieldset>
           ) : null}
-          {esPsicologica && (dialogo === "nueva" || "privateNotes" in especialidad) ? (
+          {esPsicologica ? (
             <Field
               label="Notas privadas (solo tratante)"
               htmlFor="notas-privadas"
@@ -604,6 +612,98 @@ const SIGNOS_VITALES = [
             <Button variant="ghost" onClick={() => setDialogo(null)} disabled={guardando}>Cancelar</Button>
           </div>
         </form>
+      </Modal>
+
+      <Modal
+        open={confirmandoFirma !== null}
+        onClose={() => {
+          if (firmando === null) setConfirmandoFirma(null);
+        }}
+        ariaLabel="Firmar atención"
+        size="lg"
+        panelClassName="p-0 border-neutral-200 shadow-card"
+        busy={firmando !== null}
+      >
+        {confirmandoFirma ? (
+          <>
+            <FichaCardHeader
+              title="Firmar atención"
+              description="Revisa el resumen antes de confirmar. La firma es irreversible."
+            />
+            <div className="space-y-4 px-5 py-5">
+              {error ? <ErrorNotice message={error} /> : null}
+              <div className="rounded-xl bg-neutral-50 p-3 text-sm">
+                <p className="font-medium text-neutral-900">
+                  {confirmandoFirma.started_at?.slice(0, 10) ?? "Sin fecha"} ·{" "}
+                  {careLabel(confirmandoFirma.care_type ?? "Atención")}
+                </p>
+                <p className="text-neutral-600">
+                  {confirmandoFirma.motivo || "Sin motivo indicado"} ·{" "}
+                  {confirmandoFirma.doctors?.full_name ?? "Profesional"}
+                </p>
+              </div>
+
+              {(() => {
+                const contenido = [
+                  confirmandoFirma.motivo && "motivo",
+                  confirmandoFirma.evolucion && "evolución",
+                  confirmandoFirma.diagnostico && "diagnóstico",
+                  confirmandoFirma.indicaciones && "indicaciones",
+                ].filter((valor): valor is string => Boolean(valor));
+                const datos = (confirmandoFirma.specialty_data ?? {}) as Record<string, unknown>;
+                const camposEspecialidad = Object.values(datos).filter(
+                  (valor) => valor !== null && valor !== undefined && String(valor).trim() !== "",
+                ).length;
+                return contenido.length === 0 && camposEspecialidad === 0 ? (
+                  <p className="rounded-xl border border-warning-200 bg-warning-50 p-3 text-sm font-medium text-warning-700">
+                    Esta atención no tiene contenido clínico registrado. Puedes firmarla igual, pero
+                    quedará sin evolución ni diagnóstico.
+                  </p>
+                ) : (
+                  <div className="space-y-1 text-sm text-neutral-700">
+                    <p className="font-medium text-neutral-800">Contenido que se firmará</p>
+                    {contenido.length > 0 ? (
+                      <p>Incluye: {contenido.join(", ")}.</p>
+                    ) : null}
+                    {camposEspecialidad > 0 ? (
+                      <p>
+                        Incluye {camposEspecialidad} campo
+                        {camposEspecialidad === 1 ? "" : "s"} del registro{" "}
+                        {ficha.label.toLowerCase()}.
+                      </p>
+                    ) : null}
+                  </div>
+                );
+              })()}
+
+              <div className="rounded-xl border border-warning-200 bg-warning-50 p-3 text-sm text-warning-700">
+                <p className="font-medium">Qué cambia al firmar</p>
+                <p className="mt-1">
+                  El contenido de esta atención queda inmutable y no podrá editarse. Los registros
+                  asociados —odontograma, periodoncia, plan de tratamiento, recetas,
+                  consentimientos y adjuntos— seguirán editables y no quedan congelados por esta
+                  firma.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  onClick={() => void firmar(confirmandoFirma)}
+                  disabled={firmando !== null}
+                >
+                  {firmando === confirmandoFirma.id ? "Firmando…" : "Confirmar firma"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => setConfirmandoFirma(null)}
+                  disabled={firmando !== null}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </>
+        ) : null}
       </Modal>
     </div>
   );

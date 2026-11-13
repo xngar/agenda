@@ -18,7 +18,8 @@ interface PerfilSheetContextValue {
   profile: PerfilSheetProfile;
   openProfile: () => void;
   avatarVersion: number;
-  setHasAvatar: (hasAvatar: boolean) => void;
+  avatarToken: string;
+  setHasAvatar: (hasAvatar: boolean, bumpVersion?: boolean) => void;
 }
 
 const PerfilSheetContext = createContext<PerfilSheetContextValue | null>(null);
@@ -38,18 +39,22 @@ export function PerfilSheetProvider({
   const [hasAvatar, setHasAvatar] = useState(profile.hasAvatar);
   const [avatarVersion, setAvatarVersion] = useState(0);
   const openProfile = useCallback(() => setAbierto(true), []);
-  const updateAvatar = useCallback((next: boolean) => {
+  const updateAvatar = useCallback((next: boolean, bumpVersion = true) => {
     setHasAvatar(next);
-    setAvatarVersion((version) => version + 1);
+    if (bumpVersion) {
+      setAvatarVersion((version) => version + 1);
+    }
   }, []);
+  const avatarToken = profile.avatarToken ?? "0";
   const contextValue = useMemo(
     () => ({
       profile: { ...profile, hasAvatar },
       openProfile,
       avatarVersion,
+      avatarToken,
       setHasAvatar: updateAvatar,
     }),
-    [profile, hasAvatar, openProfile, avatarVersion, updateAvatar],
+    [profile, hasAvatar, openProfile, avatarVersion, avatarToken, updateAvatar],
   );
 
   return (
@@ -117,13 +122,15 @@ export function usePerfilSheetProfile(): PerfilSheetProfile | null {
 export function usePerfilAvatar(): {
   hasAvatar: boolean;
   avatarVersion: number;
-  setHasAvatar: (hasAvatar: boolean) => void;
+  avatarToken: string;
+  setHasAvatar: (hasAvatar: boolean, bumpVersion?: boolean) => void;
 } | null {
   const ctx = useContext(PerfilSheetContext);
   return ctx
     ? {
         hasAvatar: ctx.profile.hasAvatar,
         avatarVersion: ctx.avatarVersion,
+        avatarToken: ctx.avatarToken,
         setHasAvatar: ctx.setHasAvatar,
       }
     : null;
