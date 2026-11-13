@@ -61,4 +61,31 @@ describe("LoginForm", () => {
     });
     expect(toggle().type).toBe("button");
   });
+
+  it("permite alternar entre el login y el modo recuperar contraseña", () => {
+    act(() => {
+      root.render(<LoginForm />);
+    });
+
+    const forgotButton = container.querySelector('button[type="button"]:not([aria-label*="contraseña"])') as HTMLButtonElement;
+    expect(forgotButton?.textContent).toContain("¿Olvidaste tu contraseña?");
+
+    act(() => {
+      forgotButton.click();
+    });
+
+    expect(container.textContent).toContain("Recuperar contraseña");
+    expect(container.querySelector('input[name="recoveryEmail"]')).not.toBeNull();
+
+    const backButton = Array.from(container.querySelectorAll("button")).find((b) =>
+      b.textContent?.includes("Volver a iniciar sesión"),
+    );
+    expect(backButton).toBeDefined();
+
+    act(() => {
+      backButton?.click();
+    });
+
+    expect(container.querySelector('input[name="password"]')).not.toBeNull();
+  });
 });

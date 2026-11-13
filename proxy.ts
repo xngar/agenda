@@ -53,8 +53,9 @@ export async function proxy(request: NextRequest) {
 
   const esDashboard = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
   const esLogin = pathname === "/dashboard/login";
+  const esResetPassword = pathname === "/dashboard/reset-password";
 
-  if (esDashboard && !esLogin && !loggedIn) {
+  if (esDashboard && !esLogin && !esResetPassword && !loggedIn) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard/login";
     url.search = `?next=${encodeURIComponent(pathname)}`;
