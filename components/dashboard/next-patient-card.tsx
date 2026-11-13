@@ -18,7 +18,7 @@ import { parseAppointmentRange } from "@/lib/range";
 import { formatDayKey, formatTime } from "@/lib/dates";
 import { formatPhonePartial } from "@/lib/phone";
 import { formatRut } from "@/lib/rut";
-import { SkeletonBlock, StatusBadge, buttonClasses } from "@/components/ui";
+import { SkeletonBlock } from "@/components/ui";
 import {
   prefetchPatientSummary,
   usePatientQuickView,
@@ -134,28 +134,71 @@ export function NextPatientCard({
   return (
     <section
       aria-label={heading}
-      className="rounded-card border border-neutral-200 bg-white shadow-card"
+      className="rounded-card border border-brand-navy bg-brand-navy px-4 py-3 text-white shadow-card"
     >
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 px-5 py-3.5">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <div className="min-w-0">
-          <h2 className="text-base font-semibold text-action-primary">{heading}</h2>
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-neutral-600">
-            <span className="inline-flex items-center gap-1 font-medium tabular-nums text-neutral-800">
-              <CalendarClock className="h-3.5 w-3.5 text-action-primary" aria-hidden="true" />
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-white/80">
+              {heading}
+            </h2>
+            <span aria-hidden="true" className="text-white/40">·</span>
+            <span className="inline-flex items-center gap-1 text-xs font-semibold tabular-nums text-white">
+              <CalendarClock className="h-3.5 w-3.5 text-white/80" aria-hidden="true" />
               {timeRange}
             </span>
-            <span aria-hidden="true">·</span>
-            <span>{serviceName}</span>
+            <span aria-hidden="true" className="text-white/40">·</span>
+            <span className="text-xs text-white/85">{serviceName}</span>
+          </div>
+
+          <p className="mt-0.5 flex flex-wrap items-baseline gap-x-2 text-sm">
+            <span className="text-base font-bold text-white">{patientName}</span>
+            <span className="text-xs text-white/80">
+              {rut ? `RUT ${formatRut(rut)}` : "Sin RUT registrado"}
+              {summary?.patient.prevision_type ? ` · ${summary.patient.prevision_type}` : ""}
+            </span>
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <StatusBadge status={cita.status} />
+        <div className="flex flex-wrap items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() =>
+              open(cita.patient_id, {
+                start,
+                end,
+                serviceName,
+                status: cita.status,
+                patient: {
+                  id: cita.patient_id,
+                  full_name: patientName,
+                  phone,
+                  email,
+                  rut,
+                },
+              })
+            }
+            className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-white/25 bg-white/10 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-white/20"
+          >
+            <ClipboardList className="h-3.5 w-3.5" aria-hidden="true" />
+            {isClinical ? "Ver resumen completo" : "Ver ficha administrativa"}
+          </button>
+
+          {isClinical ? (
+            <Link
+              href={`/dashboard/pacientes/${cita.patient_id}`}
+              className="inline-flex min-h-8 items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-semibold text-brand-navy shadow-2xs transition-colors hover:bg-neutral-100"
+            >
+              <FileText className="h-3.5 w-3.5" aria-hidden="true" />
+              Abrir ficha clínica
+            </Link>
+          ) : null}
+
           <button
             type="button"
             onClick={() => setCollapsed((v) => !v)}
             aria-expanded={!collapsed}
-            className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 bg-white px-2.5 py-1 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-50 hover:text-neutral-900"
+            className="inline-flex min-h-8 items-center gap-1 rounded-lg border border-white/20 bg-transparent px-2 py-1 text-xs font-medium text-white/85 transition-colors hover:bg-white/15 hover:text-white"
           >
             {collapsed ? (
               <>
@@ -171,168 +214,120 @@ export function NextPatientCard({
       </div>
 
       {!collapsed ? (
-        <div className="space-y-4 p-5">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <div className="min-w-0">
-              <p className="text-lg font-bold text-neutral-900">{patientName}</p>
-              <p className="text-xs text-neutral-600">
-                {rut ? `RUT ${formatRut(rut)}` : "Sin RUT registrado"}
-                {summary?.patient.prevision_type ? ` · ${summary.patient.prevision_type}` : ""}
-              </p>
-            </div>
-          </div>
-
+        <div className="mt-2.5">
           {loading && !summary ? (
-            <div className="grid gap-3 sm:grid-cols-3">
-              <SkeletonBlock className="h-24" />
-              <SkeletonBlock className="h-24" />
-              <SkeletonBlock className="h-24" />
+            <div className="grid gap-2 sm:grid-cols-3">
+              <SkeletonBlock className="h-12 bg-white/15" />
+              <SkeletonBlock className="h-12 bg-white/15" />
+              <SkeletonBlock className="h-12 bg-white/15" />
             </div>
           ) : isClinical && summary ? (
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-2 sm:grid-cols-3">
               {/* Bloque 1: Alertas y alergias */}
               <div
-                className={`rounded-xl border p-3.5 ${
+                className={`rounded-lg border px-3 py-2 text-xs ${
                   hasAlerts
-                    ? "border-amber-300 bg-amber-50/70 text-amber-950"
-                    : "border-neutral-200 bg-neutral-50 text-neutral-700"
+                    ? "border-amber-300 bg-amber-50 text-amber-950"
+                    : "border-white/15 bg-white/10 text-white/90"
                 }`}
               >
-                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide">
+                <p className="flex items-center gap-1.5 font-semibold uppercase tracking-wide">
                   <AlertTriangle
                     className={`h-3.5 w-3.5 shrink-0 ${
-                      hasAlerts ? "text-amber-700" : "text-neutral-500"
+                      hasAlerts ? "text-amber-700" : "text-white/75"
                     }`}
                     aria-hidden="true"
                   />
                   Alertas y alergias
                 </p>
                 {hasAlerts ? (
-                  <div className="mt-1.5 space-y-1 text-xs leading-relaxed">
-                    {summary.patient.treatment_alerts ? (
-                      <p className="font-semibold">{summary.patient.treatment_alerts}</p>
-                    ) : null}
-                    {summary.background?.alergias && summary.background.alergias.length > 0 ? (
-                      <p>Alergias: {summary.background.alergias.join(", ")}</p>
-                    ) : null}
-                  </div>
+                  <p className="mt-0.5 line-clamp-1">
+                    {[
+                      summary.patient.treatment_alerts,
+                      summary.background?.alergias?.length
+                        ? `Alergias: ${summary.background.alergias.join(", ")}`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
                 ) : (
-                  <p className="mt-1.5 text-xs text-neutral-600">
-                    Sin alertas clínicas ni alergias registradas.
+                  <p className="mt-0.5 line-clamp-1 text-white/75">
+                    Sin alertas ni alergias registradas.
                   </p>
                 )}
               </div>
 
               {/* Bloque 2: Motivo y medicamentos */}
-              <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3.5 text-neutral-700">
-                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-700">
-                  <Pill className="h-3.5 w-3.5 shrink-0 text-action-primary" aria-hidden="true" />
+              <div className="rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-xs text-white/90">
+                <p className="flex items-center gap-1.5 font-semibold uppercase tracking-wide text-white">
+                  <Pill className="h-3.5 w-3.5 shrink-0 text-white/80" aria-hidden="true" />
                   Antecedentes y fármacos
                 </p>
                 {summary.background?.motivo_consulta ||
                 (summary.background?.medicamentos &&
                   summary.background.medicamentos.length > 0) ||
                 summary.background?.antecedentes_medicos ? (
-                  <div className="mt-1.5 space-y-1 text-xs leading-relaxed">
-                    {summary.background.motivo_consulta ? (
-                      <p className="line-clamp-2">
-                        <span className="font-medium text-neutral-900">Motivo:</span>{" "}
-                        {summary.background.motivo_consulta}
-                      </p>
-                    ) : null}
-                    {summary.background.medicamentos.length > 0 ? (
-                      <p className="line-clamp-2">
-                        <span className="font-medium text-neutral-900">Fármacos:</span>{" "}
-                        {summary.background.medicamentos
-                          .slice(0, 3)
-                          .map((m) => (m.detalle ? `${m.nombre} (${m.detalle})` : m.nombre))
-                          .join(", ")}
-                      </p>
-                    ) : summary.background.antecedentes_medicos ? (
-                      <p className="line-clamp-2">{summary.background.antecedentes_medicos}</p>
-                    ) : null}
-                  </div>
+                  <p className="mt-0.5 line-clamp-1 text-white/85">
+                    {[
+                      summary.background.motivo_consulta
+                        ? `Motivo: ${summary.background.motivo_consulta}`
+                        : null,
+                      summary.background.medicamentos.length > 0
+                        ? `Fármacos: ${summary.background.medicamentos
+                            .slice(0, 3)
+                            .map((m) => (m.detalle ? `${m.nombre} (${m.detalle})` : m.nombre))
+                            .join(", ")}`
+                        : summary.background.antecedentes_medicos,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
                 ) : (
-                  <p className="mt-1.5 text-xs text-neutral-600">
-                    Sin antecedentes ni medicamentos registrados.
+                  <p className="mt-0.5 line-clamp-1 text-white/75">
+                    Sin antecedentes ni fármacos registrados.
                   </p>
                 )}
               </div>
 
               {/* Bloque 3: Última atención */}
-              <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3.5 text-neutral-700">
-                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-700">
+              <div className="rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-xs text-white/90">
+                <p className="flex items-center gap-1.5 font-semibold uppercase tracking-wide text-white">
                   <Stethoscope
-                    className="h-3.5 w-3.5 shrink-0 text-action-primary"
+                    className="h-3.5 w-3.5 shrink-0 text-white/80"
                     aria-hidden="true"
                   />
                   Última atención
                 </p>
                 {summary.last_encounter ? (
-                  <div className="mt-1.5 space-y-1 text-xs leading-relaxed">
-                    <p className="font-medium text-neutral-900">
+                  <p className="mt-0.5 line-clamp-1 text-white/85">
+                    <span className="font-medium text-white">
                       {formatDayKey(summary.last_encounter.started_at)}
                       {summary.last_encounter.care_type
                         ? ` · ${summary.last_encounter.care_type}`
                         : ""}
-                    </p>
-                    <p className="line-clamp-2 text-neutral-600">
-                      {summary.last_encounter.diagnostico ??
-                        summary.last_encounter.motivo ??
-                        "Atención registrada sin detalle breve."}
-                    </p>
-                  </div>
+                    </span>
+                    {" — "}
+                    {summary.last_encounter.diagnostico ??
+                      summary.last_encounter.motivo ??
+                      "Atención registrada"}
+                  </p>
                 ) : (
-                  <p className="mt-1.5 text-xs text-neutral-600">
+                  <p className="mt-0.5 line-clamp-1 text-white/75">
                     Primera atención registrada en la clínica.
                   </p>
                 )}
               </div>
             </div>
           ) : (
-            <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3.5 text-xs text-neutral-700">
-              <p className="font-semibold text-neutral-800">Datos de contacto</p>
-              <p className="mt-1 text-neutral-600">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-xs text-white/90">
+              <span className="font-semibold text-white">Datos de contacto:</span>
+              <span>
                 {phone ? `Teléfono: ${formatPhonePartial(phone)}` : "Sin teléfono registrado"}
                 {email ? ` · Correo: ${email}` : ""}
-              </p>
+              </span>
             </div>
           )}
-
-          <div className="flex flex-wrap items-center gap-2.5 pt-1">
-            <button
-              type="button"
-              onClick={() =>
-                open(cita.patient_id, {
-                  start,
-                  end,
-                  serviceName,
-                  status: cita.status,
-                  patient: {
-                    id: cita.patient_id,
-                    full_name: patientName,
-                    phone,
-                    email,
-                    rut,
-                  },
-                })
-              }
-              className={buttonClasses("ghost", "sm")}
-            >
-              <ClipboardList className="h-4 w-4" aria-hidden="true" />
-              {isClinical ? "Ver resumen completo" : "Ver ficha administrativa"}
-            </button>
-
-            {isClinical ? (
-              <Link
-                href={`/dashboard/pacientes/${cita.patient_id}`}
-                className={buttonClasses("primary", "sm")}
-              >
-                <FileText className="h-4 w-4" aria-hidden="true" />
-                Abrir ficha clínica
-              </Link>
-            ) : null}
-          </div>
         </div>
       ) : null}
     </section>
