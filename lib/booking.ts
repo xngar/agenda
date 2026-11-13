@@ -130,24 +130,50 @@ export async function getDefaultOrganization(): Promise<ClinicSettings | null> {
 async function loadCatalog(org: { id: string } & Record<string, unknown>): Promise<Catalog> {
   const supabase = supabaseAdmin();
   const orgId = org.id;
-  const [services, doctors, holidays] = await Promise.all([
+  const [services, doctorsWithAvatar, holidays] = await Promise.all([
     supabase.from('services').select('id,name,duration_min,active').eq('org_id', orgId).eq('active', true),
-    supabase.from('doctors').select('id,full_name,specialty,role').eq('org_id', orgId).eq('active', true),
+    supabase.from('doctors').select('id,full_name,specialty,role,avatar_path').eq('org_id', orgId).eq('active', true),
     supabase.from('clinic_holidays').select('date,name').eq('org_id', orgId),
   ]);
+
+  let doctorsData = doctorsWithAvatar.data as
+    | { id: string; full_name: string; specialty: string | null; role?: string; avatar_path?: string | null }[]
+    | null;
+  let doctorsError = doctorsWithAvatar.error;
+
+  if (
+    doctorsError &&
+    (doctorsError.code === "42703" ||
+      doctorsError.code === "PGRST204" ||
+      doctorsError.message?.toLowerCase().includes("avatar_path"))
+  ) {
+    const fallback = await supabase
+      .from('doctors')
+      .select('id,full_name,specialty,role')
+      .eq('org_id', orgId)
+      .eq('active', true);
+    doctorsData = (fallback.data ?? null) as
+      | { id: string; full_name: string; specialty: string | null; role?: string; avatar_path?: string | null }[]
+      | null;
+    doctorsError = fallback.error;
+  }
+
   if (services.error) throw new Error('No se pudieron leer los servicios');
-  if (doctors.error) throw new Error('No se pudieron leer los profesionales');
+  if (doctorsError) throw new Error('No se pudieron leer los profesionales');
   if (holidays.error) throw new Error('No se pudieron leer los feriados');
   return {
     settings: org as unknown as ClinicSettings,
     services: (services.data ?? []) as Service[],
-    doctors: ((doctors.data ?? []) as (PublicDoctor & { role?: string })[])
+    doctors: (doctorsData ?? [])
       .filter((d) => d.role === 'professional')
-      .map((rest) => {
-        const { role: _unused, ...clean } = rest as PublicDoctor & { role?: string };
-        void _unused;
-        return clean;
-      }) as PublicDoctor[],
+      .map((d) => ({
+        id: d.id,
+        full_name: d.full_name,
+        specialty: d.specialty,
+        avatar_url: d.avatar_path
+          ? `/api/doctors/${encodeURIComponent(d.id)}/avatar?v=${encodeURIComponent(d.avatar_path.slice(-16))}`
+          : null,
+      })),
     holidays: (holidays.data ?? []) as Holiday[],
   };
 }
@@ -921,7 +947,7 @@ export interface ReminderSummary {
  */
 export async function sendDueReminders(): Promise<ReminderSummary> {
   const supabase = supabaseAdmin();
-  const settings = await getSettings();
+  const orgSettingsCache = new Map<string, ClinicSettings>();
 
   const { data, error } = await supabase.rpc("claim_due_reminders");
   if (error) {
@@ -953,21 +979,32 @@ export async function sendDueReminders(): Promise<ReminderSummary> {
       continue;
     }
 
+    let orgSettings = orgSettingsCache.get(appointment.org_id);
+    if (!orgSettings) {
+      orgSettings = await getSettings(appointment.org_id);
+      orgSettingsCache.set(appointment.org_id, orgSettings);
+    }
+
+    if (orgSettings.reminders_enabled === false) {
+      summary.skipped += 1;
+      continue;
+    }
+
     const startsAt = lowerBound(appointment.during);
     const endsAt = upperBound(appointment.during);
 
     const result = await sendEmail({
       to: row.patient_email,
-      subject: `Recordatorio de cita · ${settings.name}`,
+      subject: `Recordatorio de cita · ${orgSettings.name}`,
       html: bookingReminderHtml({
         patientName: row.patient_name,
-        clinicName: settings.name,
+        clinicName: orgSettings.name,
         doctorName: appointment.doctors?.full_name ?? "Profesional",
         specialty: appointment.doctors?.specialty ?? null,
         serviceName: row.service_name ?? appointment.services?.name ?? "Atención",
-        dateLabel: formatDateLong(startsAt, settings.timezone),
-        timeLabel: formatRange(startsAt, endsAt, settings.timezone),
-        clinicAddress: CLINIC_ADDRESS,
+        dateLabel: formatDateLong(startsAt, orgSettings.timezone),
+        timeLabel: formatRange(startsAt, endsAt, orgSettings.timezone),
+        clinicAddress: orgSettings.address ?? CLINIC_ADDRESS,
         manageUrl: manageAbsoluteUrl(token),
       }),
     });

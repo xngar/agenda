@@ -19,6 +19,7 @@ import {
 } from "@/components/ui";
 import Turnstile from "@/components/turnstile";
 import WeekdayPicker, { type DayStatus } from "@/components/booking/weekday-picker";
+import { AnyDoctorAvatar, DoctorAvatar } from "@/components/booking/doctor-avatar";
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -428,6 +429,7 @@ export default function BookingWizard(props: BookingWizardProps) {
                       onChange={() => selectDoctor(null)}
                       className="h-4 w-4 shrink-0 accent-action-primary"
                     />
+                    <AnyDoctorAvatar />
                     <span>
                       <span className="block font-semibold text-neutral-800">
                         Cualquiera disponible
@@ -454,6 +456,7 @@ export default function BookingWizard(props: BookingWizardProps) {
                         onChange={() => selectDoctor(doc.id)}
                         className="h-4 w-4 shrink-0 accent-action-primary"
                       />
+                      <DoctorAvatar name={doc.full_name} avatarUrl={doc.avatar_url} />
                       <span>
                         <span className="block font-semibold text-neutral-800">{doc.full_name}</span>
                         {doc.specialty ? (

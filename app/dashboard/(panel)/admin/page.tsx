@@ -5,6 +5,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { AddMemberButton } from "./add-member-form";
 import { TeamList } from "./team-list";
+import { RemindersConfigCard } from "./reminders-config-card";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { BackLink } from "@/components/dashboard/back-link";
 import { AnimatedNumber } from "@/components/motion/animated-number";
@@ -33,13 +34,32 @@ export default async function AdminPage() {
     .select("id, full_name, specialty, role, is_admin, active")
     .order("full_name");
 
-  const { data: org } = await supabase
+  let org: {
+    professional_limit?: number | null;
+    reminders_enabled?: boolean | null;
+    reminder_hours_before?: number | null;
+  } | null = null;
+
+  const orgRes = await supabase
     .from("organizations")
-    .select("professional_limit")
+    .select("professional_limit, reminders_enabled, reminder_hours_before")
     .eq("id", session.orgId)
     .maybeSingle();
 
+  if (orgRes.error) {
+    const fallbackOrg = await supabase
+      .from("organizations")
+      .select("professional_limit")
+      .eq("id", session.orgId)
+      .maybeSingle();
+    org = fallbackOrg.data;
+  } else {
+    org = orgRes.data;
+  }
+
   const limit = org?.professional_limit ?? null;
+  const remindersEnabled = org?.reminders_enabled ?? true;
+  const reminderHours = org?.reminder_hours_before ?? 24;
   const used = (doctors ?? []).filter((d) => d.role === "professional" && d.active).length;
 
   // El email no está en `doctors`, vive en la cuenta de acceso (auth.users).
@@ -83,6 +103,8 @@ export default async function AdminPage() {
       />
 
       <TeamList initial={team} selfId={session.id} />
+
+      <RemindersConfigCard initialEnabled={remindersEnabled} initialHours={reminderHours} />
 
       <BackLink />
     </div>

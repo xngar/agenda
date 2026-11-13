@@ -11,9 +11,16 @@ import type { StaffDoctor } from "./staff-booking-button";
 import { motion, AnimatePresence } from "motion/react";
 import { RefreshCw } from "lucide-react";
 import { DUR, EASE } from "@/lib/motion";
+import { todayKey as currentTodayKey } from "@/lib/dates";
+import { NextPatientCard } from "@/components/dashboard/next-patient-card";
+
 interface Props {
   initial: DoctorAppointment[];
   dayKey: string;
+  /** Día actual en la zona horaria de la clínica. */
+  todayKey?: string;
+  /** Zona horaria de la clínica. */
+  timezone?: string;
   /** Profesional de la vista; null = todo el equipo (escucha por org). */
   doctorId: string | null;
   /** Organización, para el canal Realtime de la vista de equipo. */
@@ -39,12 +46,15 @@ type Filtro = "todas" | "activas" | "canceladas";
 export function Agenda({
   initial,
   dayKey,
+  todayKey,
+  timezone,
   doctorId,
   orgId,
   diasConCitas,
   doctors,
   orgName,
 }: Props) {
+  const effectiveToday = todayKey ?? currentTodayKey(timezone);
   const [filtro, setFiltro] = useState<Filtro>("todas");
   const [busqueda, setBusqueda] = useState("");
 
@@ -95,6 +105,13 @@ export function Agenda({
       transition={{ duration: DUR.element, ease: EASE.out }}
       className="space-y-3"
     >
+      <NextPatientCard
+        citas={initial}
+        dayKey={dayKey}
+        todayKey={effectiveToday}
+        timezone={timezone}
+      />
+
       <div className="flex flex-wrap items-center gap-2 rounded-card border border-neutral-200 bg-white p-2 shadow-card">
         <div
           className="inline-flex items-center gap-1 rounded-full bg-neutral-100 p-1"

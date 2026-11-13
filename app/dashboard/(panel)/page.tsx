@@ -283,6 +283,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           <Agenda
             initial={appointments}
             dayKey={dayKey}
+            todayKey={todayKey(tzClinica)}
+            timezone={tzClinica}
             doctorId={onlyDoctorId}
             orgId={session.orgId}
             diasConCitas={diasConCitas}

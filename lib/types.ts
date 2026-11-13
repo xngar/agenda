@@ -44,6 +44,8 @@ export interface ClinicSettings {
   min_notice_hours: number;
   max_days_ahead: number;
   cancel_min_hours: number;
+  reminders_enabled?: boolean;
+  reminder_hours_before?: number;
 }
 
 export type DoctorRoleType = "professional" | "reception";
@@ -53,6 +55,7 @@ export interface PublicDoctor {
   full_name: string;
   specialty: string | null;
   role?: DoctorRoleType | string;
+  avatar_url?: string | null;
 }
 
 export interface Service {
