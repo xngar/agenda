@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { CalendarCheck, Check, ShieldCheck, X } from "lucide-react";
 import { formatRutPartial, isValidRut, normalizeRut } from "@/lib/rut";
 import { Button, buttonClasses, inputClasses, Spinner, ErrorNotice, InfoNotice } from "@/components/ui";
 
@@ -138,10 +139,10 @@ export default function ManageAppointmentModal({
 
   const triggerClasses =
     variant === "link"
-      ? "inline-flex items-center gap-1.5 text-sm font-semibold text-action-primary hover:underline focus-visible:outline-2 focus-visible:outline-action-primary rounded-md py-1"
+      ? "group inline-flex w-full items-center justify-between gap-3 rounded-xl py-0.5 text-left text-sm font-semibold text-action-primary focus-visible:outline-2 focus-visible:outline-action-primary cursor-pointer"
       : variant === "nav"
-      ? "inline-flex items-center gap-1.5 rounded-lg border border-action-primary/20 bg-action-primary/10 px-3 py-2 text-sm font-medium text-action-primary transition-colors hover:border-action-primary/30 hover:bg-action-primary/15"
-      : buttonClasses(variant, size, className);
+        ? "inline-flex min-h-11 items-center gap-1.5 rounded-full border border-[var(--lp-sky-200)] bg-sky-50/80 px-3.5 py-2 text-sm font-semibold text-[var(--lp-navy)] transition-all duration-micro hover:border-sky-300 hover:bg-[var(--lp-sky-100)] active:scale-[0.98] cursor-pointer md:min-h-9"
+        : buttonClasses(variant, size, className);
 
   return (
     <>
@@ -153,20 +154,7 @@ export default function ManageAppointmentModal({
       >
         {children ?? (
           <>
-            <svg
-              className="h-4 w-4 shrink-0 opacity-75"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
+            <CalendarCheck className="h-4 w-4 shrink-0 text-[var(--lp-blue)]" aria-hidden="true" />
             <span>¿Ya tienes cita? Gestionar o cancelar</span>
           </>
         )}
@@ -175,41 +163,32 @@ export default function ManageAppointmentModal({
       {isOpen && portalTarget
         ? createPortal(
             <div
-              className="fixed inset-0 z-50 flex overflow-y-auto bg-black/50 p-4 backdrop-blur-sm animate-in fade-in duration-200"
+              className="fixed inset-0 z-50 flex overflow-y-auto bg-black/50 p-4 backdrop-blur-sm"
               role="dialog"
               aria-modal="true"
               aria-labelledby="modal-title"
+              onClick={() => !loading && setIsOpen(false)}
             >
               <div
-                className="m-auto w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl border border-neutral-200 relative animate-in zoom-in-95 duration-200"
+                className="anim-modal-in relative m-auto w-full max-w-lg rounded-2xl border border-[var(--lp-sky-200)] bg-white p-6 shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               >
-                {/* Botón cerrar */}
                 <button
                   type="button"
                   onClick={() => !loading && setIsOpen(false)}
                   disabled={loading}
-                  className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-700 p-1.5 rounded-lg hover:bg-neutral-100 transition-colors"
+                  className="absolute top-3.5 right-3.5 inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 cursor-pointer"
                   aria-label="Cerrar ventana"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <X className="h-5 w-5" aria-hidden="true" />
                 </button>
 
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-sky-100 text-action-primary">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                      />
-                    </svg>
+                <div className="mb-4 flex items-center gap-3 pr-10">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--lp-sky-100)] text-action-primary">
+                    <CalendarCheck className="h-5 w-5" aria-hidden="true" />
                   </span>
                   <div>
-                    <h2 id="modal-title" className="text-xl font-bold text-action-primary">
+                    <h2 id="modal-title" className="text-xl font-bold text-[var(--lp-navy)]">
                       Gestionar o cancelar cita
                     </h2>
                     <p className="text-xs text-neutral-500">
@@ -218,8 +197,8 @@ export default function ManageAppointmentModal({
                   </div>
                 </div>
 
-                <p className="text-sm text-neutral-600 mb-5 leading-relaxed">
-                  Ingresa tu <strong>RUT</strong> o tu <strong>correo electrónico</strong> para acceder al detalle de tu hora y poder <strong>reprogramarla o cancelarla</strong>.
+                <p className="mb-5 text-sm leading-relaxed text-neutral-600">
+                  Ingresa tu <strong>RUT</strong> y <strong>correo electrónico</strong> para ver, reprogramar o cancelar tu hora.
                 </p>
 
                 {error && (
@@ -232,13 +211,11 @@ export default function ManageAppointmentModal({
                   <div className="mb-5">
                     <InfoNotice>
                       <div className="flex items-start gap-2.5">
-                        <svg className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
+                        <Check className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" aria-hidden="true" />
                         <div>
                           <p className="text-sm font-semibold text-neutral-900">{success}</p>
                           {redirecting && (
-                            <p className="mt-1 text-xs text-neutral-600 flex items-center gap-1.5">
+                            <p className="mt-1 flex items-center gap-1.5 text-xs text-neutral-600">
                               <Spinner label="Cargando tu cita…" />
                             </p>
                           )}
@@ -251,7 +228,7 @@ export default function ManageAppointmentModal({
                 {!redirecting && (
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                      <label htmlFor="lookup-rut" className="block text-sm font-semibold text-neutral-800 mb-1">
+                      <label htmlFor="lookup-rut" className="mb-1 block text-sm font-semibold text-neutral-800">
                         RUT del paciente
                       </label>
                       <input
@@ -265,11 +242,10 @@ export default function ManageAppointmentModal({
                         className={inputClasses}
                         autoComplete="off"
                       />
-                      <p className="mt-1 text-xs text-neutral-500">Sin puntos ni guión también funciona.</p>
                     </div>
 
                     <div>
-                      <label htmlFor="lookup-email" className="block text-sm font-semibold text-neutral-800 mb-1">
+                      <label htmlFor="lookup-email" className="mb-1 block text-sm font-semibold text-neutral-800">
                         Correo electrónico
                       </label>
                       <input
@@ -282,22 +258,16 @@ export default function ManageAppointmentModal({
                         className={inputClasses}
                         autoComplete="email"
                       />
-                      <p className="mt-1 text-xs text-neutral-500">
-                        El correo que ingresaste al momento de agendar.
+                    </div>
+
+                    <div className="flex items-start gap-2.5 rounded-xl border border-[var(--lp-sky-200)]/80 bg-sky-50/50 p-3.5 text-xs text-neutral-700">
+                      <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-action-primary" aria-hidden="true" />
+                      <p className="leading-relaxed">
+                        Con ambos datos accedes al instante. Si sólo ingresas uno, te enviaremos un enlace seguro a tu correo.
                       </p>
                     </div>
 
-                    <div className="rounded-xl bg-neutral-50 p-3.5 border border-neutral-200/80 text-xs text-neutral-600 space-y-1">
-                      <p className="font-semibold text-neutral-700">💡 Acceso rápido y seguro:</p>
-                      <p>
-                        • Si ingresas <strong>RUT y Correo</strong>: entras al instante a la pantalla de tu cita.
-                      </p>
-                      <p>
-                        • Si ingresas sólo uno de ellos: te enviaremos el enlace privado a tu correo para verificar tu identidad.
-                      </p>
-                    </div>
-
-                    <div className="pt-2 flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5">
+                    <div className="flex flex-col-reverse items-center justify-end gap-2.5 pt-2 sm:flex-row">
                       <Button
                         type="button"
                         variant="ghost"
@@ -313,7 +283,7 @@ export default function ManageAppointmentModal({
                         variant="primary"
                         size="md"
                         disabled={loading}
-                        className="w-full sm:w-auto min-w-36"
+                        className="w-full min-w-36 sm:w-auto"
                       >
                         {loading ? <Spinner label="Buscando…" /> : "Buscar mi cita"}
                       </Button>

@@ -41,7 +41,7 @@ export interface BookingWizardProps {
   minNoticeHours: number;
   cancelMinHours: number;
   clinicName: string;
-  clinicSlug: string;
+  clinicSlug?: string;
   consentText?: string;
   timezone: string;
   initialServiceId?: string;
@@ -55,7 +55,7 @@ export interface BookingWizardProps {
  * Postgres dice que está libre. El cliente sólo pinta botones.
  */
 export default function BookingWizard(props: BookingWizardProps) {
-  const homeHref = `/${props.clinicSlug}`;
+  const homeHref = props.clinicSlug ? `/${props.clinicSlug}` : "/";
 
   const [step, setStep] = useState<Step>(props.initialServiceId ? 3 : 1);
   const [serviceId, setServiceId] = useState<string | null>(props.initialServiceId ?? null);
@@ -118,11 +118,11 @@ export default function BookingWizard(props: BookingWizardProps) {
 
       try {
         const params = new URLSearchParams({
-          clinicSlug: props.clinicSlug,
           date: dayKey,
           serviceId,
           doctorId: doctorId ?? "",
         });
+        if (props.clinicSlug) params.set("clinicSlug", props.clinicSlug);
         const response = await fetch(`/api/slots?${params.toString()}`, {
           headers: { Accept: "application/json" },
         });
@@ -209,10 +209,8 @@ export default function BookingWizard(props: BookingWizardProps) {
 
     setEarliestLoading(true);
     try {
-      const params = new URLSearchParams({
-        clinicSlug: props.clinicSlug,
-        serviceId,
-      });
+      const params = new URLSearchParams({ serviceId });
+      if (props.clinicSlug) params.set("clinicSlug", props.clinicSlug);
       const response = await fetch(`/api/slots/earliest?${params.toString()}`, {
         headers: { Accept: "application/json" },
       });
@@ -308,7 +306,7 @@ export default function BookingWizard(props: BookingWizardProps) {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
-          clinicSlug: props.clinicSlug,
+          ...(props.clinicSlug ? { clinicSlug: props.clinicSlug } : {}),
           serviceId,
           doctorId,
           slotStart,
@@ -352,10 +350,10 @@ export default function BookingWizard(props: BookingWizardProps) {
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
-      <h1 className="text-2xl font-bold text-action-primary sm:text-3xl">Reservar hora</h1>
-      <p className="mt-1.5 text-sm text-neutral-600">
-        {props.clinicName} · {props.timezone.replace("_", " ")}
-      </p>
+      <h1 className="text-2xl font-extrabold tracking-tight text-[var(--lp-navy)] sm:text-3xl">
+        Reservar hora
+      </h1>
+      <p className="mt-1 text-sm font-medium text-neutral-600">{props.clinicName}</p>
 
       <StepIndicator
         current={step}
@@ -366,9 +364,9 @@ export default function BookingWizard(props: BookingWizardProps) {
         }
       />
 
-      <div className="mt-6 space-y-5">
+      <div key={step} className="anim-fade-up mt-6 space-y-5">
         {step === 1 ? (
-          <Card>
+          <Card className="border-[var(--lp-sky-200)]/80">
             <CardHeader
               title="¿Qué necesitas?"
               description="La duración determina los horarios disponibles."
@@ -376,13 +374,17 @@ export default function BookingWizard(props: BookingWizardProps) {
             <fieldset className="p-5">
               <legend className="sr-only">Servicios disponibles</legend>
               <ul className="space-y-3">
-                {props.services.map((option) => (
-                  <li key={option.id}>
+                {props.services.map((option, idx) => (
+                  <li
+                    key={option.id}
+                    className="anim-row-in"
+                    style={{ animationDelay: `${Math.min(idx, 8) * 35}ms` }}
+                  >
                     <label
-                      className={`flex cursor-pointer items-center justify-between gap-4 rounded-xl border px-4 py-3.5 transition-colors ${
+                      className={`flex cursor-pointer items-center justify-between gap-4 rounded-xl border px-4 py-3.5 transition-all duration-micro ${
                         serviceId === option.id
-                          ? "border-action-primary bg-action-primary/5"
-                          : "border-neutral-300 hover:border-action-primary/30 hover:bg-action-primary/5"
+                          ? "border-action-primary bg-action-primary/5 shadow-2xs"
+                          : "border-neutral-200 hover:border-[var(--lp-sky-200)] hover:bg-sky-50/40"
                       }`}
                     >
                       <span className="flex min-w-0 items-center gap-3">
@@ -394,12 +396,12 @@ export default function BookingWizard(props: BookingWizardProps) {
                           onChange={() => selectService(option.id)}
                           className="h-4 w-4 shrink-0 accent-action-primary"
                         />
-                        <span className="min-w-0">
-                          <span className="block font-semibold text-neutral-800">{option.name}</span>
-                          <span className="block text-sm text-neutral-600">
-                            {option.duration_min} minutos
-                          </span>
+                        <span className="min-w-0 font-semibold text-[var(--lp-navy)]">
+                          {option.name}
                         </span>
+                      </span>
+                      <span className="shrink-0 rounded-full bg-[var(--lp-sky-100)] px-3 py-1 font-mono text-xs font-semibold text-[var(--lp-navy)]">
+                        {option.duration_min} min
                       </span>
                     </label>
                   </li>
@@ -417,29 +419,20 @@ export default function BookingWizard(props: BookingWizardProps) {
         ) : null}
 
         {step === 2 ? (
-          <Card>
+          <Card className="border-[var(--lp-sky-200)]/80">
             <CardHeader
               title="¿Con quién prefieres?"
-              description="Si no prefieres a alguien en particular, eliges el primer profesional libre."
-              action={
-                <button
-                  type="button"
-                  onClick={() => selectDoctor(null)}
-                  className="text-sm font-semibold text-action-primary underline underline-offset-4"
-                >
-                  {doctorId ? "Cambiar" : "Cualquiera disponible"}
-                </button>
-              }
+              description="Si no tienes preferencia, buscamos la primera hora disponible."
             />
             <fieldset className="p-5">
               <legend className="sr-only">Profesionales</legend>
               <ul className="space-y-3">
-                <li>
+                <li className="anim-row-in">
                   <label
-                    className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3.5 ${
+                    className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3.5 transition-all duration-micro ${
                       doctorId === null
-                        ? "border-action-primary bg-action-primary/5"
-                        : "border-neutral-300 hover:border-action-primary/30"
+                        ? "border-action-primary bg-action-primary/5 shadow-2xs"
+                        : "border-neutral-200 hover:border-[var(--lp-sky-200)] hover:bg-sky-50/40"
                     }`}
                   >
                     <input
@@ -451,22 +444,26 @@ export default function BookingWizard(props: BookingWizardProps) {
                     />
                     <AnyDoctorAvatar />
                     <span>
-                      <span className="block font-semibold text-neutral-800">
+                      <span className="block font-semibold text-[var(--lp-navy)]">
                         Cualquiera disponible
                       </span>
                       <span className="block text-sm text-neutral-600">
-                        Buscamos la hora más temprana libre y la dejamos seleccionada
+                        Seleccionamos automáticamente el primer horario libre
                       </span>
                     </span>
                   </label>
                 </li>
-                {props.doctors.map((doc) => (
-                  <li key={doc.id}>
+                {props.doctors.map((doc, idx) => (
+                  <li
+                    key={doc.id}
+                    className="anim-row-in"
+                    style={{ animationDelay: `${Math.min(idx + 1, 8) * 35}ms` }}
+                  >
                     <label
-                      className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3.5 ${
+                      className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3.5 transition-all duration-micro ${
                         doctorId === doc.id
-                          ? "border-action-primary bg-action-primary/5"
-                          : "border-neutral-300 hover:border-action-primary/30"
+                          ? "border-action-primary bg-action-primary/5 shadow-2xs"
+                          : "border-neutral-200 hover:border-[var(--lp-sky-200)] hover:bg-sky-50/40"
                       }`}
                     >
                       <input
@@ -478,7 +475,9 @@ export default function BookingWizard(props: BookingWizardProps) {
                       />
                       <DoctorAvatar name={doc.full_name} avatarUrl={doc.avatar_url} />
                       <span>
-                        <span className="block font-semibold text-neutral-800">{doc.full_name}</span>
+                        <span className="block font-semibold text-[var(--lp-navy)]">
+                          {doc.full_name}
+                        </span>
                         {doc.specialty ? (
                           <span className="block text-sm text-neutral-600">{doc.specialty}</span>
                         ) : null}
@@ -500,7 +499,7 @@ export default function BookingWizard(props: BookingWizardProps) {
         ) : null}
 
         {step === 3 ? (
-          <Card>
+          <Card className="border-[var(--lp-sky-200)]/80">
             <CardHeader
               title="Elige día y hora"
               description={
@@ -547,6 +546,7 @@ export default function BookingWizard(props: BookingWizardProps) {
                   slots={slotsByStart}
                   selected={slotStart}
                   onSelect={selectSlot}
+                  showMultiDoctorNote={doctorId === null}
                 />
               )}
 
@@ -651,19 +651,21 @@ export default function BookingWizard(props: BookingWizardProps) {
                     onChange={(e) => setForm((f) => ({ ...f, consent: e.target.checked }))}
                     className="mt-1 h-4 w-4 shrink-0 accent-action-primary"
                   />
-                  <label htmlFor="consent" className="text-sm text-neutral-700">
+                  <label htmlFor="consent" id="consent-text" className="text-sm text-neutral-700">
                     {props.consentText ?? CONSENT_TEXT}
                   </label>
                 </div>
                 {fieldErrors.consent ? (
-                  <p className="text-sm font-medium text-action-primary">{fieldErrors.consent}</p>
+                  <p role="alert" className="text-sm font-medium text-danger-700">
+                    {fieldErrors.consent}
+                  </p>
                 ) : null}
               </div>
 
               <Turnstile onToken={setTurnstileToken} resetKey={turnstileReset} />
 
-              <div className="rounded-card border border-neutral-200 bg-neutral-50 p-4">
-                <h3 className="text-sm font-semibold text-action-primary">Resumen</h3>
+              <div className="rounded-2xl border border-[var(--lp-sky-200)]/80 bg-sky-50/40 p-4">
+                <h3 className="text-sm font-bold text-[var(--lp-navy)]">Resumen</h3>
                 <dl className="mt-2 space-y-1.5 text-sm">
                   <SummaryRow label="Servicio" value={service?.name ?? "—"} />
                   <SummaryRow
@@ -691,22 +693,22 @@ export default function BookingWizard(props: BookingWizardProps) {
         ) : null}
 
         {step === 5 && manageUrl ? (
-          <Card className="p-6 text-center sm:p-8">
+          <Card className="border-[var(--lp-sky-200)]/80 p-6 text-center sm:p-8">
             <span
               aria-hidden="true"
-              className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-navy text-white"
+              className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--lp-navy)] text-white shadow-md"
             >
               <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={2.4}>
                 <path d="m5 13 4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </span>
-            <h2 className="mt-4 text-xl font-bold text-action-primary">¡Hora agendada!</h2>
+            <h2 className="mt-4 text-xl font-bold text-[var(--lp-navy)]">¡Cita reservada!</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-neutral-700">
-              Te enviamos el comprobante a <strong>{form.email}</strong>. Tu hora será confirmada a
-              la brevedad por nuestro equipo y te enviaremos un correo apenas esté confirmada.
+              Enviamos el comprobante a <strong>{form.email}</strong>. Nuestro equipo revisará tu
+              solicitud y te avisará por correo apenas quede confirmada.
             </p>
 
-            <dl className="mx-auto mt-5 max-w-sm space-y-1.5 rounded-card bg-neutral-50 p-4 text-left text-sm">
+            <dl className="mx-auto mt-5 max-w-sm space-y-1.5 rounded-2xl border border-[var(--lp-sky-200)]/80 bg-sky-50/40 p-4 text-left text-sm">
               <SummaryRow label="Servicio" value={service?.name ?? "—"} />
               <SummaryRow
                 label="Profesional"
@@ -776,19 +778,23 @@ function StepIndicator({
               >
                 <span
                   aria-hidden="true"
-                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all duration-micro ${
                     state === "actual"
-                      ? "bg-action-primary text-action-primary-foreground"
+                      ? "bg-action-primary text-action-primary-foreground ring-4 ring-action-primary/15"
                       : state === "hecho"
-                        ? "bg-action-primary/15 text-action-primary"
+                        ? "bg-[var(--lp-navy)] text-white"
                         : "bg-neutral-200 text-neutral-600"
                   }`}
                 >
                   {state === "hecho" ? "✓" : step}
                 </span>
                 <span
-                  className={`hidden truncate text-xs font-medium sm:block ${
-                    state === "actual" ? "text-action-primary" : "text-neutral-600"
+                  className={`hidden truncate text-xs sm:block ${
+                    state === "actual"
+                      ? "font-bold text-action-primary"
+                      : state === "hecho"
+                        ? "font-semibold text-[var(--lp-navy)]"
+                        : "font-medium text-neutral-600"
                   }`}
                 >
                   {STEP_TITLES[step]}
@@ -798,7 +804,7 @@ function StepIndicator({
                 <span
                   aria-hidden="true"
                   className={`hidden h-px w-4 sm:block ${
-                    step < current ? "bg-action-primary/30" : "bg-neutral-200"
+                    step < current ? "bg-[var(--lp-navy)]/35" : "bg-neutral-200"
                   }`}
                 />
               ) : null}
@@ -856,10 +862,12 @@ function SlotGrid({
   slots,
   selected,
   onSelect,
+  showMultiDoctorNote = true,
 }: {
   slots: Map<string, string[]>;
   selected: string | null;
   onSelect: (slotStart: string, doctorId: string | null) => void;
+  showMultiDoctorNote?: boolean;
 }) {
   const entries = [...slots.entries()];
 
@@ -886,10 +894,10 @@ function SlotGrid({
               type="button"
               aria-pressed={isSelected}
               onClick={() => onSelect(start, single ? doctorIds[0] : null)}
-              className={`min-h-11 rounded-xl border text-sm font-semibold transition-colors ${
+              className={`min-h-11 rounded-xl border font-mono text-sm font-semibold transition-all duration-micro cursor-pointer active:scale-[0.97] ${
                 isSelected
-                  ? "border-action-primary bg-action-primary text-action-primary-foreground"
-                  : "border-neutral-300 bg-white text-action-primary hover:border-action-primary hover:bg-action-primary/5"
+                  ? "border-action-primary bg-action-primary text-action-primary-foreground shadow-xs"
+                  : "border-neutral-200 bg-white text-[var(--lp-navy)] hover:border-[var(--lp-blue)] hover:bg-sky-50/60"
               }`}
             >
               {time}
@@ -897,9 +905,11 @@ function SlotGrid({
           );
         })}
       </div>
-      <p className="mt-3 text-xs text-neutral-600">
-        Si una hora aparece en más de un profesional, al reservar te asignamos al primero disponible.
-      </p>
+      {showMultiDoctorNote ? (
+        <p className="mt-3 text-xs text-neutral-600">
+          Si una hora aparece en más de un profesional, al reservar te asignamos al primero disponible.
+        </p>
+      ) : null}
     </fieldset>
   );
 }

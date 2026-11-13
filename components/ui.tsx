@@ -15,11 +15,11 @@ const SHAPES: Record<ButtonShape, string> = {
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    "border border-transparent bg-action-primary text-action-primary-foreground hover:bg-action-primary-hover disabled:bg-neutral-300 disabled:text-neutral-500",
+    "border border-transparent bg-action-primary text-action-primary-foreground shadow-action hover:bg-action-primary-hover hover:shadow-action-hover disabled:bg-neutral-300 disabled:text-neutral-500",
   secondary:
-    "border border-transparent bg-action-primary text-action-primary-foreground hover:bg-action-primary-hover disabled:bg-neutral-300 disabled:text-neutral-500",
+    "border border-transparent bg-brand-navy text-white shadow-xs hover:bg-brand-navy-800 disabled:bg-neutral-300 disabled:text-neutral-500",
   ghost:
-    "border border-neutral-200 bg-white text-action-primary hover:bg-action-primary/5 disabled:text-neutral-500",
+    "border border-neutral-200 bg-white text-brand-navy hover:border-brand-sky-400/60 hover:bg-brand-sky-50/50 disabled:text-neutral-500",
   danger:
     "border border-transparent bg-red-600 text-white hover:bg-red-500 disabled:bg-neutral-300 disabled:text-neutral-500",
   flat:
@@ -100,7 +100,7 @@ export function CardHeader({
   title,
   description,
   action,
-  titleClassName = "text-action-primary",
+  titleClassName = "text-brand-navy",
 }: {
   title: ReactNode;
   description?: ReactNode;
@@ -215,7 +215,7 @@ export function EmptyState({
   description,
   action,
   icon = "calendario",
-  titleClassName = "text-action-primary",
+  titleClassName = "text-brand-navy",
 }: {
   title: string;
   description?: string;

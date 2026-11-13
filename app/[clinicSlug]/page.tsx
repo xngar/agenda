@@ -1,17 +1,29 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  ArrowRight,
+  Calendar,
+  CalendarCheck,
+  CalendarClock,
+  ClipboardList,
+  Clock,
+  MailCheck,
+  MapPin,
+  Phone,
+} from "lucide-react";
 import { OrganizationNotFoundError } from "@/lib/errors";
 import { getCatalog, getPublicOrganization } from "@/lib/booking";
 import { Card, buttonClasses } from "@/components/ui";
 import { CLINIC_ADDRESS, CLINIC_PHONE } from "@/lib/clinic";
 import { getDoctorSession } from "@/lib/auth";
 import ManageAppointmentModal from "@/components/booking/manage-appointment-modal";
+import { ScrollReveal } from "@/components/motion/scroll-reveal";
 
 export async function generateMetadata({ params }: { params: Promise<{ clinicSlug: string }> }) {
   const { clinicSlug } = await params;
   const org = await getPublicOrganization(clinicSlug).catch(() => null);
   return {
-    title: { absolute: `${org?.name ?? "Clínica odontológica"} · Reserva tu hora` },
+    title: { absolute: `${org?.name ?? "Clínica"} · Reserva tu hora` },
   };
 }
 
@@ -31,133 +43,201 @@ export default async function HomePage({ params }: { params: Promise<{ clinicSlu
   const { settings } = catalog;
   const address = settings.address ?? CLINIC_ADDRESS;
   const phone = settings.phone ?? CLINIC_PHONE;
+  const cancelLabel =
+    settings.cancel_min_hours > 0
+      ? `hasta ${settings.cancel_min_hours} h antes`
+      : "hasta antes de la cita";
+
+  const steps = [
+    {
+      n: "01",
+      Icon: ClipboardList,
+      t: "Elige qué necesitas",
+      d: "Selecciona el tipo de consulta o atención.",
+    },
+    {
+      n: "02",
+      Icon: CalendarCheck,
+      t: "Elige a quién y cuándo",
+      d: "Escoge un profesional o pide la primera hora disponible.",
+    },
+    {
+      n: "03",
+      Icon: MailCheck,
+      t: "Confirmación en tu correo",
+      d: "Recibe el comprobante y el enlace para gestionar tu cita.",
+    },
+  ];
+
+  const clinicFacts = [
+    {
+      k: "Horario",
+      v: "Lunes a viernes 09:00 – 13:00 y 15:00 – 19:00 · Sábado 09:00 – 13:00",
+      Icon: Clock,
+      accent: "blue" as const,
+    },
+    {
+      k: "Dirección",
+      v: address,
+      Icon: MapPin,
+      accent: "purple" as const,
+    },
+    {
+      k: "Teléfono",
+      v: (
+        <a
+          href={`tel:${phone.replace(/\s/g, "")}`}
+          className="font-semibold text-[var(--lp-blue)] transition-colors hover:text-[var(--lp-navy)] hover:underline"
+        >
+          {phone}
+        </a>
+      ),
+      Icon: Phone,
+      accent: "blue" as const,
+    },
+    {
+      k: "Reservas y cambios",
+      v: `Reserva con ${settings.min_notice_hours} h de anticipación · Cancelación ${cancelLabel}`,
+      Icon: CalendarClock,
+      accent: "purple" as const,
+    },
+  ];
 
   return (
     <>
-      {/* Hero */}
-      <section className="border-b border-neutral-200 bg-gradient-to-b from-action-primary/5 to-white">
-        <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-          <div>
-            <h1 className="text-3xl font-bold leading-tight tracking-tight text-action-primary sm:text-4xl lg:text-[2.75rem]">
+      <section className="border-b border-[var(--lp-sky-200)]/70 bg-white">
+        <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-[1.12fr_0.88fr] lg:items-center">
+          <ScrollReveal yOffset={14}>
+            <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-[var(--lp-navy)] sm:text-4xl lg:text-5xl [text-wrap:balance]">
               {settings.name}
             </h1>
-            <p className="mt-3 text-lg font-semibold text-neutral-800 sm:text-xl">
-              Tu hora con el dentista, en dos minutos.
+            <p className="mt-3 text-lg font-semibold text-action-primary sm:text-xl">
+              Agenda tu atención online en menos de dos minutos.
             </p>
-            <p className="mt-4 max-w-xl text-base leading-relaxed text-neutral-700">
-              Elige el servicio, el profesional y el horario que te acomode. Te enviamos la
-              confirmación al correo y puedes cambiar o cancelar tu cita cuando quieras.
+            <p className="mt-3 max-w-xl text-base leading-relaxed text-neutral-600">
+              Elige el servicio, el profesional y el horario que te acomode en tiempo real, sin
+              llamadas ni contraseñas.
             </p>
+
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link href={`/${clinicSlug}/reservar`} className={buttonClasses("primary", "lg")}>
-                Reservar ahora
+              <Link
+                href={`/${clinicSlug}/reservar`}
+                className={buttonClasses("primary", "lg", "shadow-md hover:scale-[1.02]")}
+              >
+                <span>Reservar ahora</span>
+                <ArrowRight className="h-4 w-4 btn-icon-right" aria-hidden="true" />
               </Link>
-              <a href={`tel:${phone.replace(/\s/g, "")}`} className={buttonClasses("secondary", "lg")}>
-                Llamar {phone}
+              <a
+                href={`tel:${phone.replace(/\s/g, "")}`}
+                className={buttonClasses("secondary", "lg", "hover:scale-[1.02]")}
+              >
+                <Phone className="h-4 w-4 btn-icon-wiggle" aria-hidden="true" />
+                <span>Llamar {phone}</span>
               </a>
             </div>
-            <div className="mt-3.5 rounded-xl border border-action-primary/10 bg-white/80 px-4 py-3 shadow-card">
+
+            <div className="mt-5 rounded-2xl border border-[var(--lp-sky-200)]/90 bg-white p-3.5 shadow-sm transition-all duration-element hover:border-[var(--lp-blue)]/40 hover:shadow-md">
               <ManageAppointmentModal clinicSlug={clinicSlug} clinicName={settings.name} variant="link">
-                <span className="flex items-center gap-3 text-left">
-                  <span
-                    aria-hidden="true"
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-action-primary/5 text-action-primary"
-                  >
-                    <svg
-                      className="h-5 w-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                <span className="flex w-full items-center justify-between gap-3">
+                  <span className="flex items-center gap-3">
+                    <span
+                      aria-hidden="true"
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--lp-sky-100)] text-[var(--lp-navy)]"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                  </span>
-                  <span>
-                    <span className="block text-sm font-normal text-neutral-600">
-                      ¿Ya tienes cita?
+                      <Calendar className="h-5 w-5" aria-hidden="true" />
                     </span>
-                    <span className="block text-sm font-semibold text-action-primary">
-                      Gestionar o cancelar
+                    <span>
+                      <span className="block text-xs font-medium text-neutral-500">
+                        ¿Ya tienes una cita agendada?
+                      </span>
+                      <span className="block text-sm font-semibold text-action-primary">
+                        Gestionar, reprogramar o cancelar
+                      </span>
                     </span>
                   </span>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-action-primary btn-icon-right" aria-hidden="true" />
                 </span>
               </ManageAppointmentModal>
             </div>
-            <p className="mt-5 text-xs text-neutral-600">
-              Sin registro ni contraseña. Necesitamos sólo tu nombre, RUT, teléfono y correo.
-            </p>
-          </div>
+          </ScrollReveal>
 
-          <Card className="p-5 sm:p-6">
-            <h2 className="text-base font-semibold text-action-primary">Cómo funciona</h2>
-            <ol className="mt-4 space-y-4">
-              {[
-                { n: 1, t: "Elige qué necesitas", d: "Control, limpieza o urgencia dental." },
-                { n: 2, t: "Elige a quién y cuándo", d: "Puedes dejar que elijamos el profesional libre." },
-                { n: 3, t: "Deja tus datos", d: "Te escribimos para confirmar y adjuntamos la cita al calendario." },
-              ].map((step) => (
-                <li key={step.n} className="flex gap-3.5">
-                  <span
-                    aria-hidden="true"
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-action-primary text-sm font-bold text-white"
-                  >
-                    {step.n}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold text-neutral-800">{step.t}</span>
-                    <span className="block text-sm text-neutral-600">{step.d}</span>
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </Card>
+          <ScrollReveal yOffset={16} delay={0.08}>
+            <Card className="rounded-3xl border-[var(--lp-sky-200)]/80 bg-white p-6 shadow-xl shadow-sky-900/5 sm:p-7">
+              <h2 className="text-lg font-bold text-[var(--lp-navy)]">Cómo funciona</h2>
+              <ol className="relative mt-5 space-y-5">
+                {steps.map(({ n, Icon, t, d }, idx) => (
+                  <li key={n} className="relative flex gap-3.5">
+                    {idx < steps.length - 1 ? (
+                      <span
+                        aria-hidden="true"
+                        className="absolute top-9 left-4.5 h-[calc(100%-0.5rem)] w-px bg-[var(--lp-sky-200)]"
+                      />
+                    ) : null}
+                    <span
+                      aria-hidden="true"
+                      className="relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--lp-navy)] font-mono text-xs font-bold text-white shadow-xs"
+                    >
+                      {n}
+                    </span>
+                    <span className="min-w-0 pt-0.5">
+                      <span className="flex items-center gap-1.5 text-sm font-bold text-[var(--lp-navy)]">
+                        <Icon className="h-4 w-4 shrink-0 text-action-primary" aria-hidden="true" />
+                        <span>{t}</span>
+                      </span>
+                      <span className="mt-0.5 block text-sm leading-relaxed text-neutral-600">{d}</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </Card>
+          </ScrollReveal>
         </div>
       </section>
 
-      {/* Datos de la clínica */}
-      <section aria-labelledby="datos" className="border-y border-neutral-200 bg-white">
+      <section aria-labelledby="datos" className="bg-slate-50/60">
         <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
-          <div className="max-w-3xl">
-            <h2 id="datos" className="text-2xl font-bold text-action-primary">
+          <ScrollReveal yOffset={12}>
+            <h2 id="datos" className="text-2xl font-bold text-[var(--lp-navy)] sm:text-3xl">
               Datos de la clínica
             </h2>
-            <dl className="mt-5 divide-y divide-neutral-200 overflow-hidden rounded-card border border-neutral-200 bg-white">
-              {[
-                { k: "Horario", v: "Lunes a viernes 09:00 – 13:00 y 15:00 – 19:00 · Sábado 09:00 – 13:00" },
-                { k: "Dirección", v: address },
-                { k: "Teléfono", v: phone },
-                { k: "Anticipación mínima", v: `${settings.min_notice_hours} horas` },
-                {
-                  k: "Cancelación",
-                  v: settings.cancel_min_hours > 0
-                    ? `hasta ${settings.cancel_min_hours} horas antes`
-                    : "Hasta antes del inicio de la cita",
-                },
-              ].map((row) => (
-                <div key={row.k} className="flex flex-col gap-0.5 px-4 py-3 sm:flex-row sm:gap-4">
-                  <dt className="text-sm font-medium text-neutral-600 sm:w-44 sm:shrink-0">{row.k}</dt>
-                  <dd className="text-sm text-neutral-800">{row.v}</dd>
-                </div>
-              ))}
-            </dl>
+          </ScrollReveal>
 
-            {doctor ? (
-              <Card className="mt-5 p-4">
-                <p className="text-sm text-neutral-700">
-                  Hola, <strong className="text-action-primary">{doctor.full_name}</strong>. Tienes una
-                  sesión abierta en el panel.
-                </p>
-                <Link href="/dashboard" className={buttonClasses("secondary", "sm", "mt-3")}>
-                  Ir a mi agenda
-                </Link>
-              </Card>
-            ) : null}
-          </div>
+          <dl className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {clinicFacts.map(({ k, v, Icon, accent }) => (
+              <div
+                key={k}
+                className="card-hover-lift rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs"
+              >
+                <span
+                  aria-hidden="true"
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                    accent === "blue"
+                      ? "bg-[var(--lp-sky-100)] text-[var(--lp-navy)]"
+                      : "bg-action-primary/10 text-action-primary"
+                  }`}
+                >
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <dt className="mt-3.5 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                  {k}
+                </dt>
+                <dd className="mt-1 text-sm leading-relaxed text-neutral-800">{v}</dd>
+              </div>
+            ))}
+          </dl>
+
+          {doctor ? (
+            <Card className="mt-6 flex flex-col items-start justify-between gap-4 border-[var(--lp-sky-200)]/80 bg-white p-5 sm:flex-row sm:items-center">
+              <p className="text-sm text-neutral-700">
+                Hola, <strong className="text-[var(--lp-navy)]">{doctor.full_name}</strong>. Tienes
+                una sesión abierta en el panel.
+              </p>
+              <Link href="/dashboard" className={buttonClasses("secondary", "sm")}>
+                <span>Ir a mi agenda</span>
+                <ArrowRight className="h-4 w-4 btn-icon-right" aria-hidden="true" />
+              </Link>
+            </Card>
+          ) : null}
         </div>
       </section>
     </>

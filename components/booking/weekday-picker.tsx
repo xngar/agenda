@@ -170,16 +170,16 @@ export default function WeekdayPicker({
               aria-label={describeDay(cell.key, holiday ?? null, cell.disabled)}
               title={cell.reason ?? undefined}
               className={[
-                "relative flex min-h-14 flex-col items-center justify-center rounded-xl border text-sm transition-colors sm:min-h-16",
+                "relative flex min-h-14 flex-col items-center justify-center rounded-xl border text-sm transition-all duration-micro sm:min-h-16",
                 isSelected
-                  ? "border-action-primary bg-action-primary text-action-primary-foreground hover:bg-action-primary-hover"
+                  ? "border-action-primary bg-action-primary text-action-primary-foreground shadow-xs hover:bg-action-primary-hover"
                   : cell.past
                     ? "cursor-not-allowed border-neutral-100 bg-neutral-50 text-neutral-300"
                     : cell.disabled
                       ? "cursor-not-allowed border-neutral-200 bg-neutral-100 text-neutral-400 line-through"
                       : isToday
-                        ? "border-action-primary/40 bg-action-primary/5 text-neutral-800 hover:border-action-primary hover:bg-action-primary/10"
-                        : "border-neutral-300 bg-white text-neutral-800 hover:border-action-primary/30 hover:bg-action-primary/5",
+                        ? "border-[var(--lp-blue)]/50 bg-sky-50/70 font-semibold text-[var(--lp-navy)] hover:border-action-primary hover:bg-action-primary/10 cursor-pointer"
+                        : "border-neutral-200 bg-white text-neutral-800 hover:border-[var(--lp-sky-200)] hover:bg-sky-50/50 cursor-pointer",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -199,10 +199,20 @@ export default function WeekdayPicker({
         ))}
       </div>
 
-      <p className="mt-2.5 text-xs text-neutral-600">
-        Los días grises ya pasaron. Los días con línea son domingos, feriados o no tienen horas.
-        Al elegir un día te mostramos las horas reales.
-      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-neutral-600">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full border border-[var(--lp-blue)]/60 bg-sky-50" aria-hidden="true" />
+          Hoy / disponible
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-action-primary" aria-hidden="true" />
+          Seleccionado
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-neutral-200" aria-hidden="true" />
+          Sin horas o feriado
+        </span>
+      </div>
     </section>
   );
 }

@@ -58,7 +58,7 @@ export function AnyDoctorAvatar({ size = "md" }: { size?: "md" | "lg" }) {
   return (
     <span
       aria-hidden="true"
-      className={`flex shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-neutral-100 text-neutral-600 ${SIZE_CLASSES[size]}`}
+      className={`flex shrink-0 items-center justify-center rounded-full border border-[var(--lp-sky-200)] bg-[var(--lp-sky-100)] text-[var(--lp-navy)] ${SIZE_CLASSES[size]}`}
     >
       <Users className="h-5 w-5" />
     </span>
