@@ -21,7 +21,7 @@ import { WhatsappIcon, WhatsappModal } from "@/components/dashboard/whatsapp-but
 import { resaltarCita } from "./resaltar-cita";
 import type { StaffDoctor } from "./staff-booking-button";
 import { motion, AnimatePresence } from "motion/react";
-import { Bell, RefreshCw, UserRound } from "lucide-react";
+import { Mail, RefreshCw, UserRound } from "lucide-react";
 import { DUR, EASE } from "@/lib/motion";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -541,7 +541,7 @@ export function WeekView({
                     ) : accion.action === "perfil" ? (
                       <UserRound className="h-4 w-4" />
                     ) : accion.action === "remind" ? (
-                      <Bell className="h-4 w-4" />
+                      <Mail className="h-4 w-4" />
                     ) : null}
                     {accion.etiqueta}
                   </span>

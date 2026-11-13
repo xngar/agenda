@@ -5,10 +5,9 @@ import { BellRing, CheckCircle2 } from "lucide-react";
 import { Button, Card, CardHeader, inputClasses } from "@/components/ui";
 
 const HOURS_OPTIONS = [
-  { value: 6, label: "6 horas antes" },
-  { value: 12, label: "12 horas antes" },
-  { value: 24, label: "24 horas antes (recomendado)" },
-  { value: 48, label: "48 horas antes" },
+  { value: 24, label: "24 horas antes (1 día · recomendado)" },
+  { value: 48, label: "48 horas antes (2 días)" },
+  { value: 72, label: "72 horas antes (3 días)" },
 ] as const;
 
 export function RemindersConfigCard({

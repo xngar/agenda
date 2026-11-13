@@ -69,17 +69,17 @@ export default async function PanelLayout({
         profileTrigger={
           <PerfilTrigger
             title="Mi perfil"
-            className="group flex w-full flex-col items-center gap-2 rounded-[var(--panel-radius-card)] bg-white px-4 py-5 text-center transition-colors duration-element ease-in-out-soft hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy"
+            className="group flex w-full flex-col items-center gap-2 rounded-[var(--panel-radius-card)] bg-white px-4 py-5 text-center transition-colors duration-element ease-in-out-soft hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-navy group-data-[collapsed=true]/sidebar:p-1.5"
           >
             <PerfilAvatar
               initials={inicialesDe(session.full_name) || "?"}
               fullName={session.full_name}
               profileId={session.id}
             />
-            <span className="block w-full truncate text-sm font-semibold leading-5 text-neutral-800">
+            <span className="block w-full truncate text-sm font-semibold leading-5 text-neutral-800 group-data-[collapsed=true]/sidebar:sr-only">
               {session.full_name}
             </span>
-            <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-0.5 text-[11px] font-semibold leading-4 text-neutral-600">
+            <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-0.5 text-[11px] font-semibold leading-4 text-neutral-600 group-data-[collapsed=true]/sidebar:sr-only">
               {roleLabel}
             </span>
           </PerfilTrigger>

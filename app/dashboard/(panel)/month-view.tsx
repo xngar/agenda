@@ -20,7 +20,7 @@ import { useRealtimeNotifications } from "../use-realtime";
 import { resaltarCita } from "./resaltar-cita";
 import { usePatientQuickView } from "@/components/dashboard/patient-quick-view";
 import { motion, AnimatePresence } from "motion/react";
-import { Bell, RefreshCw, UserRound } from "lucide-react";
+import { Mail, RefreshCw, UserRound } from "lucide-react";
 import { DUR, EASE } from "@/lib/motion";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -545,7 +545,7 @@ export function MonthView({
                     ) : accion.action === "perfil" ? (
                       <UserRound className="h-4 w-4" />
                     ) : accion.action === "remind" ? (
-                      <Bell className="h-4 w-4" />
+                      <Mail className="h-4 w-4" />
                     ) : null}
                     {accion.etiqueta}
                   </span>

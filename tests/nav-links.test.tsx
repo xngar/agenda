@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { PanelShell } from "@/components/dashboard/panel-shell";
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 
 const ruta = vi.hoisted(() => ({ pathname: "/dashboard/pacientes" }));
@@ -165,5 +166,99 @@ describe("SidebarNav", () => {
     });
 
     expect(etiquetas()).toEqual(["Organizaciones"]);
+  });
+
+  it("en modo colapsado conserva etiquetas accesibles en sr-only, agrega title y mantiene Administración operativo", () => {
+    act(() => {
+      root.render(<SidebarNav isAdmin={true} collapsed={true} />);
+    });
+
+    const links = enlaces();
+    expect(links).toHaveLength(9);
+
+    for (const a of links) {
+      const span = a.querySelector("span");
+      expect(span?.className).toContain("sr-only");
+      expect(a.getAttribute("title")).toBe(span?.textContent?.trim());
+      expect(a.querySelector("svg")).not.toBeNull();
+    }
+
+    const grupo = botonAdministracion();
+    expect(grupo).not.toBeNull();
+    expect(grupo?.getAttribute("title")).toBe("Administración");
+    expect(grupo?.getAttribute("aria-expanded")).toBe("false");
+
+    clic(grupo!);
+    expect(grupo?.getAttribute("aria-expanded")).toBe("true");
+  });
+});
+
+describe("PanelShell", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  it("alterna el menú lateral entre expandido y colapsado, expande el contenido y persiste en localStorage", () => {
+    act(() => {
+      root.render(
+        <PanelShell
+          isAdmin={false}
+          profileTrigger={<span>Perfil</span>}
+          logout={<button type="button">Salir</button>}
+        >
+          <div>Contenido</div>
+        </PanelShell>,
+      );
+    });
+
+    const aside = container.querySelector("aside");
+    const contenido = container.querySelector("#contenido-panel");
+    expect(aside?.getAttribute("data-collapsed")).toBe("false");
+    expect(aside?.className).toContain("w-[264px]");
+    expect(contenido?.className).toContain("max-w-6xl");
+
+    const botonColapsar = container.querySelector('button[aria-label="Colapsar menú lateral"]');
+    expect(botonColapsar).not.toBeNull();
+    expect(botonColapsar?.getAttribute("aria-expanded")).toBe("true");
+
+    clic(botonColapsar!);
+
+    expect(aside?.getAttribute("data-collapsed")).toBe("true");
+    expect(aside?.className).toContain("w-[72px]");
+    expect(contenido?.className).toContain("max-w-none");
+    expect(window.localStorage.getItem("panel:sidebar-collapsed")).toBe("1");
+
+    const botonExpandir = container.querySelector('button[aria-label="Expandir menú lateral"]');
+    expect(botonExpandir).not.toBeNull();
+    expect(botonExpandir?.getAttribute("aria-expanded")).toBe("false");
+
+    clic(botonExpandir!);
+
+    expect(aside?.getAttribute("data-collapsed")).toBe("false");
+    expect(aside?.className).toContain("w-[264px]");
+    expect(contenido?.className).toContain("max-w-6xl");
+    expect(window.localStorage.getItem("panel:sidebar-collapsed")).toBe("0");
+  });
+
+  it("restaura el estado colapsado desde localStorage al montar", () => {
+    window.localStorage.setItem("panel:sidebar-collapsed", "1");
+
+    act(() => {
+      root.render(
+        <PanelShell
+          isAdmin={false}
+          profileTrigger={<span>Perfil</span>}
+          logout={<button type="button">Salir</button>}
+        >
+          <div>Contenido</div>
+        </PanelShell>,
+      );
+    });
+
+    const aside = container.querySelector("aside");
+    const contenido = container.querySelector("#contenido-panel");
+    expect(aside?.getAttribute("data-collapsed")).toBe("true");
+    expect(aside?.className).toContain("w-[72px]");
+    expect(contenido?.className).toContain("max-w-none");
   });
 });

@@ -6,15 +6,14 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 const bodySchema = z.object({
   reminders_enabled: z.boolean(),
   reminder_hours_before: z.union([
-    z.literal(6),
-    z.literal(12),
     z.literal(24),
     z.literal(48),
+    z.literal(72),
   ]),
 });
 
 const MIGRATION_MESSAGE =
-  "La configuración de recordatorios aún no está habilitada en la base de datos. Aplica la migración 20261113140000_doctor_reminders_config.sql y vuelve a intentarlo.";
+  "La configuración de recordatorios aún no está habilitada en la base de datos. Aplica la migración 20261113150000_daily_doctor_reminders.sql y vuelve a intentarlo.";
 
 function faltaMigracion(error: { code?: string; message?: string } | null): boolean {
   if (!error) return false;

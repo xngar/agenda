@@ -153,21 +153,24 @@ function esActivo(pathname: string, href: string): boolean {
   return href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
 }
 
-function navButtonClasses(active: boolean): string {
+function navButtonClasses(active: boolean, collapsed = false): string {
   const tone = active
     ? "bg-panel-active text-action-primary shadow-[inset_0_0_0_1px_var(--action-primary-line)]"
     : "text-panel-muted hover:bg-panel-hover hover:text-action-primary";
+  const layout = collapsed ? "justify-center px-0" : "gap-3 px-3";
 
-  return `group flex min-h-11 w-full items-center gap-3 rounded-control px-3 text-sm font-medium transition-all duration-micro ease-out-soft active:scale-[0.98] [&>svg]:shrink-0 [&>svg]:transition-transform [&>svg]:duration-micro [&>svg]:ease-out-soft group-hover:[&>svg]:scale-115 group-hover:[&>svg]:text-action-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary ${tone}`;
+  return `group flex min-h-11 w-full items-center ${layout} rounded-control text-sm font-medium transition-all duration-micro ease-out-soft active:scale-[0.98] [&>svg]:shrink-0 [&>svg]:transition-transform [&>svg]:duration-micro [&>svg]:ease-out-soft group-hover:[&>svg]:scale-115 group-hover:[&>svg]:text-action-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary ${tone}`;
 }
 
 function NavItems({
   items,
   pathname,
+  collapsed = false,
   onNavigate,
 }: {
   items: NavItem[];
   pathname: string;
+  collapsed?: boolean;
   onNavigate?: () => void;
 }) {
   return (
@@ -178,12 +181,13 @@ function NavItems({
           <li key={item.href}>
             <Link
               href={item.href}
+              title={collapsed ? item.label : undefined}
               aria-current={active ? "page" : undefined}
               onClick={onNavigate}
-              className={navButtonClasses(active)}
+              className={navButtonClasses(active, collapsed)}
             >
               {item.icon}
-              {item.label}
+              <span className={collapsed ? "sr-only" : "truncate"}>{item.label}</span>
             </Link>
           </li>
         );
@@ -197,12 +201,14 @@ function NavGroup({
   icon,
   items,
   pathname,
+  collapsed = false,
   onNavigate,
 }: {
   label: string;
   icon: ReactNode;
   items: NavItem[];
   pathname: string;
+  collapsed?: boolean;
   onNavigate?: () => void;
 }) {
   const panelId = useId();
@@ -213,18 +219,19 @@ function NavGroup({
     <li>
       <button
         type="button"
+        title={collapsed ? label : undefined}
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((prev) => !prev)}
-        className={`${navButtonClasses(!open && activo)} justify-between`}
+        className={`${navButtonClasses(!open && activo, collapsed)} ${collapsed ? "" : "justify-between"}`}
       >
-        <span className="flex items-center gap-3">
+        <span className={`flex items-center ${collapsed ? "justify-center" : "gap-3"}`}>
           {icon}
-          {label}
+          <span className={collapsed ? "sr-only" : "truncate"}>{label}</span>
         </span>
         <ChevronDown
           aria-hidden="true"
-          className={`h-4 w-4 shrink-0 transition-transform duration-micro ease-out-soft ${open ? "rotate-180" : ""}`}
+          className={`h-4 w-4 shrink-0 transition-transform duration-micro ease-out-soft ${open ? "rotate-180" : ""} ${collapsed ? "hidden" : ""}`}
         />
       </button>
 
@@ -233,8 +240,8 @@ function NavGroup({
         className="grid transition-[grid-template-rows] duration-element ease-out-soft"
         style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
       >
-        <ul inert={!open} className="space-y-1 overflow-hidden pb-0.5 pl-3 pr-0.5 pt-0.5">
-          <NavItems items={items} pathname={pathname} onNavigate={onNavigate} />
+        <ul inert={!open} className={`space-y-1 overflow-hidden pb-0.5 pr-0.5 pt-0.5 ${collapsed ? "pl-0" : "pl-3"}`}>
+          <NavItems items={items} pathname={pathname} collapsed={collapsed} onNavigate={onNavigate} />
         </ul>
       </div>
     </li>
@@ -244,11 +251,13 @@ function NavGroup({
 export function SidebarNav({
   isAdmin,
   isSuperAdmin = false,
+  collapsed = false,
   onNavigate,
   className,
 }: {
   isAdmin: boolean;
   isSuperAdmin?: boolean;
+  collapsed?: boolean;
   onNavigate?: () => void;
   className?: string;
 }) {
@@ -259,7 +268,7 @@ export function SidebarNav({
     return (
       <nav aria-label="Secciones del panel" className={className}>
         <ul className="space-y-1">
-          <NavItems items={soloSuperAdmin} pathname={pathname} onNavigate={onNavigate} />
+          <NavItems items={soloSuperAdmin} pathname={pathname} collapsed={collapsed} onNavigate={onNavigate} />
         </ul>
       </nav>
     );
@@ -268,9 +277,9 @@ export function SidebarNav({
   return (
     <nav aria-label="Secciones del panel" className={className}>
       <ul className="space-y-1">
-        <NavItems items={principal} pathname={pathname} onNavigate={onNavigate} />
-        <NavItems items={disponibilidad} pathname={pathname} onNavigate={onNavigate} />
-        <NavItems items={[estadisticasItem, notificacionesItem]} pathname={pathname} onNavigate={onNavigate} />
+        <NavItems items={principal} pathname={pathname} collapsed={collapsed} onNavigate={onNavigate} />
+        <NavItems items={disponibilidad} pathname={pathname} collapsed={collapsed} onNavigate={onNavigate} />
+        <NavItems items={[estadisticasItem, notificacionesItem]} pathname={pathname} collapsed={collapsed} onNavigate={onNavigate} />
 
         {administracion.length > 0 ? (
           <>
@@ -281,6 +290,7 @@ export function SidebarNav({
               icon={<AdministracionIcon />}
               items={administracion}
               pathname={pathname}
+              collapsed={collapsed}
               onNavigate={onNavigate}
             />
           </>

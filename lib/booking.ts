@@ -948,64 +948,69 @@ export interface ReminderSummary {
 export async function sendDueReminders(): Promise<ReminderSummary> {
   const supabase = supabaseAdmin();
   const orgSettingsCache = new Map<string, ClinicSettings>();
-
-  const { data, error } = await supabase.rpc("claim_due_reminders");
-  if (error) {
-    console.warn("[recordatorios] claim_due_reminders falló:", error.message);
-    return { sent: 0, skipped: 0, failed: 0 };
-  }
-
-  const rows = (data ?? []) as {
-    appointment_id: string;
-    doctor_id: string;
-    patient_email: string;
-    patient_name: string;
-    service_name: string | null;
-    starts_at: string;
-  }[];
-
   const summary: ReminderSummary = { sent: 0, skipped: 0, failed: 0 };
+  const batchLimit = 200;
+  const maxBatches = 5;
 
-  for (const row of rows) {
-    const token = await openToken(row.appointment_id);
-    if (!token) {
-      summary.skipped += 1;
-      continue;
+  for (let batch = 0; batch < maxBatches; batch += 1) {
+    const { data, error } = await supabase.rpc("claim_due_reminders");
+    if (error) {
+      console.warn("[recordatorios] claim_due_reminders falló:", error.message);
+      break;
     }
 
-    const appointment = await loadAppointmentRow(row.appointment_id);
-    if (!appointment) {
-      summary.skipped += 1;
-      continue;
+    const rows = (data ?? []) as {
+      appointment_id: string;
+      doctor_id: string;
+      patient_email: string;
+      patient_name: string;
+      service_name: string | null;
+      starts_at: string;
+    }[];
+
+    for (const row of rows) {
+      const token = await openToken(row.appointment_id);
+      if (!token) {
+        summary.skipped += 1;
+        continue;
+      }
+
+      const appointment = await loadAppointmentRow(row.appointment_id);
+      if (!appointment) {
+        summary.skipped += 1;
+        continue;
+      }
+
+      let orgSettings = orgSettingsCache.get(appointment.org_id);
+      if (!orgSettings) {
+        orgSettings = await getSettings(appointment.org_id);
+        orgSettingsCache.set(appointment.org_id, orgSettings);
+      }
+
+      const startsAt = lowerBound(appointment.during);
+      const endsAt = upperBound(appointment.during);
+
+      const result = await sendEmail({
+        to: row.patient_email,
+        subject: `Recordatorio de cita · ${orgSettings.name}`,
+        html: bookingReminderHtml({
+          patientName: row.patient_name,
+          clinicName: orgSettings.name,
+          doctorName: appointment.doctors?.full_name ?? "Profesional",
+          specialty: appointment.doctors?.specialty ?? null,
+          serviceName: row.service_name ?? appointment.services?.name ?? "Atención",
+          dateLabel: formatDateLong(startsAt, orgSettings.timezone),
+          timeLabel: formatRange(startsAt, endsAt, orgSettings.timezone),
+          clinicAddress: orgSettings.address ?? CLINIC_ADDRESS,
+          manageUrl: manageAbsoluteUrl(token),
+        }),
+      });
+
+      if (result.ok) summary.sent += 1;
+      else summary.failed += 1;
     }
 
-    let orgSettings = orgSettingsCache.get(appointment.org_id);
-    if (!orgSettings) {
-      orgSettings = await getSettings(appointment.org_id);
-      orgSettingsCache.set(appointment.org_id, orgSettings);
-    }
-
-    const startsAt = lowerBound(appointment.during);
-    const endsAt = upperBound(appointment.during);
-
-    const result = await sendEmail({
-      to: row.patient_email,
-      subject: `Recordatorio de cita · ${orgSettings.name}`,
-      html: bookingReminderHtml({
-        patientName: row.patient_name,
-        clinicName: orgSettings.name,
-        doctorName: appointment.doctors?.full_name ?? "Profesional",
-        specialty: appointment.doctors?.specialty ?? null,
-        serviceName: row.service_name ?? appointment.services?.name ?? "Atención",
-        dateLabel: formatDateLong(startsAt, orgSettings.timezone),
-        timeLabel: formatRange(startsAt, endsAt, orgSettings.timezone),
-        clinicAddress: orgSettings.address ?? CLINIC_ADDRESS,
-        manageUrl: manageAbsoluteUrl(token),
-      }),
-    });
-
-    if (result.ok) summary.sent += 1;
-    else summary.failed += 1;
+    if (rows.length < batchLimit) break;
   }
 
   return summary;

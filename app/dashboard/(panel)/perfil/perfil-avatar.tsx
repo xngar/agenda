@@ -24,7 +24,7 @@ export function PerfilAvatar({
   return (
     <span
       aria-hidden="true"
-      className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-navy-50 text-2xl font-bold text-action-primary"
+      className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-navy-50 text-2xl font-bold text-action-primary transition-all duration-element ease-out-soft group-data-[collapsed=true]/sidebar:h-10 group-data-[collapsed=true]/sidebar:w-10 group-data-[collapsed=true]/sidebar:text-sm"
     >
       {showImage ? (
         <Image
