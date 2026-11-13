@@ -66,13 +66,13 @@ export async function auditPatientView(
     p_patient_id: patientId,
     p_entity: entity,
   });
-  if (error?.code === "PGRST202" || error?.code === "42883") {
-    console.error(
-      "[ficha.audit] audit_patient_view_event no está disponible; aplica la migración de endurecimiento de seguridad",
+  if (error) {
+    return NextResponse.json(
+      { error: "No se pudo registrar el acceso en la auditoría clínica" },
+      { status: 503 },
     );
-    return null;
   }
-  return error ? dbError(error) : null;
+  return null;
 }
 
 export interface PatientAccess {

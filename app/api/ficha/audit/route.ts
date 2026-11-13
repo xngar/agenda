@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import {
   fichaContext,
   unauthorized,
@@ -249,9 +249,14 @@ async function condicionesPaciente(
   ctx: FichaContext,
   patientId: string,
 ): Promise<string[]> {
-  const condiciones = [`and(entity.eq.patients,entity_id.eq.${patientId})`];
+  const condiciones = [
+    `entity_id.eq.${patientId}`,
+    `summary->>patient_id.eq.${patientId}`,
+  ];
 
-  for (const tabla of AUDIT_TABLAS_PACIENTE) {
+  const tablas = [...AUDIT_TABLAS_PACIENTE, "appointments"] as const;
+
+  for (const tabla of tablas) {
     const { data, error } = await ctx.supabase
       .from(tabla)
       .select("id")

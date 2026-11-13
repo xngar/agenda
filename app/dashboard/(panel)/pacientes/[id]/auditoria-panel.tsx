@@ -135,7 +135,7 @@ export function AuditoriaPanel({
       <Card>
         <FichaCardHeader
           title="Historial de auditoría"
-          description="Quién hizo qué y cuándo sobre esta ficha: creaciones, ediciones, firmas y exportaciones."
+          description="Registro inmutable de trazabilidad (Ley 20.584 / DS 41 MINSAL): quién realizó lecturas, creaciones, ediciones, firmas, contactos y exportaciones sobre esta ficha."
           action={
             exporta ? (
               <div className="flex flex-wrap gap-2">

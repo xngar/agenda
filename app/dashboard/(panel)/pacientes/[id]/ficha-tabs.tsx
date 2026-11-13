@@ -254,8 +254,9 @@ export function FichaTabs({
                 Zona peligrosa
               </h2>
               <p className="mt-1 text-sm text-neutral-600">
-                Archiva al paciente sin borrar su ficha clínica. El paciente quedará inactivo y
-                sus antecedentes se conservarán.
+                Archiva al paciente como inactivo sin borrar su ficha clínica. Por mandato legal
+                (Ley 20.584 y DS 41/2012 MINSAL), la ficha y su auditoría se conservan por al menos
+                15 años desde la última atención.
               </p>
             </div>
             <button
@@ -283,8 +284,9 @@ export function FichaTabs({
         busy={eliminando}
       >
         <p className="mt-2 text-sm text-neutral-600">
-          El paciente quedará inactivo. Su ficha y los registros clínicos se conservarán y seguirán
-          sujetos a los permisos habituales.
+          El paciente quedará inactivo en el listado. Su ficha clínica, atenciones firmadas y
+          registro de auditoría se conservarán íntegramente por el plazo legal mínimo de 15 años
+          desde la última atención (Ley 20.584 / DS 41 MINSAL).
         </p>
 
         {errorEliminar ? (

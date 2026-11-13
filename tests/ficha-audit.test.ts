@@ -104,6 +104,54 @@ describe("detalleAuditoria", () => {
       "Inició contacto con el paciente",
     );
   });
+
+  it("describe eventos de lectura (view) y exportación (export)", () => {
+    expect(
+      detalleAuditoria({
+        action: "view",
+        entity: "patients",
+        summary: { event: "read" },
+      }),
+    ).toBe("Consultó la ficha del paciente");
+    expect(
+      detalleAuditoria({
+        action: "view",
+        entity: "patient_pdf",
+        summary: { event: "read" },
+      }),
+    ).toBe("Descargó la ficha clínica en PDF");
+    expect(
+      detalleAuditoria({
+        action: "export",
+        entity: "patients",
+        summary: { format: "csv", registros: 14 },
+      }),
+    ).toBe("Exportó el historial de auditoría en CSV (14 registros)");
+  });
+
+  it("describe resúmenes endurecidos sin volcar campos vacíos", () => {
+    expect(
+      detalleAuditoria({
+        action: "insert",
+        entity: "dental_chart_entries",
+        summary: { event: "insert" },
+      }),
+    ).toBe("Registró un hallazgo en el odontograma");
+    expect(
+      detalleAuditoria({
+        action: "update",
+        entity: "encounters",
+        summary: { changed_fields: ["motivo", "diagnostico", "updated_at"] },
+      }),
+    ).toBe("Editó una atención (motivo, diagnóstico)");
+    expect(
+      detalleAuditoria({
+        action: "sign",
+        entity: "encounters",
+        summary: { changed_fields: ["status", "signed_at", "signed_by"] },
+      }),
+    ).toBe("Firmó la atención clínica");
+  });
 });
 
 describe("auditQuerySchema", () => {

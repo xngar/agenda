@@ -19,7 +19,7 @@ export async function DELETE(_request: Request, { params }: Params) {
 
   const { data: adjunto, error: adjuntoError } = await ctx.supabase
     .from("attachments")
-    .select("id,patient_id,storage_path")
+    .select("id,patient_id,encounter_id,storage_path")
     .eq("id", id)
     .eq("org_id", ctx.session.orgId)
     .maybeSingle();
@@ -47,6 +47,26 @@ export async function DELETE(_request: Request, { params }: Params) {
   }
   if (!access.canDelete) {
     return forbidden("Solo el profesional tratante principal o el administrador puede eliminar adjuntos");
+  }
+
+  if (adjunto.encounter_id) {
+    const { data: atencion, error: atencionError } = await ctx.supabase
+      .from("encounters")
+      .select("status")
+      .eq("id", adjunto.encounter_id)
+      .eq("org_id", ctx.session.orgId)
+      .maybeSingle();
+
+    if (atencionError) return dbError(atencionError);
+    if (atencion?.status === "signed") {
+      return NextResponse.json(
+        {
+          error:
+            "No se puede eliminar un adjunto asociado a una atención firmada; la ficha clínica debe conservarse por al menos 15 años (DS 41/2012 MINSAL).",
+        },
+        { status: 409 },
+      );
+    }
   }
 
   const { data: consentimientoVinculado, error: consentimientoError } = await ctx.supabase
