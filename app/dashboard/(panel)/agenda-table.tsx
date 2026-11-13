@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, CalendarClock, UserX, XCircle, UserRound } from "lucide-react";
+import { Bell, ChevronDown, CalendarClock, UserX, XCircle, UserRound } from "lucide-react";
 import type { DoctorAppointment } from "@/lib/types";
 import { formatTime } from "@/lib/dates";
 import { StatusBadge } from "@/components/ui";
@@ -289,6 +289,28 @@ export function AgendaTable({
                               disabled={ocupado}
                               compacto
                             />
+                          ) : null}
+
+                          {cita.status === "pending" || cita.status === "confirmed" ? (
+                            <button
+                              type="button"
+                              onClick={() => onAccion(cita.id, "remind")}
+                              disabled={ocupado || !cita.patient?.email}
+                              title={
+                                cita.patient?.email
+                                  ? "Enviar recordatorio por correo"
+                                  : "Sin correo registrado"
+                              }
+                              aria-label={
+                                cita.patient?.email
+                                  ? `Enviar recordatorio a ${cita.patient.full_name}`
+                                  : `Sin correo registrado para ${cita.patient?.full_name ?? "el paciente"}`
+                              }
+                              className="inline-flex items-center gap-1 rounded-full border border-neutral-300 px-2.5 py-1 text-[13px] font-medium text-neutral-700 transition-all duration-micro ease-out-soft hover:scale-[1.03] hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                            >
+                              <Bell className="h-3.5 w-3.5" aria-hidden="true" />
+                              <span>Recordatorio</span>
+                            </button>
                           ) : null}
 
                           <DropdownMenu>

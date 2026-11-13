@@ -33,6 +33,15 @@ function EstadisticasIcon() {
   );
 }
 
+function NotificacionesIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+      <path d="M15 17H5l1.4-1.4A2 2 0 0 0 7 14.2V10a5 5 0 0 1 10 0v4.2a2 2 0 0 0 .6 1.4L19 17h-4Z" strokeLinejoin="round" />
+      <path d="M10 17a2 2 0 0 0 4 0" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function HorarioIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
@@ -118,6 +127,12 @@ const estadisticasItem: NavItem = {
   href: "/dashboard/estadisticas",
   label: "Estadísticas",
   icon: <EstadisticasIcon />,
+};
+
+const notificacionesItem: NavItem = {
+  href: "/dashboard/notificaciones",
+  label: "Notificaciones",
+  icon: <NotificacionesIcon />,
 };
 
 const feriadosItem: NavItem = { href: "/dashboard/feriados", label: "Feriados", icon: <FeriadosIcon /> };
@@ -255,7 +270,7 @@ export function SidebarNav({
       <ul className="space-y-1">
         <NavItems items={principal} pathname={pathname} onNavigate={onNavigate} />
         <NavItems items={disponibilidad} pathname={pathname} onNavigate={onNavigate} />
-        <NavItems items={[estadisticasItem]} pathname={pathname} onNavigate={onNavigate} />
+        <NavItems items={[estadisticasItem, notificacionesItem]} pathname={pathname} onNavigate={onNavigate} />
 
         {administracion.length > 0 ? (
           <>

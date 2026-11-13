@@ -20,7 +20,7 @@ import { useRealtimeNotifications } from "../use-realtime";
 import { resaltarCita } from "./resaltar-cita";
 import { usePatientQuickView } from "@/components/dashboard/patient-quick-view";
 import { motion, AnimatePresence } from "motion/react";
-import { RefreshCw, UserRound } from "lucide-react";
+import { Bell, RefreshCw, UserRound } from "lucide-react";
 import { DUR, EASE } from "@/lib/motion";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -132,17 +132,22 @@ export function MonthView({
       return [
         perfil,
         { etiqueta: "Confirmar", action: "confirmed", tono: "primario" },
+        { etiqueta: "Enviar recordatorio", action: "remind" },
         { etiqueta: "Rechazar", action: "cancelled", tono: "peligro" },
         whatsapp,
       ];
     }
-    return [
-      perfil,
+    const lista: Accion[] = [perfil];
+    if (cita.status === "confirmed") {
+      lista.push({ etiqueta: "Enviar recordatorio", action: "remind" });
+    }
+    lista.push(
       { etiqueta: "Atendida", action: "completed" },
       { etiqueta: "No asistió", action: "no_show" },
       { etiqueta: "Cancelar", action: "cancelled", tono: "peligro" },
       whatsapp,
-    ];
+    );
+    return lista;
   }
 
   function abrirMenu(e: React.MouseEvent, cita: DoctorAppointment) {
@@ -202,6 +207,28 @@ export function MonthView({
       const cita = initial.find((c) => c.id === appointmentId);
       if (cita) setContacto(cita);
       setMenu(null);
+      return;
+    }
+    if (action === "remind") {
+      setPendiente(appointmentId + action);
+      try {
+        const response = await fetch("/api/dashboard/appointments/reminder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ appointmentId }),
+        });
+        const data = (await response.json().catch(() => ({}))) as { error?: string };
+        if (!response.ok) {
+          toast.error(data.error ?? "No se pudo enviar el recordatorio");
+          return;
+        }
+        setMenu(null);
+        toast.success("Recordatorio enviado al paciente");
+      } catch {
+        toast.error("No pudimos conectarnos. Intenta de nuevo.");
+      } finally {
+        setPendiente(null);
+      }
       return;
     }
     setPendiente(appointmentId + action);
@@ -476,13 +503,21 @@ export function MonthView({
               const sinCelular =
                 accion.action === "whatsapp" &&
                 !whatsappPhone(menu.cita.patient?.phone ?? null);
+              const sinCorreo =
+                accion.action === "remind" && !menu.cita.patient?.email;
               return (
                 <button
                   key={accion.action}
                   type="button"
                   role="menuitem"
-                  disabled={Boolean(pendiente) || sinCelular}
-                  title={sinCelular ? "Sin celular registrado" : undefined}
+                  disabled={Boolean(pendiente) || sinCelular || sinCorreo}
+                  title={
+                    sinCelular
+                      ? "Sin celular registrado"
+                      : sinCorreo
+                        ? "Sin correo registrado"
+                        : undefined
+                  }
                   onMouseEnter={() => {
                     if (accion.action === "perfil" && menu?.cita) {
                       prefetchPerfil(menu.cita.patient_id);
@@ -509,6 +544,8 @@ export function MonthView({
                       <WhatsappIcon className="h-4 w-4" />
                     ) : accion.action === "perfil" ? (
                       <UserRound className="h-4 w-4" />
+                    ) : accion.action === "remind" ? (
+                      <Bell className="h-4 w-4" />
                     ) : null}
                     {accion.etiqueta}
                   </span>

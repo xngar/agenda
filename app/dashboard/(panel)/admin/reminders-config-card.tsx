@@ -5,10 +5,10 @@ import { BellRing, CheckCircle2 } from "lucide-react";
 import { Button, Card, CardHeader, inputClasses } from "@/components/ui";
 
 const HOURS_OPTIONS = [
+  { value: 6, label: "6 horas antes" },
   { value: 12, label: "12 horas antes" },
   { value: 24, label: "24 horas antes (recomendado)" },
   { value: 48, label: "48 horas antes" },
-  { value: 72, label: "72 horas antes" },
 ] as const;
 
 export function RemindersConfigCard({
@@ -74,8 +74,8 @@ export function RemindersConfigCard({
   return (
     <Card>
       <CardHeader
-        title="Recordatorios automáticos a pacientes"
-        description="Envía un correo automático a los pacientes con cita confirmada para reducir inasistencias."
+        title="Recordatorios automáticos a tus pacientes"
+        description="Envía un correo automático a tus pacientes con cita confirmada según la anticipación que elijas."
       />
       <form onSubmit={onSubmit} className="space-y-5 p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

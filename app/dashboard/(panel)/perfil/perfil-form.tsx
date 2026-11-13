@@ -60,7 +60,7 @@ export function PerfilForm({
   initialName: string;
   initialSpecialty: string | null;
   initialHasAvatar: boolean;
-  onAvatarChange: (hasAvatar: boolean) => void;
+  onAvatarChange: (hasAvatar: boolean, bumpVersion?: boolean) => void;
   abierto: boolean;
   role: "professional" | "reception";
   onDirtyChange?: (dirty: boolean) => void;
@@ -101,7 +101,7 @@ export function PerfilForm({
         setError(null);
         const existeFoto = Boolean(data.profile?.hasAvatar);
         setHasAvatar(existeFoto);
-        onAvatarChange(existeFoto);
+        onAvatarChange(existeFoto, false);
       } catch (cause) {
         if (vigente) {
           setError(cause instanceof Error ? cause.message : "No se pudo leer tu perfil");
@@ -130,7 +130,7 @@ export function PerfilForm({
         return;
       }
       setHasAvatar(true);
-      onAvatarChange(true);
+      onAvatarChange(true, true);
       setOk(data.warning ?? "Foto de perfil actualizada.");
       router.refresh();
     } catch (cause) {
@@ -153,7 +153,7 @@ export function PerfilForm({
         return;
       }
       setHasAvatar(false);
-      onAvatarChange(false);
+      onAvatarChange(false, true);
       setOk(data.warning ?? "Foto de perfil eliminada.");
       router.refresh();
     } catch {

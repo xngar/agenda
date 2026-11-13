@@ -48,6 +48,8 @@ export default async function PanelLayout({
 
   const roleLabel =
     session.role === "reception" ? "Recepción" : session.isAdmin ? "Administrador" : "Profesional";
+  const hasAvatar = Boolean(session.avatar_path);
+  const avatarToken = session.avatar_path ? session.avatar_path.slice(-16) : "0";
 
   return (
     <PerfilSheetProvider
@@ -55,7 +57,8 @@ export default async function PanelLayout({
       profile={{
         fullName: session.full_name,
         specialty: session.specialty,
-        hasAvatar: false,
+        hasAvatar,
+        avatarToken,
         role: session.role,
         roleLabel,
       }}

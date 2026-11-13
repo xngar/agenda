@@ -220,4 +220,37 @@ describe("AgendaTable", () => {
     expect(fila?.className).toContain("bg-brand-sky-100");
     expect(fila?.className).not.toContain("bg-success-100");
   });
+
+  it("ofrece botón Recordatorio en citas activas, delega remind y lo deshabilita sin correo", () => {
+    const conYsinCorreo = [
+      cita({
+        id: "c40",
+        status: "confirmed",
+        patient: { full_name: "Ana Soto", phone: null, email: "ana@x.cl", rut: null },
+      }),
+      cita({
+        id: "c41",
+        status: "pending",
+        patient: { full_name: "Beto Díaz", phone: null, email: "", rut: null },
+      }),
+      cita({
+        id: "c42",
+        status: "cancelled",
+        patient: { full_name: "Ceci Ruiz", phone: null, email: "ceci@x.cl", rut: null },
+      }),
+    ];
+    const onAccion = renderTable(conYsinCorreo);
+
+    const botonesRecordatorio = container.querySelectorAll(
+      'button[aria-label^="Enviar recordatorio a"], button[aria-label^="Sin correo registrado"]',
+    );
+    expect(botonesRecordatorio).toHaveLength(2);
+    expect((botonesRecordatorio[0] as HTMLButtonElement).disabled).toBe(false);
+    expect((botonesRecordatorio[1] as HTMLButtonElement).disabled).toBe(true);
+
+    act(() => {
+      botonesRecordatorio[0]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(onAccion).toHaveBeenCalledWith("c40", "remind");
+  });
 });

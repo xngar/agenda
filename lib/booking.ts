@@ -985,11 +985,6 @@ export async function sendDueReminders(): Promise<ReminderSummary> {
       orgSettingsCache.set(appointment.org_id, orgSettings);
     }
 
-    if (orgSettings.reminders_enabled === false) {
-      summary.skipped += 1;
-      continue;
-    }
-
     const startsAt = lowerBound(appointment.during);
     const endsAt = upperBound(appointment.during);
 
@@ -1014,6 +1009,56 @@ export async function sendDueReminders(): Promise<ReminderSummary> {
   }
 
   return summary;
+}
+
+/**
+ * Envía un recordatorio manual por correo para una cita puntual.
+ * Funciona de manera independiente al recordatorio automático programado.
+ */
+export async function sendManualReminder(
+  appointmentId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const row = await loadAppointmentRow(appointmentId);
+  if (!row) {
+    return { ok: false, error: "Cita no encontrada" };
+  }
+  if (row.status !== "pending" && row.status !== "confirmed") {
+    return {
+      ok: false,
+      error: "Solo se pueden enviar recordatorios para citas pendientes o confirmadas",
+    };
+  }
+  if (!row.patients?.email) {
+    return { ok: false, error: "El paciente no tiene correo electrónico registrado" };
+  }
+
+  const settings = await getSettings(row.org_id);
+  const token = await openToken(appointmentId);
+  const manageUrl = token ? manageAbsoluteUrl(token) : `${serverEnv().NEXT_PUBLIC_APP_URL}`;
+  const startsAt = lowerBound(row.during);
+  const endsAt = upperBound(row.during);
+
+  const result = await sendEmail({
+    to: row.patients.email,
+    subject: `Recordatorio de cita · ${settings.name}`,
+    html: bookingReminderHtml({
+      patientName: row.patients.full_name ?? "Paciente",
+      clinicName: settings.name,
+      doctorName: row.doctors?.full_name ?? "Profesional",
+      specialty: row.doctors?.specialty ?? null,
+      serviceName: row.services?.name ?? "Atención",
+      dateLabel: formatDateLong(startsAt, settings.timezone),
+      timeLabel: formatRange(startsAt, endsAt, settings.timezone),
+      clinicAddress: settings.address ?? CLINIC_ADDRESS,
+      manageUrl,
+    }),
+  });
+
+  if (!result.ok) {
+    return { ok: false, error: "No se pudo enviar el correo de recordatorio" };
+  }
+
+  return { ok: true };
 }
 
 async function openToken(appointmentId: string): Promise<string | null> {

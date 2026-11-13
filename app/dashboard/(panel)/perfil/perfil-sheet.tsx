@@ -18,6 +18,7 @@ export interface PerfilSheetProfile {
   fullName: string;
   specialty: string | null;
   hasAvatar: boolean;
+  avatarToken?: string;
   role: "professional" | "reception";
   roleLabel: string;
 }
@@ -63,7 +64,7 @@ export function PerfilSheet({
   onCerrar,
 }: {
   profile: PerfilSheetProfile;
-  onAvatarChange: (hasAvatar: boolean) => void;
+  onAvatarChange: (hasAvatar: boolean, bumpVersion?: boolean) => void;
   abierto: boolean;
   onCerrar: () => void;
 }) {

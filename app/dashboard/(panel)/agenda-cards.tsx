@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, CalendarClock, UserX, XCircle, UserRound } from "lucide-react";
+import { Bell, ChevronDown, CalendarClock, UserX, XCircle, UserRound } from "lucide-react";
 import { formatTime } from "@/lib/dates";
 import { parseAppointmentRange } from "@/lib/range";
 import { StatusBadge } from "@/components/ui";
@@ -126,8 +126,8 @@ export function AgendaCards({
                 />
               ) : null}
 
-              <div className="mt-3 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {cancelada ? (
                     <Accion
                       etiqueta="Reabrir"
@@ -162,6 +162,28 @@ export function AgendaCards({
                           onClick={() => onCambiar(cita.id, "reopen")}
                           disabled={ocupado}
                         />
+                      ) : null}
+
+                      {cita.status === "pending" || cita.status === "confirmed" ? (
+                        <button
+                          type="button"
+                          onClick={() => onCambiar(cita.id, "remind")}
+                          disabled={ocupado || !cita.patient?.email}
+                          title={
+                            cita.patient?.email
+                              ? "Enviar recordatorio por correo"
+                              : "Sin correo registrado"
+                          }
+                          aria-label={
+                            cita.patient?.email
+                              ? `Enviar recordatorio a ${cita.patient.full_name}`
+                              : `Sin correo registrado para ${cita.patient?.full_name ?? "el paciente"}`
+                          }
+                          className="inline-flex items-center gap-1.5 rounded-full border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-all duration-micro ease-out-soft hover:scale-[1.03] hover:border-action-primary/40 hover:bg-action-primary/5 hover:text-action-primary active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                        >
+                          <Bell className="h-4 w-4" aria-hidden="true" />
+                          <span>Recordatorio</span>
+                        </button>
                       ) : null}
 
                       <DropdownMenu>

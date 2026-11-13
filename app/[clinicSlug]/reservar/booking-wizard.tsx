@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import type { Holiday, PublicDoctor, Service, Slot, SlotWithDoctor } from "@/lib/types";
 import { CONSENT_TEXT } from "@/lib/clinic";
@@ -94,6 +94,14 @@ export default function BookingWizard(props: BookingWizardProps) {
     () => props.doctors.find((d) => d.id === doctorId) ?? null,
     [props.doctors, doctorId],
   );
+
+  useEffect(() => {
+    for (const d of props.doctors) {
+      if (!d.avatar_url) continue;
+      const img = new window.Image();
+      img.src = d.avatar_url;
+    }
+  }, [props.doctors]);
 
   /* ---------------------------------------------------------------- */
   /* Carga de horarios                                                 */

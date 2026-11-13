@@ -21,7 +21,7 @@ import { WhatsappIcon, WhatsappModal } from "@/components/dashboard/whatsapp-but
 import { resaltarCita } from "./resaltar-cita";
 import type { StaffDoctor } from "./staff-booking-button";
 import { motion, AnimatePresence } from "motion/react";
-import { RefreshCw, UserRound } from "lucide-react";
+import { Bell, RefreshCw, UserRound } from "lucide-react";
 import { DUR, EASE } from "@/lib/motion";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -499,13 +499,21 @@ export function WeekView({
               const sinCelular =
                 accion.action === "whatsapp" &&
                 !whatsappPhone(menu.cita.patient?.phone ?? null);
+              const sinCorreo =
+                accion.action === "remind" && !menu.cita.patient?.email;
               return (
                 <button
                   key={accion.action}
                   type="button"
                   role="menuitem"
-                  disabled={Boolean(pendiente) || sinCelular}
-                  title={sinCelular ? "Sin celular registrado" : undefined}
+                  disabled={Boolean(pendiente) || sinCelular || sinCorreo}
+                  title={
+                    sinCelular
+                      ? "Sin celular registrado"
+                      : sinCorreo
+                        ? "Sin correo registrado"
+                        : undefined
+                  }
                   onMouseEnter={() => {
                     if (accion.action === "perfil" && menu?.cita) {
                       prefetchPerfil(menu.cita.patient_id);
@@ -532,6 +540,8 @@ export function WeekView({
                       <WhatsappIcon className="h-4 w-4" />
                     ) : accion.action === "perfil" ? (
                       <UserRound className="h-4 w-4" />
+                    ) : accion.action === "remind" ? (
+                      <Bell className="h-4 w-4" />
                     ) : null}
                     {accion.etiqueta}
                   </span>
@@ -594,6 +604,7 @@ function accionesDe(cita: DoctorAppointment): Accion[] {
   lista.push({ etiqueta: "Atendida", action: "completed" });
   lista.push({ etiqueta: "No asistió", action: "no_show" });
   if (cita.status === "pending" || cita.status === "confirmed") {
+    lista.push({ etiqueta: "Enviar recordatorio", action: "remind" });
     lista.push({ etiqueta: "Reagendar", action: "reschedule" });
   }
   lista.push({ etiqueta: "Cancelar", action: "cancelled", tono: "peligro" });

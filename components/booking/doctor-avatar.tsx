@@ -42,6 +42,7 @@ export function DoctorAvatar({
           alt={name}
           fill
           sizes={size === "lg" ? "56px" : "48px"}
+          priority
           unoptimized
           className="object-cover"
           onError={() => setFailed(true)}

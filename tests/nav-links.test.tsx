@@ -45,14 +45,21 @@ function clic(boton: Element) {
 }
 
 describe("SidebarNav", () => {
-  it("sin admin ve Mi agenda, Pacientes, Mis Horarios, Bloqueos y Estadísticas, y el activo se marca", () => {
+  it("sin admin ve Mi agenda, Pacientes, Mis Horarios, Bloqueos, Estadísticas y Notificaciones, y el activo se marca", () => {
     act(() => {
       root.render(<SidebarNav isAdmin={false} />);
     });
 
     const links = enlaces();
-    expect(links).toHaveLength(5);
-    expect(etiquetas()).toEqual(["Mi agenda", "Pacientes", "Mis Horarios", "Bloqueos", "Estadísticas"]);
+    expect(links).toHaveLength(6);
+    expect(etiquetas()).toEqual([
+      "Mi agenda",
+      "Pacientes",
+      "Mis Horarios",
+      "Bloqueos",
+      "Estadísticas",
+      "Notificaciones",
+    ]);
 
     for (const a of links) {
       expect(a.querySelector("svg")).not.toBeNull();
@@ -66,18 +73,19 @@ describe("SidebarNav", () => {
     expect(agenda?.getAttribute("aria-current")).toBeNull();
   });
 
-  it("el admin ve los ocho accesos en orden, con Administración cerrado", () => {
+  it("el admin ve los nueve accesos en orden, con Administración cerrado", () => {
     act(() => {
       root.render(<SidebarNav isAdmin={true} />);
     });
 
-    expect(enlaces()).toHaveLength(8);
+    expect(enlaces()).toHaveLength(9);
     expect(etiquetas()).toEqual([
       "Mi agenda",
       "Pacientes",
       "Mis Horarios",
       "Bloqueos",
       "Estadísticas",
+      "Notificaciones",
       "Feriados",
       "Equipo",
       "Servicios",
@@ -144,6 +152,7 @@ describe("SidebarNav", () => {
       "/dashboard/horario",
       "/dashboard/bloqueos",
       "/dashboard/estadisticas",
+      "/dashboard/notificaciones",
       "/dashboard/feriados",
       "/dashboard/admin",
       "/dashboard/servicios",

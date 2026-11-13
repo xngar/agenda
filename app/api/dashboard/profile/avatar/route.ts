@@ -30,20 +30,13 @@ export async function GET() {
     return NextResponse.json({ error: "Esta ruta no es para el equipo de plataforma" }, { status: 403 });
   }
 
-  const { data: profile, error: profileError } = await perfilActual(session.id, session.orgId);
-  if (profileError || !profile) {
-    if (faltaMigracionAvatar(profileError)) {
-      return NextResponse.json({ error: MIGRATION_MESSAGE }, { status: 503 });
-    }
-    return NextResponse.json({ error: "No se pudo leer la foto del perfil" }, { status: 500 });
-  }
-  if (!profile.avatar_path) {
+  if (!session.avatar_path) {
     return NextResponse.json({ error: "No hay foto de perfil" }, { status: 404 });
   }
 
   const { data: image, error } = await supabaseAdmin().storage
     .from(BUCKET)
-    .download(profile.avatar_path);
+    .download(session.avatar_path);
   if (error || !image) {
     return NextResponse.json({ error: "No se pudo cargar la foto del perfil" }, { status: 500 });
   }
@@ -51,7 +44,7 @@ export async function GET() {
   return new NextResponse(new Uint8Array(await image.arrayBuffer()), {
     headers: {
       "Content-Type": "image/jpeg",
-      "Cache-Control": "private, no-store",
+      "Cache-Control": "private, max-age=3600, stale-while-revalidate=86400",
       "X-Content-Type-Options": "nosniff",
     },
   });
