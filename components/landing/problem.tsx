@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Globe,
   CalendarCheck,
@@ -23,6 +23,26 @@ export default function Problem() {
   const [activeTab, setActiveTab] = useState<"patient" | "clinic">("patient");
   const [selectedSlot, setSelectedSlot] = useState<string>("09:45");
   const [simulatedConfirmed, setSimulatedConfirmed] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || typeof IntersectionObserver === "undefined") return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          void video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      },
+      { threshold: 0.25 },
+    );
+
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-white via-sky-50/25 to-white py-16 sm:py-24">
@@ -360,6 +380,21 @@ export default function Problem() {
             </motion.div>
           </div>
         </div>
+
+        <ScrollReveal yOffset={20} className="mx-auto mt-16 w-[90%] max-w-[64.8rem] sm:mt-20">
+          <div className="overflow-hidden rounded-[30px] bg-neutral-950 shadow-2xl shadow-slate-900/10 ring-1 ring-slate-900/5">
+            <video
+              ref={videoRef}
+              src="/brag.mp4"
+              muted
+              playsInline
+              loop
+              preload="metadata"
+              aria-label="Demostración visual de la plataforma"
+              className="block h-auto w-full rounded-[30px] object-cover pointer-events-none select-none"
+            />
+          </div>
+        </ScrollReveal>
       </div>
     </section>
   );
