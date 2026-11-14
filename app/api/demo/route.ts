@@ -6,7 +6,7 @@ const schema = z.object({
   correo: z.string().email(),
   telefono: z.string().min(1),
   tipo: z.string().min(1),
-  profesionales: z.string().min(1),
+  profesionales: z.string().optional(),
   mensaje: z.string().optional(),
 });
 

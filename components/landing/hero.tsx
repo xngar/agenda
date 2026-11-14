@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { siteConfig } from "@/lib/site-config";
-import { CheckCircle2, ArrowRight, Mail } from "lucide-react";
+import { ArrowRight, Mail } from "lucide-react";
 import { motion } from "motion/react";
 import { useMotionPrefs } from "@/components/motion/use-motion-prefs";
 
@@ -32,7 +32,7 @@ export default function Hero() {
             initial={reduce ? { opacity: 1 } : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.08, ease: easeCustom }}
-            className="text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl"
+            className="text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl [text-wrap:balance]"
           >
             Agenda, fichas clínicas y pacientes en un solo lugar.
           </motion.h1>
@@ -41,45 +41,16 @@ export default function Hero() {
             initial={reduce ? { opacity: 1 } : { opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, delay: 0.16, ease: easeCustom }}
-            className="mt-5 max-w-2xl text-lg text-white/90"
+            className="mt-5 max-w-xl text-lg text-white/85 sm:text-xl"
           >
             Para clínicas y profesionales de la salud que quieren ordenar su consulta.
           </motion.p>
 
-          <motion.ul
-            initial={reduce ? { opacity: 1 } : { opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.24, ease: easeCustom }}
-            className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2"
-          >
-            {[
-              "Reservas online",
-              "Ficha clínica por especialidad",
-              "Recordatorios por WhatsApp",
-              "Panel para tu equipo",
-            ].map((item, idx) => (
-              <motion.li
-                key={item}
-                initial={reduce ? { opacity: 1 } : { opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{
-                  duration: 0.35,
-                  delay: 0.28 + idx * 0.05,
-                  ease: easeCustom,
-                }}
-                className="flex items-center gap-2 text-sm font-medium text-white"
-              >
-                <CheckCircle2 className="h-5 w-5 shrink-0 text-white" />
-                <span>{item}</span>
-              </motion.li>
-            ))}
-          </motion.ul>
-
           <motion.div
             initial={reduce ? { opacity: 1 } : { opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.36, ease: easeCustom }}
-            className="mt-8 flex flex-col gap-3 sm:flex-row"
+            transition={{ duration: 0.4, delay: 0.24, ease: easeCustom }}
+            className="mt-9 flex flex-col gap-3 sm:flex-row"
           >
             <Link
               href="#demo"
